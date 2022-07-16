@@ -18,7 +18,6 @@ echo -e "\nThis script will calculate the total time of all the times given.\n"
 echo -e "Type or paste a time in the mm:ss:ff format.\n"
 
 while true; do
-
 # Read input.
 	read in
 

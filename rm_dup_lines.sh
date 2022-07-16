@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script removes duplicate lines from log files in the current
+# This script removes duplicate lines from IRC logs in the current
 # directory.
 
 konversation_regex='^\[[[:alpha:]]+, [[:alpha:]]+ [[:digit:]]+, [[:digit:]]+\] \[[[:digit:]]+:[[:digit:]]+:[[:digit:]]+ [[:alpha:]]+ [[:alpha:]]+\]'

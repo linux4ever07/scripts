@@ -931,7 +931,6 @@ check_res () {
 	done
 
 	if [[ $switch -eq 1 ]]; then
-
 		echo -e "\nWrong resolution (${if_res}) in input file!\n"
 		echo -e "Resolution needs to be 1080p (1920x1080)!\n"
 		exit
@@ -941,7 +940,6 @@ check_res () {
 # Creates a function called 'is_handbrake', which will check if there
 # are any running HandBrake processes, and if so, wait.
 is_handbrake () {
-
 	args=(ps -C ${cmd[0]} -o pid,args \| tail -n +2)
 
 # Checks if HandBrake is running.
@@ -1077,4 +1075,3 @@ if [[ $hb_subs -ne 1 ]]; then
 fi
 
 info_txt
-
