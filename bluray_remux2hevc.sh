@@ -1,7 +1,7 @@
 #!/bin/bash
-#
+
 # Usage: bluray_remux2hevc.sh [M2TS|MKV] [-anime|-grain]
-#
+
 # This script will:
 # * Parse the input filename (a 1080p BluRay (remux or full)), get movie
 # info from IMDb, incl. name and year.
