@@ -161,9 +161,7 @@ is_torrent () {
 		echo -e "${if_tmp}\n"
 
 		while [[ -f $if_tmp ]]; do
-
 			sleep 5
-
 		done
 
 		if="${if%.part}"
@@ -960,7 +958,6 @@ is_handbrake () {
 
 # Starts the loop that will wait for HandBrake to finish.
 	while [[ ${hb_pids[0]} ]]; do
-
 # Sleeps for 5 seconds.
 		sleep 5
 
