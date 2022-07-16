@@ -620,7 +620,8 @@ sub md5test {
 }
 
 # Subroutine for checking the MD5 hash of FLAC files by reading their
-# metadata. It takes 1 argument: (1) file name
+# metadata. It takes 1 argument:
+# (1) file name
 sub md5flac {
 	my $fn = shift;
 	my (@req, $hash);
