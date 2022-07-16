@@ -7,11 +7,7 @@ pause_msg='Does this look OK? [y/n]: '
 
 declare -a remove
 
-# If the script isn't run with sudo / root privileges, then ask the user
-# to type his / her password, so we can run the script with full root
-# privileges. 'exec' is used in conjunction with 'sudo bash', thereby
-# replacing the current shell, and current instance of the script, with
-# the new one that has full privileges.
+# If the script isn't run with sudo / root privileges, quit.
 if [[ $(whoami) != root ]]; then
 	echo -e "You need to be root to run this script!\n"
 	exit

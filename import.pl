@@ -18,11 +18,6 @@ my $script = basename($0);
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
 my (@log, %t, %files);
 
-sub usage {
-	say "Usage: $script [FLAC library directory] .. [directory N]\n";
-	exit;
-}
-
 if (defined($ARGV[0])) {
 	if (scalar(@ARGV) < 2 or ! -d $ARGV[0]) {
 		usage();
@@ -54,6 +49,11 @@ foreach my $dn (@ARGV) {
 			}
 		}
 	}
+}
+
+sub usage {
+	say "Usage: $script [FLAC library directory] .. [directory N]\n";
+	exit;
 }
 
 sub gettags {

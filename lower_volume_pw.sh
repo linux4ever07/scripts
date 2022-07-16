@@ -233,7 +233,7 @@ if [[ $volume -gt $target_volume ]]; then
 	spin &
 	spin_pid="$!"
 
-echo "$volume"
+	echo "$volume"
 
 # For the first 354 10-second intervals, lower the volume by the value
 # in ${count[0]}
