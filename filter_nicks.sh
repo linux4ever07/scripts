@@ -9,7 +9,7 @@ if=$(readlink -f "$1")
 of="${if%.???}-${RANDOM}-${RANDOM}.txt"
 
 usage () {
-	echo -e "Usage: $(basename "$0") [log] [nicks...]\n"
+	printf '%s\n' "Usage: $(basename "$0") [log] [nicks...]"
 	exit
 }
 
@@ -36,7 +36,7 @@ if_nick () {
 		nick=$(cut -d' ' -f1 <<<"$line_tmp")
 		nick=$(sed -E "s/${regex2}/\1/" <<<"$nick")
 
-		echo "$nick"
+		printf '%s' "$nick"
 	fi
 }
 
@@ -123,7 +123,7 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 
 	for nick_tmp in "${!nicks[@]}"; do
 		if [[ "$nick" == "$nick_tmp" ]]; then
-			echo "$line"
+			printf '%s\n' "$line"
 		fi
 	done
 done | tee "$of"

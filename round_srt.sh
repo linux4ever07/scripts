@@ -17,7 +17,7 @@ regex_p='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
 regex_f="${regex_p} --> ${regex_p}"
 
 usage () {
-	echo -e "Usage: $(basename "$0") [SRT]\n"
+	printf '%s\n' "Usage: $(basename "$0") [SRT]"
 	exit
 }
 
@@ -43,7 +43,7 @@ time_break () {
 	s=$(sed -E -e 's/^[0-9]{2}\:[0-9]{2}\:([0-9]{2}).*$/\1/' -e 's/^0{1}//' <<<"$time")
 	cs=$(sed -E -e 's/^.*,([0-9]{3}).*$/\1/' -e 's/^0{1,2}//' <<<"$time")
 
-	echo "$h $m $s $cs"
+	printf "$h $m $s $cs"
 }
 
 # Creates a function called 't_time_break', which will be used by the
@@ -63,7 +63,7 @@ t_time_break () {
 
 	total_time=$(( h + m + s + cs ))
 
-	echo "$total_time"
+	printf "$total_time"
 }
 
 # Creates a function called 'cs_calc', which will calculate the total
@@ -81,7 +81,7 @@ cs_calc () {
 		cs=$(( cs_in - cs_tmp ))
 	fi
 
-	echo "$cs"
+	printf '%s' "$cs"
 }
 
 # Creates a function called 'c_time_calc', which will calculate the
@@ -121,7 +121,7 @@ c_time_calc () {
 		h=$(( h - 100 ))
 	done
 
-	echo "$h $m $s $cs"
+	printf '%s' "$h $m $s $cs"
 }
 
 # Creates a function called 't_time_calc', which will add the total time
@@ -144,7 +144,7 @@ t_time_calc () {
 
 	total_start_time=( $(c_time_calc ${total_start_time[@]}) )
 
-	echo "${total_start_time[@]}"
+	printf '%s' "${total_start_time[@]}"
 }
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
@@ -185,14 +185,13 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	finished_line="${finished_line_start} --> ${finished_line_stop}"
 	lines[${i}]="$finished_line"
 
-	echo '***'
-	echo "$finished_line"
+	printf '%s\n' '***'
+	printf '%s\n' "$finished_line"
 done
 
 touch "$of"
 
 # Writes the array to $of (output file).
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	echo "${lines[${i}]}" >> "$of"
+	printf '%s\n' "${lines[${i}]}" >> "$of"
 done
-

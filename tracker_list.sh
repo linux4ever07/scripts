@@ -5,7 +5,7 @@
 
 usage () {
 	bname=$(basename "$0")
-	echo -e "Usage: ${bname} [tracker txt]\n"
+	printf '%s\n' "Usage: ${bname} [tracker txt]"
 	exit
 }
 
@@ -54,7 +54,6 @@ cat "$txt_tmp" | while read line; do
 		fi
 	fi
 
-# echo "$line_n : $txt_n"
 	if [[ $line_n -eq $txt_n ]]; then
 		elements=${#trackers[@]}
 
@@ -76,11 +75,11 @@ cat "$txt_tmp" | while read line; do
 				ping -c 10 "$address" &> /dev/null
 
 				if [[ $? -eq 0 ]]; then
-					echo -e "${trackers[${i}]}\n"
+					printf '%s\n' "${trackers[${i}]}"
 				fi
 
 			elif [[ $? -eq 0 ]]; then
-				echo -e "${trackers[${i}]}\n"
+				printf '%s\n' "${trackers[${i}]}"
 			fi
 		done
 	fi

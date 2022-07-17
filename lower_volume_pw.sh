@@ -26,7 +26,7 @@ ctrl_c () {
 		set_volume "$volume_og" 'false'
 	fi
 
-	echo '** Trapped CTRL-C'
+	printf '%s\n' '** Trapped CTRL-C'
 
 	exit
 }
@@ -86,7 +86,7 @@ get_volume () {
 		exit
 	fi
 
-	echo -n "${volume} ${pw_id}"
+	printf '%s' "${volume} ${pw_id}"
 }
 
 # Creates a function called 'set_volume', which sets the volume.
@@ -130,7 +130,7 @@ reset_volume () {
 		set_volume "$volume_tmp" 'false'
 	done
 
-	echo -n "$volume_tmp"
+	printf '%s' "$volume_tmp"
 }
 
 # Creates a function called 'sleep_low', which sleeps and then lowers
@@ -148,7 +148,7 @@ sleep_low () {
 
 	set_volume "$volume" 'false'
 
-	echo -n "$volume"
+	printf '%s' "$volume"
 }
 
 # Creates a function called 'get_count', which will get the exact number
@@ -182,7 +182,7 @@ get_count () {
 		count[2]='0'
 	fi
 
-	echo -n "${count[@]}"
+	printf '%s' "${count[@]}"
 }
 
 # Creates a function called 'spin', which will show a simple animation,
@@ -192,7 +192,7 @@ spin () {
 
 	while true; do
 		for s in "${spinner[@]}"; do
-			echo -ne "\rWait${s}"
+			printf '\r%s' "Wait${s}"
 			sleep 0.5
 		done
 	done
@@ -232,26 +232,25 @@ if [[ $volume -gt $target_volume ]]; then
 	spin &
 	spin_pid="$!"
 
-	echo "$volume"
+	printf '%s\n' "$volume"
 
 # For the first 354 10-second intervals, lower the volume by the value
 # in ${count[0]}
 	for n in {1..354}; do
 		volume=$(sleep_low "${count[0]}")
-		echo "$volume"
+		printf '%s\n' "$volume"
 	done
 
 # For 354-359, lower the volume by the value in ${count[1]}
 	for n in {1..5}; do
 		volume=$(sleep_low "${count[1]}")
-		echo "$volume"
+		printf '%s\n' "$volume"
 	done
 
 # Finally lower the volume by the value in ${count[2]}
 	volume=$(sleep_low "${count[2]}")
-	echo "$volume"
+	printf '%s\n' "$volume"
 
 	kill "$spin_pid"
-	echo
+	printf '\n'
 fi
-
