@@ -60,7 +60,7 @@ sub parse_srt {
 
 		if (length($this)) {
 			if ($this =~ /$format[0]/) {
-				if (defined($next)) {
+				if (length($next)) {
 					if ($next =~ /$format[1]/) {
 						$skip = 1;
 						next;
