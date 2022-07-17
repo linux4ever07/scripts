@@ -43,7 +43,7 @@ time_break () {
 	s=$(sed -E -e 's/^[0-9]{2}\:[0-9]{2}\:([0-9]{2}).*$/\1/' -e 's/^0{1}//' <<<"$time")
 	cs=$(sed -E -e 's/^.*,([0-9]{3}).*$/\1/' -e 's/^0{1,2}//' <<<"$time")
 
-	printf "$h $m $s $cs"
+	printf '%s' "$h $m $s $cs"
 }
 
 # Creates a function called 't_time_break', which will be used by the
@@ -63,7 +63,7 @@ t_time_break () {
 
 	total_time=$(( h + m + s + cs ))
 
-	printf "$total_time"
+	printf '%s' "$total_time"
 }
 
 # Creates a function called 'cs_calc', which will calculate the total
