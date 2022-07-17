@@ -182,7 +182,7 @@ get_count () {
 		count[2]='0'
 	fi
 
-	printf '%s' "${count[@]}"
+	printf '%s\n' "${count[@]}"
 }
 
 # Creates a function called 'spin', which will show a simple animation,
@@ -223,9 +223,9 @@ if [[ $volume -gt $target_volume ]]; then
 # There's no need to lower the volume gradually, if the difference is
 # very small.
 	if [[ $diff -gt 360 ]]; then
-		count=( $(get_count ${diff}) )
+		mapfile -t count < <(get_count "${diff}")
 	else
-		count=(0 0 ${diff})
+		count=('0' '0' "${diff}")
 	fi
 
 # Starts the spinner animation...

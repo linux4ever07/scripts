@@ -29,7 +29,7 @@ if [[ ! -f $if ]]; then
 	usage
 fi
 
-mapfile -t lines < <(cat "$if")
+mapfile -t lines <"$if"
 
 declare -a duration
 
@@ -144,7 +144,7 @@ t_time_calc () {
 
 	total_start_time=( $(c_time_calc ${total_start_time[@]}) )
 
-	printf '%s' "${total_start_time[@]}"
+	printf '%s\n' "${total_start_time[@]}"
 }
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
