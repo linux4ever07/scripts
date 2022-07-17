@@ -6,7 +6,6 @@
 # I'm using this script to automatically lower the volume when I fall
 # asleep to watching a movie or YouTube.
 
-#
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
 regex_sink='^id ([0-9]+),'

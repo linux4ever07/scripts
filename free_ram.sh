@@ -70,7 +70,7 @@ kill_chromium () {
 				fi
 
 				if [[ $pid_switch -eq 0 ]]; then
-					echo "SIGKILL: ${child_pid}"
+					printf '%s' "SIGKILL: ${child_pid}\n"
 					kill -9 "$child_pid"
 				else
 					pid_switch=0
@@ -124,17 +124,17 @@ while true; do
 
 # Runs 'free', stores output in the $free_ram array, and sets a couple
 # of variables based on that output.
-	mapfile -t free_ram < <(free)
-	ram=$(sed -E 's/[[:space:]]+/ /g' <<<"${free_ram[1]}" | cut -d' ' -f4)
-	swap=$(sed -E 's/[[:space:]]+/ /g' <<<"${free_ram[2]}" | cut -d' ' -f4)
-	avail=$(sed -E 's/[[:space:]]+/ /g' <<<"${free_ram[1]}" | cut -d' ' -f7)
+	mapfile -t free_ram < <(free | sed -E 's/[[:space:]]+/ /g')
+	ram=$(cut -d' ' -f4 <<<"${free_ram[1]}")
+	swap=$(cut -d' ' -f4 <<<"${free_ram[2]}")
+	avail=$(cut -d' ' -f7 <<<"${free_ram[1]}")
 
 # Prints the free and available RAM and SWAP.
-	echo "FREE (kibibytes)"
-	echo "RAM: ${ram}, SWAP: ${swap}"
-	echo "***"
-	echo "AVAILABLE (kibibytes)"
-	echo -e "RAM: ${avail}\n"
+	printf '%s' "FREE (kibibytes)\n"
+	printf '%s' "RAM: ${ram}, SWAP: ${swap}\n"
+	printf '%s' "***\n"
+	printf '%s' "AVAILABLE (kibibytes)\n"
+	printf '%s' "RAM: ${avail}\n\n"
 
 # If available RAM is less than 1GB...
 	if [[ $avail -lt 1000000 ]]; then
@@ -151,7 +151,7 @@ while true; do
 		if [[ $is_firefox ]]; then
 			time=$(now)
 
-			echo -e "${time}: Killing Firefox...\n" | tee --append "$log_killed"
+			printf '%s' "${time}: Killing Firefox...\n\n" | tee --append "$log_killed"
 			kill_firefox
 		fi
 
@@ -160,7 +160,7 @@ while true; do
 		if [[ $is_tor ]]; then
 			time=$(now)
 
-			echo -e "${time}: Killing Tor Browser...\n" | tee --append "$log_killed"
+			printf '%s' "${time}: Killing Tor Browser...\n\n" | tee --append "$log_killed"
 			kill_firefox
 		fi
 
@@ -168,7 +168,7 @@ while true; do
 		if [[ ! ${is_chromium[0]} =~ $regex ]]; then
 			time=$(now)
 
-			echo -e "${time}: Killing Chromium...\n" | tee --append "$log_killed"
+			printf '%s' "${time}: Killing Chromium...\n\n" | tee --append "$log_killed"
 			kill_chromium
 		fi
 
@@ -177,4 +177,3 @@ while true; do
 		sync
 	fi
 done
-
