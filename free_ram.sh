@@ -70,7 +70,7 @@ kill_chromium () {
 				fi
 
 				if [[ $pid_switch -eq 0 ]]; then
-					printf '%s' "SIGKILL: ${child_pid}\n"
+					printf '%s\n' "SIGKILL: ${child_pid}"
 					kill -9 "$child_pid"
 				else
 					pid_switch=0
@@ -130,11 +130,11 @@ while true; do
 	avail=$(cut -d' ' -f7 <<<"${free_ram[1]}")
 
 # Prints the free and available RAM and SWAP.
-	printf '%s' "FREE (kibibytes)\n"
-	printf '%s' "RAM: ${ram}, SWAP: ${swap}\n"
-	printf '%s' "***\n"
-	printf '%s' "AVAILABLE (kibibytes)\n"
-	printf '%s' "RAM: ${avail}\n\n"
+	printf '%s\n' "FREE (kibibytes)"
+	printf '%s\n' "RAM: ${ram}, SWAP: ${swap}"
+	printf '%s\n' "***"
+	printf '%s\n' "AVAILABLE (kibibytes)"
+	printf '%s\n\n' "RAM: ${avail}"
 
 # If available RAM is less than 1GB...
 	if [[ $avail -lt 1000000 ]]; then
@@ -151,7 +151,7 @@ while true; do
 		if [[ $is_firefox ]]; then
 			time=$(now)
 
-			printf '%s' "${time}: Killing Firefox...\n\n" | tee --append "$log_killed"
+			printf '%s\n\n' "${time}: Killing Firefox..." | tee --append "$log_killed"
 			kill_firefox
 		fi
 
@@ -160,7 +160,7 @@ while true; do
 		if [[ $is_tor ]]; then
 			time=$(now)
 
-			printf '%s' "${time}: Killing Tor Browser...\n\n" | tee --append "$log_killed"
+			printf '%s\n\n' "${time}: Killing Tor Browser..." | tee --append "$log_killed"
 			kill_firefox
 		fi
 
@@ -168,7 +168,7 @@ while true; do
 		if [[ ! ${is_chromium[0]} =~ $regex ]]; then
 			time=$(now)
 
-			printf '%s' "${time}: Killing Chromium...\n\n" | tee --append "$log_killed"
+			printf '%s\n\n' "${time}: Killing Chromium..." | tee --append "$log_killed"
 			kill_chromium
 		fi
 
