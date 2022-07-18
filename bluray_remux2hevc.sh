@@ -157,8 +157,8 @@ is_torrent () {
 	fi
 
 	if [[ -f $if_tmp ]]; then
-		echo -e "\nWaiting for this download to finish:"
-		echo -e "${if_tmp}\n"
+		printf '\n%s\n' 'Waiting for this download to finish:'
+		printf '%s\n\n' "${if_tmp}"
 
 		while [[ -f $if_tmp ]]; do
 			sleep 5
@@ -169,7 +169,7 @@ is_torrent () {
 		md5=$(md5sum -b "$if")
 		md5_f="${HOME}/${bname}_MD5-${RANDOM}.txt"
 
-		echo "$md5" | tee "$md5_f"
+		printf '%s\n' "$md5" | tee "$md5_f"
 	fi
 }
 
@@ -228,8 +228,8 @@ for cmd_tmp in ${cmd[@]}; do
 	check=$(basename $(command -v ${cmd_tmp}) 2>&-)
 
 	if [[ -z $check ]]; then
-		echo -e "\nYou need ${pkg[${cmd_tmp}]} installed on your system."
-		echo -e "Install it through your package manager.\n"
+		printf '\n%s\n' "You need ${pkg[${cmd_tmp}]} installed on your system."
+		printf '%s\n\n' 'Install it through your package manager.'
 		exit
 	fi
 done
@@ -345,7 +345,7 @@ break_name () {
 	done
 
 # Echoes the complete parsed name.
-	echo "${name[@]}"
+	printf '%s\n' "${name[@]}"
 }
 
 # This creates a function called 'imdb', which will look up the movie
@@ -359,7 +359,7 @@ imdb () {
 	}
 
 	if [[ $# -eq 0 ]]; then
-		echo 'Usage: imdb "Movie Title (Year)"'
+		printf '%s\n' 'Usage: imdb "Movie Title (Year)"'
 		exit 1
 	else
 		y=$(grep -Eo "\([0-9]{4}\)$" <<<"${@}" | tr -d '[:punct:]')
@@ -432,8 +432,8 @@ imdb () {
 	}
 
 	print_imdb () {
-		echo "$title"
-		echo "$year"
+		printf '%s\n' "$title"
+		printf '%s\n' "$year"
 	}
 
 # RUNTIME
@@ -666,9 +666,9 @@ dts_extract_remux () {
 	fi
 
 	if [[ -z $audio_track_ref ]]; then
-		echo -e "\nThere are no DTS-HD MA audio tracks in:\n"
-		echo -e "${if}\n"
-		echo 'Choose a different input file that has DTS-HD MA!'
+		printf '\n%s\n\n' 'There are no DTS-HD MA audio tracks in:'
+		printf '%s\n\n' "$if"
+		printf '%s\n' 'Choose a different input file that has DTS-HD MA!'
 		exit
 	fi
 
@@ -704,8 +704,8 @@ dts_extract_remux () {
 	esac
 
 # Runs ffmpeg, extracts the core DTS track, and remuxes.
-	echo -e "\nCommand used to extract core DTS track, and remux:" | tee --append "$command_f"
-	echo "${args[@]}" | tee --append "$command_f"
+	printf '\n%s\n' 'Command used to extract core DTS track, and remux:' | tee --append "$command_f"
+	printf '%s\n' "${args[@]}" | tee --append "$command_f"
 
 	if [[ $existing -ne 1 ]]; then
 # Runs ffmpeg. If the command wasn't successful, quit.
@@ -741,8 +741,8 @@ hb_encode () {
 	fi
 
 # Echoes the full HandBrake command, and executes it.
-	echo -e "\nCommand used to encode:" | tee --append "$command_f"
-	echo "${args[@]}" | tee --append "$command_f"
+	printf '\n%s\n' 'Command used to encode:' | tee --append "$command_f"
+	printf '%s\n' "${args[@]}" | tee --append "$command_f"
 
 # Runs HandBrake. If the command wasn't successful, quit.
 	run_or_quit
@@ -759,14 +759,14 @@ sub_mux () {
 
 	args=(${cmd[2]} --title \"\" -o \""${of_tmp}"\" \""${of}"\" --no-video --no-audio --no-chapters \""${of_remux}"\")
 
-	echo -e "\nCommands used to merge with subtitles:" | tee --append "$command_f"
-	echo "${args[@]}" | tee --append "$command_f"
+	printf '\n%s\n' 'Commands used to merge with subtitles:' | tee --append "$command_f"
+	printf '%s\n' "${args[@]}" | tee --append "$command_f"
 
 	run_or_quit
 
 	args=(mv \""${of_tmp}"\" \""${of}"\")
 
-	echo -e "\n${args[@]}" | tee --append "$command_f"
+	printf '\n%s\n' "${args[@]}" | tee --append "$command_f"
 
 	run_or_quit
 }
@@ -885,7 +885,7 @@ info_txt () {
 		for (( i = 0; i < $elements; i++ )); do
 			info_ref="${type}[${i}]"
 
-			echo "${!info_ref}" >> "${!info_f_ref}"
+			printf '%s\n' "${!info_ref}" >> "${!info_f_ref}"
 		done
 	done
 }
@@ -929,8 +929,8 @@ check_res () {
 	done
 
 	if [[ $switch -eq 1 ]]; then
-		echo -e "\nWrong resolution (${if_res}) in input file!\n"
-		echo -e "Resolution needs to be 1080p (1920x1080)!\n"
+		printf '\n%s\n\n' "Wrong resolution (${if_res}) in input file!"
+		printf '%s\n\n' "Resolution needs to be 1080p (1920x1080)!"
 		exit
 	fi
 }
@@ -946,13 +946,13 @@ is_handbrake () {
 # Prints the PID and arguments of the HandBrake commands that are
 # running, if any.
 	if [[ ${hb_pids[0]} ]]; then
-		echo -e "\nWaiting for this to finish:\n"
+		printf '\n%s\n\n' 'Waiting for this to finish:'
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 			pid=$(sed -E 's/^[[:space:]]*([[:digit:]]+).*/\1/' <<<"${hb_pids[${i}]}")
 			comm=$(sed -E 's/^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)/\1/' <<<"${hb_pids[${i}]}")
 
-			echo "PID: ${pid}"
-			echo -e "COMMAND: ${comm}\n"
+			printf '%s\n' "PID: ${pid}"
+			printf '%s\n\n' "COMMAND: ${comm}"
 		done
 	fi
 
@@ -985,7 +985,7 @@ if_m2ts () {
 	bd_title_field=$(( count - 2 ))
 	bd_title=$(cut -d'/' -f${bd_title_field}- <<<"$if" | cut -d'/' -f1)
 
-	echo "$bd_title"
+	printf "$bd_title"
 }
 
 # If the input filename is an M2TS, get the movie title and year from
@@ -1009,7 +1009,7 @@ mapfile -t imdb_tmp < <(fsencode "$(imdb "$bname_tmp")")
 # * If not, use the information in $bname_tmp instead, but delete
 # special characters.
 if [[ $imdb_tmp ]]; then
-	title=$(echo "${imdb_tmp[0]}" | tr ' ' '.')
+	title=$(tr ' ' '.' <<<"${imdb_tmp[0]}")
 	year="${imdb_tmp[1]}"
 else
 	bname_tmp_fs=$(fsencode "$bname_tmp")
