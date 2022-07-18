@@ -306,17 +306,16 @@ sub file2hash {
 
 # Open the database file and read it into the @dbfile variable.
 	open($md5db_in, '<', $db) or die "Can't open '$db': $!";
-	chomp (@dbfile = (<$md5db_in>));
+	foreach my $line (<$md5db_in>) {
+		$line =~ s/(\r){0,}(\n){0,}$//g;
+		push(@dbfile, $line);
+	}
 	close($md5db_in) or die "Can't close '$db': $!";
 
 # Loop through all the lines in the database file and split them before
 # storing in the database hash. Also, print each line to STDOUT for
 # debug purposes.
 	foreach my $line (@dbfile) {
-# Convert CR+LF newlines to proper LF to avoid identical file names from
-# being interpreted as different.
-		$line =~ s/\r//g;
-
 # If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
 # Split the line into relative file name, and MD5 sum.
@@ -480,16 +479,15 @@ sub md5import {
 	if ($md5fn =~ /.md5$/i) {
 # Open the *.MD5 file and read its contents to the @lines array.
 		open(MD5, '<', $md5fn) or die "Can't open '$md5fn': $!";
-		chomp(@lines = (<MD5>));
+		foreach my $line (<MD5>) {
+			$line =~ s/(\r){0,}(\n){0,}$//g;
+			push(@lines, $line);
+		}
 		close(MD5) or die "Can't close '$md5fn': $!";
 
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 		foreach my $line (@lines) {
-# Convert CR+LF newlines to proper LF to avoid identical file names from
-# being interpreted as different.
-			$line =~ s/\r//g;
-
 # If format string matches the line(s) in the *.MD5 file, continue.
 			if ($line =~ /$format/) {
 # Split the line so that the hash and file name go into @fields array.

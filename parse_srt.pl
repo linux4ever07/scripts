@@ -42,7 +42,7 @@ sub parse_srt {
 
 	open(my $srt, '<', $fn) or die "Can\'t open 'SRT': $!";
 	foreach my $line (<$srt>) {
-		$line =~ s/(\r|\n)//g;
+		$line =~ s/(\r){0,}(\n){0,}$//g;
 		push(@lines, $line);
 	}
 	close($srt) or die "Can\'t close 'SRT': $!";
