@@ -5,7 +5,7 @@
 
 usage () {
 	bname=$(basename "$0")
-	printf '%s\n' "Usage: ${bname} [tracker txt]"
+	printf '%s\n\n' "Usage: ${bname} [tracker txt]"
 	exit
 }
 

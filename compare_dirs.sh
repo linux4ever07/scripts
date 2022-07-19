@@ -16,12 +16,12 @@ set -eo pipefail
 is_md5sum=$(command -v md5sum)
 
 if [[ -z $is_md5sum ]]; then
-	echo -e "\nThis script needs 'md5sum' installed to run!\n"
+	printf '\n%s\n\n' "This script needs 'md5sum' installed to run!"
 	exit
 fi
 
 usage () {
-	echo -e "\nUsage: $(basename "$0") [dir1] [dir2]\n"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [dir1] [dir2]"
 	exit
 }
 
@@ -149,12 +149,12 @@ identical='1'
 print_list () {
 	for (( i = 0; i < ${!elements_ref}; i++ )); do
 		tmp_ref="${type}[${i}]"
-		echo "${!tmp_ref}"
+		printf '%s\n' "${!tmp_ref}"
 	done | sort
 
 	unset -v "$type"
 
-	echo
+	printf '\n' 
 }
 
 for type in "${var_list2[@]}"; do
@@ -166,37 +166,37 @@ for type in "${var_list2[@]}"; do
 		continue
 	fi
 
-	echo
+	printf '\n' 
 
 	case $type in
 		'dir1_files_missing')
-			echo "*** 1:${dir1}"
-			echo -e "The files below are missing:\n"
+			printf '%s\n' "*** 1:${dir1}"
+			printf '%s\n\n' "The files below are missing:"
 
 			print_list
 		;;
 		'dir1_dirs_missing')
-			echo "*** 1:${dir1}"
-			echo -e "The directories below are missing:\n"
+			printf '%s\n' "*** 1:${dir1}"
+			printf '%s\n\n' "The directories below are missing:"
 
 			print_list
 		;;
 		'dir2_files_missing')
-			echo "*** 2:${dir2}"
-			echo -e "The files below are missing:\n"
+			printf '%s\n' "*** 2:${dir2}"
+			printf '%s\n\n' "The files below are missing:"
 
 			print_list
 		;;
 		'dir2_dirs_missing')
-			echo "*** 2:${dir2}"
-			echo -e "The directories below are missing:\n"
+			printf '%s\n' "*** 2:${dir2}"
+			printf '%s\n\n' "The directories below are missing:"
 
 			print_list
 		;;
 		'md5s_mismatch')
-			echo "*** 1:${dir1}"
-			echo "*** 2:${dir2}"
-			echo -e "MD5 hash mismatch:\n"
+			printf '%s\n' "*** 1:${dir1}"
+			printf '%s\n' "*** 2:${dir2}"
+			printf '%s\n\n' "MD5 hash mismatch:"
 
 			print_list
 		;;

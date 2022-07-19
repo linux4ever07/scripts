@@ -12,7 +12,7 @@ trap ctrl_c INT
 
 ctrl_c () {
 	restore
-	echo '** Trapped CTRL-C'
+	printf '%s\n' '** Trapped CTRL-C'
 	exit
 }
 
@@ -28,7 +28,7 @@ cat_stderr () {
 	truncate -s 0 "$stderr_f"
 
 	if [[ $stderr_out ]]; then
-		echo "$stderr_out"
+		printf '%s\n' "$stderr_out"
 	fi
 }
 
@@ -107,7 +107,7 @@ fi
 output () {
 	print_stdout () {
 		for (( n = 0; n < ${last}; n++ )); do
-			echo "${stdout_v[${n}]}"
+			printf '%s\n' "${stdout_v[${n}]}"
 		done
 		unset -v stdout_v
 		cat_stderr
@@ -118,10 +118,10 @@ output () {
 	fi
 
 	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		echo -e "${f}: Everything is Ok\n"
+		printf '%s\n\n' "${f}: Everything is Ok"
 # print_stdout
 	else
-		echo -e "${f}: Something went wrong\n"
+		printf '%s\n\n' "${f}: Something went wrong"
 		print_stdout
 	fi
 }
@@ -134,23 +134,23 @@ iso_extract () {
 	iso_mnt="/dev/shm/${f_bn}-${RANDOM}"
 	iso_of="${PWD}/${iso_bn}-${RANDOM}"
 
-	echo -e "${iso_of}: Creating output directory...\n"
+	printf '%s\n\n' "${iso_of}: Creating output directory..."
 	mkdir "$iso_mnt" "$iso_of"
 
-	echo -e "${f}: Mounting...\n"
+	printf '%s\n\n' "${f}: Mounting..."
 	sudo mount "$f" "$iso_mnt" -o loop
 
-	echo -e "${f}: Extracting files...\n"
+	printf '%s\n\n' "${f}: Extracting files..."
 	cp -p -r "$iso_mnt"/* "$iso_of"
 
-	echo -e "${iso_of}: Changing owner to ${USER}...\n"
+	printf '%s\n\n' "${iso_of}: Changing owner to ${USER}..."
 	sudo chown -R "${USER}:${USER}" "$iso_of"
 	sudo chmod -R +rw "$iso_of"
 
-	echo -e "${f}: Unmounting...\n"
+	printf '%s\n\n' "${f}: Unmounting..."
 	sudo umount "$iso_mnt"
 
-	echo -e "${iso_mnt}: Removing mountpoint...\n"
+	printf '%s\n\n' "${iso_mnt}: Removing mountpoint..."
 	rm -rf "$iso_mnt"
 }
 
@@ -176,65 +176,65 @@ while [[ $# -gt 0 ]]; do
 			cat_stderr
 		;;
 		*.tar)
-			mapfile -t stdout_v < <(tar -xf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -xf "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			mapfile -t stdout_v < <(tar -xzf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -xzf "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			mapfile -t stdout_v < <(tar -xjf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -xjf "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.tar.xz|*.txz)
-			mapfile -t stdout_v < <(tar -xJf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -xJf "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.lzh)
 			check_cmd lzh
 
-			mapfile -t stdout_v < <(7z x "$f"; echo "$?")
+			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.z|*.gz)
-			mapfile -t stdout_v < <(gunzip "$f"; echo "$?")
+			mapfile -t stdout_v < <(gunzip "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.bz2)
-			mapfile -t stdout_v < <(bunzip2 "$f"; echo "$?")
+			mapfile -t stdout_v < <(bunzip2 "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.xz)
-			mapfile -t stdout_v < <(unxz "$f"; echo "$?")
+			mapfile -t stdout_v < <(unxz "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.zip)
-			mapfile -t stdout_v < <(unzip "$f"; echo "$?")
+			mapfile -t stdout_v < <(unzip "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.7z)
 			check_cmd 7z
 
-			mapfile -t stdout_v < <(7za x "$f"; echo "$?")
+			mapfile -t stdout_v < <(7za x "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.rar)
 			check_cmd rar
 
-			mapfile -t stdout_v < <(rar x "$f"; echo "$?")
+			mapfile -t stdout_v < <(rar x "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.cab|*.exe)
 			check_cmd cab
 
-			mapfile -t stdout_v < <(cabextract "$f"; echo "$?")
+			mapfile -t stdout_v < <(cabextract "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.arj)
 			check_cmd arj
 
-			mapfile -t stdout_v < <(7z x "$f"; echo "$?")
+			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.iso)

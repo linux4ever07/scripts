@@ -48,7 +48,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 		previous="$line_tmp"
 
-		echo "$line" >> "$fn_out"
+		printf '%s\n' "$line" >> "$fn_out"
 	done
 
 	touch -r "$fn" "$fn_out"

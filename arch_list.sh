@@ -11,7 +11,7 @@ trap ctrl_c INT
 
 ctrl_c () {
 	restore
-	echo '** Trapped CTRL-C'
+	printf '%s\n' '** Trapped CTRL-C'
 	exit
 }
 
@@ -27,7 +27,7 @@ cat_stderr () {
 	truncate -s 0 "$stderr_f"
 
 	if [[ $stderr_out ]]; then
-		echo "$stderr_out"
+		printf '%s\n' "$stderr_out"
 	fi
 }
 
@@ -106,7 +106,7 @@ fi
 output () {
 	print_stdout () {
 		for (( n = 0; n < ${last}; n++ )); do
-			echo "${stdout_v[${n}]}"
+			printf '%s\n' "${stdout_v[${n}]}"
 		done
 		unset -v stdout_v
 		cat_stderr
@@ -117,10 +117,10 @@ output () {
 	fi
 
 	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		echo -e "${f}: Everything is Ok\n"
+		printf '%s\n\n' "${f}: Everything is Ok"
 		print_stdout
 	else
-		echo -e "${f}: Something went wrong\n"
+		printf '%s\n\n' "${f}: Something went wrong"
 		print_stdout
 	fi
 }
@@ -142,71 +142,71 @@ while [[ $# -gt 0 ]]; do
 			cat_stderr
 		;;
 		*.tar)
-			mapfile -t stdout_v < <(tar -tvf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -tvf "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			mapfile -t stdout_v < <(tar -ztvf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -ztvf "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			mapfile -t stdout_v < <(tar -jtvf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -jtvf "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.tar.xz|*.txz)
-			mapfile -t stdout_v < <(tar -Jtvf "$f"; echo "$?")
+			mapfile -t stdout_v < <(tar -Jtvf "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.lzh)
 			check_cmd lzh
 
-			mapfile -t stdout_v < <(7z l "$f"; echo "$?")
+			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.z|*.gz)
-			mapfile -t stdout_v < <(gunzip -l "$f"; echo "$?")
+			mapfile -t stdout_v < <(gunzip -l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.bz2)
-			mapfile -t stdout_v < <(bunzip2 -t "$f"; echo "$?")
+			mapfile -t stdout_v < <(bunzip2 -t "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.xz)
-			mapfile -t stdout_v < <(unxz -l "$f"; echo "$?")
+			mapfile -t stdout_v < <(unxz -l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.zip)
-			mapfile -t stdout_v < <(unzip -l "$f"; echo "$?")
+			mapfile -t stdout_v < <(unzip -l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.7z)
 			check_cmd 7z
 
-			mapfile -t stdout_v < <(7za l "$f"; echo "$?")
+			mapfile -t stdout_v < <(7za l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.rar)
 			check_cmd rar
 
-			mapfile -t stdout_v < <(rar vb "$f"; echo "$?")
+			mapfile -t stdout_v < <(rar vb "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.cab|*.exe)
 			check_cmd cab
 
-			mapfile -t stdout_v < <(cabextract -l "$f"; echo "$?")
+			mapfile -t stdout_v < <(cabextract -l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.arj)
 			check_cmd arj
 
-			mapfile -t stdout_v < <(7z l "$f"; echo "$?")
+			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 		*.iso)
 			check_cmd 7z
 
-			mapfile -t stdout_v < <(7z l "$f"; echo "$?")
+			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
 			output | less
 		;;
 	esac

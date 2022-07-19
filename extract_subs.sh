@@ -4,10 +4,10 @@
 # only a random number is added to the name.
 
 usage () {
-	msg[0]="You need mkvtoolnix installed to run this script.\n"
-	msg[1]="Usage: $(basename "$0") [MKV]\n"
-	msg[2]="There are no subtitles in:\n${if}\n"
-	echo -e "${msg[${1}]}"
+	msg[0]="You need mkvtoolnix installed to run this script."
+	msg[1]="Usage: $(basename "$0") [MKV]"
+	msg[2]="There are no subtitles in:\n${if}"
+	printf '%s\n\n' "${msg[${1}]}"
 	exit
 }
 

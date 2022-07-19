@@ -11,7 +11,7 @@
 set -eo pipefail
 
 usage () {
-	echo -e "Usage: $(basename "$0") [dir] [upper|lower]\n"
+	printf '%s\n\n' "Usage: $(basename "$0") [dir] [upper|lower]"
 	exit
 }
 
@@ -65,7 +65,7 @@ for (( i = ${depth}; i > 0; i-- )); do
 		new_f="${dn}/${new_bn}"
 
 		if [[ $new_bn != $bn ]]; then
-			echo "$new_f"
+			printf '%s\n' "$new_f"
 			mv -n "$f" "$new_f"
 		fi
 	done

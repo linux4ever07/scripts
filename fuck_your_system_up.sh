@@ -6,7 +6,7 @@
 
 # If the script isn't run with sudo / root privileges, quit.
 if [[ $(whoami) != root ]]; then
-	echo -e "You need to be root to run this script!\n"
+	printf '%s\n\n' "You need to be root to run this script!"
 	exit
 fi
 
@@ -33,7 +33,7 @@ erase_devices () {
 			done
 		done
 
-		echo
+		printf '\n'
 	done
 }
 

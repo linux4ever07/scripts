@@ -14,8 +14,8 @@ ss=0
 ff=0
 t=1
 
-echo -e "\nThis script will calculate the total time of all the times given.\n"
-echo -e "Type or paste a time in the mm:ss:ff format.\n"
+printf '\n%s\n\n' "This script will calculate the total time of all the times given."
+printf '%s\n\n' "Type or paste a time in the mm:ss:ff format."
 
 while true; do
 # Read input.

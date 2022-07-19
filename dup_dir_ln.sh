@@ -19,20 +19,20 @@
 set -eo pipefail
 
 usage () {
-	echo -e "Usage: $(basename "$0") [in_dir] [out_dir]\n"
+	printf '%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
 	exit
 }
 
 # If the script isn't run with sudo / root privileges, then quit.
 if [[ $(whoami) != root ]]; then
-	echo -e "You need to be root to run this script!\n"
+	printf '%s\n\n' "You need to be root to run this script!"
 	exit
 fi
 
 if [[ ! -d $1 || -z $2 ]]; then
 	usage
 elif [[ -d $2 || -f $2 ]]; then
-	echo -e "\"${2}\" already exists!\n"
+	printf '%s\n\n' "\"${2}\" already exists!"
 	exit
 fi
 

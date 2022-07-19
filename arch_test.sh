@@ -9,7 +9,7 @@ trap ctrl_c INT
 
 ctrl_c () {
 	restore
-	echo '** Trapped CTRL-C'
+	printf '%s\n' '** Trapped CTRL-C'
 	exit
 }
 
@@ -25,7 +25,7 @@ cat_stderr () {
 	truncate -s 0 "$stderr_f"
 
 	if [[ $stderr_out ]]; then
-		echo "$stderr_out"
+		printf '%s\n' "$stderr_out"
 	fi
 }
 
@@ -99,7 +99,7 @@ CMD
 output () {
 	print_stdout () {
 		for (( n = 0; n < ${last}; n++ )); do
-			echo "${stdout_v[${n}]}"
+			printf '%s\n' "${stdout_v[${n}]}"
 		done
 		unset -v stdout_v
 		cat_stderr
@@ -110,10 +110,10 @@ output () {
 	fi
 
 	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		echo -e "${f}: Everything is Ok\n"
+		printf '%s\n\n' "${f}: Everything is Ok"
 # print_stdout
 	else
-		echo -e "${f}: Something went wrong\n"
+		printf '%s\n\n' "${f}: Something went wrong"
 		print_stdout
 	fi
 }
@@ -137,59 +137,59 @@ while [[ $# -gt 0 ]]; do
 				cat_stderr
 			;;
 			*.tar)
-				mapfile -t stdout_v < <(tar tf "$f"; echo "$?")
+				mapfile -t stdout_v < <(tar tf "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.zip)
-				mapfile -t stdout_v < <(unzip -t "$f"; echo "$?")
+				mapfile -t stdout_v < <(unzip -t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.z|*.gz)
-				mapfile -t stdout_v < <(gunzip -t "$f"; echo "$?")
+				mapfile -t stdout_v < <(gunzip -t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.lzh)
 				check_cmd lzh
 
-				mapfile -t stdout_v < <(7z t "$f"; echo "$?")
+				mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
 				output
 			;;
 			*.bz2)
-				mapfile -t stdout_v < <(bunzip2 -t "$f"; echo "$?")
+				mapfile -t stdout_v < <(bunzip2 -t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.xz)
-				mapfile -t stdout_v < <(xz -t "$f"; echo "$?")
+				mapfile -t stdout_v < <(xz -t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.7z)
 				check_cmd 7z
 
-				mapfile -t stdout_v < <(7za t "$f"; echo "$?")
+				mapfile -t stdout_v < <(7za t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.rar|*.part00.rar)
 				check_cmd rar
 
-				mapfile -t stdout_v < <(rar t "$f"; echo "$?")
+				mapfile -t stdout_v < <(rar t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.cab|*.exe)
 				check_cmd cab
 
-				mapfile -t stdout_v < <(cabextract -t "$f"; echo "$?")
+				mapfile -t stdout_v < <(cabextract -t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.arj)
 				check_cmd arj
 
-				mapfile -t stdout_v < <(7z t "$f"; echo "$?")
+				mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			*.iso)
 				check_cmd iso
 
-				mapfile -t stdout_v < <(7z t "$f"; echo "$?")
+				mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
 				output "$f"
 			;;
 			esac
@@ -199,4 +199,3 @@ while [[ $# -gt 0 ]]; do
 done
 
 restore
-

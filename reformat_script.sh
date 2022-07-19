@@ -38,7 +38,7 @@ set -eo pipefail
 
 # If the script isn't run with sudo / root privileges, quit.
 if [[ $(whoami) != root ]]; then
-	echo -e "You need to be root to run this script!\n"
+	printf '%s\n\n' "You need to be root to run this script!"
 	exit
 fi
 
@@ -83,14 +83,14 @@ reformat_comments () {
 				if [[ $char_sum -le $limit ]]; then
 					string_tmp+=" ${line_tmp_array[${k}]}"
 				else
-					echo "$string_tmp" >> "$of"
+					printf '%s\n' "$string_tmp" >> "$of"
 
 					string_tmp="# ${line_tmp_array[${k}]}"
 					char_sum=$(( 1 + word ))
 				fi
 
 				if [[ $k -eq $end ]]; then
-					echo "$string_tmp" >> "$of"
+					printf '%s\n' "$string_tmp" >> "$of"
 				fi
 			done
 		fi
@@ -115,7 +115,7 @@ reformat_lines () {
 		line=$(sed -E "s/${regex3}//" <<<"$line")
 	fi
 
-	echo "$line" >> "$of"
+	printf '%s\n' "$line" >> "$of"
 }
 
 mkdir -p "$tmp_dn"

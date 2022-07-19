@@ -18,7 +18,7 @@ trap ctrl_c INT
 
 ctrl_c () {
 	restore
-	echo '** Trapped CTRL-C'
+	printf '%s\n' '** Trapped CTRL-C'
 	exit
 }
 
@@ -34,7 +34,7 @@ cat_stderr () {
 	truncate -s 0 "$stderr_f"
 
 	if [[ $stderr_out ]]; then
-		echo "$stderr_out"
+		printf '%s\n' "$stderr_out"
 	fi
 }
 
@@ -111,7 +111,7 @@ CMD
 output () {
 	print_stdout () {
 		for (( n = 0; n < ${last}; n++ )); do
-			echo "${stdout_v[${n}]}"
+			printf '%s\n' "${stdout_v[${n}]}"
 		done
 		unset -v stdout_v
 		cat_stderr
@@ -122,10 +122,10 @@ output () {
 	fi
 
 	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		echo -e "${f}: Everything is Ok\n"
+		printf '%s\n\n' "${f}: Everything is Ok"
 # print_stdout
 	else
-		echo -e "${f}: Something went wrong\n"
+		printf '%s\n\n' "${f}: Something went wrong"
 		print_stdout
 	fi
 }
@@ -140,7 +140,7 @@ tar_f () {
 # already exists, and if so it quits running the script.
 exists () {
 	if [[ -f $f ]]; then
-		echo -e "${f}: File already exists\n"
+		printf '%s\n\n' "${f}: File already exists"
 		exit
 	fi
 }
@@ -156,35 +156,35 @@ exists
 # Depending on the filename extension, create an archive accordingly.
 case "$f" in
 	*.tar)
-		mapfile -t stdout_v < <(tar -cf "${of}.tar" "${files[@]}"; echo "$?")
+		mapfile -t stdout_v < <(tar -cf "${of}.tar" "${files[@]}"; printf '%s\n' "$?")
 		output
 	;;
 	*.tar.gz|*.tgz)
-		mapfile -t stdout_v < <(tar_f "$f" | gzip -9 > "${of}.tar.gz"; echo "$?")
+		mapfile -t stdout_v < <(tar_f "$f" | gzip -9 > "${of}.tar.gz"; printf '%s\n' "$?")
 		output
 	;;
 	*.tar.bz2|*.tbz|*.tbz2)
-		mapfile -t stdout_v < <(tar_f "$f" | bzip2 --compress -9 > "${of}.tar.bz2"; echo "$?")
+		mapfile -t stdout_v < <(tar_f "$f" | bzip2 --compress -9 > "${of}.tar.bz2"; printf '%s\n' "$?")
 		output
 	;;
 	*.tar.xz|*.txz)
-		mapfile -t stdout_v < <(tar_f "$f" | xz --compress -9 > "${of}.tar.xz"; echo "$?")
+		mapfile -t stdout_v < <(tar_f "$f" | xz --compress -9 > "${of}.tar.xz"; printf '%s\n' "$?")
 		output
 	;;
 	*.zip)
-		mapfile -t stdout_v < <(zip -r -9 "$f" "${files[@]}"; echo "$?")
+		mapfile -t stdout_v < <(zip -r -9 "$f" "${files[@]}"; printf '%s\n' "$?")
 		output
 	;;
 	*.7z)
 		check_cmd 7z
 
-		mapfile -t stdout_v < <(7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "${files[@]}"; echo "$?")
+		mapfile -t stdout_v < <(7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "${files[@]}"; printf '%s\n' "$?")
 		output
 	;;
 	*.rar)
 		check_cmd rar
 
-		mapfile -t stdout_v < <(rar a -m5 "$f" "${files[@]}"; echo "$?")
+		mapfile -t stdout_v < <(rar a -m5 "$f" "${files[@]}"; printf '%s\n' "$?")
 		output
 	;;
 	*)

@@ -26,7 +26,7 @@ if=$(readlink -f "$1")
 
 # Creates a function called 'usage', which will print usage and quit.
 usage () {
-	echo -e "\nUsage: $(basename "$0") [CUE] [-byteswap]\n"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [CUE] [-byteswap]"
 	exit
 }
 
@@ -57,7 +57,7 @@ trap ctrl_c INT
 
 ctrl_c () {
 	rm -f "$cue_tmp_f"
-	echo '** Trapped CTRL-C'
+	printf '%s\n' '** Trapped CTRL-C'
 	exit
 }
 
@@ -68,7 +68,7 @@ check_cmd () {
 		command -v "$cmd" &>/dev/null
 
 		if [[ $? -ne 0 ]]; then
-			echo -e "\nYou need to install '${cmd}' through your package manager!\n"
+			printf '\n%s\n\n' "You need to install '${cmd}' through your package manager!"
 			exit
 		fi
 	done
@@ -108,8 +108,8 @@ read_cue () {
 			if [[ -z $bin ]]; then
 				bin="$bin_tmp"
 			elif [[ $n -gt 1 ]]; then
-				echo -e "\nThis CUE file contains multiple FILE commands!"
-				echo -e "You need to merge all the containing files into one BIN file, using a tool like PowerISO.\n"
+				printf '\n%s\n' "This CUE file contains multiple FILE commands!"
+				printf '%s\n\n' "You need to merge all the containing files into one BIN file, using a tool like PowerISO."
 				rm -f "$cue_tmp_f"
 				exit
 			fi
@@ -122,7 +122,7 @@ read_cue () {
 			cue_lines[${i}]="FILE \"${bin_tmp}\" ${f_type}"
 		fi
 
-		echo "${cue_lines[${i}]}" >> "$cue_tmp_f"
+		printf '%s\n' "${cue_lines[${i}]}" >> "$cue_tmp_f"
 	done
 
 # If the filenames in the CUE aren't real files, the print the filenames
@@ -134,13 +134,13 @@ read_cue () {
 	done
 
 	if [[ ${not_found[0]} ]]; then
-		echo -e "\nThe files below were not found:\n"
+		printf '\n%s\n\n' "The files below were not found:"
 
 		for (( i=0; i<${#bin_list[@]}; i++ )); do
-			echo "${bin_list[${i}]}"
+			printf '%s\n' "${bin_list[${i}]}"
 		done
 
-		echo
+		printf '\n' 
 
 		rm -f "$cue_tmp_f"
 		exit
@@ -157,7 +157,7 @@ bin_split () {
 # the output from 'bchunk' in case it quits with a non-zero exit status.
 	print_stdout() {
 		for (( i=0; i<${last}; i++ )); do
-			echo "${bchunk_stdout[${i}]}"
+			printf '%s\n' "${bchunk_stdout[${i}]}"
 		done
 	}
 
@@ -167,7 +167,7 @@ bin_split () {
 		args=(bchunk -w "${args_tmp[@]}")
 	fi
 
-	mapfile -t bchunk_stdout < <(eval "${args[@]}"; echo "$?")
+	mapfile -t bchunk_stdout < <(eval "${args[@]}"; printf '%s\n' "$?")
 
 	if [[ ${#bchunk_stdout[@]} -gt 0 ]]; then
 		last=$(( ${#bchunk_stdout[@]} - 1 ))
@@ -298,14 +298,13 @@ create_cue
 # Create output file, or quit.
 touch "$of_cue" || exit
 
-echo
+printf '\n' 
 
 # Print the created CUE file to the terminal, and to the output file.
 for (( i=0; i<${#of_cue_list[@]}; i++ )); do
-	echo "${of_cue_list[${i}]}" | tee --append "$of_cue"
+	printf '%s\n' "${of_cue_list[${i}]}" | tee --append "$of_cue"
 done
 
-echo
+printf '\n' 
 
 rm -f "$cue_tmp_f"
-

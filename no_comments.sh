@@ -10,5 +10,5 @@ regex='^([[:space:]]*)(#+)'
 mapfile -t lines < <(grep -Ev "$regex" "$if")
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	echo "${lines[${i}]}"
+	printf '%s\n' "${lines[${i}]}"
 done
