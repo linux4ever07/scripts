@@ -18,8 +18,6 @@
 # The output script file replaces the input file.
 
 if=$(readlink -f "$1")
-bn=$(basename "$if")
-dn=$(dirname "$if")
 
 regex1='^([[:space:]]*)#'
 regex2='echo( \-[[:alpha:]]+){0,} *'
