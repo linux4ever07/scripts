@@ -215,7 +215,7 @@ volume=$(reset_volume)
 # If volume is greater than target volume, then...
 if [[ $volume -gt $target_volume ]]; then
 # Calculates the difference between current volume and target volume.
-	diff=$(( $volume - $target_volume ))
+	diff=$(( volume - target_volume ))
 
 # If the difference is greater than 360 (the unit used in this script),
 # then run the get_count function, otherwise just decrease by 0 until
