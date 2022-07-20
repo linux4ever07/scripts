@@ -10,7 +10,7 @@
 # a tracker could be only temporarily offline.
 
 # Any tracker URL using protocols besides HTTP, HTTPS and UDP will be
-# ignored / skipped by this script.
+# ignored / skipped by this script, when checking online status.
 
 # The second argument to the script (-nocheck), is optional. If used,
 # the online status of trackers will not be checked, but the list will
