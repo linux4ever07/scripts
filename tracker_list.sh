@@ -13,54 +13,45 @@ if [[ -z $1 || ! -f $1 ]]; then
 	usage
 fi
 
+if=$(readlink f "$1")
+switch=0
+
 declare -a trackers
 
-txt="$1"
-txt_tmp="/dev/shm/trackers-${RANDOM}.txt"
-line_n=0
-n=0
-switch=0
-elements=0
+mapfile -t lines < <(sort --unique <"$if")
+end=$(( ${#lines[@]} - 1 ))
 
-sort --unique <"$txt" > "$txt_tmp"
-txt_n=$(wc --lines <"$txt_tmp")
-
-cat "$txt_tmp" | while read line; do
+for (( i = 0; i < ${#lines[@]}; i++ )); do
+	line="${lines[${i}]}"
 	switch=0
-	let line_n++
 
-	if [[ $line ]]; then
-		elements=${#trackers[@]}
-
-		for (( i = 0; i < $elements; i++ )); do
+	if [[ ! -z $line ]]; then
+		for (( j = 0; j < ${#trackers[@]}; j++ )); do
 			line_tmp=$(sed -e 's_/$__' -e 's_/announce__' <<<"$line")
-			grep --quiet "$line_tmp" <<<"${trackers[${i}]}"
+			grep --quiet "$line_tmp" <<<"${trackers[${j}]}"
 
 			if [[ $? -eq 0 ]]; then
 				switch=1
 
-				array_l=$(wc --chars <<<"${trackers[${i}]}")
-				line_l=$(wc --chars <<<"$line")
+				array_l="${#trackers[${j}]}"
+				line_l="${#line}"
 
 				if [[ $line_l > $array_l && $line =~ /announce$ ]]; then
-					trackers[${i}]="$line"
+					trackers[${j}]="$line"
 				fi
 			fi
 		done
 
 		if [[ $switch -eq 0 ]]; then
-			trackers[${n}]="$line"
-			let n++
+			trackers[${j}]="$line"
 		fi
 	fi
 
-	if [[ $line_n -eq $txt_n ]]; then
-		elements=${#trackers[@]}
-
+	if [[ $i -eq $end ]]; then
 		declare -A md5h
 
-		for (( i = 0; i < $elements; i++ )); do
-			md5=$(tr -d '[:space:]' <<<"${trackers[${i}]}" | md5sum -)
+		for (( j = 0; j < ${#trackers[@]}; j++ )); do
+			md5=$(tr -d '[:space:]' <<<"${trackers[${j}]}" | md5sum -)
 
 			if [[ ${md5h[${md5}]} -eq 1 ]]; then
 				continue
@@ -68,21 +59,19 @@ cat "$txt_tmp" | while read line; do
 				md5h[${md5}]=1
 			fi
 
-			curl --retry 8 --silent --output /dev/null "${trackers[${i}]}"
+			curl --retry 8 --silent --output /dev/null "${trackers[${j}]}"
 
 			if [[ $? -ne 0 ]]; then
-				address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"${trackers[${i}]}")
+				address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"${trackers[${j}]}")
 				ping -c 10 "$address" &> /dev/null
 
 				if [[ $? -eq 0 ]]; then
-					printf '%s\n' "${trackers[${i}]}"
+					printf '%s\n' "${trackers[${j}]}"
 				fi
 
 			elif [[ $? -eq 0 ]]; then
-				printf '%s\n' "${trackers[${i}]}"
+				printf '%s\n' "${trackers[${j}]}"
 			fi
 		done
 	fi
 done
-
-rm "$txt_tmp"
