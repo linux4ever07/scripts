@@ -9,6 +9,9 @@
 # script a couple of times, waiting a few hours or days inbetween, since
 # a tracker could be only temporarily offline.
 
+# Any tracker URL using protocols besides HTTP, HTTPS and UDP will be
+# ignored / skipped by this script.
+
 # The second argument to the script (-nocheck), is optional. If used,
 # the online status of trackers will not be checked, but the list will
 # only get sorted and rid of duplicates.
@@ -38,6 +41,10 @@ fi
 if=$(readlink -f "$1")
 switch=0
 
+regex1='^([[:alpha:]]+)://'
+regex2=':([0-9]+)'
+regex3='/.*$'
+
 declare -a trackers
 
 mapfile -t lines < <(sort --unique <"$if")
@@ -48,7 +55,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	if [[ ! -z $line ]]; then
 		for (( j = 0; j < ${#trackers[@]}; j++ )); do
-			line_tmp=$(sed -e 's_/$__' -e 's_/announce__' <<<"$line")
+			line_tmp=$(sed -E -e 's_/$__' -e 's_/announce__' <<<"$line")
 			grep --quiet "$line_tmp" <<<"${trackers[${j}]}"
 
 			if [[ $? -eq 0 ]]; then
@@ -87,10 +94,23 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 		continue
 	fi
 
-	curl --retry 8 --silent --output /dev/null "$tracker"
+	address=$(sed -E -e "s_${regex1}__" -e "s_${regex2}__" -e "s_${regex3}__" <<<"$tracker")
+	protocol=$(grep -Eo "$regex1" <<<"$tracker" | sed -E "s_${regex1}_\1_" | tr '[:upper:]' '[:lower:]')
+	port=$(grep -Eo "$regex2" <<<"$tracker" | sed -E "s_${regex2}_\1_")
+
+	case $protocol in
+		http*)
+			curl --retry 10 --retry-delay 10 --connect-timeout 10 --silent --output /dev/null "$tracker"
+		;;
+		udp)
+			nc --udp -z --wait 10 "$address" "$port" &> /dev/null
+		;;
+		*)
+			continue
+		;;
+	esac
 
 	if [[ $? -ne 0 ]]; then
-		address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"$tracker")
 		ping -c 10 "$address" &> /dev/null
 
 		if [[ $? -eq 0 ]]; then
