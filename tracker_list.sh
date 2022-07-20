@@ -88,6 +88,12 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 		md5h[${md5}]=1
 	fi
 
+	if [[ $nocheck -eq 1 ]]; then
+		printf '%s\n\n' "$tracker"
+
+		continue
+	fi
+
 	address=$(sed -E -e "s_${regex1}__" -e "s_${regex2}__" -e "s_${regex3}__" <<<"$tracker")
 	protocol=$(grep -Eo "$regex1" <<<"$tracker" | sed -E "s_${regex1}_\1_" | tr '[:upper:]' '[:lower:]')
 	port=$(grep -Eo "$regex2" <<<"$tracker" | sed -E "s_${regex2}_\1_")
@@ -103,12 +109,6 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 			continue
 		;;
 	esac
-
-	if [[ $nocheck -eq 1 ]]; then
-		printf '%s\n\n' "$tracker"
-
-		continue
-	fi
 
 	if [[ $? -ne 0 ]]; then
 		ping -c 10 -W 10 "$address" &> /dev/null
