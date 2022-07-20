@@ -42,7 +42,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		done
 
 		if [[ $switch -eq 0 ]]; then
-			trackers[${j}]="$line"
+			trackers+=("$line")
 		fi
 	fi
 
