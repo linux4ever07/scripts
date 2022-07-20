@@ -103,7 +103,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 			curl --retry 10 --retry-delay 10 --connect-timeout 10 --silent --output /dev/null "$tracker"
 		;;
 		udp)
-			nc --udp -z --wait 10 "$address" "$port" &> /dev/null
+			timeout 10 nc --udp -z "$address" "$port" &> /dev/null
 		;;
 		*)
 			continue
