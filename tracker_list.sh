@@ -1,11 +1,10 @@
 #!/bin/bash
 # This script parses a BitTorrent tracker list text file, sorts, removes
-# duplicates, checks online status of each URL, and echoes the list to
+# duplicates, checks online status of each URL, and prints the list to
 # STDOUT in the correct format.
 
 usage () {
-	bname=$(basename "$0")
-	printf '%s\n\n' "Usage: ${bname} [tracker txt]"
+	printf '%s\n\n' "Usage: $(basename "$0") [tracker txt]"
 	exit
 }
 
