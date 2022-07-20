@@ -73,6 +73,13 @@ declare -A md5h
 
 for (( i = 0; i < ${#trackers[@]}; i++ )); do
 	tracker=$(tr -d '[:space:]' <<<"${trackers[${i}]}")
+	md5=$(md5sum <<<"$tracker")
+
+	if [[ ${md5h[${md5}]} -eq 1 ]]; then
+		continue
+	else
+		md5h[${md5}]=1
+	fi
 
 	if [[ $nocheck -eq 1 ]]; then
 		printf '%s\n\n' "$tracker"
