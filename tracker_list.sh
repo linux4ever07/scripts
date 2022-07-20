@@ -44,6 +44,8 @@ switch=0
 regex1='^([[:alpha:]]+)://'
 regex2=':([0-9]+)'
 regex3='/.*$'
+regex4='/announce(\.[[:alpha:]]{1,4}){0,1}$'
+regex5='/$'
 
 declare -a trackers
 
@@ -55,7 +57,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	if [[ ! -z $line ]]; then
 		for (( j = 0; j < ${#trackers[@]}; j++ )); do
-			line_tmp=$(sed -E -e 's_/$__' -e 's_/announce__' <<<"$line")
+			line_tmp=$(sed -E -e 's_${regex4}__' -e 's_${regex5}__' <<<"$line")
 			grep --quiet "$line_tmp" <<<"${trackers[${j}]}"
 
 			if [[ $? -eq 0 ]]; then
