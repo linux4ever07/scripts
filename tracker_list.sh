@@ -68,7 +68,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 				if [[ $? -eq 0 ]]; then
 					printf '%s\n\n' "$tracker"
 				fi
-
 			elif [[ $? -eq 0 ]]; then
 				printf '%s\n\n' "$tracker"
 			fi
