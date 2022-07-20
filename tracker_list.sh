@@ -66,11 +66,11 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 				ping -c 10 "$address" &> /dev/null
 
 				if [[ $? -eq 0 ]]; then
-					printf '%s\n' "${trackers[${j}]}"
+					printf '%s\n\n' "${trackers[${j}]}"
 				fi
 
 			elif [[ $? -eq 0 ]]; then
-				printf '%s\n' "${trackers[${j}]}"
+				printf '%s\n\n' "${trackers[${j}]}"
 			fi
 		done
 	fi
