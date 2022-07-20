@@ -18,7 +18,6 @@ switch=0
 declare -a trackers
 
 mapfile -t lines < <(sort --unique <"$if")
-end=$(( ${#lines[@]} - 1 ))
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
@@ -45,32 +44,30 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 			trackers+=("$line")
 		fi
 	fi
+done
 
-	if [[ $i -eq $end ]]; then
-		declare -A md5h
+declare -A md5h
 
-		for (( j = 0; j < ${#trackers[@]}; j++ )); do
-			tracker="${trackers[${j}]}"
-			md5=$(tr -d '[:space:]' <<<"$tracker" | md5sum -)
+for (( i = 0; i < ${#trackers[@]}; i++ )); do
+	tracker="${trackers[${i}]}"
+	md5=$(tr -d '[:space:]' <<<"$tracker" | md5sum -)
 
-			if [[ ${md5h[${md5}]} -eq 1 ]]; then
-				continue
-			else
-				md5h[${md5}]=1
-			fi
+	if [[ ${md5h[${md5}]} -eq 1 ]]; then
+		continue
+	else
+		md5h[${md5}]=1
+	fi
 
-			curl --retry 8 --silent --output /dev/null "$tracker"
+	curl --retry 8 --silent --output /dev/null "$tracker"
 
-			if [[ $? -ne 0 ]]; then
-				address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"$tracker")
-				ping -c 10 "$address" &> /dev/null
+	if [[ $? -ne 0 ]]; then
+		address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"$tracker")
+		ping -c 10 "$address" &> /dev/null
 
-				if [[ $? -eq 0 ]]; then
-					printf '%s\n\n' "$tracker"
-				fi
-			elif [[ $? -eq 0 ]]; then
-				printf '%s\n\n' "$tracker"
-			fi
-		done
+		if [[ $? -eq 0 ]]; then
+			printf '%s\n\n' "$tracker"
+		fi
+	elif [[ $? -eq 0 ]]; then
+		printf '%s\n\n' "$tracker"
 	fi
 done
