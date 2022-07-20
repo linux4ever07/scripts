@@ -3,15 +3,15 @@
 # duplicates, checks online status of each URL, and prints the list to
 # STDOUT in the correct format.
 
-# The second argument to the script (-nocheck), is optional. If used,
-# the online status of trackers will not be checked, but the list will
-# only get sorted and rid of duplicates.
-
 # Only the trackers that are still online will be printed. This is
 # useful to clean up old lists of public trackers that can be found
 # online, as an example. Though, it might be a good idea to run the
 # script a couple of times, waiting a few hours or days inbetween, since
 # a tracker could be only temporarily offline.
+
+# The second argument to the script (-nocheck), is optional. If used,
+# the online status of trackers will not be checked, but the list will
+# only get sorted and rid of duplicates.
 
 # If you want to save the list in a text file, you can just do a
 # redirection like so:
