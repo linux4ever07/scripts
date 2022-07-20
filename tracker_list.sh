@@ -50,7 +50,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		declare -A md5h
 
 		for (( j = 0; j < ${#trackers[@]}; j++ )); do
-			md5=$(tr -d '[:space:]' <<<"${trackers[${j}]}" | md5sum -)
+			tracker="${trackers[${j}]}"
+			md5=$(tr -d '[:space:]' <<<"$tracker" | md5sum -)
 
 			if [[ ${md5h[${md5}]} -eq 1 ]]; then
 				continue
@@ -58,18 +59,18 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 				md5h[${md5}]=1
 			fi
 
-			curl --retry 8 --silent --output /dev/null "${trackers[${j}]}"
+			curl --retry 8 --silent --output /dev/null "$tracker"
 
 			if [[ $? -ne 0 ]]; then
-				address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"${trackers[${j}]}")
+				address=$(sed -e 's_^.*//__' -e 's_:[0-9]*__' -e 's_/.*$__' <<<"$tracker")
 				ping -c 10 "$address" &> /dev/null
 
 				if [[ $? -eq 0 ]]; then
-					printf '%s\n\n' "${trackers[${j}]}"
+					printf '%s\n\n' "$tracker"
 				fi
 
 			elif [[ $? -eq 0 ]]; then
-				printf '%s\n\n' "${trackers[${j}]}"
+				printf '%s\n\n' "$tracker"
 			fi
 		done
 	fi
