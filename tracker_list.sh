@@ -13,7 +13,7 @@ if [[ -z $1 || ! -f $1 ]]; then
 	usage
 fi
 
-if=$(readlink f "$1")
+if=$(readlink -f "$1")
 switch=0
 
 declare -a trackers
