@@ -66,7 +66,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 				array_l="${#trackers[${j}]}"
 				line_l="${#line}"
 
-				if [[ $line_l > $array_l && $line =~ /announce$ ]]; then
+				if [[ $line_l > $array_l && $line =~ $regex4 ]]; then
 					trackers[${j}]="$line"
 				fi
 			fi
