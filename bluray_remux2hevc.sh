@@ -224,7 +224,7 @@ pkg[${cmd[4]}]='flac'
 
 # Checks if HandBrake, ffmpeg, mkvtoolnix and curl are available on
 # this system. If not, display a message, and quit.
-for cmd_tmp in ${cmd[@]}; do
+for cmd_tmp in "${cmd[@]}"; do
 	check=$(basename $(command -v ${cmd_tmp}) 2>&-)
 
 	if [[ -z $check ]]; then
@@ -274,12 +274,14 @@ break_name () {
 
 	declare -a name
 
-	temp=$(grep -Eo "^.*[0-9]{4}([[:punct:]]|[[:space:]]){1}" <<<"$bname" | sed 's/^[[:space:]]*\[.*\][[:space:]]*//')
+	regex='^(.*)([[:punct:]]|[[:space:]]){0,}([0-9]{4})([[:punct:]]|[[:space:]]){0,}'
 
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
 # trailing whitespace from the string.
-	if [[ -z $temp ]]; then
+	if [[ $bname =~ $regex1 ]]; then
+		temp=$(sed -E "s/${regex}/\1 \3/" <<<"$bname")
+	else
 		temp=$(sed 's/ *$//' <<<"${bname:0:64}")
 	fi
 
@@ -331,12 +333,12 @@ break_name () {
 
 		name[${i}]=$(tr -d '[:space:]' <<<"${!array_ref}")
 
-		if [[ $i -eq elements ]]; then
-			year=$(grep -Eo "([[:punct:]]|[[:space:]])*[0-9]{4}([[:punct:]]|[[:space:]])*$" <<<"${!array_ref}" | tr -d '[:punct:]')
+		if [[ $i -eq $elements ]]; then
+			year="${!array_ref}"
 
 # If the $year variable is set, use it, otherwise use '0000' as the
 # year, adding it as the last element to the $name array.
-			if [[ $year ]]; then
+			if [[ ! -z $year ]]; then
 				name[${i}]="(${year})"
 			else
 				name+=('(0000)')
@@ -351,8 +353,13 @@ break_name () {
 # This creates a function called 'imdb', which will look up the movie
 # name on IMDb, based on the file name of the input file.
 imdb () {
+	t_y_regex=' \(([0-9]{4})\)$'
+	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
+	full_regex'<meta property='og:title' content=\"(.* \(.*[0-9]{4}\)) - IMDb\"'
+	title_year_regex='(.*) \(.*([0-9]{4})\)$'
+
 # agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
-	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
 
 	curl_w_args () {
 		curl --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "${1}"
@@ -360,10 +367,10 @@ imdb () {
 
 	if [[ $# -eq 0 ]]; then
 		printf '%s\n' 'Usage: imdb "Movie Title (Year)"'
-		exit 1
+		return 1
 	else
-		y=$(grep -Eo "\([0-9]{4}\)$" <<<"${@}" | tr -d '[:punct:]')
-		t=$(uriencode "$(sed 's/ ([0-9]\{4\})$//' <<<"${@}")")
+		t=$(uriencode "$(sed -E "s/${t_y_regex}//" <<<"${@}")")
+		y=$(sed -E "s/${t_y_regex}/\1/" <<<"${@}")
 	fi
 
 	configure () {
@@ -385,28 +392,13 @@ imdb () {
 
 		if [[ $y == '0000' ]]; then
 			url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&view=simple"
-# url_tmp2="https://www.google.com/search?q=${t}+site:imdb.com"
 		else
 			url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
-# url_tmp2="https://www.google.com/search?q=${t}+${y}+site:imdb.com"
 		fi
 
-		id=$(curl_w_args "${url_tmp}" | grep -Eo "<a href=\"/title/tt[0-9]{4,}/" | grep -Eo "tt[0-9]{4,}" | head -n 1)
-# id2=$(curl_w_args "${url_tmp2}" | grep -Eo
-# "https://www.imdb.com/title/tt[0-9]{4,}" | grep -Eo "tt[0-9]{4,}" |
-# head -n 1) Disabled $id2 because Google is blocking cURL now.
+		id=$(curl_w_args "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s/${id_regex}/\1/" | head -n 1)
 
-# In case IMDb and Google give different IMDb IDs, use the one from the
-# Google search results. If $id is empty, but $id2 isn't, use $id2.
-# Else, use $id.
-
-		if [[ $id && $id2 && $id != $id2 ]]; then
-			url="https://www.imdb.com/title/${id2}/"
-		elif [[ -z $id && $id2 ]]; then
-			url="https://www.imdb.com/title/${id2}/"
-		else
-			url="https://www.imdb.com/title/${id}/"
-		fi
+		url="https://www.imdb.com/title/${id}/"
 
 # Exports the content of $url to $tmpfile.
 		curl -o "${tmpfile}" --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$url" 2>&-
@@ -417,10 +409,10 @@ imdb () {
 			return
 		fi
 
-		full=$(grep -Eo "<meta property='og:title' content=\".* \(.*[0-9]{4}\) - IMDb\"" "${tmpfile}" | cut -d'"' -f2 | sed 's/ - IMDb$//')
+		full=$(grep -Eo "$full_regex" "${tmpfile}" | sed -E "s/${full_regex}/\1/")
 
-		title=$(sed -E 's/ \(.*[0-9]{4}\)$//' <<<"$full")
-		year=$(grep -Eo "[0-9]{4}\)$" <<<"$full" | tr -d '[:punct:]')
+		title=$(sed -E "s/${title_year_regex}/\1/" <<<"$full")
+		year=$(sed -E "s/${title_year_regex}/\2/" <<<"$full")
 
 # Saving these because the regex:es might be useful in the future.
 # temp=$(grep "og:description" "${tmpfile}" | sed -e 's/content="/@/g'
@@ -462,7 +454,11 @@ dts_extract_remux () {
 	regex_51=', 5.1\(.*\),'
 	bps_regex='^ +BPS.*: [0-9]+'
 	bps_regex2='[0-9]{3}'
+	bps_regex3='.* ([0-9]+) kb/s$'
+	bps_regex4='^.*: ([0-9]+)'
+	bps_regex5='.*(...)$'
 	kbps_regex='[0-9]+ kb/s$'
+	map_regex='.*Stream #(0:[0-9]+).*'
 
 	high_kbps='1536'
 	low_kbps='768'
@@ -550,7 +546,7 @@ dts_extract_remux () {
 # If the $audio_track_tmp line contains a bitrate, use that and
 # compare it against the $bps_limit variable.
 		if [[ $audio_track_tmp =~ $kbps_regex ]]; then
-			bps_if=$(sed -E 's|.* ([0-9]+) kb/s$|\1|' <<<"${audio_track_tmp}")
+			bps_if=$(sed -E "s|${bps_regex3}|\1|" <<<"${audio_track_tmp}")
 			bps_if=$(( bps_if * 1000 ))
 
 			compare_bitrate
@@ -578,12 +574,12 @@ dts_extract_remux () {
 				if [[ ${if_info_tmp[${i}]} =~ $bps_regex ]]; then
 # Deletes everything on the line, except the number of bytes per second
 # (BPS).
-					bps_if=$(sed -E 's/^.*: ([0-9]+)/\1/' <<<"${if_info_tmp[${i}]}")
+					bps_if=$(sed -E "s/${bps_regex4}/\1/" <<<"${if_info_tmp[${i}]}")
 
 # If input bitrate consists of at least 3 digits...
 					if [[ $bps_if =~ $bps_regex2 ]]; then
 # Gets the 3 last digits of the input bitrate.
-						bps_last=$(sed -E -e 's/.*(...)$/\1/' -e 's/^0*//' <<<"$bps_if")
+						bps_last=$(sed -E -e "s/${bps_regex5}/\1/" -e 's/^0*//' <<<"$bps_if")
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
@@ -673,7 +669,7 @@ dts_extract_remux () {
 	fi
 
 # Gets the ffmpeg map code of the audio track.
-	map=$(sed -E 's/.*Stream #(0:[0-9]+).*/\1/' <<<"${!audio_track_ref}")
+	map=$(sed -E "s/${map_regex}/\1/" <<<"${!audio_track_ref}")
 
 # Creates first part of ffmpeg command.
 	args1=(${cmd[1]} -i \""${if}"\" -metadata title=\"\" -map 0:v -map ${map} -map 0:s?)
@@ -940,6 +936,9 @@ check_res () {
 is_handbrake () {
 	args=(ps -C ${cmd[0]} -o pid,args \| tail -n +2)
 
+	pid_regex='^[[:space:]]*([[:digit:]]+).*'
+	comm_regex='^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)'
+
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")
 
@@ -948,8 +947,8 @@ is_handbrake () {
 	if [[ ${hb_pids[0]} ]]; then
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-			pid=$(sed -E 's/^[[:space:]]*([[:digit:]]+).*/\1/' <<<"${hb_pids[${i}]}")
-			comm=$(sed -E 's/^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)/\1/' <<<"${hb_pids[${i}]}")
+			pid=$(sed -E "s/${pid_regex}/\1/" <<<"${hb_pids[${i}]}")
+			comm=$(sed -E "s/${comm_regex}/\1/" <<<"${hb_pids[${i}]}")
 
 			printf '%s\n' "PID: ${pid}"
 			printf '%s\n\n' "COMMAND: ${comm}"
@@ -981,8 +980,8 @@ if_m2ts () {
 		return
 	fi
 
-	count=$(grep -o '/' <<<"$if" | grep -c .)
-	bd_title_field=$(( count - 2 ))
+	mapfile -d'/' -t count <<<"$if"
+	bd_title_field=$(( ${#count[@]} - 3 ))
 	bd_title=$(cut -d'/' -f${bd_title_field}- <<<"$if" | cut -d'/' -f1)
 
 	printf "$bd_title"
@@ -1014,7 +1013,7 @@ if [[ $imdb_tmp ]]; then
 else
 	bname_tmp_fs=$(fsencode "$bname_tmp")
 	title=$(sed -E 's/ [0-9]{4}$//' <<<"$bname_tmp_fs" | tr ' ' '.')
-	year=$(grep -Eo "[0-9]{4}$" <<<"$bname_tmp_fs" | tr -d '[:punct:]')
+	year=$(grep -Eo '[0-9]{4}$' <<<"$bname_tmp_fs" | tr -d '[:punct:]')
 fi
 
 # Creates a directory structure in the current user's home directory:
