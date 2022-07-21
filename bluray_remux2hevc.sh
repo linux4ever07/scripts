@@ -279,7 +279,7 @@ break_name () {
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
 # trailing whitespace from the string.
-	if [[ $bname =~ $regex1 ]]; then
+	if [[ $bname =~ $regex ]]; then
 		temp=$(sed -E "s/${regex}/\1 \3/" <<<"$bname")
 	else
 		temp=$(sed 's/ *$//' <<<"${bname:0:64}")
