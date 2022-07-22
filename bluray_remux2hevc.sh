@@ -985,7 +985,7 @@ if_m2ts () {
 	bd_title_field=$(( ${#count[@]} - 3 ))
 	bd_title=$(cut -d'/' -f${bd_title_field}- <<<"$if" | cut -d'/' -f1)
 
-	printf "$bd_title"
+	printf '%s' "$bd_title"
 }
 
 # If the input filename is an M2TS, get the movie title and year from
