@@ -274,13 +274,16 @@ break_name () {
 
 	declare -a name
 
+	types=('dots' 'hyphens' 'underscores' 'spaces')
+
 	regex='^(.*)([[:punct:]]|[[:space:]]){0,}([0-9]{4})([[:punct:]]|[[:space:]]){0,}'
 
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
 # trailing whitespace from the string.
 	if [[ $bname =~ $regex ]]; then
-		temp=$(sed -E "s/${regex}/\1 \3/" <<<"$bname")
+		temp=$(sed -E "s/${regex}/\1/" <<<"$bname")
+		year=$(sed -E "s/${regex}/\(\3\)/" <<<"$bname")
 	else
 		temp=$(sed 's/ *$//' <<<"${bname:0:64}")
 	fi
@@ -312,7 +315,7 @@ break_name () {
 
 # This for loop is to figure out if $bname is separated by dots,
 # hyphens, underscores or spaces.
-	for type in dots hyphens underscores spaces; do
+	for type in "${types[@]}"; do
 		temp_number="bname_elements[${type}]"
 
 		if [[ ${!temp_number} -gt $elements ]]; then
@@ -321,7 +324,7 @@ break_name () {
 		fi
 	done
 
-	elements=$(( elements - 2 ))
+	elements=$(( elements - 1 ))
 
 # This for loop is to go through the word list. The last element is the
 # year, so do a regex on that to filter out other characters besides
@@ -332,19 +335,15 @@ break_name () {
 		array_ref="bname_${temp_type}[${i}]"
 
 		name[${i}]=$(tr -d '[:space:]' <<<"${!array_ref}")
-
-		if [[ $i -eq $elements ]]; then
-			year="${!array_ref}"
-
-# If the $year variable is set, use it.
-			if [[ ! -z $year ]]; then
-				name[${i}]="(${year})"
-			fi
-		fi
 	done
 
+	if [[ ! -z $year ]]; then
+		name+=("$year")
+	fi
+
 # Echoes the complete parsed name.
-	printf '%s\n' "${name[@]}"
+	name_string=$(sed -E 's/ +/ /g' <<<"${name[@]}")
+	printf '%s\n' "$name_string"
 }
 
 # This creates a function called 'imdb', which will look up the movie
