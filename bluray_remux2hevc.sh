@@ -430,6 +430,8 @@ imdb () {
 
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
+
+	unset -v title year
 }
 
 # Creates a function called 'dts_extract_remux', which will find a
