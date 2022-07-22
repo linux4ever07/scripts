@@ -410,8 +410,6 @@ imdb () {
 	json_types=(['title']=1 ['year']=1 ['plot']=1)
 
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
-		json_switch=0
-
 		for json_type in "${!json_types[@]}"; do
 			json_regex1_ref="${json_type}_regex1"
 			json_regex2_ref="${json_type}_regex2"
@@ -420,14 +418,9 @@ imdb () {
 				n=$(( z + 1 ))
 				eval ${json_type}=\"$(sed -E "s/${!json_regex2_ref}/\1/" <<<"${tmp_array[${n}]}")\"
 				unset -v json_types[${json_type}]
-				json_switch=1
 				break
 			fi
 		done
-
-		if [[ $json_switch -eq 1 ]]; then
-			break
-		fi
 	done
 
 	printf '%s\n' "$title"
