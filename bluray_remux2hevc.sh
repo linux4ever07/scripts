@@ -348,9 +348,10 @@ imdb () {
 	term="${@}"
 	t_y_regex='^(.*) \(([0-9]{4})\)$'
 	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
-	full_regex='<meta property=\"og:title\" content=\".*- IMDb\"\/>'
-	full_regex2='(<)|(\/>)'
-	title_year_regex='^meta property=\"og:title\" content=\"(.*) \(.*([0-9]{4})\) - IMDb\"( \(meta property=\"){0,}.*$'
+	title_regex='\,\"originalTitleText\":'
+	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
+	year_regex='\,\"releaseYear\":'
+	year_regex2='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
 
 # agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
@@ -374,16 +375,12 @@ imdb () {
 
 	tmpfile="/dev/shm/imdb-mf_${RANDOM}.tmp"
 
-
-	if [[ -f ${tmpfile} ]]; then
-		rm -f "${tmpfile}"
-	fi
-
 # Sets the type of IMDb search results to include.
 	type='feature,tv_movie,tv_special,documentary,video'
 
 # If the year is set to '0000', that means it's unknown, hence we will
 # need to use slightly different URLs, when searching for the movie.
+# https://www.imdb.com/interfaces/
 	if [[ $y == '0000' ]]; then
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&view=simple"
 	else
@@ -401,18 +398,35 @@ imdb () {
 		return 1
 	fi
 
-	mapfile -d'|' -t full_array < <(grep -Eo "$full_regex" "${tmpfile}" | sed -E -e "s/${full_regex2}/\|/g" -e "s/\|\|/\|/g")
+# Translate {} characters to newlines so we can parse the JSON data.
+# I came to the conclusion that this is the most simple, reliable and
+# future-proof way to get the movie information. It's possible to add
+# more regex:es to the for loop below, to get additional information.
+# Excluding lines that are longer than 500 characters, to make it
+# slightly faster.
+	mapfile -t tmp_array < <(tr '{}' '\n' <"$tmpfile" | grep -Ev '.{500}')
 
-	title=$(sed -E "s/${title_year_regex}/\1/" <<<"${full_array[1]}")
-	year=$(sed -E "s/${title_year_regex}/\2/" <<<"${full_array[1]}")
+	n=0
 
-# Saving these because the regex:es might be useful in the future.
-# temp=$(grep "og:description" "${tmpfile}" | sed -e 's/content="/@/g'
-# -e 's/" \/>/@/g' -e 's/\&quot;/\"/g' | cut -d'@' -f2) director=$(echo
-# "${temp}" | cut -d'.' -f1 | sed 's/^Directed by //') cast=$(echo
-# "${temp}" | cut -d'.' -f2 | sed 's/^ *//') plot=$(echo "${temp}" | cut
-# -d'.' -f3 | sed 's/^ *//') rating=$(grep -i "ratingValue" "${tmpfile}"
-# | head -n 1 | cut -d'"' -f4)
+	for (( i = 0; i < ${#tmp_array[@]}; i++ )); do
+		if [[ ! -z $title && ! -z $year ]]; then
+			break
+		fi
+		if [[ "${tmp_array[${i}]}" =~ $title_regex ]]; then
+			n=$(( i + 1 ))
+
+			title=$(sed -E "s/${title_regex2}/\1/" <<<"${tmp_array[${n}]}")
+		fi
+		if [[ "${tmp_array[${i}]}" =~ $year_regex ]]; then
+			n=$(( i + 1 ))
+
+			year=$(sed -E "s/${year_regex2}/\1/" <<<"${tmp_array[${n}]}")
+		fi
+	done
+
+	if [[ -f ${tmpfile} ]]; then
+		rm -f "${tmpfile}"
+	fi
 
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
