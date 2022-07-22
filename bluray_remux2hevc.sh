@@ -348,10 +348,12 @@ imdb () {
 	term="${@}"
 	t_y_regex='^(.*) \(([0-9]{4})\)$'
 	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
-	title_regex='\,\"originalTitleText\":'
+	title_regex1='\,\"originalTitleText\":'
 	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
-	year_regex='\,\"releaseYear\":'
+	year_regex1='\,\"releaseYear\":'
 	year_regex2='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
+	plot_regex1='\"plotText\":'
+	plot_regex2='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
 
 # agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
@@ -403,20 +405,22 @@ imdb () {
 
 	n=0
 
+	declare -A json_types
+
+	json_types=(['title']=1 ['year']=1 ['plot']=1)
+
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
-		if [[ ! -z $title && ! -z $year ]]; then
-			break
-		fi
-		if [[ "${tmp_array[${z}]}" =~ $title_regex ]]; then
-			n=$(( z + 1 ))
+		for json_type in "${!json_types[@]}"; do
+			json_regex1_ref="${json_type}_regex1"
+			json_regex2_ref="${json_type}_regex2"
 
-			title=$(sed -E "s/${title_regex2}/\1/" <<<"${tmp_array[${n}]}")
-		fi
-		if [[ "${tmp_array[${z}]}" =~ $year_regex ]]; then
-			n=$(( z + 1 ))
-
-			year=$(sed -E "s/${year_regex2}/\1/" <<<"${tmp_array[${n}]}")
-		fi
+			if [[ "${tmp_array[${z}]}" =~ ${!json_regex1_ref} ]]; then
+				n=$(( z + 1 ))
+				eval ${json_type}=\"$(sed -E "s/${!json_regex2_ref}/\1/" <<<"${tmp_array[${n}]}")\"
+				unset -v json_types[${json_type}]
+				break
+			fi
+		done
 	done
 
 	printf '%s\n' "$title"
