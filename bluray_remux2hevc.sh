@@ -336,12 +336,9 @@ break_name () {
 		if [[ $i -eq $elements ]]; then
 			year="${!array_ref}"
 
-# If the $year variable is set, use it, otherwise use '0000' as the
-# year, adding it as the last element to the $name array.
+# If the $year variable is set, use it.
 			if [[ ! -z $year ]]; then
 				name[${i}]="(${year})"
-			else
-				name+=('(0000)')
 			fi
 		fi
 	done
@@ -353,10 +350,12 @@ break_name () {
 # This creates a function called 'imdb', which will look up the movie
 # name on IMDb, based on the file name of the input file.
 imdb () {
+	term="${@}"
 	t_y_regex=' \(([0-9]{4})\)$'
 	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
-	full_regex'<meta property='og:title' content=\"(.* \(.*[0-9]{4}\)) - IMDb\"'
-	title_year_regex='(.*) \(.*([0-9]{4})\)$'
+	full_regex='<meta property=\"og:title\" content=\".*- IMDb\"\/>'
+	full_regex2='(<)|(\/>)'
+	title_year_regex='^.* content=\"(.*) \(([0-9]{4})\) - IMDb\"$'
 
 # agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
@@ -369,50 +368,48 @@ imdb () {
 		printf '%s\n' 'Usage: imdb "Movie Title (Year)"'
 		return 1
 	else
-		t=$(uriencode "$(sed -E "s/${t_y_regex}//" <<<"${@}")")
-		y=$(sed -E "s/${t_y_regex}/\1/" <<<"${@}")
+		t=$(uriencode "$(sed -E "s/${t_y_regex}//" <<<"${term}")")
+
+		if [[ $term =~ $t_y_regex ]]; then
+			y=$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")
+		else
+			y='0000'
+		fi
 	fi
 
-	configure () {
-		tmpfile="/dev/shm/imdb-mf_${RANDOM}.tmp"
-	}
+	tmpfile="/dev/shm/imdb-mf_${RANDOM}.tmp"
 
-	cleanup () {
-		if [[ -f ${tmpfile} ]]; then
-			rm -f "${tmpfile}"
-		fi
-	}
 
-	get_imdb () {
+	if [[ -f ${tmpfile} ]]; then
+		rm -f "${tmpfile}"
+	fi
+
 # Sets the type of IMDb search results to include.
-		type='feature,tv_movie,tv_special,documentary,video'
+	type='feature,tv_movie,tv_special,documentary,video'
 
 # If the year is set to '0000', that means it's unknown, hence we will
 # need to use slightly different URLs, when searching for the movie.
+	if [[ $y == '0000' ]]; then
+		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&view=simple"
+	else
+		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
+	fi
 
-		if [[ $y == '0000' ]]; then
-			url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&view=simple"
-		else
-			url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
-		fi
+	id=$(curl_w_args "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s|${id_regex}|\1|" | head -n 1)
 
-		id=$(curl_w_args "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s/${id_regex}/\1/" | head -n 1)
-
-		url="https://www.imdb.com/title/${id}/"
+	url="https://www.imdb.com/title/${id}/"
 
 # Exports the content of $url to $tmpfile.
-		curl -o "${tmpfile}" --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$url" 2>&-
-	}
+	curl -o "${tmpfile}" --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$url" 2>&-
 
-	parse_imdb () {
-		if [[ ! -f $tmpfile ]]; then
-			return
-		fi
+	if [[ ! -f $tmpfile ]]; then
+		return 1
+	fi
 
-		full=$(grep -Eo "$full_regex" "${tmpfile}" | sed -E "s/${full_regex}/\1/")
+	mapfile -d'|' -t full_array < <(grep -Eo "$full_regex" "${tmpfile}" | sed -E -e "s/${full_regex2}/\|/g" -e "s/\|\|/\|/g")
 
-		title=$(sed -E "s/${title_year_regex}/\1/" <<<"$full")
-		year=$(sed -E "s/${title_year_regex}/\2/" <<<"$full")
+	title=$(sed -E "s/${title_year_regex}/\1/" <<<"${full_array[1]}")
+	year=$(sed -E "s/${title_year_regex}/\2/" <<<"${full_array[1]}")
 
 # Saving these because the regex:es might be useful in the future.
 # temp=$(grep "og:description" "${tmpfile}" | sed -e 's/content="/@/g'
@@ -421,21 +418,9 @@ imdb () {
 # "${temp}" | cut -d'.' -f2 | sed 's/^ *//') plot=$(echo "${temp}" | cut
 # -d'.' -f3 | sed 's/^ *//') rating=$(grep -i "ratingValue" "${tmpfile}"
 # | head -n 1 | cut -d'"' -f4)
-	}
 
-	print_imdb () {
-		printf '%s\n' "$title"
-		printf '%s\n' "$year"
-	}
-
-# RUNTIME
-
-	configure
-	cleanup
-	get_imdb
-	parse_imdb
-	print_imdb
-	cleanup
+	printf '%s\n' "$title"
+	printf '%s\n' "$year"
 }
 
 # Creates a function called 'dts_extract_remux', which will find a
