@@ -356,8 +356,8 @@ imdb () {
 # agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
 
-	curl_w_args () {
-		curl --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "${1}"
+	get_page () {
+		curl --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "${1}" 2>&-
 	}
 
 	if [[ $# -eq 0 ]]; then
@@ -373,8 +373,6 @@ imdb () {
 		fi
 	fi
 
-	tmpfile="/dev/shm/imdb-mf_${RANDOM}.tmp"
-
 # Sets the type of IMDb search results to include.
 	type='feature,tv_movie,tv_special,documentary,video'
 
@@ -387,16 +385,13 @@ imdb () {
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	id=$(curl_w_args "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s|${id_regex}|\1|" | head -n 1)
+	id=$(get_page "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s|${id_regex}|\1|" | head -n 1)
 
-	url="https://www.imdb.com/title/${id}/"
-
-# Exports the content of $url to $tmpfile.
-	curl -o "${tmpfile}" --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$url" 2>&-
-
-	if [[ ! -f $tmpfile ]]; then
+	if [[ -z $id ]]; then
 		return 1
 	fi
+
+	url="https://www.imdb.com/title/${id}/"
 
 # Translate {} characters to newlines so we can parse the JSON data.
 # I came to the conclusion that this is the most simple, reliable and
@@ -404,29 +399,25 @@ imdb () {
 # more regex:es to the for loop below, to get additional information.
 # Excluding lines that are longer than 500 characters, to make it
 # slightly faster.
-	mapfile -t tmp_array < <(tr '{}' '\n' <"$tmpfile" | grep -Ev '.{500}')
+	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev '.{500}')
 
 	n=0
 
-	for (( i = 0; i < ${#tmp_array[@]}; i++ )); do
+	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
 		if [[ ! -z $title && ! -z $year ]]; then
 			break
 		fi
-		if [[ "${tmp_array[${i}]}" =~ $title_regex ]]; then
-			n=$(( i + 1 ))
+		if [[ "${tmp_array[${z}]}" =~ $title_regex ]]; then
+			n=$(( z + 1 ))
 
 			title=$(sed -E "s/${title_regex2}/\1/" <<<"${tmp_array[${n}]}")
 		fi
-		if [[ "${tmp_array[${i}]}" =~ $year_regex ]]; then
-			n=$(( i + 1 ))
+		if [[ "${tmp_array[${z}]}" =~ $year_regex ]]; then
+			n=$(( z + 1 ))
 
 			year=$(sed -E "s/${year_regex2}/\1/" <<<"${tmp_array[${n}]}")
 		fi
 	done
-
-	if [[ -f ${tmpfile} ]]; then
-		rm -f "${tmpfile}"
-	fi
 
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
