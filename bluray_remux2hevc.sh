@@ -350,7 +350,7 @@ imdb () {
 	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
 	full_regex='<meta property=\"og:title\" content=\".*- IMDb\"\/>'
 	full_regex2='(<)|(\/>)'
-	title_year_regex='^meta property=\"og:title\" content=\"(.*) \(.*([0-9]{4})\) - IMDb\" (\(meta property=\"){0,}.*$'
+	title_year_regex='^meta property=\"og:title\" content=\"(.*) \(.*([0-9]{4})\) - IMDb\"( \(meta property=\"){0,}.*$'
 
 # agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
