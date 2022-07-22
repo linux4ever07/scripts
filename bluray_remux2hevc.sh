@@ -396,7 +396,7 @@ imdb () {
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	mapfile -t id_array < <(get_page "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s/${id_regex}/\1/")
+	mapfile -t id_array < <(get_page "${url_tmp}" | grep -Eo "${id_regex}" | sed -E "s/${id_regex}/\1/")
 	id="${id_array[0]}"
 
 	if [[ -z $id ]]; then
@@ -411,7 +411,7 @@ imdb () {
 # more regex:es to the for loop below, to get additional information.
 # Excluding lines that are longer than 500 characters, to make it
 # slightly faster.
-	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^$')
+	mapfile -t tmp_array < <(get_page "${url}" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^$')
 
 	n=0
 
