@@ -276,7 +276,7 @@ break_name () {
 
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
-	regex='^(.*)([[:punct:]]|[[:space:]]){0,}([0-9]{4})([[:punct:]]|[[:space:]]){0,}'
+	regex='^(.*)([[:punct:]]|[[:space:]]){1,}([0-9]{4})([[:punct:]]|[[:space:]]){1,}(.*)$'
 
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
@@ -346,7 +346,7 @@ break_name () {
 # name on IMDb, based on the file name of the input file.
 imdb () {
 	term="${@}"
-	t_y_regex=' \(([0-9]{4})\)$'
+	t_y_regex='^(.*) \(([0-9]{4})\)$'
 	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
 	full_regex='<meta property=\"og:title\" content=\".*- IMDb\"\/>'
 	full_regex2='(<)|(\/>)'
@@ -363,10 +363,10 @@ imdb () {
 		printf '%s\n' 'Usage: imdb "Movie Title (Year)"'
 		return 1
 	else
-		t=$(uriencode "$(sed -E "s/${t_y_regex}//" <<<"${term}")")
+		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")")
 
 		if [[ $term =~ $t_y_regex ]]; then
-			y=$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")
+			y=$(sed -E "s/${t_y_regex}/\2/" <<<"${term}")
 		else
 			y='0000'
 		fi
