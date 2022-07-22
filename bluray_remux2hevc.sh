@@ -324,12 +324,8 @@ break_name () {
 		fi
 	done
 
-	elements=$(( elements - 1 ))
-
-# This for loop is to go through the word list. The last element is the
-# year, so do a regex on that to filter out other characters besides
-# four digits.
-	for (( i = 0; i <= $elements; i++ )); do
+# This for loop is to go through the word list.
+	for (( i = 0; i < $elements; i++ )); do
 # Creates a reference, pointing to the $i element of the
 # 'bname_$temp_type' array.
 		array_ref="bname_${temp_type}[${i}]"
