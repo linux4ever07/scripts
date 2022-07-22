@@ -3,11 +3,20 @@
 # This script looks up movies on IMDb, and displays information about
 # them.
 
-# Usage: imdb.sh "Movie Title (Year)"
+# Usage: imdb.sh "movie title (year)"
 
 # (The year is optional, and only recommended for more accurate search
-# results. The paranthesis around 'Year' are required for proper
+# results. The paranthesis around (year) are required for proper
 # parsing.)
+
+usage () {
+	printf '%s\n\n' "Usage: $(basename "$0") \"movie title (year)\""
+	exit
+}
+
+if [[ ${#@} -eq 0 ]]; then
+	usage
+fi
 
 # This creates a function called 'uriencode', which will translate
 # the special characters in any string to be URL friendly. This will be
@@ -46,10 +55,12 @@ c_time_calc () {
 
 # This creates a function called 'imdb', which will look up the movie
 # name on IMDb.
+# https://www.imdb.com/search/title/
+# https://www.imdb.com/interfaces/
 imdb () {
 	term="${@}"
 	t_y_regex='^(.*) \(([0-9]{4})\)$'
-	id_regex='<a href=\"/title/(tt[0-9]{4,})/'
+	id_regex='\/title\/(tt[0-9]+)'
 	title_regex1='\,\"originalTitleText\":'
 	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	year_regex1='\,\"releaseYear\":'
@@ -74,31 +85,30 @@ imdb () {
 	}
 
 	if [[ $# -eq 0 ]]; then
-		printf '%s\n' 'Usage: imdb "Movie Title (Year)"'
+		printf '%s\n\n' 'Usage: imdb "movie title (year)"'
 		return 1
 	else
 		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")")
 
 		if [[ $term =~ $t_y_regex ]]; then
 			y=$(sed -E "s/${t_y_regex}/\2/" <<<"${term}")
-		else
-			y='0000'
 		fi
 	fi
 
 # Sets the type of IMDb search results to include.
 	type='feature,tv_movie,tv_special,documentary,video'
 
-# If the year is set to '0000', that means it's unknown, hence we will
-# need to use slightly different URLs, when searching for the movie.
-# https://www.imdb.com/interfaces/
-	if [[ $y == '0000' ]]; then
+# If the $y variable is empty, that means the year is unknown, hence we
+# will need to use slightly different URLs, when searching for the
+# movie.
+	if [[ -z $y ]]; then
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&view=simple"
 	else
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	id=$(get_page "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s|${id_regex}|\1|" | head -n 1)
+	mapfile -t id_array < <(get_page "${url_tmp}" | grep -Eo "$id_regex" | sed -E "s/${id_regex}/\1/")
+	id="${id_array[0]}"
 
 	if [[ -z $id ]]; then
 		return 1
@@ -112,7 +122,7 @@ imdb () {
 # more regex:es to the for loop below, to get additional information.
 # Excluding lines that are longer than 500 characters, to make it
 # slightly faster.
-	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev '.{500}')
+	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^$')
 
 	n=0
 
@@ -156,4 +166,4 @@ IMDB
 	unset -v title year plot rating genre director runtime
 }
 
-imdb "{$@}"
+imdb "${@}"
