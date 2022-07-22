@@ -118,7 +118,7 @@ imdb () {
 
 	declare -A json_types
 
-	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['director']=1 ['runtime']=1)
+	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['genre']=1 ['director']=1 ['runtime']=1)
 
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
 		for json_type in "${!json_types[@]}"; do
@@ -142,6 +142,8 @@ ${url}
 
 Rating: ${rating}
 
+Genre: ${genre}
+
 Runtime: ${runtime}
 
 Plot summary:
@@ -151,7 +153,7 @@ Director: ${director}
 
 IMDB
 
-	unset -v title year plot rating director runtime
+	unset -v title year plot rating genre director runtime
 }
 
 imdb "{$@}"
