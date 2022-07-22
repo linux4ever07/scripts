@@ -45,7 +45,7 @@ c_time_calc () {
 }
 
 # This creates a function called 'imdb', which will look up the movie
-# name on IMDb, based on the file name of the input file.
+# name on IMDb.
 imdb () {
 	term="${@}"
 	t_y_regex='^(.*) \(([0-9]{4})\)$'
