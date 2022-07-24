@@ -7,7 +7,7 @@ declare -a mkvinfo_list
 declare -a lang_list
 declare -a lang_list_sorted
 
-if="$1"
+if=$(readlink -f "$1")
 
 if [[ ! -f $if ]]; then
 	printf '%s\n\n' "Usage: $(basename "$0") [MKV]"
