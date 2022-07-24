@@ -10,7 +10,7 @@ usage () {
 	exit
 }
 
-if [[ "${#@}" -lt 2 ]]; then
+if [[ ${#@} -lt 2 ]]; then
 	usage
 fi
 
@@ -49,7 +49,7 @@ for dn in "${dirs[@]}"; do
 		md5=$(md5sum -b "$f" | cut -d' ' -f1)
 
 		if [[ ! -z ${md5s[${md5}]} ]]; then
-			if [[ ${md5s[${md5}]} == $f_bn ]]; then
+			if [[ "${md5s[${md5}]}" == "$f_bn" ]]; then
 				printf '%s\n' "$f"
 				rm -f "$f"
 			fi
