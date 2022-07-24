@@ -20,7 +20,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 	md5_fn=$(md5sum -b <<<"$fn" | cut -d' ' -f1)
 	md5=$(md5sum -b "$fn" | cut -d' ' -f1)
-	date=$(ls -ldA --time-style=+%s "$fn" | cut -d' ' -f6)
+	date=$(stat -c '%s' "$fn")
 
 	if [[ ! -z ${md5s_date[${md5}]} ]]; then
 		if [[ $date -lt ${md5s_date[${md5}]} ]]; then
