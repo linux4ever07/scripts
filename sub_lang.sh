@@ -22,7 +22,6 @@ count=0
 mapfile -t mkv_info_list < <(mkvinfo "$if")
 
 for (( i = 0; i < ${#mkv_info_list[@]}; i++ )); do
-
 	line="${mkv_info_list[${i}]}"
 
 	if [[ $line =~ 'Track type: subtitles' ]]; then
@@ -53,11 +52,9 @@ sort_list () {
 mapfile -t lang_list_sorted < <(sort_list)
 
 for (( i = 0; i < ${#lang_list_sorted[@]}; i++ )); do
-
 	line="${lang_list_sorted[${i}]}"
 
 	if [[ $line ]]; then
-
 		if [[ $count -eq 0 ]]; then
 			printf "Subtitles: %s" "${line^}"
 		else
