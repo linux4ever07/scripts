@@ -257,13 +257,6 @@ if [[ -z $of_dir ]]; then
 	usage
 fi
 
-#printf '%s\n' "-out ${of_dir}"
-#printf '%s\n' "-lang ${lang}"
-#printf '%s\n' "-exist ${exist}"
-#printf '%s\n' "-hb_subs ${hb_subs}"
-#printf '%s\n' "-anime ${anime}"
-#printf '%s\n' "-grain ${grain}"
-
 # Creates an array of the list of commands needed by this script.
 cmd=(HandBrakeCLI ffmpeg mkvmerge curl flac)
 
