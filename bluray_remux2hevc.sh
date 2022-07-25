@@ -99,11 +99,9 @@ bname=$(basename "$if")
 # Creates a function called 'usage', which echoes the syntax,
 # some basic info, and quits.
 usage () {
-	bname=$(basename "$0")
-
 	cat <<USAGE
 
-Usage: ${bname} [mkv|m2ts] -out [directory] [...]
+Usage: $(basename "$0") [mkv|m2ts] -out [directory] [...]
 
 This script encodes an input MKV or M2TS Blu-Ray remux to HEVC / x265.
 
