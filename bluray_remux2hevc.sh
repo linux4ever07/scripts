@@ -333,6 +333,10 @@ break_name () {
 		name[${i}]=$(tr -d '[:space:]' <<<"${!array_ref}")
 	done
 
+	if [[ ! -z $year ]]; then
+		name+=("$year")
+	fi
+
 # Echoes the complete parsed name.
 	name_string=$(sed -E 's/ +/ /g' <<<"${name[@]}")
 	printf '%s\n' "$name_string"
