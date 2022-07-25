@@ -988,6 +988,8 @@ if_m2ts () {
 	printf '%s' "$bd_title"
 }
 
+# Creates a function called 'get_name', which will get the title and
+# year, based on the input filename.
 get_name () {
 	year='0000'
 	regex='^(.*) ([0-9]{4})$'
@@ -1031,6 +1033,7 @@ get_name () {
 # Gets information about input file.
 mapfile -t if_info < <(eval ${cmd[1]} -hide_banner -i \""${if}"\" 2>&1)
 
+# Gets the title and year.
 mapfile -t get_name_tmp < <(get_name)
 title="${get_name_tmp[0]}"
 year="${get_name_tmp[1]}"
