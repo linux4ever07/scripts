@@ -408,8 +408,6 @@ imdb () {
 	runtime_regex1='\,\"runtime\":'
 	runtime_regex2='\"seconds\":(.*)\,\"__typename\":\"Runtime\"'
 
-
-# agent='Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1d'
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
 
 	get_page () {
