@@ -169,7 +169,7 @@ is_torrent () {
 		md5=$(md5sum -b "$if")
 		md5_f="${HOME}/${bname}_MD5-${RANDOM}.txt"
 
-		printf '%s\n' "$md5" | tee "$md5_f"
+		printf '%s\r\n' "$md5" | tee "$md5_f"
 	fi
 }
 
@@ -701,8 +701,8 @@ dts_extract_remux () {
 	esac
 
 # Runs ffmpeg, extracts the core DTS track, and remuxes.
-	printf '\n%s\n' 'Command used to extract core DTS track, and remux:' | tee --append "$command_f"
-	printf '%s\n' "${args[@]}" | tee --append "$command_f"
+	printf '\r\n%s\r\n' 'Command used to extract core DTS track, and remux:' | tee --append "$command_f"
+	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
 
 	if [[ $existing -ne 1 ]]; then
 # Runs ffmpeg. If the command wasn't successful, quit.
@@ -738,8 +738,8 @@ hb_encode () {
 	fi
 
 # Echoes the full HandBrake command, and executes it.
-	printf '\n%s\n' 'Command used to encode:' | tee --append "$command_f"
-	printf '%s\n' "${args[@]}" | tee --append "$command_f"
+	printf '\r\n%s\r\n' 'Command used to encode:' | tee --append "$command_f"
+	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
 
 # Runs HandBrake. If the command wasn't successful, quit.
 	run_or_quit
@@ -756,14 +756,14 @@ sub_mux () {
 
 	args=(${cmd[2]} --title \"\" -o \""${of_tmp}"\" \""${of}"\" --no-video --no-audio --no-chapters \""${of_remux}"\")
 
-	printf '\n%s\n' 'Commands used to merge with subtitles:' | tee --append "$command_f"
-	printf '%s\n' "${args[@]}" | tee --append "$command_f"
+	printf '\r\n%s\r\n' 'Commands used to merge with subtitles:' | tee --append "$command_f"
+	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
 
 	run_or_quit
 
 	args=(mv \""${of_tmp}"\" \""${of}"\")
 
-	printf '\n%s\n' "${args[@]}" | tee --append "$command_f"
+	printf '\r\n%s\r\n' "${args[@]}" | tee --append "$command_f"
 
 	run_or_quit
 }
@@ -882,7 +882,7 @@ info_txt () {
 		for (( i = 0; i < $elements; i++ )); do
 			info_ref="${type}[${i}]"
 
-			printf '%s\n' "${!info_ref}" >> "${!info_f_ref}"
+			printf '%s\r\n' "${!info_ref}" >> "${!info_f_ref}"
 		done
 	done
 }
