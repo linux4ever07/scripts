@@ -1024,15 +1024,20 @@ get_name () {
 		fi
 	fi
 
-	printf '%s' "${title}.${year}.${rls_type}"
+	printf '%s\n' "$title"
+	printf '%s\n' "$year"
 }
 
 # Gets information about input file.
 mapfile -t if_info < <(eval ${cmd[1]} -hide_banner -i \""${if}"\" 2>&1)
 
+mapfile -t get_name_tmp < <(get_name)
+title="${get_name_tmp[0]}"
+year="${get_name_tmp[1]}"
+
 # Creates a directory structure in the current user's home directory:
 # "${title}.${year}.${rls_type}/Info"
-of_bname=$(get_name)
+of_bname="${title}.${year}.${rls_type}"
 of_dir="${HOME}/${of_bname}"
 info_dir="${of_dir}/Info"
 mkdir -p "$info_dir"
