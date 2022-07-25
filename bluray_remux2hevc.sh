@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: bluray_remux2hevc.sh [mkv|m2ts] -out [directory]
+# Usage: bluray_remux2hevc.sh [mkv|m2ts] -out [directory] [...]
 
 # This script will:
 # * Parse the input filename (a 1080p BluRay (remux or full)), get movie
