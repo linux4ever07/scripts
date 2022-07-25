@@ -8,7 +8,7 @@
 # * Extract core DTS track from DTS-HD MA track (with ffmpeg).
 # * Remux the input file (MKV or M2TS), without all its audio tracks,
 # with the extracted core DTS track (with ffmpeg).
-# * Encode the remuxed MKV to HEVC in HandBrake.
+# * Encode the remuxed MKV to HEVC / x265 in HandBrake.
 # * Merge the finished encode with the subtitles from the source file.
 # * Create info txt files for input, output, and remux output.
 
