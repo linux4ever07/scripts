@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Usage: bluray_remux2hevc.sh [M2TS|MKV] [-anime|-grain]
+# Usage: bluray_remux2hevc.sh [mkv|m2ts] -out [directory]
 
 # This script will:
 # * Parse the input filename (a 1080p BluRay (remux or full)), get movie
 # info from IMDb, incl. name and year.
 # * Extract core DTS track from DTS-HD MA track (with ffmpeg).
-# * Remux the input file (M2TS or MKV), without all its audio tracks,
+# * Remux the input file (MKV or M2TS), without all its audio tracks,
 # with the extracted core DTS track (with ffmpeg).
 # * Encode the remuxed MKV to HEVC in HandBrake.
 # * Merge the finished encode with the subtitles from the source file.
@@ -32,8 +32,7 @@
 
 # First argument to this script should be a file, for example an
 # M2TS or MKV.
-# Second argument is an optional switch, and can be '-grain' or
-# '-anime', which tells the script whether or not to use the
+# '-grain' and '-anime' tell the script whether or not to use the
 # '--encoder-tune grain' or '--encoder-tune anime' HandBrake argument.
 # -grain is only needed if the input video has film grain (all movies
 # shot on analog film have grain). -anime is only needed if the input
@@ -57,32 +56,27 @@
 # The HandBrake PID can be found by running:
 # ps -C HandBrakeCLI -o pid,args
 
-# One more thing...:
+# One more thing...
 
-# This script assumes that you're not a n00b, but a hacker.
-
-# Signs of being a hacker:
-# * uses Linux
-# * uses an SSD for the root partition
-# * uses a larger magnetic hard drive for the /home partition
-
-# Hence, getting speed, as well as storage. Always keeping
-# the root (/) partition and the /home partition separate. In case of
-# wanting to format and reinstall Linux, or try a different distro.
-# The hacker gets to keep his / her data, because the hacker is smart.
-
-# TL;DR The script assumes that you have enough free space in $HOME.
+# Make sure you have enough free space in the output directory.
 # The output, and remux output, files are quite large.
 
 # The script was first created in 2019.
 
-set -eo pipefail
+# Generates a random number, which can be used for these filenames:
+# dts track, output, output remux, input info txt, output info txt,
+# output remux info txt.
+session="$RANDOM"
+
+# Creates a variable that will contain the exit status of all
+# commands run in the script.
+exit_status=0
 
 # Creates a variable that will work as a switch. If this variable is set
 # to '1', it will skip running the 'dts_extract_remux' and 'remux_mkv'
 # functions. This is handy if that file has already been created in
 # a previous session of this script.
-existing=0
+exist=0
 
 # Creates a variable that will work as a switch. If this variable is set
 # to '1', it will use pass the subtitles from the input file to
@@ -90,6 +84,13 @@ existing=0
 # with the audio and video, when dealing with input files that have
 # been merged from multiple BluRay discs.
 hb_subs=0
+
+# Sets the default language to English. This language code is what
+# the script till look for when extracting the core DTS track.
+lang='eng'
+
+anime=0
+grain=0
 
 # Gets full path of input file.
 if=$(readlink -f "$1")
@@ -101,9 +102,10 @@ usage () {
 	bname=$(basename "$0")
 
 	cat <<USAGE
-Usage: ${bname} [M2TS|MKV] [-anime|-grain]
 
-This script encodes an input M2TS or MKV Blu-Ray remux to HEVC.
+Usage: ${bname} [mkv|m2ts] -out [directory] [...]
+
+This script encodes an input MKV or M2TS Blu-Ray remux to HEVC / x265.
 
 The input file should be a Blu-Ray remux, that has identical bitrate
 to the original Blu-Ray disc, for the video and audio tracks.
@@ -111,9 +113,16 @@ As an example, this is the video bitrate of
 the "The Imaginarium of Doctor Parnassus (2009)" Blu-Ray:
 29495915 b/s = 29495.915 kb/s = 29.495915 mb/s
 
-The output filenames will be in the home directory of user: ${USER}
+	Optional arguments:
 
-	Options:
+-lang [code]
+	Three-letter language code for the audio track.
+
+-exist
+	In case the output remux file already exists.
+
+-hb_subs
+	Pass the subs directly to HandBrake instead of ffmpeg.
 
 -anime
 	Only needed if the input file is animation.
@@ -181,34 +190,79 @@ if [[ -z $1 || ! -f $if ]]; then
 	usage
 fi
 
-anime=0
-grain=0
+# The loop below handles the arguments to the script.
+shift
 
-# Checks if the second argument to the script is '-anime' or '-grain'.
-# If so, set $anime or $grain to 1, otherwise 0. If second argument
-# exists, but isn't '-anime' or '-grain', then print syntax and quit.
-case $2 in
-	'-anime')
-		anime=1
-	;;
-	'-grain')
-		grain=1
-	;;
-	*)
-		if [[ $2 ]]; then
+while [[ ${#@} -gt 0 ]]; do
+	case $1 in
+		'-out')
+			shift
+
+			if [[ ! -d $1 ]]; then
+				usage
+			else
+				of_dir=$(readlink -f "$1")
+			fi
+
+			shift
+		;;
+		'-lang')
+			shift
+
+			lang_regex='[[:alpha:]]{3}'
+
+			if [[ ! $1 =~ $lang_regex ]]; then
+				usage
+			else
+				lang=$(tr '[:upper:]' '[:lower:]' <<<"$1")
+			fi
+
+			shift
+		;;
+		'-exist')
+			shift
+
+			exist=1
+		;;
+		'-hb_subs')
+			shift
+
+			hb_subs=1
+		;;
+		'-anime')
+			shift
+
+			if [[ $grain -eq 1 ]]; then
+				usage
+			fi
+
+			anime=1
+		;;
+		'-grain')
+			shift
+
+			if [[ $anime -eq 1 ]]; then
+				usage
+			fi
+
+			grain=1
+		;;
+		*)
 			usage
-		fi
-	;;
-esac
+		;;
+	esac
+done
 
-# Generates a random number, which can be used for these filenames:
-# dts track, output, output remux, input info txt, output info txt,
-# output remux info txt.
-session="$RANDOM"
+if [[ -z $of_dir ]]; then
+	usage
+fi
 
-# Creates a variable that will contain the exit status of all
-# commands run in the script.
-exit_status=0
+#printf '%s\n' "-out ${of_dir}"
+#printf '%s\n' "-lang ${lang}"
+#printf '%s\n' "-exist ${exist}"
+#printf '%s\n' "-hb_subs ${hb_subs}"
+#printf '%s\n' "-anime ${anime}"
+#printf '%s\n' "-grain ${grain}"
 
 # Creates an array of the list of commands needed by this script.
 cmd=(HandBrakeCLI ffmpeg mkvmerge curl flac)
@@ -233,10 +287,6 @@ for cmd_tmp in "${cmd[@]}"; do
 		exit
 	fi
 done
-
-# Sets the default language to English. This language code is what
-# the script till look for when extracting the core DTS track.
-lang='eng'
 
 # Setting some variables that will be used to create a full HandBrake
 # command, with args.
@@ -704,7 +754,7 @@ dts_extract_remux () {
 	printf '\r\n%s\r\n' 'Command used to extract core DTS track, and remux:' | tee --append "$command_f"
 	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
 
-	if [[ $existing -ne 1 ]]; then
+	if [[ $exist -ne 1 ]]; then
 # Runs ffmpeg. If the command wasn't successful, quit.
 		run_or_quit
 	fi
@@ -1042,7 +1092,7 @@ year="${get_name_tmp[1]}"
 # Creates a directory structure in the current user's home directory:
 # "${title}.${year}.${rls_type}/Info"
 of_bname="${title}.${year}.${rls_type}"
-of_dir="${HOME}/${of_bname}"
+of_dir="${of_dir}/${of_bname}"
 info_dir="${of_dir}/Info"
 mkdir -p "$info_dir"
 
@@ -1065,7 +1115,7 @@ for txt_f in "$command_f" "$hb_log_f"; do
 	touch "$txt_f"
 done
 
-if [[ $existing -ne 1 ]]; then
+if [[ $exist -ne 1 ]]; then
 # If output filename already exists, add a random number to the end of
 # the filename.
 	if [[ -f $of ]]; then
