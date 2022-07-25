@@ -1,9 +1,10 @@
 #!/bin/bash
 # This script finds a running HandBrake process, if it exists, and
-# pauses it. The user can resume the process later by typing
-# 'kill -s 18 $pid'.
-# The script runs 'kill -s 20 $pid', to suspend the process.
-# 20 = SIGSTP (kill -l)
+# pauses it. The user can resume the process later with the
+# 'start_handbrake.sh' script.
+
+# The script uses the SIGSTP (20) signal to suspend the process.
+# To get a list of available signals: kill -l
 
 pid_list_f='/dev/shm/handbrake_pid.txt'
 touch "$pid_list_f"
@@ -13,7 +14,7 @@ comm='HandBrakeCLI'
 mapfile -t pids < <(ps -C "$comm" -o comm,pid | tail -n +2)
 
 for (( i = 0; i < ${#pids[@]}; i++ )); do
-	mapfile -d' ' -t pid_info < <(sed 's/ \+/ /' <<<"${pids[${i}]}")
+	mapfile -d' ' -t pid_info < <(sed -E 's/ +/ /' <<<"${pids[${i}]}")
 	name=$(tr -d '[:blank:]' <<<"${pid_info[0]}")
 	pid=$(tr -d '[:blank:]' <<<"${pid_info[1]}")
 
@@ -24,9 +25,7 @@ for (( i = 0; i < ${#pids[@]}; i++ )); do
 
 		printf '%s\n' "$pid" >> "$pid_list_f"
 
-# 18 = SIGCONT (kill -l)
 		printf '\n%s\n' 'Run this command later to resume:'
 		printf '%s\n\n' "start_handbrake.sh"
 	fi
 done
-
