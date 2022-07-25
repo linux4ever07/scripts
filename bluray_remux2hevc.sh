@@ -988,8 +988,8 @@ if_m2ts () {
 	printf '%s' "$bd_title"
 }
 
-# Creates a function called 'get_name', which will get the title and
-# year, based on the input filename.
+# Creates a function called 'get_name', which will get the movie title
+# and year, based on the input filename.
 get_name () {
 	year='0000'
 	regex='^(.*) ([0-9]{4})$'
@@ -1012,19 +1012,20 @@ get_name () {
 # * If not, use the information in $bname_tmp instead, but delete
 # special characters.
 	if [[ ${#imdb_tmp[@]} -eq 2 ]]; then
-		title=$(tr ' ' '.' <<<"${imdb_tmp[0]}")
-
+		title="${imdb_tmp[0]}"
 		year="${imdb_tmp[1]}"
 	else
 		bname_tmp_fs=$(fsencode "$bname_tmp")
 
 		if [[ $bname_tmp_fs =~ $regex ]]; then
-			title=$(sed -E "s/${regex}/\1/" <<<"$bname_tmp_fs" | tr ' ' '.')
+			title=$(sed -E "s/${regex}/\1/" <<<"$bname_tmp_fs")
 			year=$(sed -E "s/${regex}/\2/" <<<"$bname_tmp_fs")
 		else
-			title=$(tr ' ' '.' <<<"$bname_tmp_fs")
+			title="$bname_tmp_fs"
 		fi
 	fi
+
+	title=$(tr ' ' '.' <<<"$title")
 
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
@@ -1033,7 +1034,7 @@ get_name () {
 # Gets information about input file.
 mapfile -t if_info < <(eval ${cmd[1]} -hide_banner -i \""${if}"\" 2>&1)
 
-# Gets the title and year.
+# Gets the movie title and year.
 mapfile -t get_name_tmp < <(get_name)
 title="${get_name_tmp[0]}"
 year="${get_name_tmp[1]}"
