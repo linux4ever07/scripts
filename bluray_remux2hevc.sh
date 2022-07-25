@@ -248,7 +248,7 @@ a_encoder='copy:dts'
 
 # Creates a variable which contains the last part of the output
 # filename.
-rls_type='1080p.BluRay.HEVC.DTS'
+rls_type='1080p.BluRay.x265.DTS'
 
 # This creates a function called 'fsencode', which will delete special
 # characters that are not allowed in filenames on certain filesystems.
