@@ -988,43 +988,51 @@ if_m2ts () {
 	printf '%s' "$bd_title"
 }
 
+get_name () {
+	year='0000'
+	regex='^(.*) ([0-9]{4})$'
+
 # If the input filename is an M2TS, get the movie title and year from
 # the surrounding directory structure.
-if_m2ts=$(if_m2ts)
+	if_m2ts=$(if_m2ts)
 
-if [[ $if_m2ts ]]; then
-	bname="$if_m2ts"
-fi
+	if [[ ! -z $if_m2ts ]]; then
+		bname="$if_m2ts"
+	fi
 
 # Breaks up the input filename, and gets its IMDb name.
-bname_tmp=$(break_name "$bname")
-
-# Gets information about input file.
-mapfile -t if_info < <(eval ${cmd[1]} -hide_banner -i \""${if}"\" 2>&1)
+	bname_tmp=$(break_name "$bname")
 
 # Gets information from IMDb, and removes special characters.
-mapfile -t imdb_tmp < <(fsencode "$(imdb "$bname_tmp")")
+	mapfile -t imdb_tmp < <(fsencode "$(imdb "$bname_tmp")")
 
 # * If IMDb lookup succeeded, use that information.
 # * If not, use the information in $bname_tmp instead, but delete
 # special characters.
-if [[ $imdb_tmp ]]; then
-	title=$(tr ' ' '.' <<<"${imdb_tmp[0]}")
+	if [[ ${#imdb_tmp[@]} -eq 2 ]]; then
+		title=$(tr ' ' '.' <<<"${imdb_tmp[0]}")
 
-	if [[ ! -z ${imdb_tmp[1]} ]]; then
 		year="${imdb_tmp[1]}"
 	else
-		year='0000'
+		bname_tmp_fs=$(fsencode "$bname_tmp")
+
+		if [[ $bname_tmp_fs =~ $regex ]]; then
+			title=$(sed -E "s/${regex}/\1/" <<<"$bname_tmp_fs" | tr ' ' '.')
+			year=$(sed -E "s/${regex}/\2/" <<<"$bname_tmp_fs")
+		else
+			title=$(tr ' ' '.' <<<"$bname_tmp_fs")
+		fi
 	fi
-else
-	bname_tmp_fs=$(fsencode "$bname_tmp")
-	title=$(sed -E 's/ [0-9]{4}$//' <<<"$bname_tmp_fs" | tr ' ' '.')
-	year=$(grep -Eo '[0-9]{4}$' <<<"$bname_tmp_fs" | tr -d '[:punct:]')
-fi
+
+	printf '%s' "${title}.${year}.${rls_type}"
+}
+
+# Gets information about input file.
+mapfile -t if_info < <(eval ${cmd[1]} -hide_banner -i \""${if}"\" 2>&1)
 
 # Creates a directory structure in the current user's home directory:
 # "${title}.${year}.${rls_type}/Info"
-of_bname="${title}.${year}.${rls_type}"
+of_bname=$(get_name)
 of_dir="${HOME}/${of_bname}"
 info_dir="${of_dir}/Info"
 mkdir -p "$info_dir"
