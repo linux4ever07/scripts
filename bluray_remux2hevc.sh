@@ -639,7 +639,7 @@ dts_extract_remux () {
 				n="elements[${tmp_type}]"
 
 				if [[ ${if_info[${i}]} =~ ${type[${tmp_type}]} ]]; then
-					if [[ ${!audio_tracks[@]} -eq 0 ]]; then
+					if [[ -z ${!audio_tracks[@]} ]]; then
 						audiotracks[$tmp_type]="${if_info[${i}]}"
 					fi
 
@@ -782,7 +782,7 @@ hb_encode () {
 sub_mux () {
 	mapfile -t if_subs < <(mkvinfo "${of_remux}" 2>&- | grep 'Track type: subtitles')
 
-	if [[ -z ${if_subs[0]} ]]; then
+	if [[ -z ${if_subs[@]} ]]; then
 		return
 	fi
 
@@ -973,7 +973,7 @@ is_handbrake () {
 
 # Prints the PID and arguments of the HandBrake commands that are
 # running, if any.
-	if [[ ${hb_pids[0]} ]]; then
+	if [[ -n ${hb_pids[@]} ]]; then
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 			pid=$(sed -E "s/${pid_regex}/\1/" <<<"${hb_pids[${i}]}")
@@ -985,7 +985,7 @@ is_handbrake () {
 	fi
 
 # Starts the loop that will wait for HandBrake to finish.
-	while [[ ${hb_pids[0]} ]]; do
+	while [[ -n ${hb_pids[@]} ]]; do
 # Sleeps for 5 seconds.
 		sleep 5
 
