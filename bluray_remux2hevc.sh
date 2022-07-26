@@ -270,7 +270,7 @@ pkg[${cmd[4]}]='flac'
 # Checks if HandBrake, ffmpeg, mkvtoolnix and curl are available on
 # this system. If not, display a message, and quit.
 for cmd_tmp in "${cmd[@]}"; do
-	check=$(basename $(command -v ${cmd_tmp}) 2>&-)
+	check=$(basename "$(command -v ${cmd_tmp})" 2>&-)
 
 	if [[ -z $check ]]; then
 		printf '\n%s\n' "You need ${pkg[${cmd_tmp}]} installed on your system."
@@ -366,7 +366,7 @@ break_name () {
 	done
 
 # This for loop is to go through the word list.
-	for (( i = 0; i < $elements; i++ )); do
+	for (( i = 0; i < elements; i++ )); do
 # Creates a reference, pointing to the $i element of the
 # 'bname_$temp_type' array.
 		array_ref="bname_${temp_type}[${i}]"
@@ -374,7 +374,7 @@ break_name () {
 		name[${i}]=$(tr -d '[:space:]' <<<"${!array_ref}")
 	done
 
-	if [[ ! -z $year ]]; then
+	if [[ -n $year ]]; then
 		name+=("$year")
 	fi
 
@@ -559,12 +559,12 @@ dts_extract_remux () {
 			map_tmp=$(sed -E 's/.*Stream #(0:[0-9]+).*/\1/' <<<"${!audio_track_ref}")
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
-			eval ${cmd[1]} -i \""${if}"\" -map ${map} -c:a copy \""$flac_tmp"\"
-			eval ${cmd[4]} -d \""$flac_tmp"\"
+			eval "${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""$flac_tmp"\"
+			eval "${cmd[4]}" -d \""$flac_tmp"\"
 			rm "$flac_tmp"
 
 # Gets information about the WAV file.
-			mapfile -t flac_info < <(eval ${cmd[1]} -hide_banner -i \""${wav_tmp}"\" 2>&1)
+			mapfile -t flac_info < <(eval "${cmd[1]}" -hide_banner -i \""${wav_tmp}"\" 2>&1)
 			rm "$wav_tmp"
 
 # Go through the information about the input file, and see if any of the
@@ -595,7 +595,7 @@ dts_extract_remux () {
 
 # This loop looks for the line number of $audio_track_tmp...
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
-			if [[ ${if_info_tmp[${i}]} == $audio_track_tmp ]]; then
+			if [[ ${if_info_tmp[${i}]} == "$audio_track_tmp" ]]; then
 				j=$(( i + 1 ))
 				break
 			fi
@@ -604,7 +604,7 @@ dts_extract_remux () {
 # If line matches $first_line_regex, continue looking for the bitrate in
 # the metadata.
 		if [[ ${if_info_tmp[${j}]} =~ $first_line_regex ]]; then
-			for (( i = ${j}; i < ${#if_info_tmp[@]}; i++ )); do
+			for (( i = j; i < ${#if_info_tmp[@]}; i++ )); do
 # If line matches $last_line_regex, break this loop.
 				if [[ ${if_info_tmp[${i}]} =~ $last_line_regex ]]; then
 					break
@@ -644,7 +644,7 @@ dts_extract_remux () {
 # See if the current line is an audio track, and the same language as
 # $lang.
 		if [[ ${if_info[${i}]} =~ $regex_audio ]]; then
-			for tmp_type in ${audio_types[@]}; do
+			for tmp_type in "${audio_types[@]}"; do
 				n="elements[${tmp_type}]"
 
 				if [[ ${if_info[${i}]} =~ ${type[${tmp_type}]} ]]; then
@@ -664,7 +664,7 @@ dts_extract_remux () {
 # Go through the different types of audio and see if we have a matching
 # 5.1 track in one of those formats. If not, use the first track in the
 # list, in the preferred available format.
-	for tmp_type in ${audio_types[@]}; do
+	for tmp_type in "${audio_types[@]}"; do
 		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
 			array_ref="audio_tracks[${tmp_type},${i}]"
 
@@ -684,7 +684,7 @@ dts_extract_remux () {
 # Pick the first audio track in the list, if $audio_track_ref is still
 # empty.
 	if [[ -z $audio_track_ref ]]; then
-		for tmp_type in ${audio_types[@]}; do
+		for tmp_type in "${audio_types[@]}"; do
 			if [[ ${elements[${tmp_type}]} -gt 0 ]]; then
 				audio_track_ref="audio_tracks[${tmp_type},0]"
 				audio_format="$tmp_type"
@@ -693,7 +693,7 @@ dts_extract_remux () {
 		done
 
 		if [[ -z $audio_track_ref ]]; then
-			for tmp_type in ${audio_types[@]}; do
+			for tmp_type in "${audio_types[@]}"; do
 					audio_track_ref="audio_tracks[${tmp_type}]"
 					audio_format="$tmp_type"
 					break
@@ -712,7 +712,7 @@ dts_extract_remux () {
 	map=$(sed -E "s/${map_regex}/\1/" <<<"${!audio_track_ref}")
 
 # Creates first part of ffmpeg command.
-	args1=(${cmd[1]} -i \""${if}"\" -metadata title=\"\" -map 0:v -map ${map} -map 0:s?)
+	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${map}" -map 0:s?)
 
 # Creates ffmpeg command.
 	case $audio_format in
@@ -720,22 +720,22 @@ dts_extract_remux () {
 			args=("${args1[@]}" -bsf:a dca_core -c:v copy -c:a copy -c:s copy \""${of_remux}"\")
 		;;
 		'truehd')
-			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab ${use_kbps} \""${of_remux}"\")
+			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab "${use_kbps}" \""${of_remux}"\")
 		;;
 		'pcm')
 			get_bitrate
-			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab ${use_kbps} \""${of_remux}"\")
+			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab "${use_kbps}" \""${of_remux}"\")
 		;;
 		'flac')
 			get_bitrate
-			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab ${use_kbps} \""${of_remux}"\")
+			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab "${use_kbps}" \""${of_remux}"\")
 		;;
 		'dts')
 			args=("${args1[@]}" -c:v copy -c:a copy -c:s copy \""${of_remux}"\")
 		;;
 		'ac3')
 			get_bitrate
-			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab ${use_kbps} \""${of_remux}"\")
+			args=("${args1[@]}" -strict -2 -c:v copy -c:a dts -c:s copy -ab "${use_kbps}" \""${of_remux}"\")
 		;;
 	esac
 
@@ -753,12 +753,12 @@ dts_extract_remux () {
 # Creates a function called 'hb_encode', which will generate a full
 # HandBrake command (with args), and then execute it.
 hb_encode () {
-	args1=(${cmd[0]} --format $format --markers --encoder $v_encoder --encoder-preset ${preset})
+	args1=("${cmd[0]}" --format "${format}" --markers --encoder "${v_encoder}" --encoder-preset "${preset}")
 
 	if [[ $hb_subs -eq 1 ]]; then
-		args2=(--vb $v_bitrate --two-pass --vfr --aencoder $a_encoder --all-subtitles -i \""${of_remux}"\" -o \""${of}"\")
+		args2=(--vb "${v_bitrate}" --two-pass --vfr --aencoder "${a_encoder}" --all-subtitles -i \""${of_remux}"\" -o \""${of}"\")
 	else
-		args2=(--vb $v_bitrate --two-pass --vfr --aencoder $a_encoder -i \""${of_remux}"\" -o \""${of}"\")
+		args2=(--vb "${v_bitrate}" --two-pass --vfr --aencoder "${a_encoder}" -i \""${of_remux}"\" -o \""${of}"\")
 	fi
 
 	args3=(2\> \>\(tee \""${hb_log_f}"\"\))
@@ -795,7 +795,7 @@ sub_mux () {
 		return
 	fi
 
-	args=(${cmd[2]} --title \"\" -o \""${of_tmp}"\" \""${of}"\" --no-video --no-audio --no-chapters \""${of_remux}"\")
+	args=("${cmd[2]}" --title \"\" -o \""${of_tmp}"\" \""${of}"\" --no-video --no-audio --no-chapters \""${of_remux}"\")
 
 	args_string="${args[@]}"
 	printf '\r\n%s\r\n' 'Commands used to merge with subtitles:' | tee --append "$command_f"
@@ -821,7 +821,7 @@ info_txt () {
 	of_bname=$(basename "$of")
 	of_remux_bname=$(basename "$of_remux")
 
-	cmd[5]=$(basename $(command -v mediainfo) 2>&-)
+	cmd[5]=$(basename "$(command -v mediainfo)" 2>&-)
 
 # Creates filenames for the info txt files, which contain the
 # information generated by 'ffmpeg'. Also creates filenames for
@@ -838,18 +838,18 @@ info_txt () {
 	mediainfo_info_f="${info_dir}/${bname}_mediainfo.txt"
 
 	if [[ ${cmd[5]} ]]; then
-		info_list_1=(if_info of_info of_remux_info mediainfo_info)
+		info_list_1=('if_info' 'of_info' 'of_remux_info' 'mediainfo_info')
 	else
-		info_list_1=(if_info of_info of_remux_info)
+		info_list_1=('if_info' 'of_info' 'of_remux_info')
 	fi
 
 	info_list_2=(hb_version_info hb_opts_info ff_version_info ff_opts_info size_info)
-	info_list_3=(${info_list_1[@]} ${info_list_2[@]})
+	info_list_3=("${info_list_1[@]}" "${info_list_2[@]}")
 
 # If the info txt filenames (in list 1) already exist, add a random
 # number to the end of the filename. Also, create empty files with those
 # names.
-	for txt_f in ${info_list_1[@]}; do
+	for txt_f in "${info_list_1[@]}"; do
 		txt_ref="${txt_f}_f"
 
 		if [[ -f ${!txt_ref} ]]; then
@@ -863,7 +863,7 @@ info_txt () {
 
 # If the info txt filenames (in list 2) already exist, remove them.
 # Also, create empty files with those names.
-	for txt_f in ${info_list_2[@]}; do
+	for txt_f in "${info_list_2[@]}"; do
 		txt_ref="${txt_f}_f"
 
 		if [[ -f ${!txt_ref} ]]; then
@@ -874,28 +874,28 @@ info_txt () {
 	done
 
 # Gets information about output file.
-	mapfile -t of_info < <(eval ${cmd[1]} -hide_banner -i \""${of}"\" 2>&1)
+	mapfile -t of_info < <(eval "${cmd[1]}" -hide_banner -i \""${of}"\" 2>&1)
 
 # Gets information about output file.
-	mapfile -t of_remux_info < <(eval ${cmd[1]} -hide_banner -i \""${of_remux}"\" 2>&1)
+	mapfile -t of_remux_info < <(eval "${cmd[1]}" -hide_banner -i \""${of_remux}"\" 2>&1)
 
 # Gets HandBrake version.
-	mapfile -t hb_version_info < <(eval ${cmd[0]} --version 2>&-)
+	mapfile -t hb_version_info < <(eval "${cmd[0]}" --version 2>&-)
 
 # Gets the list of HandBrake options.
-	mapfile -t hb_opts_info < <(eval ${cmd[0]} --help 2>&-)
+	mapfile -t hb_opts_info < <(eval "${cmd[0]}" --help 2>&-)
 
 # Gets the ffmpeg version.
-	mapfile -t ff_version_info < <(eval ${cmd[1]} -version)
+	mapfile -t ff_version_info < <(eval "${cmd[1]}" -version)
 
 # Gets the ffmpeg options.
-	mapfile -t ff_opts_info < <(eval ${cmd[1]} -hide_banner -help full)
+	mapfile -t ff_opts_info < <(eval "${cmd[1]}" -hide_banner -help full)
 
 # Gets the file size of '$if', '$of_remux' and '$of'.
 	mapfile -t size_info < <(du -BM "${if}" "${of_remux}" "${of}" 2>&-)
 
 # Gets information about output file from 'mediainfo'.
-	mapfile -t mediainfo_info < <(eval ${cmd[5]} -f \""${of}"\" 2>&-)
+	mapfile -t mediainfo_info < <(eval "${cmd[5]}" -f \""${of}"\" 2>&-)
 
 	declare -A info_elements
 
@@ -918,11 +918,11 @@ info_txt () {
 # Prints the information gathered from the output file, by mediainfo
 # (if that command is installed).
 
-	for type in ${info_list_3[@]}; do
+	for type in "${info_list_3[@]}"; do
 		info_f_ref="${type}_f"
 		elements="${info_elements[${type}]}"
 
-		for (( i = 0; i < $elements; i++ )); do
+		for (( i = 0; i < elements; i++ )); do
 			info_ref="${type}[${i}]"
 
 			printf '%s\r\n' "${!info_ref}" >> "${!info_f_ref}"
@@ -978,7 +978,7 @@ check_res () {
 # Creates a function called 'is_handbrake', which will check if there
 # are any running HandBrake processes, and if so, wait.
 is_handbrake () {
-	args=(ps -C ${cmd[0]} -o pid,args \| tail -n +2)
+	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
 
 	pid_regex='^[[:space:]]*([[:digit:]]+).*'
 	comm_regex='^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)'
@@ -1041,7 +1041,7 @@ get_name () {
 # the surrounding directory structure.
 	if_m2ts=$(if_m2ts)
 
-	if [[ ! -z $if_m2ts ]]; then
+	if [[ -n $if_m2ts ]]; then
 		bname="$if_m2ts"
 	fi
 
@@ -1075,7 +1075,7 @@ get_name () {
 }
 
 # Gets information about input file.
-mapfile -t if_info < <(eval ${cmd[1]} -hide_banner -i \""${if}"\" 2>&1)
+mapfile -t if_info < <(eval "${cmd[1]}" -hide_banner -i \""${if}"\" 2>&1)
 
 # Gets the movie title and year.
 mapfile -t get_name_tmp < <(get_name)

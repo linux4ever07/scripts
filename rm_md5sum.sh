@@ -22,7 +22,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	md5=$(md5sum -b "$fn" | cut -d' ' -f1)
 	date=$(stat -c '%Y' "$fn")
 
-	if [[ ! -z ${md5s_date[${md5}]} ]]; then
+	if [[ -n ${md5s_date[${md5}]} ]]; then
 		if [[ $date -lt ${md5s_date[${md5}]} ]]; then
 			md5s_date[${md5}]="$date"
 			md5s_og[${md5}]="$fn"
@@ -41,7 +41,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	md5_fn=$(md5sum -b <<<"$fn" | cut -d' ' -f1)
 	md5="${md5s_fn[${md5_fn}]}"
 
-	if [[ ! -z ${md5s_og[${md5}]} ]]; then
+	if [[ -n ${md5s_og[${md5}]} ]]; then
 		if [[ "$fn" != "${md5s_og[${md5}]}" ]]; then
 			printf '%s\n' "$fn"
 			rm -f "$fn"

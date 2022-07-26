@@ -48,7 +48,7 @@ for dn in "${dirs[@]}"; do
 
 		md5=$(md5sum -b "$f" | cut -d' ' -f1)
 
-		if [[ ! -z ${md5s[${md5}]} ]]; then
+		if [[ -n ${md5s[${md5}]} ]]; then
 			if [[ "${md5s[${md5}]}" == "$f_bn" ]]; then
 				printf '%s\n' "$f"
 				rm -f "$f"
