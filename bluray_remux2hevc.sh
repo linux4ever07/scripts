@@ -494,8 +494,7 @@ dts_extract_remux () {
 	regex_51=', 5.1\(.*\),'
 	bps_regex='^ +BPS.*: ([0-9]+)$'
 	bps_regex2='.*([0-9]{3})$'
-	bps_regex3='.* ([0-9]+) kb/s$'
-	kbps_regex='[0-9]+ kb/s$'
+	kbps_regex='.* ([0-9]+) kb\/s$'
 	map_regex='.*Stream #(0:[0-9]+).*'
 
 	high_kbps='1536'
@@ -584,7 +583,7 @@ dts_extract_remux () {
 # If the $audio_track_tmp line contains a bitrate, use that and
 # compare it against the $bps_limit variable.
 		if [[ $audio_track_tmp =~ $kbps_regex ]]; then
-			bps_if=$(sed -E "s|${bps_regex3}|\1|" <<<"${audio_track_tmp}")
+			bps_if=$(sed -E "s/${kbps_regex}/\1/" <<<"${audio_track_tmp}")
 			bps_if=$(( bps_if * 1000 ))
 
 			compare_bitrate
