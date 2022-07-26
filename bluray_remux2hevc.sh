@@ -1024,9 +1024,9 @@ if_m2ts () {
 		return
 	fi
 
-	mapfile -d'/' -t count <<<"$if"
-	bd_title_field=$(( ${#count[@]} - 3 ))
-	bd_title=$(cut -d'/' -f${bd_title_field}- <<<"$if" | cut -d'/' -f1)
+	mapfile -d'/' -t path_parts <<<"$if"
+	field=$(( ${#path_parts[@]} - 4 ))
+	bd_title="${path_parts[${field}]}"
 
 	printf '%s' "$bd_title"
 }
