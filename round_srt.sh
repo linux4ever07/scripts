@@ -164,7 +164,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	c_total_stop_time=( $(time_break "${duration[1]}") )
 	c_total_stop_time=( $(c_time_calc ${c_total_stop_time[@]}) )
 
-	if [[ ${p_total_stop_time[0]} ]]; then
+	if [[ -n ${p_total_stop_time[@]} ]]; then
 		c_total_start_time=( $(t_time_calc ${c_total_start_time[@]} ${p_total_stop_time[@]}) )
 	fi
 

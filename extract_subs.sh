@@ -26,7 +26,7 @@ fi
 
 mapfile -t if_subs < <(mkvinfo "${if}" 2>&- | grep 'Track type: subtitles')
 
-if [[ -z ${if_subs[0]} ]]; then
+if [[ -z ${if_subs[@]} ]]; then
 	usage 2
 fi
 

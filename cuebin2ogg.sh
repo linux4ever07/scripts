@@ -133,7 +133,7 @@ read_cue () {
 		fi
 	done
 
-	if [[ ${not_found[0]} ]]; then
+	if [[ -n ${not_found[@]} ]]; then
 		printf '\n%s\n\n' "The files below were not found:"
 
 		for (( i=0; i<${#bin_list[@]}; i++ )); do
@@ -169,7 +169,7 @@ bin_split () {
 
 	mapfile -t bchunk_stdout < <(eval "${args[@]}"; printf '%s\n' "$?")
 
-	if [[ ${#bchunk_stdout[@]} -gt 0 ]]; then
+	if [[ -n ${bchunk_stdout[@]} ]]; then
 		last=$(( ${#bchunk_stdout[@]} - 1 ))
 	fi
 
