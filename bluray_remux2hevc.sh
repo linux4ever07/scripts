@@ -834,7 +834,7 @@ info_txt () {
 		info_list_1=('if_info' 'of_info' 'of_remux_info')
 	fi
 
-	info_list_2=(hb_version_info hb_opts_info ff_version_info ff_opts_info size_info)
+	info_list_2=('hb_version_info' 'hb_opts_info' 'ff_version_info' 'ff_opts_info' 'size_info')
 	info_list_3=("${info_list_1[@]}" "${info_list_2[@]}")
 
 # If the info txt filenames (in list 1) already exist, add a random
