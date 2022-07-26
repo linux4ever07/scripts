@@ -543,8 +543,6 @@ dts_extract_remux () {
 # the $audio_track_tmp variable, which will be used later in this
 # function to find the bitrate.
 		if [[ $audio_format == 'flac' ]]; then
-			regex_flac="^ +Stream #.*: Audio: "
-
 			flac_tmp="${of_dir}/FLAC.TMP-${session}.flac"
 			wav_tmp="${of_dir}/FLAC.TMP-${session}.wav"
 
@@ -565,7 +563,7 @@ dts_extract_remux () {
 # for.
 			for (( i = 0; i < ${#flac_info[@]}; i++ )); do
 # See if the current line is an audio track.
-				if [[ ${flac_info[${i}]} =~ $regex_flac ]]; then
+				if [[ ${flac_info[${i}]} =~ $regex_audio ]]; then
 					audio_track_tmp="${flac_info[${i}]}"
 					if_info_tmp=("${flac_info[@]}")
 					break
