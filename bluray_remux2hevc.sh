@@ -68,10 +68,6 @@
 # output remux info txt.
 session="$RANDOM"
 
-# Creates a variable that will contain the exit status of all
-# commands run in the script.
-exit_status=0
-
 # Creates a variable that will work as a switch. If this variable is set
 # to '1', it will skip running the 'dts_extract_remux' and 'remux_mkv'
 # functions. This is handy if that file has already been created in
@@ -834,7 +830,7 @@ info_txt () {
 	size_info_f="${info_dir}/size.txt"
 	mediainfo_info_f="${info_dir}/${bname}_mediainfo.txt"
 
-	if [[ ${cmd[5]} ]]; then
+	if [[ -n ${cmd[5]} ]]; then
 		info_list_1=('if_info' 'of_info' 'of_remux_info' 'mediainfo_info')
 	else
 		info_list_1=('if_info' 'of_info' 'of_remux_info')
@@ -931,13 +927,7 @@ info_txt () {
 # stored in the $args array, and quit if the command returns a false
 # exit status.
 run_or_quit () {
-	eval "${args[@]}"
-
-	exit_status="$?"
-
-	if [[ $exit_status -ne 0 ]]; then
-		exit $exit_status
-	fi
+	eval "${args[@]}" || exit "$?"
 }
 
 # Creates a function called 'check_res', which will check the resolution
