@@ -242,34 +242,35 @@ sub logger {
 	given ($sw) {
 # Starts writing the log.
 		when ('start') {
-			say $LOG "\n**** Logging started on $now ****\n";
-			say $LOG "Running script in '$mode' mode on:\n";
+			say $LOG "\n" . '**** Logging started on ' . $now . ' ****'
+			. "\n\n" . 'Running script in \'' . $mode . '\' mode on:' .
+			"\n";
 			foreach my $dn (@lib) { say $LOG $dn; }
 			say $LOG "";
 		}
 # When the script is interrupted by user pressing ^C, say so in STDOUT,
 # close the log.
 		when ('int') {
-			say "\nInterrupted by user!\n";
-			say $LOG $n . " file(s) were tested.";
-			say $LOG "\n**** Logging ended on $now ****\n";
+			say "\n" . 'Interrupted by user!' . "\n\n" . $n .
+			" file(s) were tested." . "\n" . '**** Logging ended on ' .
+			$now . ' ****' . "\n";
 			close $LOG or die "Can't close '$LOG': $!";
 		}
 # Called when file has been deleted or moved.
 		when ('gone') {
-			say $LOG $fn[0] . "\n\t" . "has been (re)moved.\n";
-			$err{$fn[0]} = "has been (re)moved.\n";
+			say $LOG $fn[0] . "\n\t" . 'has been (re)moved.' . "\n";
+			$err{$fn[0]} = 'has been (re)moved.' . "\n";
 		}
 # Called when file has been corrupted.
 		when ('corr') {
-			say $LOG $fn[0] . "\n\t" .
-			"has been corrupted.\n";
-			$err{$fn[0]} = "has been corrupted.\n";
+			say $LOG $fn[0] . "\n\t" . 'has been corrupted.' . "\n";
+			$err{$fn[0]} = 'has been corrupted.' . "\n";
 		}
 		when ('diff') {
 			say $LOG $fn[0] . "\n\t" .
-				"doesn't match the hash in database.\n";
-			$err{$fn[0]} = "doesn't match the hash in database.\n";
+			'doesn\'t match the hash in database.' . "\n";
+			$err{$fn[0]} = 'doesn\'t match the hash in database.' .
+			"\n";
 		}
 # Called when done, and to close the log.
 # If no errors occurred write "Everything is OK!" to the log.
@@ -277,16 +278,17 @@ sub logger {
 # Either way, print number of files processed.
 		when ('end') {
 			if (!%err) {
-				say $LOG "\nEverything is OK!\n";
+				say $LOG "\n" . 'Everything is OK!' . "\n";
 			} else {
-				say "\n**** Errors Occurred ****\n";
+				say "\n" . '**** Errors Occurred ****' . "\n";
 				foreach my $fn (sort keys %err) {
 					say $SE $fn . "\n\t" . $err{$fn};
 				}
 			}
 
-			say $LOG $n . " file(s) were tested.\n" if ($n);
-			say $LOG "\n**** Logging ended on $now ****\n";
+			say $LOG $n . ' file(s) were tested.' . "\n" if ($n);
+			say $LOG "\n" . '**** Logging ended on' . $now . ' ****' .
+			"\n";
 			close $LOG or die "Can't close '$LOG': $!";
 		}
 	}
@@ -322,7 +324,7 @@ sub file2hash {
 # Also create another variable that contains the absolute file name.
 			my ($rel_fn, $hash) = (split(/\Q$delim/, $line));
 			my $abs_fn;
-			if ($dn ne '.') { $abs_fn = "$dn/$rel_fn"; }
+			if ($dn ne '.') { $abs_fn = $dn . '/' . $rel_fn; }
 			else { $abs_fn = $rel_fn; }
 
 # If the file name matches "$HOME/.*", then ignore it. Directories in
@@ -398,8 +400,8 @@ sub init_hash {
 # Subroutine for when the database file is empty, or doesn't exist.
 sub if_empty {
 	if (!keys(%md5h)) {
-		say "No database file. Run the script in 'index' mode first\n" .
-		"to index the files.";
+		say 'No database file. Run the script in \'index\' mode first' .
+		"\n" . 'to index the files.';
 		exit;
 	}
 }
@@ -424,7 +426,7 @@ sub getfiles {
 
 # Using quotemeta operators here (\Q & \E) because Perl interprets the
 # string as a regular expression when it's not.
-		$fn =~ s(\Q$dn\E/)();
+		$fn =~ s(^\Q$dn\E/)();
 
 		if (-f $fn && basename($fn) ne $db) {
 			push(@files, $fn);
@@ -456,7 +458,7 @@ sub md5double {
 # any.
 	foreach my $hash (keys(%exists)) {
 		if (@{$exists{${hash}}} > 1) {
-			say "These files have the same hash (${hash}):";
+			say 'These files have the same hash (' . $hash . '):';
 			foreach my $fn (@{$exists{${hash}}}) { say $fn; }
 			say "";
 		}
@@ -504,8 +506,8 @@ sub md5import {
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
 				if (! $md5h{$fn} && -f $fn) {
-					say "$fn" . "\n\t" . "Imported MD5 sum from '" .
-					basename($md5fn) . "'.\n";
+					say $fn . "\n\t" . 'Imported MD5 sum from \'' .
+					basename($md5fn) . '\'.' . "\n";
 
 					$md5h{$fn} = $hash;
 
@@ -561,7 +563,7 @@ sub md5index {
 		if (!$fn) { yield(); next; }
 
 		$md5h{$fn} = md5sum($fn);
-		say "$tid $fn: done indexing (${file_stack})";
+		say $tid . ' ' . $fn . ': done indexing (' . $file_stack . ')';
 
 		{ lock($n);
 		$n++; }
@@ -569,7 +571,7 @@ sub md5index {
 # If the $saw_sigint variable has been tripped.
 # Quit this 'while' loop, thereby closing the thread.
 		if ($saw_sigint) {
-			say "Closing thread: " . $tid;
+			say 'Closing thread: ' . $tid;
 			iquit();
 		}
 	}
@@ -590,7 +592,7 @@ sub md5test {
 		if (!$fn) { yield(); next; }
 
 		$newmd5 = md5sum($fn);
-		say "$tid $fn: done testing (${file_stack})";
+		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
 		$oldmd5 = $md5h{$fn};
 
 # If the new MD5 sum doesn't match the one in the hash, and file doesn't
@@ -607,7 +609,7 @@ sub md5test {
 # If the $saw_sigint variable has been tripped.
 # Quit this 'while' loop, thereby closing the thread.
 		if ($saw_sigint) {
-			say "Closing thread: " . $tid;
+			say 'Closing thread: ' . $tid;
 			iquit();
 		}
 	}
@@ -626,11 +628,12 @@ sub md5flac {
 
 	if ($fn =~ /.flac$/i) {
 		if (! @req) {
-			chomp(@req = ( `which flac metaflac 2>&-` ));
+			chomp(@req = ( `command -v flac metaflac 2>&-` ));
 
 			if (! $req[0] or ! $req[1]) {
-				say "You need both 'flac' and 'metaflac' to test FLAC files!\n" .
-				"Using normal test method...\n";
+				say 'You need both \'flac\' and \'metaflac\' to test ' .
+				'FLAC files!' . "\n" . 'Using normal test method...' .
+				"\n";
 				@req = '0';
 				return;
 			}
@@ -754,7 +757,8 @@ foreach my $dn (@lib) {
 					if ($saw_sigint) { iquit(); }
 					while ($file_stack >= $disk_size) {
 						my $active = threads->running();
-						say("${active}: $file_stack > $disk_size");
+						say $active . ': ' . $file_stack . ' > ' .
+						$disk_size;
 						yield();
 					}
 # Unless file name exists in the database hash, continue.
@@ -769,7 +773,7 @@ foreach my $dn (@lib) {
 				foreach my $fn (sort(keys(%md5h))) {
 					if ($saw_sigint) { iquit(); }
 					while ($file_stack >= $disk_size) {
-						say("$file_stack > $disk_size");
+						say $file_stack . ' > ' . $disk_size;
 						yield();
 					}
 					file2ram($fn);
@@ -779,7 +783,7 @@ foreach my $dn (@lib) {
 
 		if (%large) {
 			while ($file_stack > 0) {
-				say("$file_stack > 0");
+				say $file_stack . ' > ' . '0';
 				yield();
 			}
 			foreach my $fn (sort(keys(%large))) {
