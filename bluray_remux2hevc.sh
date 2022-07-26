@@ -170,7 +170,7 @@ is_torrent () {
 		if="${if%.part}"
 
 		md5=$(md5sum -b "$if")
-		md5_f="${HOME}/${bname}_MD5-${RANDOM}.txt"
+		md5_f="${HOME}/${bname}_MD5-${session}.txt"
 
 		printf '%s\r\n' "$md5" | tee "$md5_f"
 	fi
@@ -252,7 +252,7 @@ if [[ -z $of_dir ]]; then
 fi
 
 # Creates an array of the list of commands needed by this script.
-cmd=(HandBrakeCLI ffmpeg mkvmerge curl flac)
+cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
 
 # Declares an associative array (hash), which contains the package names
 # of the commands that are needed by the script.
