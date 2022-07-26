@@ -187,7 +187,7 @@ fi
 # The loop below handles the arguments to the script.
 shift
 
-while [[ ${#@} -gt 0 ]]; do
+while [[ -n $@ ]]; do
 	case $1 in
 		'-out')
 			shift
