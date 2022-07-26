@@ -554,7 +554,7 @@ dts_extract_remux () {
 			wav_tmp="${of_dir}/FLAC.TMP-${session}.wav"
 
 # Gets the ffmpeg map code of the FLAC track.
-			map_tmp=$(sed -E 's/.*Stream #(0:[0-9]+).*/\1/' <<<"${!audio_track_ref}")
+			map_tmp=$(sed -E "s/${map_regex}/\1/" <<<"${!audio_track_ref}")
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
 			eval "${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""$flac_tmp"\"
