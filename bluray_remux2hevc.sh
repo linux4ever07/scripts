@@ -521,7 +521,7 @@ dts_extract_remux () {
 	elements[dts]=0
 	elements[ac3]=0
 
-	audio_types=(dts_hdma truehd pcm flac dts ac3)
+	audio_types=('dts_hdma' 'truehd' 'pcm' 'flac' 'dts' 'ac3')
 
 	declare -A audio_tracks
 
