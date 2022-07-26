@@ -643,7 +643,7 @@ sub md5flac {
 			chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
 			if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
 
-			system('flac', '--totally-silent', '--test', "$fn");
+			system('flac', '--totally-silent', '--test', $fn);
 			if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
 
 			return $hash;
