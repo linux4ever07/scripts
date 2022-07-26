@@ -96,7 +96,7 @@ grain=0
 if=$(readlink -f "$1")
 bname=$(basename "$if")
 
-# Creates a function called 'usage', which echoes the syntax,
+# Creates a function called 'usage', which prints the syntax,
 # some basic info, and quits.
 usage () {
 	cat <<USAGE
@@ -378,7 +378,7 @@ break_name () {
 		name+=("$year")
 	fi
 
-# Echoes the complete parsed name.
+# Prints the complete parsed name.
 	name_string=$(sed -E 's/ +/ /g' <<<"${name[@]}")
 	printf '%s\n' "$name_string"
 }
@@ -740,8 +740,9 @@ dts_extract_remux () {
 	esac
 
 # Runs ffmpeg, extracts the core DTS track, and remuxes.
+	args_string="${args[@]}"
 	printf '\r\n%s\r\n' 'Command used to extract core DTS track, and remux:' | tee --append "$command_f"
-	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
+	printf '%s\r\n' "$args_string" | tee --append "$command_f"
 
 	if [[ $exist -ne 1 ]]; then
 # Runs ffmpeg. If the command wasn't successful, quit.
@@ -776,9 +777,10 @@ hb_encode () {
 		args=("${args1[@]}" "${args2[@]}" "${args3[@]}")
 	fi
 
-# Echoes the full HandBrake command, and executes it.
+# Prints the full HandBrake command, and executes it.
+	args_string="${args[@]}"
 	printf '\r\n%s\r\n' 'Command used to encode:' | tee --append "$command_f"
-	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
+	printf '%s\r\n' "$args_string" | tee --append "$command_f"
 
 # Runs HandBrake. If the command wasn't successful, quit.
 	run_or_quit
@@ -795,14 +797,16 @@ sub_mux () {
 
 	args=(${cmd[2]} --title \"\" -o \""${of_tmp}"\" \""${of}"\" --no-video --no-audio --no-chapters \""${of_remux}"\")
 
+	args_string="${args[@]}"
 	printf '\r\n%s\r\n' 'Commands used to merge with subtitles:' | tee --append "$command_f"
-	printf '%s\r\n' "${args[@]}" | tee --append "$command_f"
+	printf '%s\r\n' "$args_string" | tee --append "$command_f"
 
 	run_or_quit
 
 	args=(mv \""${of_tmp}"\" \""${of}"\")
 
-	printf '\r\n%s\r\n' "${args[@]}" | tee --append "$command_f"
+	args_string="${args[@]}"
+	printf '\r\n%s\r\n' "$args_string" | tee --append "$command_f"
 
 	run_or_quit
 }
@@ -905,13 +909,13 @@ info_txt () {
 	info_elements[size_info]="${#size_info[@]}"
 	info_elements[mediainfo_info]="${#mediainfo_info[@]}"
 
-# Echoes the information gathered from the input file, by ffmpeg.
-# Echoes the information gathered from the output file, by ffmpeg.
-# Echoes the information gathered from the remux output file, by ffmpeg.
-# Echoes the version and options of HandBrake.
-# Echoes the version and options of ffmpeg.
-# Echoes file size information.
-# Echoes the information gathered from the output file, by mediainfo
+# Prints the information gathered from the input file, by ffmpeg.
+# Prints the information gathered from the output file, by ffmpeg.
+# Prints the information gathered from the remux output file, by ffmpeg.
+# Prints the version and options of HandBrake.
+# Prints the version and options of ffmpeg.
+# Prints file size information.
+# Prints the information gathered from the output file, by mediainfo
 # (if that command is installed).
 
 	for type in ${info_list_3[@]}; do
