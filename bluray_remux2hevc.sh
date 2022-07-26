@@ -492,11 +492,9 @@ imdb () {
 dts_extract_remux () {
 	regex_audio="^ +Stream #.*(\(${lang}\)){0,1}: Audio: "
 	regex_51=', 5.1\(.*\),'
-	bps_regex='^ +BPS.*: [0-9]+'
-	bps_regex2='[0-9]{3}'
+	bps_regex='^ +BPS.*: ([0-9]+)$'
+	bps_regex2='.*([0-9]{3})$'
 	bps_regex3='.* ([0-9]+) kb/s$'
-	bps_regex4='^.*: ([0-9]+)'
-	bps_regex5='.*(...)$'
 	kbps_regex='[0-9]+ kb/s$'
 	map_regex='.*Stream #(0:[0-9]+).*'
 
@@ -614,12 +612,12 @@ dts_extract_remux () {
 				if [[ ${if_info_tmp[${i}]} =~ $bps_regex ]]; then
 # Deletes everything on the line, except the number of bytes per second
 # (BPS).
-					bps_if=$(sed -E "s/${bps_regex4}/\1/" <<<"${if_info_tmp[${i}]}")
+					bps_if=$(sed -E "s/${bps_regex}/\1/" <<<"${if_info_tmp[${i}]}")
 
 # If input bitrate consists of at least 3 digits...
 					if [[ $bps_if =~ $bps_regex2 ]]; then
 # Gets the 3 last digits of the input bitrate.
-						bps_last=$(sed -E -e "s/${bps_regex5}/\1/" -e 's/^0*//' <<<"$bps_if")
+						bps_last=$(sed -E -e "s/${bps_regex2}/\1/" -e 's/^0*//' <<<"$bps_if")
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
