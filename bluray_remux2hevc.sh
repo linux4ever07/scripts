@@ -146,38 +146,6 @@ USAGE
 	exit
 }
 
-# Creates a function called 'is_torrent', which checks if the filename
-# ends with '.part', or if there's a filename in the same directory that
-# ends with '.part'. If there is, wait until the filename changes, and
-# '.part' is removed from the filename. This function recognizes if
-# input file is an unfinished download, and waits for the file to fully
-# download before processing it.
-is_torrent () {
-	if [[ $if =~ .part$ ]]; then
-		if_tmp="$if"
-	else
-		if_tmp="${if}.part"
-	fi
-
-	if [[ -f $if_tmp ]]; then
-		printf '\n%s\n' 'Waiting for this download to finish:'
-		printf '%s\n\n' "${if_tmp}"
-
-		while [[ -f $if_tmp ]]; do
-			sleep 5
-		done
-
-		if="${if%.part}"
-
-		md5=$(md5sum -b "$if")
-		md5_f="${HOME}/${bname}_MD5-${session}.txt"
-
-		printf '%s\r\n' "$md5" | tee "$md5_f"
-	fi
-}
-
-is_torrent
-
 # If first argument is empty, or is not a real file, then print
 # syntax and quit.
 if [[ -z $1 || ! -f $if ]]; then
@@ -203,7 +171,7 @@ while [[ -n $@ ]]; do
 		'-lang')
 			shift
 
-			lang_regex='[[:alpha:]]{3}'
+			lang_regex='^[[:alpha:]]{3}$'
 
 			if [[ ! $1 =~ $lang_regex ]]; then
 				usage
@@ -1058,6 +1026,38 @@ get_name () {
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
 }
+
+# Creates a function called 'is_torrent', which checks if the filename
+# ends with '.part', or if there's a filename in the same directory that
+# ends with '.part'. If there is, wait until the filename changes, and
+# '.part' is removed from the filename. This function recognizes if
+# input file is an unfinished download, and waits for the file to fully
+# download before processing it.
+is_torrent () {
+	if [[ $if =~ .part$ ]]; then
+		if_tmp="$if"
+	else
+		if_tmp="${if}.part"
+	fi
+
+	if [[ -f $if_tmp ]]; then
+		printf '\n%s\n' 'Waiting for this download to finish:'
+		printf '%s\n\n' "${if_tmp}"
+
+		while [[ -f $if_tmp ]]; do
+			sleep 5
+		done
+
+		if="${if%.part}"
+
+		md5=$(md5sum -b "$if")
+		md5_f="${HOME}/${bname}_MD5-${session}.txt"
+
+		printf '%s\r\n' "$md5" | tee "$md5_f"
+	fi
+}
+
+is_torrent
 
 # Gets information about input file.
 mapfile -t if_info < <(eval "${cmd[1]}" -hide_banner -i \""${if}"\" 2>&1)
