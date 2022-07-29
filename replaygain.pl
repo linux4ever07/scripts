@@ -235,7 +235,7 @@ sub existstag {
 
 	foreach my $tag (@_) {
 		if (! defined($t{$tag})) {
-			say "$fn: doesn't have $tag tag";
+			say $fn . ': ' . 'doesn\'t have ' . $tag . ' tag';
 			$switch = 1;
 			last;
 		}
@@ -270,7 +270,7 @@ sub vendor {
 		$newfn_wav = $newfn . '.wav';
 		$newfn_stderr = $newfn . '.stderr';
 
-		print "$fn: old encoder ($t{vendor_ref}), re-encoding... ";
+		print $fn . ': ' . 'old encoder (' . $t{vendor_ref} . '), re-encoding... ';
 
 # Duplicate STDERR (for restoration later).
 # Redirect STDERR to a file ($newfn_stderr).
@@ -303,7 +303,7 @@ sub vendor {
 
 			foreach (@stderra) {
 				if (/has an ID3v2 tag/) {
-					print "$fn: replacing ID3v2 tags with VorbisComment... ";
+					print "\n" . $fn . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
 
 # Decode the FLAC file to WAV (in order to lose the ID3v2 tags).
 					system('flac', '--silent', '--decode', $fn, "--output-name=$newfn_wav");
@@ -326,7 +326,7 @@ sub vendor {
 # Clearing the %mflac_if hash key representing $fn, to force the
 # 'writetags' subroutine to rewrite the tags. They were removed in the
 # decoding process.
-						$mflac_if{$fn} = ();
+						@{$mflac_if{$fn}} = ();
 					} elsif ($? == 2) {
 						sigint($newfn_wav, $newfn_flac, $newfn_stderr);
 					}
@@ -344,7 +344,7 @@ sub rmtag {
 
 	foreach my $tag (@_) {
 		if (defined($t{$tag})) {
-			say "$fn: removing $tag tag";
+			say $fn . ': ' . 'removing ' . $tag . ' tag';
 			delete($t{$tag});
 		}
 	}
@@ -386,7 +386,7 @@ sub discnum {
 			$t{discnumber} = ${^MATCH};
 			$t{album} =~ s/$regex//;
 
-			say "$fn: adding discnumber tag";
+			say $fn . ': ' . 'adding discnumber tag';
 		}
 	}
 
@@ -399,7 +399,7 @@ sub discnum {
 			$t{discnumber} = 1;
 		}
 
-		say "$fn: adding discnumber tag";
+		say $fn . ': ' . 'adding discnumber tag';
 	}
 
 # Let's add the TOTALDISCS tag as well, if possible.
@@ -407,7 +407,7 @@ sub discnum {
 		if (defined($t{disctotal})) {
 			$t{totaldiscs} = $t{disctotal};
 
-			say "$fn: adding totaldiscs tag";
+			say $fn . ': ' . 'adding totaldiscs tag';
 		}
 	}
 
@@ -416,7 +416,7 @@ sub discnum {
 			${^MATCH} =~ m/$regex3/;
 			$t{totaldiscs} = ${^MATCH};
 
-			say "$fn: adding totaldiscs tag";
+			say $fn . ': ' . 'adding totaldiscs tag';
 		}
 	}
 
@@ -458,7 +458,7 @@ sub albumartist {
 				$t{albumartist} = 'Various Artists';
 			} else { $t{albumartist} = $t{artist}; }
 
-			say "$fn: adding albumartist tag";
+			say $fn . ': ' . 'adding albumartist tag';
 		}
 	}
 }
@@ -484,7 +484,7 @@ sub tracknum {
 		}
 
 		if ($t{tracknumber} ne $old_tag) {
-			say "$fn: fixing tracknumber tag";
+			say $fn . ': ' . 'fixing tracknumber tag';
 		}
 	}
 }
@@ -494,7 +494,7 @@ sub tracknum {
 sub rm_albumart {
 	my $fn = shift;
 
-	say "$fn: removing album art";
+	say $fn . ': ' . 'removing album art';
 
 	system('metaflac', '--remove', ,'--block-type=PICTURE', $fn);
 	or_warn("Can't remove album art");
@@ -601,7 +601,7 @@ sub tags2fn {
 	}
 
 	if (! -f $newfn) {
-		say "$fn: renaming based on tags";
+		say $fn . ': ' . 'renaming based on tags';
 		move($fn, $newfn) or die "Can't rename '$fn': $!";
 	}
 }
@@ -623,13 +623,13 @@ sub totaltracks {
 		$tracks = ${tracks}{$t{discnumber}};
 
 		if (! defined($t{totaltracks}) && ! defined($t{tracktotal})) {
-			say "$fn: adding totaltracks tag";
+			say $fn . ': ' . 'adding totaltracks tag';
 			$t{totaltracks} = $tracks;
 		}
 	}
 
 	if (defined($t{tracktotal}) && ! defined($t{totaltracks})) {
-		say "$fn: adding totaltracks tag";
+		say $fn . ': ' . 'adding totaltracks tag';
 		$t{totaltracks} = $t{tracktotal};
 	}
 }
