@@ -60,6 +60,8 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 
 		if [[ $n -lt ${#line_tmp} ]]; then
 			switch=1
+		else
+			continue
 		fi
 
 		unset -v line_tmp
