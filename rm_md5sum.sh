@@ -7,8 +7,13 @@
 
 set -eo pipefail
 
-if [[ ! -d $1 ]]; then
+usage () {
+	printf '%s\n\n' "Usage: $(basename "$0") [dir]"
 	exit
+}
+
+if [[ -z $1 || ! -d $1 ]]; then
+	usage
 fi
 
 dn=$(readlink -f "$1")

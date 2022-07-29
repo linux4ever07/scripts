@@ -6,7 +6,7 @@
 set -eo pipefail
 
 usage () {
-	echo -e "Usage: $(basename "$0") [source dir] [dirs...]\n"
+	printf '%s\n\n' "Usage: $(basename "$0") [source dir] [dirs...]"
 	exit
 }
 
