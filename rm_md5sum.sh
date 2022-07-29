@@ -5,6 +5,8 @@
 # considered to be the originals, when other files with the same MD5
 # hash are found.
 
+set -eo pipefail
+
 if [[ ! -d $1 ]]; then
 	exit
 fi
