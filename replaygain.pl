@@ -315,7 +315,7 @@ sub vendor {
 					}
 
 # Back up the album art, if it exists.
-					system("metaflac --export-picture-to=\"$newfn_art\" \"$fn\" >&-");
+					system("metaflac --export-picture-to=\"$newfn_art\" \"$fn\" 1>&- 2>&-");
 
 # Encode the WAV file to FLAC.
 					if (-f $newfn_art) {
