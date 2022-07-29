@@ -106,7 +106,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 		;;
 		udp)
 			for n in {1..10}; do
-				timeout 10 nc --udp -z "$address" "$port" >&-
+				timeout 10 nc --udp -z "$address" "$port" 1>&- 2>&-
 			done
 		;;
 		*)
@@ -115,7 +115,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 	esac
 
 	if [[ $? -ne 0 ]]; then
-		ping -c 10 -W 10 "$address" >&-
+		ping -c 10 -W 10 "$address" 1>&- 2>&-
 
 		if [[ $? -eq 0 ]]; then
 			printf '%s\n\n' "$tracker"

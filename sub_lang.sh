@@ -14,7 +14,7 @@ if [[ ! -f $if ]]; then
 	exit
 fi
 
-command -v mkvinfo >&- || exit
+command -v mkvinfo 1>&- 2>&- || exit
 
 switch=0
 count=0

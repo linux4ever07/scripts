@@ -109,7 +109,7 @@ set_volume () {
 
 	volume_dec=$(printf '%d.%06d' "$volume_1" "$volume_2")
 
-	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume_dec}, ${volume_dec} ] }" >&-
+	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume_dec}, ${volume_dec} ] }" 1>&- 2>&-
 }
 
 # Creates a function called 'reset_volume', which resets the volume.
