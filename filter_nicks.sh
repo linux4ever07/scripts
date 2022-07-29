@@ -21,6 +21,8 @@ regex1='^<'
 regex2='^<\+*(.*)>$'
 regex3='(:|,)$'
 
+switch=0
+
 shift
 
 declare -A nicks nicks_tmp
@@ -46,15 +48,19 @@ mapfile -t lines <"$if"
 for (( i=0; i<${#lines[@]}; i++ )); do
 	line=$(tr '[[:upper:]]' '[[:lower:]]' <<<"${lines[${i}]}")
 
-	if [[ $i -eq 0 ]]; then
+	if [[ $switch -eq 0 ]]; then
 		line_tmp="$line"
 
 		n='0'
 
-		until [[ "$line_tmp" =~ $regex1 ]]; do
+		until [[ "$line_tmp" =~ $regex1 || $n -eq ${#line_tmp} ]]; do
 			line_tmp="${line:${n}}"
 			n=$(( n + 1 ))
 		done
+
+		if [[ $n -lt ${#line_tmp} ]]; then
+			switch=1
+		fi
 
 		unset -v line_tmp
 
