@@ -235,7 +235,7 @@ sub existstag {
 
 	foreach my $tag (@_) {
 		if (! defined($t{$tag})) {
-			say $fn . ': ' . 'doesn\'t have ' . $tag . ' tag';
+			say $fn . ': doesn\'t have ' . $tag . ' tag';
 			$switch = 1;
 			last;
 		}
@@ -250,7 +250,7 @@ sub existstag {
 # it.
 sub vendor {
 	my $fn = shift;
-	my($newfn, $newfn_flac, $newfn_wav, $newfn_stderr);
+	my($newfn, $newfn_flac, $newfn_wav, $newfn_stderr, $newfn_art);
 
 	sub sigint {
 		say "Interrupted by user!";
@@ -264,10 +264,11 @@ sub vendor {
 
 	if (! defined($t{vendor_ref}) or $t{vendor_ref} ne $flac_version[1]) {
 		$newfn = $fn;
-		$newfn =~ s/.[[:alnum:]]+$//i;
+		$newfn =~ s/.[[:alnum:]]{3,4}$//i;
 		$newfn = $newfn . '-' . int(rand(10000));
 		$newfn_flac = $newfn . '.flac';
 		$newfn_wav = $newfn . '.wav';
+		$newfn_art = $newfn . '.albumart';
 		$newfn_stderr = $newfn . '.stderr';
 
 		print $fn . ': ' . 'old encoder (' . $t{vendor_ref} . '), re-encoding... ';
@@ -312,9 +313,20 @@ sub vendor {
 					if ($? == 2) {
 						sigint($newfn_wav, $newfn_stderr);
 					}
+
+# Back up the album art, if it exists.
+					system("metaflac --export-picture-to=\"$newfn_art\" \"$fn\" >&-");
+
 # Encode the WAV file to FLAC.
-					system('flac', '--silent', '-8', $newfn_wav, "--output-name=$newfn_flac");
-					or_warn("Can't encode file");
+					if (-f $newfn_art) {
+						system('flac', '--silent', '-8', "--picture=$newfn_art", $newfn_wav, "--output-name=$newfn_flac");
+						or_warn("Can't encode file");
+
+						unlink($newfn_art) or die "Can't remove '$newfn_art': $!";
+					} else {
+						system('flac', '--silent', '-8', $newfn_wav, "--output-name=$newfn_flac");
+						or_warn("Can't encode file");
+					}
 
 					unlink($newfn_wav) or die "Can't remove '$newfn_wav': $!";
 
@@ -344,7 +356,7 @@ sub rmtag {
 
 	foreach my $tag (@_) {
 		if (defined($t{$tag})) {
-			say $fn . ': ' . 'removing ' . $tag . ' tag';
+			say $fn . ': removing ' . $tag . ' tag';
 			delete($t{$tag});
 		}
 	}
@@ -386,7 +398,7 @@ sub discnum {
 			$t{discnumber} = ${^MATCH};
 			$t{album} =~ s/$regex//;
 
-			say $fn . ': ' . 'adding discnumber tag';
+			say $fn . ': adding discnumber tag';
 		}
 	}
 
@@ -399,7 +411,7 @@ sub discnum {
 			$t{discnumber} = 1;
 		}
 
-		say $fn . ': ' . 'adding discnumber tag';
+		say $fn . ': adding discnumber tag';
 	}
 
 # Let's add the TOTALDISCS tag as well, if possible.
@@ -407,7 +419,7 @@ sub discnum {
 		if (defined($t{disctotal})) {
 			$t{totaldiscs} = $t{disctotal};
 
-			say $fn . ': ' . 'adding totaldiscs tag';
+			say $fn . ': adding totaldiscs tag';
 		}
 	}
 
@@ -416,7 +428,7 @@ sub discnum {
 			${^MATCH} =~ m/$regex3/;
 			$t{totaldiscs} = ${^MATCH};
 
-			say $fn . ': ' . 'adding totaldiscs tag';
+			say $fn . ': adding totaldiscs tag';
 		}
 	}
 
@@ -458,7 +470,7 @@ sub albumartist {
 				$t{albumartist} = 'Various Artists';
 			} else { $t{albumartist} = $t{artist}; }
 
-			say $fn . ': ' . 'adding albumartist tag';
+			say $fn . ': adding albumartist tag';
 		}
 	}
 }
@@ -484,7 +496,7 @@ sub tracknum {
 		}
 
 		if ($t{tracknumber} ne $old_tag) {
-			say $fn . ': ' . 'fixing tracknumber tag';
+			say $fn . ': fixing tracknumber tag';
 		}
 	}
 }
@@ -494,7 +506,7 @@ sub tracknum {
 sub rm_albumart {
 	my $fn = shift;
 
-	say $fn . ': ' . 'removing album art';
+	say $fn . ': removing album art';
 
 	system('metaflac', '--remove', ,'--block-type=PICTURE', $fn);
 	or_warn("Can't remove album art");
@@ -601,7 +613,7 @@ sub tags2fn {
 	}
 
 	if (! -f $newfn) {
-		say $fn . ': ' . 'renaming based on tags';
+		say $fn . ': renaming based on tags';
 		move($fn, $newfn) or die "Can't rename '$fn': $!";
 	}
 }
@@ -623,13 +635,13 @@ sub totaltracks {
 		$tracks = ${tracks}{$t{discnumber}};
 
 		if (! defined($t{totaltracks}) && ! defined($t{tracktotal})) {
-			say $fn . ': ' . 'adding totaltracks tag';
+			say $fn . ': adding totaltracks tag';
 			$t{totaltracks} = $tracks;
 		}
 	}
 
 	if (defined($t{tracktotal}) && ! defined($t{totaltracks})) {
-		say $fn . ': ' . 'adding totaltracks tag';
+		say $fn . ': adding totaltracks tag';
 		$t{totaltracks} = $t{tracktotal};
 	}
 }
