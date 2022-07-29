@@ -28,7 +28,7 @@ usage () {
 
 if [[ -z $1 || ! -f $1 ]]; then
 	usage
-elif [[ ! -z $2 && $2 != '-nocheck' ]]; then
+elif [[ -n $2 && $2 != '-nocheck' ]]; then
 	usage
 fi
 
@@ -55,7 +55,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line=$(tr -d '[:space:]' <<<"${lines[${i}]}")
 	switch=0
 
-	if [[ ! -z $line ]]; then
+	if [[ -n $line ]]; then
 		for (( j = 0; j < ${#trackers[@]}; j++ )); do
 			line_tmp=$(sed -E -e "s_${regex4}__" -e "s_${regex5}__" <<<"$line")
 			grep --quiet "$line_tmp" <<<"${trackers[${j}]}"

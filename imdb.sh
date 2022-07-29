@@ -14,7 +14,7 @@ usage () {
 	exit
 }
 
-if [[ ${#@} -eq 0 ]]; then
+if [[ -z $@ ]]; then
 	usage
 fi
 
@@ -82,8 +82,7 @@ imdb () {
 		curl --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "${1}" 2>&-
 	}
 
-	if [[ $# -eq 0 ]]; then
-		printf '%s\n\n' 'Usage: imdb "movie title (year)"'
+	if [[ -z $term ]]; then
 		return 1
 	else
 		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")")
