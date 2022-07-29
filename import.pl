@@ -16,7 +16,7 @@ use Encode qw(decode find_encoding);
 
 my $script = basename($0);
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my (@log, %t, %files);
+my (@log, %t, %files, $library);
 
 if (defined($ARGV[0])) {
 	if (scalar(@ARGV) < 2 or ! -d $ARGV[0]) {
