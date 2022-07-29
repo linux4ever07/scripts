@@ -21,7 +21,7 @@ my (@log, %t, %files, $library);
 if (defined($ARGV[0])) {
 	if (scalar(@ARGV) < 2 or ! -d $ARGV[0]) {
 		usage();
-	} else { $library = abs_path($ARGV[0]); }
+	} else { $library = shift; }
 } else {
 	usage();
 }
