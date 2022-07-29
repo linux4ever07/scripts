@@ -29,7 +29,7 @@ erase_devices () {
 			printf '...%s' "$n"
 
 			for source in "${sources[@]}"; do
-				dd if="$source" of="$device" bs=1M count=100 &>-
+				dd if="$source" of="$device" bs=1M count=100 1>&- 2>&-
 			done
 		done
 
