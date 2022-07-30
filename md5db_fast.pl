@@ -287,7 +287,7 @@ sub logger {
 			}
 
 			say $LOG $n . ' file(s) were tested.' . "\n" if ($n);
-			say $LOG "\n" . '**** Logging ended on' . $now . ' ****' .
+			say $LOG "\n" . '**** Logging ended on ' . $now . ' ****' .
 			"\n";
 			close $LOG or die "Can't close '$LOG': $!";
 		}
