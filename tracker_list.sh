@@ -49,7 +49,7 @@ regex5='/$'
 
 declare -a trackers
 
-mapfile -t lines < <(sort --unique <"$if")
+mapfile -t lines < <(sort --unique <"$if" | tr '[:upper:]' '[:lower:]')
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line=$(tr -d '[:space:]' <<<"${lines[${i}]}")
@@ -82,7 +82,7 @@ declare -A md5h
 
 for (( i = 0; i < ${#trackers[@]}; i++ )); do
 	tracker=$(tr -d '[:space:]' <<<"${trackers[${i}]}")
-	md5=$(md5sum <<<"$tracker")
+	md5=$(md5sum -b <<<"$tracker")
 
 	if [[ ${md5h[${md5}]} -eq 1 ]]; then
 		continue
@@ -97,7 +97,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 	fi
 
 	address=$(sed -E -e "s_${regex1}__" -e "s_${regex2}__" -e "s_${regex3}__" <<<"$tracker")
-	protocol=$(grep -Eo "$regex1" <<<"$tracker" | sed -E "s_${regex1}_\1_" | tr '[:upper:]' '[:lower:]')
+	protocol=$(grep -Eo "$regex1" <<<"$tracker" | sed -E "s_${regex1}_\1_")
 	port=$(grep -Eo "$regex2" <<<"$tracker" | sed -E "s_${regex2}_\1_")
 
 	case $protocol in
