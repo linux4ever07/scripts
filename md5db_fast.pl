@@ -363,7 +363,7 @@ sub file2hash {
 	}
 
 # Clears the screen, thereby scrolling past the database file print.
-#	print $clear;
+	print $clear;
 }
 
 # Subroutine for printing the database hash to the database file.
