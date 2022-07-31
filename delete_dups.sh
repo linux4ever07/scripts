@@ -21,7 +21,7 @@ for dn in "$@"; do
 		usage
 	fi
 
-	dirs+=( "$(readlink -f "$dn")" )
+	dirs+=("$(readlink -f "$dn")")
 done
 
 declare -A md5s

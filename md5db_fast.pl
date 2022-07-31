@@ -29,7 +29,10 @@ chomp(my $cores = `grep -c ^processor /proc/cpuinfo`);
 my (@lib, $mode);
 
 # Path to and name of log file to be used for logging.
-my $logf = "$ENV{HOME}/md5db.log";
+my $logf = $ENV{HOME} . '/' . 'md5db.log';
+
+# Regex used for skipping dot files and directories in home directories.
+my $dotskip = qr(^/home/[[:alnum:]]+/\.);
 
 # Delimiter used for database.
 my $delim = "\t\*\t";
@@ -286,7 +289,7 @@ sub logger {
 				}
 			}
 
-			say $LOG $n . ' file(s) were tested.' . "\n" if ($n);
+			say $LOG $n . ' file(s) were tested.' . "\n" if (length($n));
 			say $LOG "\n" . '**** Logging ended on ' . $now . ' ****' .
 			"\n";
 			close $LOG or die "Can't close '$LOG': $!";
@@ -303,7 +306,7 @@ sub file2hash {
 	my $dn = shift;
 
 # The format string which is used for parsing the database file.
-	my $format = qr/^.*\t\*\t[[:alnum:]]{32}$/;
+	my $format = qr/^.*\Q$delim\E[[:alnum:]]{32}$/;
 	my (@dbfile, $md5db_in);
 
 # Open the database file and read it into the @dbfile variable.
@@ -322,7 +325,7 @@ sub file2hash {
 		if ($line =~ /$format/) {
 # Split the line into relative file name, and MD5 sum.
 # Also create another variable that contains the absolute file name.
-			my ($rel_fn, $hash) = (split(/\Q$delim/, $line));
+			my ($rel_fn, $hash) = (split(/\Q$delim\E/, $line));
 			my $abs_fn;
 			if ($dn ne '.') { $abs_fn = $dn . '/' . $rel_fn; }
 			else { $abs_fn = $rel_fn; }
@@ -336,7 +339,7 @@ sub file2hash {
 # "$HOME/.*".
 			if ($abs_fn =~ m/^\./) {
 				my $absabs_fn = abs_path($abs_fn);
-				if ($absabs_fn =~ m(^/home/[[:alnum:]]+/\.)) { next; }
+				if ($absabs_fn =~ m($dotskip)) { next; }
 			}
 
 # If $abs_fn is a real file and not already in the hash, continue.
@@ -360,7 +363,7 @@ sub file2hash {
 	}
 
 # Clears the screen, thereby scrolling past the database file print.
-	print $clear;
+#	print $clear;
 }
 
 # Subroutine for printing the database hash to the database file.
@@ -422,7 +425,7 @@ sub getfiles {
 # the home-dir of a user are usually configuration files for the desktop
 # and various applications. These files change often and will therefore
 # clog the log file created by this script, making it hard to read.
-		if ($fn =~ m(^/home/[[:alnum:]]+/\.)) { next; }
+		if ($fn =~ m($dotskip)) { next; }
 
 # Using quotemeta operators here (\Q & \E) because Perl interprets the
 # string as a regular expression when it's not.
@@ -496,7 +499,7 @@ sub md5import {
 # After that strip the path (if any) of the file name, and prepend the
 # path of the *.MD5 file to it instead. Store hash and file name in the
 # $hash and $fn variables for readability.
-				@fields = split(/\s\Q*/, $line, 2);
+				@fields = split(/\s\*/, $line, 2);
 				my $path = dirname($md5fn);
 				$hash = $fields[0];
 

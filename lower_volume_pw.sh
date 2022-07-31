@@ -188,7 +188,7 @@ get_count () {
 # Creates a function called 'spin', which will show a simple animation,
 # while waiting for the command output.
 spin () {
-	spinner=( '   ' '.  ' '.. ' '...' )
+	spinner=('   ' '.  ' '.. ' '...')
 
 	while true; do
 		for s in "${spinner[@]}"; do

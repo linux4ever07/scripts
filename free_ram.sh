@@ -87,7 +87,7 @@ kill_firefox () {
 
 	for name in 'Web Content' 'WebExtensions'; do
 		mapfile -t pids_tmp < <(pgrep -x "$name" | tr -d '[:blank:]')
-		pids+=( "${pids_tmp[@]}" )
+		pids+=("${pids_tmp[@]}")
 	done
 
 	for name in firefox tor; do
