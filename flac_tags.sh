@@ -42,7 +42,7 @@ gettags () {
 
 		field=$(tr '[:upper:]' '[:lower:]' <<<"${mflac[0]}")
 
-		if [[ "${alltags[${field}]}" ]]; then
+		if [[ -n ${alltags[${field}]} ]]; then
 			continue
 		fi
 
