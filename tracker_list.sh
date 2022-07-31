@@ -44,7 +44,7 @@ switch=0
 regex1='^([[:alpha:]]+)://'
 regex2=':([0-9]+)'
 regex3='/.*$'
-regex4='/announce(\.[[:alpha:]]{1,4}){0,1}$'
+regex4='/announce(\.[^.]*){0,1}$'
 regex5='/$'
 
 declare -a trackers

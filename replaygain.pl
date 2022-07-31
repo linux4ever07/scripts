@@ -264,7 +264,7 @@ sub vendor {
 
 	if (! defined($t{vendor_ref}) or $t{vendor_ref} ne $flac_version[1]) {
 		$newfn = $fn;
-		$newfn =~ s/.[[:alnum:]]{3,4}$//i;
+		$newfn =~ s/\.[^.]*$//;
 		$newfn = $newfn . '-' . int(rand(10000));
 		$newfn_flac = $newfn . '.flac';
 		$newfn_wav = $newfn . '.wav';

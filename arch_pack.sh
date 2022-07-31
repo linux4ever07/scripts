@@ -9,7 +9,7 @@ set -o pipefail
 # the first argument to the script.
 f=$(readlink -f "$1")
 f_bn=$(basename "$f")
-of=$(sed -E 's/(\.[0-z]{2,3}){1,2}$//' <<<"$1")
+of=$(sed -E 's/(\.tar){0,1}(\.[^.]*)$//' <<<"$1")
 stderr_f="/dev/shm/arch_pack_stderr-${RANDOM}.txt"
 c_tty=$(tty)
 
