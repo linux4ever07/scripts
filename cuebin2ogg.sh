@@ -50,6 +50,10 @@ cue="$if"
 cue_tmp_f="/dev/shm/${if_bn%.cue}-${RANDOM}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -iname "${if_name}.bin" | head -n 1)
 
+regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
+regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
+
 declare -a cue_lines bchunk_list of_cue_list
 
 # trap ctrl-c and call ctrl_c()
@@ -86,16 +90,14 @@ read_cue () {
 	touch "$cue_tmp_f"
 
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
-		cue_lines[${i}]=$(sed -E 's/^[[:blank:]]*(.*)[[:blank:]]*$/\1/' <<<"${cue_lines[${i}]}")
+		cue_lines[${i}]=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${i}]}")
 
 		if [[ ${cue_lines[${i}]} =~ ^FILE ]]; then
-
 			n=$(( n + 1 ))
 
 # Extracting the filename from line, and removing path from it.
-			bin_tmp=$(sed -E 's/^FILE (\"{0,1}.*\"{0,1}) .*$/\1/' <<<"${cue_lines[${i}]}")
-			bin_tmp=$(tr -d '"' <<<"$bin_tmp")
-			bin_tmp=$(sed 's_.*/__' <<<"$bin_tmp")
+			bin_tmp=$(sed -E "s/${regex_fn}/\2/" <<<"${cue_lines[${i}]}")
+			bin_tmp=$(sed -E 's_.*/__' <<<"$bin_tmp")
 
 # Adding the full path to filename.
 			bin_tmp="${if_dn}/${bin_tmp}"
@@ -118,7 +120,7 @@ read_cue () {
 # new one containing the full path to file. We need this, since we're
 # creating a temporary input CUE file in /dev/shm, so its location will
 # be different from the files it points to.
-			f_type=$(sed -E 's/^FILE \"{0,1}.*\"{0,1} (.*)$/\1/' <<<"${cue_lines[${i}]}")
+			f_type=$(sed -E "s/${regex_fn}/\3/" <<<"${cue_lines[${i}]}")
 			cue_lines[${i}]="FILE \"${bin_tmp}\" ${f_type}"
 		fi
 
@@ -190,7 +192,7 @@ bin_split () {
 	done
 
 	for (( i=${n}; i<${#bchunk_stdout[@]}; i++ )); do
-		line=$(sed -E 's/^ *[0-9]+: (.*\.[[:alpha:]]{3}).*/\1/' <<<"${bchunk_stdout[${i}]}")
+		line=$(sed -E "s/${regex_bchunk}/\1/" <<<"${bchunk_stdout[${i}]}")
 
 		if [[ $line =~ .wav$ ]]; then
 			bchunk_list+=( "$(sed 's/.wav$/.ogg/' <<<"$line")" )
