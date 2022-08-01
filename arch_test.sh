@@ -1,6 +1,8 @@
 #!/bin/bash
 # This script tests archive files passed to it as arguments.
 
+set -o pipefail
+
 stderr_f="/dev/shm/arch_test_stderr-${RANDOM}.txt"
 c_tty=$(tty)
 
