@@ -36,8 +36,8 @@ if [[ ! -f $if ]]; then
 fi
 
 if_bn=$(basename "$if")
-if_bn_lc=$(sed 's/[[:upper:]]/\L&/g' <<<"$if_bn")
-if_name="${if_bn_lc%.cue}"
+if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
+if_name="${if_bn_lc%.[^.]*}"
 of_name=$(tr '[:blank:]' '_' <<<"$if_name")
 
 if_dn=$(dirname "$if")
