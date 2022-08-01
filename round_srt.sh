@@ -22,7 +22,7 @@ usage () {
 }
 
 if=$(readlink -f "$1" 2>&-)
-of_tmp="${if%.srt}"
+of_tmp="${if%.[^.]*}"
 of="${of_tmp}-${RANDOM}.srt"
 
 if [[ ! -f $if ]]; then
