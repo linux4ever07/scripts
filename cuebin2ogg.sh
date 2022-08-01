@@ -16,11 +16,8 @@
 # If the byte order is wrong, the Ogg files will be white noise.
 # So, it's easy to tell whether or not the byte order is correct.
 
-# You can convert the ISO back to BIN (since it's now stripped of
-# its audio tracks). Use PowerISO for Linux, or the Windows version in
-# Wine.
-#
-# https://www.poweriso.com/
+# The ISO file produced by bchunk is discarded, and the data track is
+# instead copied directly from the original BIN file.
 
 if=$(readlink -f "$1")
 
@@ -45,14 +42,17 @@ of_dn="${PWD}/${of_name}-${RANDOM}"
 
 of_cue="${of_dn}/${of_name}01.cue"
 of_bin="${of_dn}/${of_name}01.bin"
+of_iso="${of_dn}/${of_name}01.iso"
 
 cue="$if"
-cue_tmp_f="/dev/shm/${if_bn%.cue}-${RANDOM}.cue"
+cue_tmp_f="/dev/shm/${if_bn%.[^.]*}-${RANDOM}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -iname "${if_name}.bin" | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
+regex_audio='^TRACK [0-9]+ AUDIO$'
+regex_audio2='^INDEX 01 ([0-9]{2}:[0-9]{2}:[0-9]{2})$'
 
 declare -a cue_lines bchunk_list of_cue_list
 
@@ -82,7 +82,7 @@ check_cmd () {
 # file, add full path to filenames listed in the CUE file, and create a
 # new temporary CUE file in /dev/shm based on this.
 read_cue () {
-	mapfile -t cue_lines <"$cue"
+	mapfile -t cue_lines < <(tr -d '\r' <"$cue")
 
 	declare -a bin_list not_found
 	n='0'
@@ -97,7 +97,7 @@ read_cue () {
 
 # Extracting the filename from line, and removing path from it.
 			bin_tmp=$(sed -E "s/${regex_fn}/\2/" <<<"${cue_lines[${i}]}")
-			bin_tmp=$(sed -E 's_.*/__' <<<"$bin_tmp")
+			bin_tmp=$(tr -d '"' <<<"$bin_tmp")
 
 # Adding the full path to filename.
 			bin_tmp="${if_dn}/${bin_tmp}"
@@ -110,8 +110,8 @@ read_cue () {
 			if [[ -z $bin ]]; then
 				bin="$bin_tmp"
 			elif [[ $n -gt 1 ]]; then
-				printf '\n%s\n' "This CUE file contains multiple FILE commands!"
-				printf '%s\n\n' "You need to merge all the containing files into one BIN file, using a tool like PowerISO."
+				printf '\n%s\n' 'This CUE file contains multiple FILE commands!'
+				printf '%s\n\n' 'You need to merge all the containing files into one BIN file, using a tool like PowerISO.'
 				rm -f "$cue_tmp_f"
 				exit
 			fi
@@ -136,7 +136,7 @@ read_cue () {
 	done
 
 	if [[ -n ${not_found[@]} ]]; then
-		printf '\n%s\n\n' "The files below were not found:"
+		printf '\n%s\n\n' 'The files below were not found:'
 
 		for (( i=0; i<${#bin_list[@]}; i++ )); do
 			printf '%s\n' "${bin_list[${i}]}"
@@ -283,6 +283,36 @@ create_cue () {
 	done
 }
 
+# Copies the raw BINARY data from the original BIN file for the data
+# track.
+bin_data_track () {
+	for (( i=0; i<${#cue_lines[@]}; i++ )); do
+		cue_line=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${i}]}")
+
+		n=$(( i + 1 ))
+
+		if [[ $cue_line =~ $regex_audio ]]; then
+			cue_line_next=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${n}]}")
+
+			if [[ $cue_line_next =~ $regex_audio2 ]]; then
+				mapfile -d':' -t data_track_length < <(sed -E "s/${regex_audio2}/\1/" <<<"$cue_line_next")
+				break
+			fi
+		fi
+	done
+
+# Converting minutes and seconds to frames, and adding all the numbers
+# together.
+	data_track_length[0]=$(( ${data_track_length[0]} * 60 * 75 ))
+	data_track_length[1]=$(( ${data_track_length[1]} * 75 ))
+
+	data_frames=$(( ${data_track_length[0]} + ${data_track_length[1]} + ${data_track_length[2]} ))
+
+# 2048 bytes is the sector size normally for data CDs / tracks, and 2352
+# is the size of audio sectors.
+	dd if="$bin" of="$of_bin" bs=2352 count="$data_frames"
+}
+
 # Check if 'oggenc' and 'bchunk' are installed.
 check_cmd oggenc bchunk
 
@@ -296,6 +326,9 @@ bin_split "$2"
 wav2ogg
 create_cue
 
+# Remove ISO file, since we're gonna copy the BIN data track instead.
+rm -f "$of_iso"
+
 # Create output file, or quit.
 touch "$of_cue" || exit
 
@@ -303,9 +336,12 @@ printf '\n'
 
 # Print the created CUE file to the terminal, and to the output file.
 for (( i=0; i<${#of_cue_list[@]}; i++ )); do
-	printf '%s\n' "${of_cue_list[${i}]}" | tee --append "$of_cue"
+	printf '%s\r\n' "${of_cue_list[${i}]}" | tee --append "$of_cue"
 done
 
 printf '\n' 
 
 rm -f "$cue_tmp_f"
+
+# Copy data track from original BIN file.
+bin_data_track
