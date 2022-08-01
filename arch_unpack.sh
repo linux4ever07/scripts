@@ -168,7 +168,7 @@ while [[ $# -gt 0 ]]; do
 			check_cmd dar
 
 			dar_of="${PWD}/${f_bn}"
-			dar_of=$(sed -E 's/(\.[0-9]+){0,1}\.dar$//' <<<"$dar_of")
+			dar_of=$(sed -E 's/(\.[0-9]+){0,1}(\.dar)$//' <<<"$dar_of")
 			dar_of="${dar_of}-${RANDOM}"
 			mkdir "$dar_of"
 
