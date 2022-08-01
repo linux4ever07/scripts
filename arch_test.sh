@@ -118,15 +118,19 @@ output () {
 	fi
 }
 
-while [[ $# -gt 0 ]]; do
 # If there are no arguments to the script, print usage and then exit.
-	if [[ ! -f $1 ]]; then
-		usage
-	fi
+if [[ -z $1 ]]; then
+	usage
+fi
 
+while [[ $# -gt 0 ]]; do
 	f=$(readlink -f "$1")
 	f_bn=$(basename "$f")
 	f_lc=$(tr '[[:upper:]]' '[[:lower:]]' <<<"$f_bn")
+
+	if [[ ! -f $f || ! -r $f ]]; then
+		usage
+	fi
 
 	if [[ -f $f ]]; then
 		case "$f_lc" in

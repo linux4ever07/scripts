@@ -95,11 +95,6 @@ CMD
 	done
 }
 
-# If there are no arguments to the script, print usage and then exit.
-if [[ -z $1 ]]; then
-	usage
-fi
-
 # Creates a function, called 'output', which will let the user know if
 # the extraction went okay or not. If not, print the entire output from
 # the compression program.
@@ -124,6 +119,11 @@ output () {
 		print_stdout
 	fi
 }
+
+# If there are no arguments to the script, print usage and then exit.
+if [[ -z $1 ]]; then
+	usage
+fi
 
 while [[ $# -gt 0 ]]; do
 	f=$(readlink -f "$1")
