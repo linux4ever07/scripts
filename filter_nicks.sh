@@ -6,7 +6,7 @@
 # on between the nicks specified.
 
 if=$(readlink -f "$1")
-of="${if%.???}-${RANDOM}-${RANDOM}.txt"
+of="${if%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
 usage () {
 	printf '%s\n' "Usage: $(basename "$0") [log] [nicks...]"

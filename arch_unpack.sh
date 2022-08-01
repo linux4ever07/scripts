@@ -130,7 +130,7 @@ output () {
 # copy files from, and unmount an ISO file. This in effect means
 # extracting the ISO.
 iso_extract () {
-	iso_bn="${f_bn%.???}"
+	iso_bn="${f_bn%.[^.]*}"
 	iso_mnt="/dev/shm/${f_bn}-${RANDOM}"
 	iso_of="${PWD}/${iso_bn}-${RANDOM}"
 
