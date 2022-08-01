@@ -92,7 +92,7 @@ read_cue () {
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
 		cue_lines[${i}]=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${i}]}")
 
-		if [[ ${cue_lines[${i}]} =~ ^FILE ]]; then
+		if [[ ${cue_lines[${i}]} =~ $regex_fn ]]; then
 			n=$(( n + 1 ))
 
 # Extracting the filename from line, and removing path from it.
