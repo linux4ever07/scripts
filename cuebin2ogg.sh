@@ -175,7 +175,7 @@ bin_split () {
 		last=$(( ${#bchunk_stdout[@]} - 1 ))
 	fi
 
-	if [[ ${bchunk_stdout[${last}]} -ne 0 ]]; then
+	if [[ "${bchunk_stdout[${last}]}" != "0" ]]; then
 		print_stdout
 
 		exit
