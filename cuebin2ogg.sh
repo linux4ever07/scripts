@@ -185,7 +185,6 @@ bin_split () {
 		line="${bchunk_stdout[${i}]}"
 
 		if [[ $line == 'Writing tracks:' ]]; then
-
 			n=$(( i + 2 ))
 			break
 		fi
