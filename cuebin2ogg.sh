@@ -217,7 +217,7 @@ wav2ogg () {
 create_cue () {
 	n='0'
 
-	mode_regex='^TRACK [0-9]{2,} MODE'
+	regex_mode='^TRACK [0-9]{2,} MODE'
 
 	declare -A gaps
 	declare -a modes
@@ -244,7 +244,7 @@ create_cue () {
 			'TRACK'*)
 				n=$(( n + 1 ))
 
-				if [[ $line =~ $mode_regex ]]; then
+				if [[ $line =~ $regex_mode ]]; then
 					modes[${n}]="$line"
 				fi
 			;;
