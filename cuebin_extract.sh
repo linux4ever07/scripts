@@ -138,8 +138,8 @@ bin=$(find "$if_dn" -maxdepth 1 -iname "${if_name}.bin" | head -n 1)
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
-regex_audio='^TRACK [0-9]+ AUDIO$'
-regex_audio2='^INDEX [0-9]{2} ([0-9]{2}:[0-9]{2}:[0-9]{2})$'
+regex_audio='^TRACK [0-9]{2,} AUDIO$'
+regex_audio2='^INDEX [0-9]{2,} ([0-9]{2}:[0-9]{2}:[0-9]{2})$'
 regex_iso='\.iso$'
 regex_wav='\.wav$'
 
