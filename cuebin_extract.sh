@@ -30,7 +30,7 @@
 # be white noise if the endianness is wrong. So, it's easy to tell
 # whether or not the byte order is correct.
 
-# The ISO file produced by bchunk is discarded, and the data track is
+# The ISO file produced by 'bchunk' is discarded, and the data track is
 # instead copied directly from the original BIN file, calculating the
 # length of the data track based on the information gathered from the
 # CUE file.
