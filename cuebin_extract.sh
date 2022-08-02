@@ -109,7 +109,7 @@ fi
 if_bn=$(basename "$if")
 if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
 
-# If $if is not a real file, or it has the wrong extensionprint usage
+# If $if is not a real file, or it has the wrong extension, print usage
 # and quit.
 if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
