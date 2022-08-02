@@ -394,8 +394,6 @@ create_cue () {
 		;;
 	esac
 
-	n='0'
-
 	regex_mode='^TRACK [0-9]{2,} MODE'
 
 	case $type_tmp in
