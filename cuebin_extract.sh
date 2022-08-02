@@ -69,7 +69,7 @@ fi
 
 declare -A audio_types
 
-audio_types=([cdr]=0 [ogg]=0 [flac]=0)
+audio_types=(['cdr']=0 ['ogg']=0 ['flac']=0)
 exclusive=0
 byteswap=0
 
@@ -79,19 +79,19 @@ shift
 while [[ -n $@ ]]; do
 	case $1 in
 		'-cdr')
-			audio_types[cdr]=1
+			audio_types['cdr']=1
 			exclusive=1
 
 			shift
 		;;
 		'-ogg')
-			audio_types[ogg]=1
+			audio_types['ogg']=1
 			exclusive=1
 
 			shift
 		;;
 		'-flac')
-			audio_types[flac]=1
+			audio_types['flac']=1
 			exclusive=1
 
 			shift
@@ -357,7 +357,7 @@ bin_split () {
 	done
 }
 
-# Creates a function called 'wav2ogg', which will encode the WAVs
+# Creates a function called 'encode_audio', which will encode the WAVs
 # created by 'bchunk'.
 encode_audio () {
 	type="$1"
@@ -454,6 +454,9 @@ create_cue () {
 			add_gap post
 		fi
 	done
+
+	# Clearing this array since it's used for both ogg and flac.
+	unset -v bchunk_wav_list
 }
 
 # Copies the raw BINARY data from the original BIN file for the data
