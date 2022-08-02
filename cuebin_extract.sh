@@ -113,6 +113,11 @@ fi
 
 if_bn=$(basename "$if")
 if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
+
+if [[ ${if_bn_lc##*.} != 'cue' ]]; then
+	usage
+fi
+
 if_name="${if_bn_lc%.[^.]*}"
 of_name=$(tr '[:blank:]' '_' <<<"$if_name")
 
