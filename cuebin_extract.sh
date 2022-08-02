@@ -137,6 +137,7 @@ regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 regex_audio='^TRACK [0-9]{2,} AUDIO$'
 regex_audio2='^INDEX [0-9]{2,} ([0-9]{2}:[0-9]{2}:[0-9]{2})$'
+regex_mode='^TRACK [0-9]{2,} MODE'
 regex_iso='\.iso$'
 regex_wav='\.wav$'
 
@@ -384,8 +385,6 @@ create_cue () {
 			type_tmp='wav'
 		;;
 	esac
-
-	regex_mode='^TRACK [0-9]{2,} MODE'
 
 	case $type_tmp in
 		'cdr')
