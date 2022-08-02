@@ -216,8 +216,8 @@ read_cue () {
 		printf '%s\n' "${cue_lines[${i}]}" >> "$cue_tmp_f"
 	done
 
-# If the filenames in the CUE aren't real files, the print the filenames
-# and quit.
+# If the filenames in the CUE aren't real files, then print the
+# filenames and quit.
 	for (( i=0; i<${#bin_list[@]}; i++ )); do
 		if [[ ! -f ${bin_list[${i}]} ]]; then
 			not_found+=("${bin_list[${i}]}")
