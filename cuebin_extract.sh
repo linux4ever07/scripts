@@ -46,13 +46,13 @@ Usage: $(basename "$0") [CUE] [...]
 	Optional arguments:
 
 -cdr
-	Audio tracks will be outputted exclusively in CD audio format.
+	Audio tracks will be output exclusively in CD audio format.
 
 -ogg
-	Audio tracks will be outputted exclusively in Ogg Vorbis.
+	Audio tracks will be output exclusively in Ogg Vorbis.
 
 -flac
-	Audio tracks will be outputted exclusively in FLAC.
+	Audio tracks will be output exclusively in FLAC.
 
 -byteswap
 	Reverses the endianness / byte order of the audio tracks.
