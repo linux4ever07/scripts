@@ -62,11 +62,6 @@ USAGE
 	exit
 }
 
-# If $if is not a real file, print usage and quit.
-if [[ ! -f $if ]]; then
-	usage
-fi
-
 declare -A audio_types
 
 audio_types=(['cdr']=0 ['ogg']=0 ['flac']=0)
@@ -114,7 +109,9 @@ fi
 if_bn=$(basename "$if")
 if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
 
-if [[ ${if_bn_lc##*.} != 'cue' ]]; then
+# If $if is not a real file, or it has the wrong extensionprint usage
+# and quit.
+if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
 
@@ -200,7 +197,8 @@ read_cue () {
 # If the number of FILE commands is greater than 1, quit.
 			if [[ -z $bin ]]; then
 				bin="$bin_tmp"
-			elif [[ $n -gt 1 ]]; then
+			fi
+			if [[ $n -gt 1 ]]; then
 				printf '\n%s\n' 'This CUE file contains multiple FILE commands!'
 				printf '%s\n\n' 'You need to merge all the containing files into one BIN file, using a tool like PowerISO.'
 				rm -f "$cue_tmp_f"
