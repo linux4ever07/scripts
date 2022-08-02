@@ -499,7 +499,7 @@ for type in "${!audio_types[@]}"; do
 done
 
 # Remove the ISO file, since we're gonna copy the raw data track from
-# the BIN file instead instead.
+# the BIN file instead.
 rm -f "$of_iso"
 
 printf '\n'
