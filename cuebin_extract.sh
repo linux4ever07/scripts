@@ -525,8 +525,8 @@ for type in "${!audio_types[@]}"; do
 
 	for (( i=0; i<elements; i++ )); do
 		line_ref="of_cue_${type}_list[${i}]"
-		printf '%s\r\n' "${!line_ref}" | tee --append "${!of_cue_ref}"
-	done
+		printf '%s\r\n' "${!line_ref}"
+	done | tee "${!of_cue_ref}"
 
 	printf '\n'
 done
