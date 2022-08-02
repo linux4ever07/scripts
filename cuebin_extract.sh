@@ -447,8 +447,8 @@ create_cue () {
 	unset -v bchunk_wav_list
 }
 
-# Copies the raw BINARY data from the original BIN file for the data
-# track.
+# Creates a function called 'bin_data_track', which copies the raw
+# binary data from the original BIN file for the data track.
 bin_data_track () {
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
 		cue_line=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${i}]}")
