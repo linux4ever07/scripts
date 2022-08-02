@@ -295,17 +295,10 @@ bin_split () {
 	case $type_tmp in
 		'cdr')
 			mapfile -t bchunk_cdr_stdout < <(eval "${cdr_args[@]}"; printf '%s\n' "$?")
-		;;
-		'wav')
-			mapfile -t bchunk_wav_stdout < <(eval "${wav_args[@]}"; printf '%s\n' "$?")
-		;;
-	esac
-
-	case $type_tmp in
-		'cdr')
 			elements="${#bchunk_cdr_stdout[@]}"
 		;;
 		'wav')
+			mapfile -t bchunk_wav_stdout < <(eval "${wav_args[@]}"; printf '%s\n' "$?")
 			elements="${#bchunk_wav_stdout[@]}"
 		;;
 	esac
