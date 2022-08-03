@@ -137,7 +137,7 @@ bin=$(find "$if_dn" -maxdepth 1 -iname "${if_name}.bin" | head -n 1)
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
-regex_frames='[0-9]+'
+regex_frames='^[0-9]+$'
 regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
 regex_audio='^TRACK [0-9]{2,} AUDIO$'
 regex_index="^INDEX ([0-9]{2,}) (${regex_time})$"
@@ -484,18 +484,14 @@ create_cue () {
 }
 
 # Creates a function called 'time_convert', which converts time in the
-# 00:00:00 format back and forth between frames / sectors or the time
+# hh:mm:ss format back and forth between frames / sectors or the time
 # format.
 time_convert () {
 	time="$1"
 
-# If argument is in the 00:00:00 format...
+# If argument is in the hh:mm:ss format...
 	if [[ $time =~ $regex_time ]]; then
-		mapfile -d':' -t time_split <<<"$time"
-
-		time_split[0]=$(sed -E 's/^0{1}//' <<<"${time_split[0]}")
-		time_split[1]=$(sed -E 's/^0{1}//' <<<"${time_split[1]}")
-		time_split[2]=$(sed -E 's/^0{1}//' <<<"${time_split[2]}")
+		mapfile -t time_split < <(tr ':' '\n'  <<<"$time" | sed -E 's/^0{1}//')
 
 # Converting minutes and seconds to frames, and adding all the numbers
 # together.
@@ -538,6 +534,7 @@ time_convert () {
 # binary data from the original BIN file for the data track.
 bin_data_track () {
 	n=0
+	sector=('2048' '2352')
 	last=$(( ${#cue_lines[@]} - 1 ))
 
 	until [[ $n -eq $last ]]; do
@@ -567,7 +564,7 @@ bin_data_track () {
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
 # bytes is the size of audio sectors.
-	dd if="$bin" of="$of_bin" bs=2352 count="$data_frames"
+	dd if="$bin" of="$of_bin" bs="${sector[1]}" count="$data_frames"
 }
 
 # Check if 'oggenc', 'flac' and 'bchunk' are installed.
@@ -626,7 +623,7 @@ done
 
 printf '\n' 
 
-rm -f "$cue_tmp_f"
+rm -f "$cue_tmp_f" || exit
 
 # Copy data track from original BIN file.
 bin_data_track

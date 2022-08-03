@@ -191,9 +191,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	printf '%s\n' "$finished_line"
 done
 
-touch "$of"
-
 # Writes the array to $of (output file).
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	printf '%s\r\n' "${lines[${i}]}" >> "$of"
-done
+	printf '%s\r\n' "${lines[${i}]}"
+done > "$of"
