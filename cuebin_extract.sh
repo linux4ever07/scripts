@@ -537,20 +537,32 @@ time_convert () {
 # Creates a function called 'bin_data_track', which copies the raw
 # binary data from the original BIN file for the data track.
 bin_data_track () {
-	for (( i=0; i<${#cue_lines[@]}; i++ )); do
-		cue_line="${cue_lines[${i}]}"
+	n=0
+	last=$(( ${#cue_lines[@]} - 1 ))
 
-		n=$(( i + 1 ))
+	until [[ $n -eq $last ]]; do
+		cue_line="${cue_lines[${n}]}"
 
 		if [[ $cue_line =~ $regex_audio ]]; then
-			cue_line_next="${cue_lines[${n}]}"
+			n=$(( n + 1 ))
+			cue_line="${cue_lines[${n}]}"
 
-			if [[ $cue_line_next =~ $regex_index ]]; then
-				time=$(sed -E "s/${regex_index}/\2/" <<<"$cue_line_next")
-				data_frames=$(time_convert "$time")
-				break
-			fi
+			until [[ $cue_line =~ $regex_index ]]; do
+				n=$(( i + 1 ))
+				cue_line="${cue_lines[${n}]}"
+
+				if [[ $cue_line =~ $regex_audio ]]; then
+					break
+				fi
+			done
+
+			time=$(sed -E "s/${regex_index}/\2/" <<<"$cue_line")
+			data_frames=$(time_convert "$time")
+
+			break
 		fi
+
+		n=$(( n + 1 ))
 	done
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
