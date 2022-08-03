@@ -254,7 +254,7 @@ read_cue () {
 				n=$(( n + 1 ))
 
 # If line contains a MODE command, save it for later to be added by the
-# 'create_cue" function.
+# 'create_cue' function.
 				if [[ $line =~ $regex_mode ]]; then
 					modes[${n}]="$line"
 				fi
