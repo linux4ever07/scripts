@@ -271,7 +271,7 @@ read_cue () {
 						next=$(( next + 1 ))
 						line_next_2="${cue_lines[${next}]}"
 
-						if [[ $line_next =~ $regex_index ]]; then
+						if [[ $line_next_2 =~ $regex_index ]]; then
 							index_next_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next_2")
 
 							if [[ $index_next_n == '01' ]]; then
