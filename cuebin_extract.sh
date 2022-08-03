@@ -216,8 +216,8 @@ read_cue () {
 			cue_lines[${i}]="FILE \"${bin_tmp}\" ${f_type}"
 		fi
 
-		printf '%s\n' "${cue_lines[${i}]}"
-	done > "$cue_tmp_f"
+		printf '%s\n' "${cue_lines[${i}]}" >> "$cue_tmp_f"
+	done
 
 # If the filenames in the CUE aren't real files, then print the
 # filenames and quit.
