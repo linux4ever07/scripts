@@ -548,7 +548,7 @@ bin_data_track () {
 			cue_line="${cue_lines[${n}]}"
 
 			until [[ $cue_line =~ $regex_index ]]; do
-				n=$(( i + 1 ))
+				n=$(( n + 1 ))
 				cue_line="${cue_lines[${n}]}"
 
 				if [[ $cue_line =~ $regex_audio ]]; then
