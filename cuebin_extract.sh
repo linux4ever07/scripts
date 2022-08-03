@@ -37,6 +37,8 @@
 
 if=$(readlink -f "$1")
 
+session="${RANDOM}-${RANDOM}"
+
 # Creates a function called 'usage', which will print usage and quit.
 usage () {
 	cat <<USAGE
@@ -119,7 +121,7 @@ if_name="${if_bn_lc%.[^.]*}"
 of_name=$(tr '[:blank:]' '_' <<<"$if_name")
 
 if_dn=$(dirname "$if")
-of_dn="${PWD}/${of_name}-${RANDOM}"
+of_dn="${PWD}/${of_name}-${session}"
 
 of_cdr_cue="${of_dn}/${of_name}01_cdr.cue"
 of_ogg_cue="${of_dn}/${of_name}01_ogg.cue"
@@ -129,14 +131,16 @@ of_bin="${of_dn}/${of_name}01.bin"
 of_iso="${of_dn}/${of_name}01.iso"
 
 cue="$if"
-cue_tmp_f="/dev/shm/${if_bn%.[^.]*}-${RANDOM}.cue"
+cue_tmp_f="/dev/shm/${if_bn%.[^.]*}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -iname "${if_name}.bin" | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
+regex_frames='[0-9]+'
+regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
 regex_audio='^TRACK [0-9]{2,} AUDIO$'
-regex_audio2='^INDEX [0-9]{2,} ([0-9]{2}:[0-9]{2}:[0-9]{2})$'
+regex_index="^INDEX ([0-9]{2,}) (${regex_time})$"
 regex_mode='^TRACK [0-9]{2,} MODE'
 regex_iso='\.iso$'
 regex_wav='\.wav$'
@@ -170,7 +174,7 @@ check_cmd () {
 # file, add full path to filenames listed in the CUE file, and create a
 # new temporary CUE file in /dev/shm based on this.
 read_cue () {
-	mapfile -t cue_lines < <(tr -d '\r' <"$cue")
+	mapfile -t cue_lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
 
 	declare -a bin_list not_found
 
@@ -179,7 +183,7 @@ read_cue () {
 	touch "$cue_tmp_f"
 
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
-		cue_lines[${i}]=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${i}]}")
+		cue_lines[${i}]="${cue_lines[${i}]}"
 
 		if [[ ${cue_lines[${i}]} =~ $regex_fn ]]; then
 			n=$(( n + 1 ))
@@ -240,6 +244,8 @@ read_cue () {
 
 	n=0
 
+# The loop below adds MODE, PREGAP and POSTGAP commands to be processed
+# later by the 'create_cue' function.
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
 		line="${cue_lines[${i}]}"
 
@@ -247,8 +253,45 @@ read_cue () {
 			'TRACK'*)
 				n=$(( n + 1 ))
 
+# If line contains a MODE command, save it for later to be added by the
+# 'create_cue" function.
 				if [[ $line =~ $regex_mode ]]; then
 					modes[${n}]="$line"
+				fi
+
+				next=$(( i + 1 ))
+				line_next="${cue_lines[${next}]}"
+
+# If the original CUE specifies a pregap using the INDEX command,
+# convert that to a PREGAP command.
+				if [[ $line_next =~ $regex_index ]]; then
+					index_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next")
+
+					if [[ $index_n == '00' ]]; then
+						next=$(( next + 1 ))
+						line_next_2="${cue_lines[${next}]}"
+
+						if [[ $line_next =~ $regex_index ]]; then
+							index_next_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next_2")
+
+							if [[ $index_next_n == '01' ]]; then
+								time_index=$(sed -E "s/${regex_index}/\2/" <<<"$line_next")
+								time_index_next=$(sed -E "s/${regex_index}/\2/" <<<"$line_next_2")
+								frames=$(time_convert "$time_index")
+								frames_next=$(time_convert "$time_index_next")
+
+								if [[ $frames_next -gt $frames ]]; then
+									frames_diff=$(( $frames_next - $frames ))
+
+									time_diff=$(time_convert "$frames_diff")
+
+									if [[ -z ${gaps[pre,${n}]} ]]; then
+										gaps[pre,${n}]="PREGAP ${time_diff}"
+									fi
+								fi
+							fi
+						fi
+					fi
 				fi
 			;;
 			'PREGAP'*)
@@ -447,30 +490,75 @@ create_cue () {
 	unset -v bchunk_wav_list
 }
 
+# Creates a function called 'time_convert', which converts time in the
+# 00:00:00 format back and forth between 'frames' / sectors or the time
+# format.
+time_convert () {
+	time="$1"
+
+# If argument is in the 00:00:00 format...
+	if [[ $time =~ $regex_time ]]; then
+		mapfile -d':' -t time_split <<<"$time"
+
+		time_split[0]=$(sed -E 's/^0{1}//' <<<"${time_split[0]}")
+		time_split[1]=$(sed -E 's/^0{1}//' <<<"${time_split[1]}")
+		time_split[2]=$(sed -E 's/^0{1}//' <<<"${time_split[2]}")
+
+# Converting minutes and seconds to frames, and adding all the numbers
+# together.
+		time_split[0]=$(( ${time_split[0]} * 60 * 75 ))
+		time_split[1]=$(( ${time_split[1]} * 75 ))
+
+		time=$(( ${time_split[0]} + ${time_split[1]} + ${time_split[2]} ))
+
+# If argument is in the frame format...
+	elif [[ $time =~ $regex_frames ]]; then
+		s=$(( $time / 75 ))
+
+# While $s (seconds) is equal to (or greater than) 60, clear the $s
+# variable and add 1 to the $m (minutes) variable.
+		while [[ $s -ge 60 ]]; do
+			m=$(( m + 1 ))
+			s=$(( s - 60 ))
+		done
+
+	# While $m (minutes) is equal to (or greater than) 60, clear the $m
+	# variable and add 1 to the $h (hours) variable.
+		while [[ $m -ge 60 ]]; do
+			h=$(( h + 1 ))
+			m=$(( m - 60 ))
+		done
+
+	# While $h (hours) is equal to 100 (or greater than), clear the $h
+	# variable.
+		while [[ $h -ge 100 ]]; do
+			h=$(( h - 100 ))
+		done
+
+		time=$(printf '%02d:%02d:%02d' "$h" "$m" "$s")
+	fi
+
+	printf '%s' "$time"
+}
+
 # Creates a function called 'bin_data_track', which copies the raw
 # binary data from the original BIN file for the data track.
 bin_data_track () {
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
-		cue_line=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${i}]}")
+		cue_line="${cue_lines[${i}]}"
 
 		n=$(( i + 1 ))
 
 		if [[ $cue_line =~ $regex_audio ]]; then
-			cue_line_next=$(sed -E "s/${regex_blank}/\1/" <<<"${cue_lines[${n}]}")
+			cue_line_next="${cue_lines[${n}]}"
 
-			if [[ $cue_line_next =~ $regex_audio2 ]]; then
-				mapfile -d':' -t data_track_length < <(sed -E "s/${regex_audio2}/\1/" <<<"$cue_line_next")
+			if [[ $cue_line_next =~ $regex_index ]]; then
+				time=$(sed -E "s/${regex_index}/\2/" <<<"$cue_line_next")
+				data_frames=$(time_convert "$time")
 				break
 			fi
 		fi
 	done
-
-# Converting minutes and seconds to frames, and adding all the numbers
-# together.
-	data_track_length[0]=$(( ${data_track_length[0]} * 60 * 75 ))
-	data_track_length[1]=$(( ${data_track_length[1]} * 75 ))
-
-	data_frames=$(( ${data_track_length[0]} + ${data_track_length[1]} + ${data_track_length[2]} ))
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
 # bytes is the size of audio sectors.

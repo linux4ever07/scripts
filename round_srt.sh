@@ -13,8 +13,8 @@
 # adjusted so they don't overlap. They will all differ by at least 1
 # centisecond.
 
-regex_p='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
-regex_f="${regex_p} --> ${regex_p}"
+regex_p='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
+regex_f="^${regex_p} --> ${regex_p}$"
 
 usage () {
 	printf '%s\n' "Usage: $(basename "$0") [SRT]"
@@ -29,7 +29,7 @@ if [[ ! -f $if ]]; then
 	usage
 fi
 
-mapfile -t lines <"$if"
+mapfile -t lines < <(tr -d '\r' <"$if")
 
 declare -a duration
 
@@ -38,10 +38,12 @@ declare -a duration
 time_break () {
 	time="$1"
 
-	h=$(sed -E -e 's/^([0-9]{2}).*$/\1/' -e 's/^0{1}//' <<<"$time")
-	m=$(sed -E -e 's/^[0-9]{2}\:([0-9]{2}).*$/\1/' -e 's/^0{1}//' <<<"$time")
-	s=$(sed -E -e 's/^[0-9]{2}\:[0-9]{2}\:([0-9]{2}).*$/\1/' -e 's/^0{1}//' <<<"$time")
-	cs=$(sed -E -e 's/^.*,([0-9]{3}).*$/\1/' -e 's/^0{1,2}//' <<<"$time")
+	mapfile -d' ' -t time_split < <(sed -E "s/${regex_p}/\1 \2 \3 \4/" <<<"$time")
+
+	h=$(sed -E 's/^0{1}//' <<<"${time_split[0]}")
+	m=$(sed -E 's/^0{1}//' <<<"${time_split[1]}")
+	s=$(sed -E 's/^0{1}//' <<<"${time_split[2]}")
+	cs=$(sed -E 's/^0{1,2}//' <<<"${time_split[3]}")
 
 	printf '%s' "$h $m $s $cs"
 }
@@ -128,21 +130,21 @@ c_time_calc () {
 # of the previous 'time line' to the current 'time line', plus a
 # centisecond if centiseconds are identical with previous 'time line'.
 t_time_calc () {
-	total_start_time=($1 $2 $3 $4)
-	total_stop_time=($5 $6 $7 $8)
+	total_start_time=("$1" "$2" "$3" "$4")
+	total_stop_time=("$5" "$6" "$7" "$8")
 
 # Converts previous and current 'time line' to centiseconds...
-	c_tmp=$(t_time_break ${total_start_time[@]})
-	p_tmp=$(t_time_break ${total_stop_time[@]})
+	c_tmp=$(t_time_break "${total_start_time[@]}")
+	p_tmp=$(t_time_break "${total_stop_time[@]}")
 
 # Until the value of the current 'time_line' is higher than the
 # previous, add 1 centisecond.
 	until [[ $c_tmp -gt $p_tmp ]]; do
 		total_start_time[3]=$(( ${total_start_time[3]} + 100 ))
-		c_tmp=$(t_time_break ${total_start_time[@]})
+		c_tmp=$(t_time_break "${total_start_time[@]}")
 	done
 
-	total_start_time=( $(c_time_calc ${total_start_time[@]}) )
+	mapfile -d' ' -t total_start_time < <(c_time_calc "${total_start_time[@]}")
 
 	printf '%s\n' "${total_start_time[@]}"
 }
@@ -158,17 +160,17 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	duration[0]=$(tr -d '[:blank:]' <<<"${duration[0]}")
 	duration[1]=$(tr -d '[:blank:]' <<<"${duration[1]}")
 
-	c_total_start_time=( $(time_break "${duration[0]}") )
-	c_total_start_time=( $(c_time_calc ${c_total_start_time[@]}) )
+	mapfile -d' ' -t c_total_start_time < <(time_break "${duration[0]}")
+	mapfile -d' ' -t c_total_start_time < <(c_time_calc "${c_total_start_time[@]}")
 
-	c_total_stop_time=( $(time_break "${duration[1]}") )
-	c_total_stop_time=( $(c_time_calc ${c_total_stop_time[@]}) )
+	mapfile -d' ' -t c_total_stop_time < <(time_break "${duration[1]}")
+	mapfile -d' ' -t c_total_stop_time < <(c_time_calc "${c_total_stop_time[@]}")
 
 	if [[ -n ${p_total_stop_time[@]} ]]; then
-		c_total_start_time=( $(t_time_calc ${c_total_start_time[@]} ${p_total_stop_time[@]}) )
+		mapfile -t c_total_start_time < <(t_time_calc "${c_total_start_time[@]}" "${p_total_stop_time[@]}")
 	fi
 
-	p_total_stop_time=(${c_total_stop_time[@]})
+	p_total_stop_time=("${c_total_stop_time[@]}")
 
 	start_h="${c_total_start_time[0]}"
 	start_m="${c_total_start_time[1]}"
@@ -180,8 +182,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	stop_s="${c_total_stop_time[2]}"
 	stop_cs="${c_total_stop_time[3]}"
 
-	finished_line_start=$(printf "%02d:%02d:%02d,%03d" $start_h $start_m $start_s $start_cs)
-	finished_line_stop=$(printf "%02d:%02d:%02d,%03d" $stop_h $stop_m $stop_s $stop_cs)
+	finished_line_start=$(printf '%02d:%02d:%02d,%03d' "$start_h" "$start_m" "$start_s" "$start_cs")
+	finished_line_stop=$(printf '%02d:%02d:%02d,%03d' "$stop_h" "$stop_m" "$stop_s" "$stop_cs")
 	finished_line="${finished_line_start} --> ${finished_line_stop}"
 	lines[${i}]="$finished_line"
 
@@ -193,5 +195,5 @@ touch "$of"
 
 # Writes the array to $of (output file).
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	printf '%s\n' "${lines[${i}]}" >> "$of"
+	printf '%s\r\n' "${lines[${i}]}" >> "$of"
 done
