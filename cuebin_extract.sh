@@ -264,9 +264,9 @@ read_cue () {
 				next=$(( i + 2 ))
 				line_next_2="${cue_lines[${next}]}"
 
-				if [[ $line_next =~ $regex_index && $line_next_2 =~ $regex_index ]]; then
 # If the original CUE specifies a pregap using the INDEX command,
 # convert that to a PREGAP command.
+				if [[ $line_next =~ $regex_index && $line_next_2 =~ $regex_index ]]; then
 					index_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next")
 					index_next_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next_2")
 
@@ -278,7 +278,6 @@ read_cue () {
 
 						if [[ $frames_next -gt $frames ]]; then
 							frames_diff=$(( $frames_next - $frames ))
-
 							time_diff=$(time_convert "$frames_diff")
 
 							if [[ -z ${gaps[pre,${n}]} ]]; then
@@ -485,7 +484,7 @@ create_cue () {
 }
 
 # Creates a function called 'time_convert', which converts time in the
-# 00:00:00 format back and forth between 'frames' / sectors or the time
+# 00:00:00 format back and forth between frames / sectors or the time
 # format.
 time_convert () {
 	time="$1"
