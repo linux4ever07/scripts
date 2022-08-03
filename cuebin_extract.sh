@@ -132,7 +132,7 @@ of_iso="${of_dn}/${of_name}01.iso"
 
 cue="$if"
 cue_tmp_f="/dev/shm/${if_bn%.[^.]*}-${session}.cue"
-bin=$(find "$if_dn" -maxdepth 1 -iname "${if_name}.bin" | head -n 1)
+bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
@@ -481,9 +481,9 @@ create_cue () {
 	unset -v bchunk_wav_list
 }
 
-# Creates a function called 'time_convert', which converts time in the
-# hh:mm:ss format back and forth between frames / sectors or the time
-# format.
+# Creates a function called 'time_convert', which converts track length
+# back and forth between the time (hh:mm:ss) format and frames /
+# sectors.
 time_convert () {
 	time="$1"
 
