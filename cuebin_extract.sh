@@ -551,7 +551,7 @@ bin_data_track () {
 				n=$(( n + 1 ))
 				cue_line="${cue_lines[${n}]}"
 
-				if [[ $n =~ $last ]]; then
+				if [[ $n -eq $last ]]; then
 					break
 				fi
 			done
