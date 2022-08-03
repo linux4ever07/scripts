@@ -261,34 +261,28 @@ read_cue () {
 
 				next=$(( i + 1 ))
 				line_next="${cue_lines[${next}]}"
+				next=$(( i + 2 ))
+				line_next_2="${cue_lines[${next}]}"
 
+				if [[ $line_next =~ $regex_index && $line_next_2 =~ $regex_index ]]; then
 # If the original CUE specifies a pregap using the INDEX command,
 # convert that to a PREGAP command.
-				if [[ $line_next =~ $regex_index ]]; then
 					index_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next")
+					index_next_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next_2")
 
-					if [[ $index_n == '00' ]]; then
-						next=$(( next + 1 ))
-						line_next_2="${cue_lines[${next}]}"
+					if [[ $index_n == '00' && $index_next_n == '01' ]]; then
+						time_index=$(sed -E "s/${regex_index}/\2/" <<<"$line_next")
+						time_index_next=$(sed -E "s/${regex_index}/\2/" <<<"$line_next_2")
+						frames=$(time_convert "$time_index")
+						frames_next=$(time_convert "$time_index_next")
 
-						if [[ $line_next_2 =~ $regex_index ]]; then
-							index_next_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next_2")
+						if [[ $frames_next -gt $frames ]]; then
+							frames_diff=$(( $frames_next - $frames ))
 
-							if [[ $index_next_n == '01' ]]; then
-								time_index=$(sed -E "s/${regex_index}/\2/" <<<"$line_next")
-								time_index_next=$(sed -E "s/${regex_index}/\2/" <<<"$line_next_2")
-								frames=$(time_convert "$time_index")
-								frames_next=$(time_convert "$time_index_next")
+							time_diff=$(time_convert "$frames_diff")
 
-								if [[ $frames_next -gt $frames ]]; then
-									frames_diff=$(( $frames_next - $frames ))
-
-									time_diff=$(time_convert "$frames_diff")
-
-									if [[ -z ${gaps[pre,${n}]} ]]; then
-										gaps[pre,${n}]="PREGAP ${time_diff}"
-									fi
-								fi
+							if [[ -z ${gaps[pre,${n}]} ]]; then
+								gaps[pre,${n}]="PREGAP ${time_diff}"
 							fi
 						fi
 					fi
