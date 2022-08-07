@@ -69,12 +69,13 @@ declare -A audio_types
 audio_types=(['cdr']=0 ['ogg']=0 ['flac']=0)
 exclusive=0
 byteswap=0
+wav_switch=0
 
 # The loop below handles the arguments to the script.
 shift
 
 while [[ -n $@ ]]; do
-	case $1 in
+	case "$1" in
 		'-cdr')
 			audio_types['cdr']=1
 			exclusive=1
@@ -132,7 +133,7 @@ of_iso="${of_dn}/${of_name}01.iso"
 
 cue="$if"
 cue_tmp_f="/dev/shm/${if_bn%.[^.]*}-${session}.cue"
-bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" | head -n 1)
+bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
@@ -152,8 +153,8 @@ declare -a cue_lines bchunk_cdr_list bchunk_wav_list of_cue_cdr_list of_cue_ogg_
 trap ctrl_c INT
 
 ctrl_c () {
-	rm -f "$cue_tmp_f"
 	printf '%s\n' '** Trapped CTRL-C'
+	rm -f "$cue_tmp_f"
 	exit
 }
 
@@ -247,7 +248,7 @@ read_cue () {
 	for (( i=0; i<${#cue_lines[@]}; i++ )); do
 		line="${cue_lines[${i}]}"
 
-		case $line in
+		case "$line" in
 			'TRACK'*)
 				n=$(( n + 1 ))
 
@@ -301,7 +302,7 @@ read_cue () {
 bin_split () {
 	type="$1"
 
-	case $type in
+	case "$type" in
 		'cdr')
 			type_tmp='cdr'
 		;;
@@ -325,12 +326,18 @@ bin_split () {
 		wav_args=(bchunk -w "${args_tmp[@]}")
 	fi
 
-	case $type_tmp in
+	case "$type_tmp" in
 		'cdr')
 			mapfile -t bchunk_cdr_stdout < <(eval "${cdr_args[@]}"; printf '%s\n' "$?")
 			elements="${#bchunk_cdr_stdout[@]}"
 		;;
 		'wav')
+			if [[ $wav_switch -eq 1 ]]; then
+				return
+			else
+				wav_switch=1
+			fi
+
 			mapfile -t bchunk_wav_stdout < <(eval "${wav_args[@]}"; printf '%s\n' "$?")
 			elements="${#bchunk_wav_stdout[@]}"
 		;;
@@ -365,19 +372,12 @@ bin_split () {
 		bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
 		line=$(sed -E "s/${regex_bchunk}/\1/" <<<"${!bchunk_stdout_ref}")
 
-		case $type_tmp in
+		case "$type_tmp" in
 			'cdr')
 				bchunk_cdr_list+=("$line")
 			;;
 			'wav')
-				if [[ $line =~ $regex_iso ]]; then
-					bchunk_wav_list+=("$line")
-
-				fi
-				if [[ $line =~ $regex_wav ]]; then
-					line_tmp=$(sed "s/${regex_wav}/.${type}/" <<<"$line")
-					bchunk_wav_list+=("$line_tmp")
-				fi
+				bchunk_wav_list+=("$line")
 			;;
 		esac
 	done
@@ -388,7 +388,7 @@ bin_split () {
 encode_audio () {
 	type="$1"
 
-	case $type in
+	case "$type" in
 		'cdr')
 			return
 		;;
@@ -399,8 +399,6 @@ encode_audio () {
 			flac -8 "${of_dn}"/*.wav || exit
 		;;
 	esac
-
-	rm -f "${of_dn}"/*.wav || exit
 }
 
 # Creates a function called 'create_cue', which will create a new CUE
@@ -408,7 +406,7 @@ encode_audio () {
 create_cue () {
 	type="$1"
 
-	case $type in
+	case "$type" in
 		'cdr')
 			type_tmp='cdr'
 		;;
@@ -420,7 +418,7 @@ create_cue () {
 		;;
 	esac
 
-	case $type_tmp in
+	case "$type_tmp" in
 		'cdr')
 			elements="${#bchunk_cdr_list[@]}"
 		;;
@@ -456,15 +454,15 @@ create_cue () {
 			eval of_cue_${type}_list+=\(\""    INDEX 01 00:00:00"\"\)
 			add_gap post
 		else
-			case $type in
+			case "$type" in
 				'cdr')
 					of_cue_cdr_list+=("FILE \"${!line_ref}\" BINARY")
 				;;
 				'ogg')
-					of_cue_ogg_list+=("FILE \"${!line_ref}\" OGG")
+					of_cue_ogg_list+=("FILE \"${!line_ref%.wav}.ogg\" OGG")
 				;;
 				'flac')
-					of_cue_flac_list+=("FILE \"${!line_ref}\" FLAC")
+					of_cue_flac_list+=("FILE \"${!line_ref%.wav}.flac\" FLAC")
 				;;
 			esac
 
@@ -476,9 +474,6 @@ create_cue () {
 			add_gap post
 		fi
 	done
-
-	# Clearing this array since it's used for both ogg and flac.
-	unset -v bchunk_wav_list
 }
 
 # Creates a function called 'time_convert', which converts track length
@@ -565,6 +560,20 @@ bin_data_track () {
 	dd if="$bin" of="$of_bin" bs="${sector[1]}" count="$data_frames"
 }
 
+# Creates a function called 'clean_up', which deletes temporary files,
+# meaning potential WAV files, the ISO file produced by 'bchunk'
+# and the temporary CUE file.
+clean_up () {
+	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.wav" 2>&-)
+
+	for (( i=0; i<${#files[@]}; i++ )); do
+		fn="${files[${i}]}"
+		rm -f "$fn" || exit
+	done
+
+	rm -f "$of_iso" "$cue_tmp_f" || exit
+}
+
 # Check if 'oggenc', 'flac' and 'bchunk' are installed.
 check_cmd oggenc flac bchunk
 
@@ -585,10 +594,6 @@ for type in "${!audio_types[@]}"; do
 	create_cue "$type"
 done
 
-# Remove the ISO file, since we're gonna copy the raw data track from
-# the BIN file instead.
-rm -f "$of_iso" || exit
-
 printf '\n'
 
 # Print the created CUE file to the terminal, and to the output file.
@@ -597,7 +602,7 @@ for type in "${!audio_types[@]}"; do
 		continue
 	fi
 
-	case $type in
+	case "$type" in
 		'cdr')
 			elements="${#of_cue_cdr_list[@]}"
 		;;
@@ -621,7 +626,8 @@ done
 
 printf '\n' 
 
-rm -f "$cue_tmp_f" || exit
+# Delete temporary files.
+clean_up
 
 # Copy data track from original BIN file.
 bin_data_track
