@@ -332,6 +332,7 @@ bin_split () {
 			elements="${#bchunk_cdr_stdout[@]}"
 		;;
 		'wav')
+# If WAV files have already been produced, skip this function.
 			if [[ $wav_switch -eq 1 ]]; then
 				return
 			else
