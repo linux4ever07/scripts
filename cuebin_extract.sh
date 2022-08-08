@@ -276,7 +276,7 @@ read_cue () {
 						frames_next=$(time_convert "$time_index_next")
 
 						if [[ $frames_next -gt $frames ]]; then
-							frames_diff=$(( $frames_next - $frames ))
+							frames_diff=$(( frames_next - frames ))
 							time_diff=$(time_convert "$frames_diff")
 
 							if [[ -z ${gaps[pre,${n}]} ]]; then
@@ -496,7 +496,7 @@ time_convert () {
 
 # If argument is in the frame format...
 	elif [[ $time =~ $regex_frames ]]; then
-		s=$(( $time / 75 ))
+		s=$(( time / 75 ))
 
 # While $s (seconds) is equal to (or greater than) 60, clear the $s
 # variable and add 1 to the $m (minutes) variable.
