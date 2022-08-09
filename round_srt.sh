@@ -40,9 +40,9 @@ time_break () {
 
 	mapfile -d' ' -t time_split < <(sed -E "s/${regex_p}/\1 \2 \3 \4/" <<<"$time")
 
-	h=$(sed -E 's/^0{1}//' <<<"${time_split[0]}")
-	m=$(sed -E 's/^0{1}//' <<<"${time_split[1]}")
-	s=$(sed -E 's/^0{1}//' <<<"${time_split[2]}")
+	h=$(sed -E 's/^0//' <<<"${time_split[0]}")
+	m=$(sed -E 's/^0//' <<<"${time_split[1]}")
+	s=$(sed -E 's/^0//' <<<"${time_split[2]}")
 	cs=$(sed -E 's/^0{1,2}//' <<<"${time_split[3]}")
 
 	printf '%s' "$h $m $s $cs"
