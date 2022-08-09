@@ -478,12 +478,12 @@ create_cue () {
 }
 
 # Creates a function called 'time_convert', which converts track length
-# back and forth between the time (hh:mm:ss) format and frames /
+# back and forth between the time (mm:ss:ff) format and frames /
 # sectors.
 time_convert () {
 	time="$1"
 
-# If argument is in the hh:mm:ss format...
+# If argument is in the mm:ss:ff format...
 	if [[ $time =~ $regex_time ]]; then
 		mapfile -t time_split < <(tr ':' '\n'  <<<"$time" | sed -E 's/^0//')
 
@@ -496,6 +496,7 @@ time_convert () {
 
 # If argument is in the frame format...
 	elif [[ $time =~ $regex_frames ]]; then
+		f=$(( time % 75 ))
 		s=$(( time / 75 ))
 
 # While $s (seconds) is equal to (or greater than) 60, clear the $s
@@ -505,20 +506,7 @@ time_convert () {
 			s=$(( s - 60 ))
 		done
 
-	# While $m (minutes) is equal to (or greater than) 60, clear the $m
-	# variable and add 1 to the $h (hours) variable.
-		while [[ $m -ge 60 ]]; do
-			h=$(( h + 1 ))
-			m=$(( m - 60 ))
-		done
-
-	# While $h (hours) is equal to 100 (or greater than), clear the $h
-	# variable.
-		while [[ $h -ge 100 ]]; do
-			h=$(( h - 100 ))
-		done
-
-		time=$(printf '%02d:%02d:%02d' "$h" "$m" "$s")
+		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
 	fi
 
 	printf '%s' "$time"
