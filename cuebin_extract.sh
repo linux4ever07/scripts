@@ -487,7 +487,7 @@ time_convert () {
 	if [[ $time =~ $regex_time ]]; then
 		mapfile -t time_split < <(tr ':' '\n'  <<<"$time" | sed -E 's/^0//')
 
-# Converting hours and minutes to frames, and adding all the numbers
+# Converting minutes and seconds to frames, and adding all the numbers
 # together.
 		time_split[0]=$(( ${time_split[0]} * 60 * 75 ))
 		time_split[1]=$(( ${time_split[1]} * 75 ))
