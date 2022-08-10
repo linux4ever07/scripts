@@ -431,16 +431,18 @@ create_cue () {
 # Creates a function called 'add_gap', which will add pregap or postgap,
 # if they exist in the source CUE file.
 	add_gap () {
-		if [[ $1 == 'pre' ]]; then
-			if [[ ${gaps[pre,${n}]} ]]; then
-				eval of_cue_${type}_list+=\(\""    ${gaps[pre,${n}]}"\"\)
-			fi
-		fi
-		if [[ $1 == 'post' ]]; then
-			if [[ ${gaps[post,${n}]} ]]; then
-				eval of_cue_${type}_list+=\(\""    ${gaps[post,${n}]}"\"\)
-			fi
-		fi
+		case "$1" in
+			'pre')
+				if [[ -n ${gaps[pre,${n}]} ]]; then
+					eval of_cue_${type}_list+=\(\""    ${gaps[pre,${n}]}"\"\)
+				fi
+			;;
+			'post')
+				if [[ -n ${gaps[post,${n}]} ]]; then
+					eval of_cue_${type}_list+=\(\""    ${gaps[post,${n}]}"\"\)
+				fi
+			;;
+		esac
 	}
 
 	for (( i=0; i<elements; i++ )); do
