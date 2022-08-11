@@ -28,7 +28,7 @@ if (defined($ARGV[0])) {
 
 foreach my $dn (@ARGV) {
 	if (! -d $dn) {
-		say "$dn: not a directory";
+		say $dn . ': not a directory';
 		exit;
 	}
 
@@ -41,18 +41,18 @@ foreach my $dn (@ARGV) {
 			@log = getfiles($dn);
 			my $fc = keys(%files);
 			if ($fc > 0) {
-				say "$dn: importing...\n";
+				say $dn . ': importing...' . "\n";
 				import($fc);
 			}
 			else {
-				say "$dn: contains no FLAC files";
+				say $dn . ': contains no FLAC files';
 			}
 		}
 	}
 }
 
 sub usage {
-	say "Usage: $script [FLAC library directory] .. [directory N]\n";
+	say 'Usage: ' . $script . ' [FLAC library directory] .. [directory N]' . "\n";
 	exit;
 }
 
@@ -104,7 +104,7 @@ sub checktags {
 
 	foreach my $tag (@tags) {
 		if (! defined($t{$tag}) ) {
-			say "$fn: doesn't have $tag tag";
+			say $fn . ': doesn\'t have ' . $tag . ' tag';
 			exit;
 		}
 	}
@@ -217,8 +217,8 @@ sub import {
 		$path = $library . '/' . $ct{albumartist} . '/' . $ct{album};
 
 		if ($cp == 0 && -d $path) {
-			say "$path: already exists";
-			say "Skipping...\n";
+			say $path . ': already exists';
+			say 'Skipping...' . "\n";
 			return;
 		} else {
 			make_path($path);
@@ -232,12 +232,12 @@ sub import {
 
 		my $tf = $path . '/' . $newfn;
 
-		say "Copying '$sf'\n\tto '$tf'...";
+		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...';
 		copy($sf, $tf) or die "Copy failed: $!";
 		$cp++
 	}
 
-	say "Copied $cp / $total files from '$t{album}'.\n";
+	say 'Copied ' . $cp . ' / ' . $total . ' files from \'' . $t{album} . '\'.' . "\n";
 
 	foreach my $sf (@log) {
 		my $tf;
@@ -248,7 +248,7 @@ sub import {
 		  $tf = $path . '/' . $t{album} . '.log';
 		}
 
-		say "Copying '$sf'\n\tto '$tf'...\n";
+		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...' . "\n";
 		copy($sf, $tf) or die "Copy failed: $!";
 		$cplog++
 	}
