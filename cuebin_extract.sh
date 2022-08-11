@@ -43,7 +43,7 @@ session="${RANDOM}-${RANDOM}"
 usage () {
 	cat <<USAGE
 
-Usage: $(basename "$0") [CUE] [...]
+Usage: $(basename "$0") [cue] [...]
 
 	Optional arguments:
 
