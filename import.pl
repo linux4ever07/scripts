@@ -71,6 +71,7 @@ sub gettags {
 
 		if (defined($tag[0])) {
 			$tagname = lc($tag[0]);
+			$tagname =~ s/ //g;
 		} else { next; }
 
 		if (defined($tag[1])) {

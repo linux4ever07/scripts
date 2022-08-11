@@ -46,7 +46,7 @@ gettags () {
 			continue
 		fi
 
-		alltags[${field}]="${mflac[1]}"
+		alltags["${field}"]="${mflac[1]}"
 	done
 
 	for field in "${!alltags[@]}"; do

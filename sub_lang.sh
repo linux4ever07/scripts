@@ -8,10 +8,16 @@ declare -a lang_list
 declare -a lang_list_sorted
 
 if=$(readlink -f "$1")
+if_bn=$(basename "$if")
+if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
 
-if [[ ! -f $if ]]; then
-	printf '%s\n\n' "Usage: $(basename "$0") [MKV]"
+usage () {
+	printf '%s\n\n' "Usage: $(basename "$0") [mkv]"
 	exit
+}
+
+if [[ ! -f $if || ${if_bn_lc##*.} != 'mkv' ]]; then
+	usage
 fi
 
 command -v mkvinfo 1>&- 2>&- || exit
@@ -19,7 +25,7 @@ command -v mkvinfo 1>&- 2>&- || exit
 switch=0
 count=0
 
-mapfile -t mkv_info_list < <(mkvinfo "$if")
+mapfile -t mkv_info_list < <(mkvinfo "$if" 2>&-)
 
 for (( i = 0; i < ${#mkv_info_list[@]}; i++ )); do
 	line="${mkv_info_list[${i}]}"

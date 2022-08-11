@@ -5,14 +5,16 @@
 
 usage () {
 	msg[0]="You need mkvtoolnix installed to run this script."
-	msg[1]="Usage: $(basename "$0") [MKV]"
-	msg[2]="There are no subtitles in:\n${if}"
+	msg[1]="Usage: $(basename "$0") [mkv]"
+	msg[2]="There are no subtitles in: ${bn}"
 	printf '%s\n\n' "${msg[${1}]}"
 	exit
 }
 
-cmd=$(command -v mkvmerge 2>&-)
-if=$(readlink -f "$1" 2>&-)
+cmd=$(command -v mkvmerge)
+if=$(readlink -f "$1")
+if_bn=$(basename "$if")
+if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
 of_tmp="${if%.mkv}"
 of="${of_tmp}-${RANDOM}.mkv"
 
@@ -20,7 +22,7 @@ if [[ -z $cmd ]]; then
 	usage 0
 fi
 
-if [[ ! -f $if ]]; then
+if [[ ! -f $if || ${if_bn_lc##*.} != 'mkv' ]]; then
 	usage 1
 fi
 

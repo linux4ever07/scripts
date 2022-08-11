@@ -136,7 +136,7 @@ foreach my $dn (@dirs) {
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say "Usage: $script [FLAC library directory]\n";
+	say 'Usage: ' . $script . ' [FLAC library directory]' . "\n";
 	exit;
 }
 
@@ -212,6 +212,7 @@ sub gettags {
 
 			if (defined($tag[0])) {
 				$tagname = lc($tag[0]);
+				$tagname =~ s/ //g;
 			} else { next; }
 
 			if (defined($tag[1])) {
