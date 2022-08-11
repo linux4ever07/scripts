@@ -189,6 +189,8 @@ sub gettags {
 	my $fn = shift;
 	my(%alltags, @lines);
 
+	my $regex = qr/^(\")|(\")$/;
+
 	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--show-vendor-tag', '--export-tags-to=-', $fn) or die "Can't open 'metaflac': $!";
 	chomp(@lines = (<$output>));
 	close($output) or die "Can't close 'metaflac': $!";
@@ -207,6 +209,8 @@ sub gettags {
 				$tag[1] = $_;
 			}
 		} else {
+			$_ =~ s/$regex//g;
+
 			push(@{$mflac_if{$fn}}, $_);
 			@tag = split('=');
 

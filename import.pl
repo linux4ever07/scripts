@@ -60,12 +60,16 @@ sub gettags {
 	my $fn = shift;
 	my (%alltags, @lines);
 
+	my $regex = qr/^(\")|(\")$/;
+
 	open(OUTPUT, '-|', 'metaflac', '--no-utf8-convert', '--export-tags-to=-', $fn) or die "Can't open metaflac: $!";
 	chomp(@lines = (<OUTPUT>));
 	close(OUTPUT) or die "Can't close metaflac: $!";
 
 	foreach (@lines) {
 		my (@tag, $tagname);
+
+		$_ =~ s/$regex//g;
 
 		@tag = split('=');
 
