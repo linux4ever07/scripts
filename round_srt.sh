@@ -74,7 +74,7 @@ cs_calc () {
 	cs_in="$1"
 
 # Saves the last 2 (or 1) digits of $cs_in in $cs_tmp
-	cs_tmp=$(sed -E -e 's/.*(..)$/\1/' -e 's/^0*//' <<<"$cs_in")
+	cs_tmp=$(sed -E -e 's/.*(..)$/\1/' -e 's/^0//' <<<"$cs_in")
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
 	if [[ $cs_tmp -ge 50 ]]; then
