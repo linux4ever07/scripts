@@ -576,7 +576,7 @@ dts_extract_remux () {
 
 # If input bitrate consists of at least 3 digits...
 					if [[ $bps_if =~ $bps_regex2 ]]; then
-# Gets the 3 last digits of the input bitrate.
+# Gets the last 3 digits of the input bitrate.
 						bps_last=$(sed -E -e "s/${bps_regex2}/\1/" -e 's/^0*//' <<<"$bps_if")
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
