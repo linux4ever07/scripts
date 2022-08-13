@@ -606,10 +606,6 @@ dts_extract_remux () {
 				n="elements[${tmp_type}]"
 
 				if [[ ${if_info[${i}]} =~ ${type[${tmp_type}]} ]]; then
-					if [[ -z ${!audio_tracks[@]} ]]; then
-						audiotracks[$tmp_type]="${if_info[${i}]}"
-					fi
-
 					audio_tracks[${tmp_type},${!n}]="${if_info[${i}]}"
 					elements[${tmp_type}]=$(( ${!n} + 1 ))
 				fi
