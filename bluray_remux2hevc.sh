@@ -156,7 +156,7 @@ fi
 shift
 
 while [[ -n $@ ]]; do
-	case $1 in
+	case "$1" in
 		'-out')
 			shift
 
@@ -661,7 +661,7 @@ dts_extract_remux () {
 	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${map}" -map 0:s?)
 
 # Creates ffmpeg command.
-	case $audio_format in
+	case "$audio_format" in
 		'dts_hdma')
 			args=("${args1[@]}" -bsf:a dca_core -c:v copy -c:a copy -c:s copy \""${of_remux}"\")
 		;;
