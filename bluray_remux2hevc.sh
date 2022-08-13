@@ -645,14 +645,6 @@ dts_extract_remux () {
 				break
 			fi
 		done
-
-		if [[ -z $audio_track_ref ]]; then
-			for tmp_type in "${audio_types[@]}"; do
-					audio_track_ref="audio_tracks[${tmp_type}]"
-					audio_format="$tmp_type"
-					break
-			done
-		fi
 	fi
 
 	if [[ -z $audio_track_ref ]]; then
