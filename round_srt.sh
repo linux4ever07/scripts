@@ -17,7 +17,7 @@ regex_p='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
 regex_f="^${regex_p} --> ${regex_p}$"
 
 usage () {
-	printf '%s\n' "Usage: $(basename "$0") [SRT]"
+	printf '%s\n' "Usage: $(basename "$0") [srt]"
 	exit
 }
 

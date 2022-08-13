@@ -22,7 +22,7 @@ if (! -f $fn or $ext ne '.srt') { usage(); }
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say "Usage: $script [SRT]\n";
+	say 'Usage: ' . $script . ' [srt]' . "\n";
 	exit;
 }
 

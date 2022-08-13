@@ -132,7 +132,7 @@ of_bin="${of_dn}/${of_name}01.bin"
 of_iso="${of_dn}/${of_name}01.iso"
 
 cue="$if"
-cue_tmp_f="/dev/shm/${if_bn%.[^.]*}-${session}.cue"
+cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
