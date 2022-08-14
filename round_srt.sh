@@ -156,7 +156,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	mapfile -d' ' -t duration < <(sed -E 's/ --> / /' <<<"$line")
+	mapfile -d' ' -t duration <<<"${line/ --> / }"
 	duration[0]=$(tr -d '[:blank:]' <<<"${duration[0]}")
 	duration[1]=$(tr -d '[:blank:]' <<<"${duration[1]}")
 
