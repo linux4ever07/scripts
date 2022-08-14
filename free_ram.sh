@@ -127,16 +127,16 @@ while true; do
 # Runs 'free', stores output in the $free_ram array, and sets a couple
 # of variables based on that output.
 	mapfile -t free_ram < <(free | sed -E 's/[[:space:]]+/ /g')
-	ram=$(cut -d' ' -f4 <<<"${free_ram[1]}")
-	swap=$(cut -d' ' -f4 <<<"${free_ram[2]}")
-	avail=$(cut -d' ' -f7 <<<"${free_ram[1]}")
+	mapfile -d' ' -t ram <<<"${free_ram[1]}"
+	mapfile -d' ' -t swap <<<"${free_ram[2]}"
+	mapfile -d' ' -t avail <<<"${free_ram[1]}"
 
 # Prints the free and available RAM and SWAP.
-	printf '%s\n' "FREE (kibibytes)"
-	printf '%s\n' "RAM: ${ram}, SWAP: ${swap}"
-	printf '%s\n' "***"
-	printf '%s\n' "AVAILABLE (kibibytes)"
-	printf '%s\n\n' "RAM: ${avail}"
+	printf '%s\n' 'FREE (kibibytes)'
+	printf 'RAM: %s, SWAP: %s' "${ram[3]}" "${swap[3]}"
+	printf '%s\n' '***'
+	printf '%s\n' 'AVAILABLE (kibibytes)'
+	printf 'RAM: %s\n' "${avail[6]}"
 
 # If available RAM is less than 1GB...
 	if [[ $avail -lt $limit ]]; then

@@ -25,8 +25,10 @@ declare -A md5s_date md5s_fn md5s_og
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
 
-	md5_fn=$(md5sum -b <<<"$fn" | cut -d' ' -f1)
-	md5=$(md5sum -b "$fn" | cut -d' ' -f1)
+	md5_fn=$(md5sum -b <<<"$fn")
+	md5_fn="${md5_fn%% *}"
+	md5=$(md5sum -b "$fn")
+	md5="${md5}%% *"
 	date=$(stat -c '%Y' "$fn")
 
 	if [[ -n ${md5s_date[${md5}]} ]]; then
@@ -45,7 +47,8 @@ done
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
 
-	md5_fn=$(md5sum -b <<<"$fn" | cut -d' ' -f1)
+	md5_fn=$(md5sum -b <<<"$fn")
+	md5_fn="${md5_fn%% *}"
 	md5="${md5s_fn[${md5_fn}]}"
 
 	if [[ -n ${md5s_og[${md5}]} ]]; then

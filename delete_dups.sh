@@ -35,7 +35,8 @@ for (( i=0; i<${#files[@]}; i++ )); do
 	eval f="${files[${i}]}"
 	f_bn=$(basename "$f")
 
-	md5=$(md5sum -b "$f" | cut -d' ' -f1)
+	md5=$(md5sum -b "$f")
+	md5="${md5%% *}"
 	md5s[${md5}]="$f_bn"
 done
 
@@ -46,7 +47,8 @@ for dn in "${dirs[@]}"; do
 		eval f="${files[${i}]}"
 		f_bn=$(basename "$f")
 
-		md5=$(md5sum -b "$f" | cut -d' ' -f1)
+		md5=$(md5sum -b "$f")
+		md5="${md5%% *}"
 
 		if [[ -n ${md5s[${md5}]} ]]; then
 			if [[ "${md5s[${md5}]}" == "$f_bn" ]]; then

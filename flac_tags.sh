@@ -33,8 +33,8 @@ gettags () {
 
 		unset -v mflac
 
-		mflac[0]=$(cut -d'=' -f1 <<<"$line")
-		mflac[1]=$(cut -d'=' -f2- <<<"$line")
+		mflac[0]="${line%%=*}"
+		mflac[1]="${line#*=}"
 
 		if [[ -z ${mflac[1]} ]]; then
 			continue

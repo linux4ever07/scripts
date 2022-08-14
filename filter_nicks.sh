@@ -35,7 +35,7 @@ done
 
 if_nick () {
 	if [[ "$line_tmp" =~ $regex1 ]]; then
-		nick=$(cut -d' ' -f1 <<<"$line_tmp")
+		nick="${line_tmp%% *}"
 		nick=$(sed -E "s/${regex2}/\1/" <<<"$nick")
 
 		printf '%s' "$nick"
