@@ -23,7 +23,7 @@ gettags () {
 			continue
 		fi
 
-		field=$(tr '[:upper:]' '[:lower:]' <<<"${mflac[0]}")
+		field="${mflac[0],,}"
 
 		if [[ -n ${alltags[${field}]} ]]; then
 			continue

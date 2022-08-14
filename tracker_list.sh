@@ -49,7 +49,7 @@ regex5='/$'
 
 declare -a trackers
 
-mapfile -t lines < <(sort --unique <"$if" | tr '[:upper:]' '[:lower:]')
+mapfile -t lines < <(sort --unique <"${if,,}")
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line=$(tr -d '[:space:]' <<<"${lines[${i}]}")

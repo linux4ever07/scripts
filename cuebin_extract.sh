@@ -110,7 +110,7 @@ if [[ $exclusive -eq 0 ]]; then
 fi
 
 if_bn=$(basename "$if")
-if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
+if_bn_lc="${if_bn,,}"
 
 # If $if is not a real file, or it has the wrong extension, print usage
 # and quit.

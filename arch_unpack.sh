@@ -157,7 +157,7 @@ fi
 while [[ $# -gt 0 ]]; do
 	f=$(readlink -f "$1")
 	f_bn=$(basename "$f")
-	f_bn_lc=$(tr '[[:upper:]]' '[[:lower:]]' <<<"$f_bn")
+	f_bn_lc="${f_bn,,}"
 
 	if [[ ! -f $f || ! -r $f ]]; then
 		usage

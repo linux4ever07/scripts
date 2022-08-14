@@ -28,7 +28,7 @@ shift
 declare -A nicks nicks_tmp
 
 for nick in "$@"; do
-	nick=$(tr '[[:upper:]]' '[[:lower:]]' <<<"$nick")
+	nick="${nick,,}"
 
 	nicks["${nick}"]='1'
 done
@@ -46,7 +46,7 @@ mapfile -t lines <"$if"
 
 # This loop finds all the nicks in the log and adds them to a hash.
 for (( i=0; i<${#lines[@]}; i++ )); do
-	line=$(tr '[[:upper:]]' '[[:lower:]]' <<<"${lines[${i}]}")
+	line="${lines[${i}],,}"
 
 	if [[ $switch -eq 0 ]]; then
 		line_tmp="$line"
@@ -85,7 +85,7 @@ done
 # This loop finds all the nicks highlighted by the nicks given as
 # arguments to the script, and adds them to the nick hash.
 for (( i=0; i<${#lines[@]}; i++ )); do
-	line=$(tr '[[:upper:]]' '[[:lower:]]' <<<"${lines[${i}]}")
+	line="${lines[${i}],,}"
 
 	line_tmp="${line:${n}}"
 
@@ -121,7 +121,8 @@ done
 for (( i=0; i<${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
-	line_tmp=$(tr '[[:upper:]]' '[[:lower:]]' <<<"${line:${n}}")
+	line_tmp="${line,,}"
+	line_tmp="${line_tmp:${n}}"
 
 	nick=$(if_nick)
 

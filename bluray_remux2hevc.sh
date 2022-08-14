@@ -176,7 +176,7 @@ while [[ -n $@ ]]; do
 			if [[ ! $1 =~ $lang_regex ]]; then
 				usage
 			else
-				lang=$(tr '[:upper:]' '[:lower:]' <<<"$1")
+				lang="${1,,}"
 			fi
 
 			shift
@@ -456,7 +456,6 @@ dts_extract_remux () {
 	regex_audio="^ +Stream #.*(\(${lang}\)){0,1}: Audio: "
 	regex_51=', 5.1\(.*\),'
 	bps_regex='^ +BPS.*: ([0-9]+)$'
-	bps_regex2='.*([0-9]{3})$'
 	kbps_regex='.* ([0-9]+) kb\/s$'
 	map_regex='.*Stream #(0:[0-9]+).*'
 
@@ -575,16 +574,15 @@ dts_extract_remux () {
 					bps_if=$(sed -E "s/${bps_regex}/\1/" <<<"${if_info_tmp[${i}]}")
 
 # If input bitrate consists of at least 3 digits...
-					if [[ $bps_if =~ $bps_regex2 ]]; then
+					if [[ ${#bps_if} -ge 3 ]]; then
 # Gets the last 3 digits of the input bitrate.
-						bps_last=$(sed -E -e "s/${bps_regex2}/\1/" -e 's/^0{1,2}//' <<<"$bps_if")
+						bps_last=$(sed -E 's/^0{1,2}//' <<<"${bps_if: -3}")
+						bps_if=$(( bps_if - bps_last ))
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
 						if [[ $bps_last -ge 500 ]]; then
-							bps_if=$(( (bps_if - bps_last) + 1000 ))
-						else
-							bps_if=$(( bps_if - bps_last ))
+							bps_if=$(( bps_if  + 1000 ))
 						fi
 					fi
 

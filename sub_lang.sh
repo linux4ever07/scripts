@@ -9,7 +9,7 @@ declare -a lang_list_sorted
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
-if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
+if_bn_lc="${if_bn,,}"
 
 usage () {
 	printf '%s\n\n' "Usage: $(basename "$0") [mkv]"

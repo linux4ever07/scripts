@@ -57,9 +57,9 @@ for (( i = ${depth}; i > 0; i-- )); do
 		bn=$(basename "$f")
 
 		if [[ $case == 'upper' ]]; then
-			new_bn=$(tr '[[:lower:]]' '[[:upper:]]' <<<"$bn")
+			new_bn="${bn^^}"
 		elif [[ $case == 'lower' ]]; then
-			new_bn=$(tr '[[:upper:]]' '[[:lower:]]' <<<"$bn")
+			new_bn="${bn,,}"
 		fi
 
 		new_f="${dn}/${new_bn}"

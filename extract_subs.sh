@@ -14,7 +14,7 @@ usage () {
 cmd=$(command -v mkvmerge)
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
-if_bn_lc=$(tr '[:upper:]' '[:lower:]' <<<"$if_bn")
+if_bn_lc="${if_bn,,}"
 of_tmp="${if%.mkv}"
 of="${of_tmp}-${RANDOM}.mkv"
 
