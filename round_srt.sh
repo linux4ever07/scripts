@@ -14,7 +14,8 @@
 # centisecond.
 
 regex_p='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
-regex_f="^${regex_p} --> ${regex_p}$"
+regex_d=' --> '
+regex_f="^${regex_p}${regex_d}${regex_p}$"
 
 usage () {
 	printf '%s\n' "Usage: $(basename "$0") [srt]"
@@ -156,7 +157,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	mapfile -d' ' -t duration <<<"${line/ --> / }"
+	mapfile -d' ' -t duration <<<"${line/${regex_d}/ }"
 	duration[0]=$(tr -d '[:blank:]' <<<"${duration[0]}")
 	duration[1]=$(tr -d '[:blank:]' <<<"${duration[1]}")
 
