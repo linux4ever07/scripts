@@ -471,7 +471,7 @@ dts_extract_remux () {
 	type[truehd]='truehd'
 	type[pcm]='pcm_bluray'
 	type[flac]='flac'
-	type[dts]='dts \(DTS(-ES)?\)'
+	type[dts]='dts \(DTS(-ES){0,1}\)'
 	type[ac3]='ac3'
 	elements[dts_hdma]=0
 	elements[truehd]=0
