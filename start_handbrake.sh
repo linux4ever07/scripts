@@ -14,7 +14,7 @@ fi
 
 pid=$(head -n 1 "$pid_list_f")
 
-if [[ $pid ]]; then
+if [[ -n $pid ]]; then
 		name=$(ps -p "$pid" -o comm | tail -n +2)
 
 		if [[ $name == $comm ]]; then
