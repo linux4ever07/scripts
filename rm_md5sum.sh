@@ -28,7 +28,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	md5_fn=$(md5sum -b <<<"$fn")
 	md5_fn="${md5_fn%% *}"
 	md5=$(md5sum -b "$fn")
-	md5="${md5}%% *"
+	md5="${md5%% *}"
 	date=$(stat -c '%Y' "$fn")
 
 	if [[ -n ${md5s_date[${md5}]} ]]; then
