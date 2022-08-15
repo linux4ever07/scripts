@@ -185,7 +185,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	finished_line_start=$(printf '%02d:%02d:%02d,%03d' "$start_h" "$start_m" "$start_s" "$start_cs")
 	finished_line_stop=$(printf '%02d:%02d:%02d,%03d' "$stop_h" "$stop_m" "$stop_s" "$stop_cs")
-	finished_line="${finished_line_start} --> ${finished_line_stop}"
+	finished_line="${finished_line_start}${regex_d}${finished_line_stop}"
 	lines[${i}]="$finished_line"
 
 	printf '%s\n' '***'
