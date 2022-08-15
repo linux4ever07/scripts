@@ -138,7 +138,7 @@ while true; do
 	printf 'RAM: %s\n\n' "${ram[6]}"
 
 # If available RAM is less than 1GB...
-	if [[ $avail -lt $limit ]]; then
+	if [[ ${ram[6]} -lt $limit ]]; then
 # Checks if Firefox and Chromium are running. $is_chromium is an array,
 # since the output probably spans across multiple lines, due to Chromium
 # being highly multithreaded and keeping separate threads / processes
