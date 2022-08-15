@@ -18,7 +18,6 @@ if [[ -n $pid ]]; then
 		name=$(ps -p "$pid" -o comm | tail -n +2)
 
 		if [[ $name == $comm ]]; then
-
 			printf '\n%s\n' 'STARTING!'
 			printf '%s\n' "NAME: ${name} : PID: ${pid}"
 
