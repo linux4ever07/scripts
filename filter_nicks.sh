@@ -19,7 +19,7 @@ fi
 
 regex1='^<'
 regex2='^<\+*(.*)>$'
-regex3='(:|,)$'
+regex3='[:,.?!]+$'
 
 switch=0
 
