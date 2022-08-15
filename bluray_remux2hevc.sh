@@ -453,11 +453,10 @@ imdb () {
 # the input file, without all its audio tracks but with the video and
 # subtitle tracks, and with the core DTS track.
 dts_extract_remux () {
-	regex_audio="^ +Stream #.*(\(${lang}\)){0,1}: Audio: "
+	regex_audio="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: Audio: "
 	regex_51=', 5.1\(.*\),'
 	bps_regex='^ +BPS.*: ([0-9]+)$'
 	kbps_regex='.* ([0-9]+) kb\/s$'
-	map_regex='.*Stream #(0:[0-9]+).*'
 
 	high_kbps='1536'
 	low_kbps='768'
@@ -513,7 +512,7 @@ dts_extract_remux () {
 			wav_tmp="${of_dir}/FLAC.TMP-${session}.wav"
 
 # Gets the ffmpeg map code of the FLAC track.
-			map_tmp=$(sed -E "s/${map_regex}/\1/" <<<"${!audio_track_ref}")
+			map_tmp=$(sed -E "s/${regex_audio}/\1/" <<<"${!audio_track_ref}")
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
 			eval "${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""$flac_tmp"\"
@@ -653,7 +652,7 @@ dts_extract_remux () {
 	fi
 
 # Gets the ffmpeg map code of the audio track.
-	map=$(sed -E "s/${map_regex}/\1/" <<<"${!audio_track_ref}")
+	map=$(sed -E "s/${regex_audio}/\1/" <<<"${!audio_track_ref}")
 
 # Creates first part of ffmpeg command.
 	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${map}" -map 0:s?)
