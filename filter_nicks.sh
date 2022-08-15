@@ -28,9 +28,7 @@ shift
 declare -A nicks nicks_tmp
 
 for nick in "$@"; do
-	nick="${nick,,}"
-
-	nicks["${nick}"]='1'
+	nicks["${nick,,}"]='1'
 done
 
 if_nick () {
