@@ -14,8 +14,8 @@
 # centisecond.
 
 regex_p='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
-regex_d=' --> '
-regex_f="^${regex_p}${regex_d}${regex_p}$"
+delim=' --> '
+regex_f="^${regex_p}${delim}${regex_p}$"
 
 usage () {
 	printf '%s\n' "Usage: $(basename "$0") [srt]"
@@ -157,7 +157,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	mapfile -d' ' -t duration <<<"${line/${regex_d}/ }"
+	mapfile -d' ' -t duration <<<"${line/${delim}/ }"
 	duration[0]=$(tr -d '[:blank:]' <<<"${duration[0]}")
 	duration[1]=$(tr -d '[:blank:]' <<<"${duration[1]}")
 
@@ -185,7 +185,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	finished_line_start=$(printf '%02d:%02d:%02d,%03d' "$start_h" "$start_m" "$start_s" "$start_cs")
 	finished_line_stop=$(printf '%02d:%02d:%02d,%03d' "$stop_h" "$stop_m" "$stop_s" "$stop_cs")
-	finished_line="${finished_line_start}${regex_d}${finished_line_stop}"
+	finished_line="${finished_line_start}${delim}${finished_line_stop}"
 	lines[${i}]="$finished_line"
 
 	printf '%s\n' '***'

@@ -11,6 +11,10 @@ if=$(readlink -f "$1")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
+regex_sub='^.*Track type: subtitles'
+regex_lang='^.*Language( \(.*\)){0,1}: '
+regex_name='^.*Name: '
+
 usage () {
 	printf '%s\n\n' "Usage: $(basename "$0") [mkv]"
 	exit
@@ -30,20 +34,18 @@ mapfile -t mkv_info_list < <(mkvinfo "$if" 2>&-)
 for (( i = 0; i < ${#mkv_info_list[@]}; i++ )); do
 	line="${mkv_info_list[${i}]}"
 
-	if [[ $line =~ 'Track type: subtitles' ]]; then
+	if [[ $line =~ $regex_sub ]]; then
 		switch=1
 	fi
 
 	if [[ $switch -eq 1 ]]; then
-		if [[ $line =~ 'Language:' ]]; then
-
-			lang_list+=( $(sed 's/^.*Language: //' <<<"$line") )
+		if [[ $line =~ $regex_lang ]]; then
+			lang_list+=( "$(sed -E "s/${regex_lang}//" <<<"$line")" )
 			switch=0
 		fi
 
-		if [[ $line =~ 'Name:' ]]; then
-
-			lang_list+=( $(sed 's/^.*Name: //' <<<"$line") )
+		if [[ $line =~ $regex_name ]]; then
+			lang_list+=( "$(sed -E "s/${regex_name}//" <<<"$line")" )
 			switch=0
 		fi
 	fi
