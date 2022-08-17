@@ -335,7 +335,11 @@ break_name () {
 # 'bname_$temp_type' array.
 		array_ref="bname_${temp_type}[${i}]"
 
-		name[${i}]=$(tr -d '[:space:]' <<<"${!array_ref}")
+		temp_name=$(tr -d '[:space:]' <<<"${!array_ref}")
+
+		if [[ -n $temp_name ]]; then
+			name+=("$temp_name")
+		fi
 	done
 
 	if [[ -n $year ]]; then
