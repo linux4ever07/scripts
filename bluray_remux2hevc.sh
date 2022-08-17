@@ -64,8 +64,8 @@
 # The script was first created in 2019.
 
 # Generates a random number, which can be used for these filenames:
-# dts track, output, output remux, input info txt, output info txt,
-# output remux info txt.
+# output, output remux, input info txt, output info txt, output remux
+# info txt.
 session="$RANDOM"
 
 # Creates a variable that will work as a switch. If this variable is set
