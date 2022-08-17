@@ -3,8 +3,8 @@
 # Usage: bluray_remux2hevc.sh [mkv|m2ts] -out [directory] [...]
 
 # This script will:
-# * Parse the input filename (a 1080p BluRay (remux or full)), get movie
-# info from IMDb, incl. name and year.
+# * Parse the input filename (a 1080p Blu-Ray (remux or full)), get
+# movie info from IMDb, incl. name and year.
 # * Extract core DTS track from DTS-HD MA track (with ffmpeg).
 # * Remux the input file (MKV or M2TS), without all its audio tracks,
 # with the extracted core DTS track (with ffmpeg).
@@ -78,7 +78,7 @@ exist=0
 # to '1', it will use pass the subtitles from the input file to
 # HandBrake. This is to prevent the subtitles from going out of sync
 # with the audio and video, when dealing with input files that have
-# been merged from multiple BluRay discs.
+# been merged from multiple Blu-Ray discs.
 hb_subs=0
 
 # Sets the default language to English. This language code is what
