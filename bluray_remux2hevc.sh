@@ -30,8 +30,9 @@
 
 # The subtitles will add a bit of extra size.
 
-# First argument to this script should be a file, for example an
-# M2TS or MKV.
+# First argument to this script should be a file, typically an MKV or
+# M2TS.
+
 # '-grain' and '-anime' tell the script whether or not to use the
 # '--encoder-tune grain' or '--encoder-tune anime' HandBrake argument.
 # -grain is only needed if the input video has film grain (all movies
