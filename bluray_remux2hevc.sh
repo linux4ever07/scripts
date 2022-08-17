@@ -343,8 +343,8 @@ break_name () {
 	fi
 
 # Prints the complete parsed name.
-	name_string=$(sed -E 's/ +/ /g' <<<"${name[@]}")
-	printf '%s\n' "$name_string"
+	name_string="${name[@]}"
+	printf '%s' "$name_string"
 }
 
 # This creates a function called 'imdb', which will look up the movie
