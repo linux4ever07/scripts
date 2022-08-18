@@ -24,7 +24,7 @@ Usage: $(basename "$0") [mkv] [default track #] [...]
 	Optional arguments:
 
 -lang [code]
-	Language for added subtitle.
+	Three-letter language code for added subtitle.
 
 -name [...]
 	Name for added subtitle (needs to be specified after -lang, if at
