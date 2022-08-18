@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script is meant to merge extra subtitles into an MKV file, and
+# This script is meant to mux extra subtitles into an MKV file, and
 # also set the default subtitle.
 
 if=$(readlink -f "$1")
@@ -32,7 +32,7 @@ Usage: $(basename "$0") [mkv] [default track #] [...]
 
 [srt]
 	File name of subtitle to be added (needs to be specified after above
-	arguments.
+	arguments).
 
 USAGE
 	exit
