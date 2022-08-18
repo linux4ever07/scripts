@@ -3,7 +3,7 @@
 # in a comma-separated list. The MKV file should be given as the 1st
 # argument to this script.
 
-declare -a mkvinfo_list
+declare -a mkv_info_list
 declare -a lang_list
 declare -a lang_list_sorted
 
