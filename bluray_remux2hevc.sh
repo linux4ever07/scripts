@@ -458,7 +458,7 @@ imdb () {
 # the input file, without all its audio tracks but with the video and
 # subtitle tracks, and with the core DTS track.
 dts_extract_remux () {
-	regex_audio="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: Audio: "
+	regex_audio="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: Audio: .*$"
 	regex_51=', 5.1\(.*\),'
 	bps_regex='^ +BPS.*: ([0-9]+)$'
 	kbps_regex='.* ([0-9]+) kb\/s$'
