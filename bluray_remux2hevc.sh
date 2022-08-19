@@ -283,6 +283,7 @@ break_name () {
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
 	regex='^(.*)([[:punct:]]|[[:space:]]){1,}([0-9]{4})([[:punct:]]|[[:space:]]){1,}(.*)$'
+	regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
@@ -291,7 +292,7 @@ break_name () {
 		temp=$(sed -E "s/${regex}/\1/" <<<"$bname")
 		year=$(sed -E "s/${regex}/\(\3\)/" <<<"$bname")
 	else
-		temp=$(sed 's/ *$//' <<<"${bname:0:64}")
+		temp=$(sed -E "s/${regex_blank}/\1/" <<<"${bname:0:64}")
 	fi
 
 # Break $bname up in a list of words, and store those words in arrays,
