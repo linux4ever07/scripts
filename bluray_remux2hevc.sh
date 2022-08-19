@@ -117,7 +117,7 @@ the "The Imaginarium of Doctor Parnassus (2009)" Blu-Ray:
 	In case the output remux file already exists.
 
 -hb_subs
-	Pass the subs directly to HandBrake instead of ffmpeg.
+	Pass the subs directly to HandBrake instead of mkvmerge.
 
 -anime
 	Only needed if the input file is animation.
