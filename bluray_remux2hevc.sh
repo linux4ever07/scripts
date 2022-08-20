@@ -314,9 +314,7 @@ break_name () {
 # If there are more dots in $bname than hyphens, underscores or spaces,
 # that means $bname is separated by dots. Otherwise, it's separated by
 # hyphens, underscores or spaces. In either case, loop through the word
-# list in either array, and break the name up in separate words. The
-# last element is the year, so do a regex on that to filter out other
-# characters besides four digits.
+# list in either array, and break the name up in separate words.
 	elements=0
 
 # This for loop is to figure out if $bname is separated by dots,
