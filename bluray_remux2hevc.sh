@@ -317,7 +317,6 @@ break_name () {
 # list in either array, and break the name up in separate words. The
 # last element is the year, so do a regex on that to filter out other
 # characters besides four digits.
-
 	elements=0
 
 # This for loop is to figure out if $bname is separated by dots,
