@@ -136,7 +136,7 @@ cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_fn='^FILE \"{0,1}(.*\/){0,1}(.*)\"{0,1} (.*)$'
+regex_fn='^FILE \"{0,1}(.*[\/]){0,1}(.*)\"{0,1} (.*)$'
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 regex_frames='^[0-9]+$'
 regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
