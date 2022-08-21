@@ -138,20 +138,17 @@ regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_path='^(.*[\/])'
 regex_file='^(FILE) (.*) (.*)$'
 regex_track='^(TRACK) ([0-9]{2,}) (.*)$'
-
 regex_frames='^[0-9]+$'
 regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
-
 regex_pregap="^(PREGAP) (${regex_time})$"
 regex_index="^(INDEX) ([0-9]{2,}) (${regex_time})$"
 regex_postgap="^(POSTGAP) (${regex_time})$"
 
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
-
-cue_commands=('file' 'track' 'pregap' 'index' 'postgap')
-
 regex_iso='\.iso$'
 regex_wav='\.wav$'
+
+cue_commands=('file' 'track' 'pregap' 'index' 'postgap')
 
 declare -A cue_lines
 declare -a bchunk_cdr_list bchunk_wav_list of_cue_cdr_list of_cue_ogg_list of_cue_flac_list
