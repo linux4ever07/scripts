@@ -550,7 +550,6 @@ data_track () {
 	fi
 
 	time=$(sed -E "s/${regex_index}/\3/" <<<"$string")
-
 	frames=$(time_convert "$time")
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
