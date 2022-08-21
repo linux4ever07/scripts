@@ -199,6 +199,10 @@ read_cue () {
 					fn="$fn_found"
 				else
 					not_found+=("$fn")
+
+					if [[ $track_n -eq 1 && -f $bin ]]; then
+						fn="$bin"
+					fi
 				fi
 
 				files+=("$fn")
