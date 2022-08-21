@@ -69,7 +69,6 @@ declare -A audio_types
 audio_types=(['cdr']=0 ['ogg']=0 ['flac']=0)
 exclusive=0
 byteswap=0
-wav_switch=0
 
 # The loop below handles the arguments to the script.
 shift
@@ -136,18 +135,26 @@ cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_fn='^FILE \"{0,1}(.*[\/]){0,1}(.*)\"{0,1} (.*)$'
-regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
+regex_path='^(.*[\/])'
+regex_file='^(FILE) (.*) (.*)$'
+regex_track='^(TRACK) ([0-9]{2,}) (.*)$'
+
 regex_frames='^[0-9]+$'
 regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
-regex_audio='^TRACK [0-9]{2,} AUDIO$'
-regex_index="^INDEX ([0-9]{2,}) (${regex_time})$"
-regex_mode='^TRACK [0-9]{2,} MODE'
+
+regex_pregap="^(PREGAP) (${regex_time})$"
+regex_index="^(INDEX) ([0-9]{2,}) (${regex_time})$"
+regex_postgap="^(POSTGAP) (${regex_time})$"
+
+regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
+
+cue_commands=('file' 'track' 'pregap' 'index' 'postgap')
+
 regex_iso='\.iso$'
 regex_wav='\.wav$'
 
-declare -A gaps
-declare -a cue_lines bchunk_cdr_list bchunk_wav_list of_cue_cdr_list of_cue_ogg_list of_cue_flac_list modes
+declare -A cue_lines
+declare -a bchunk_cdr_list bchunk_wav_list of_cue_cdr_list of_cue_ogg_list of_cue_flac_list
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -175,58 +182,93 @@ check_cmd () {
 # file, add full path to filenames listed in the CUE file, and create a
 # new temporary CUE file in /dev/shm based on this.
 read_cue () {
-	mapfile -t cue_lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
+	declare -a files not_found
+	declare string
 
-	declare -a bin_list not_found
+	track_n=0
 
-	n='0'
+	handle_command () {
+		case "$1" in
+			'file')
+				fn=$(sed -E "s/${regex_file}/\2/" <<<"$line" | tr -d '"')
+				fn=$(sed -E "s/${regex_path}//" <<<"$fn")
 
-	for (( i=0; i<${#cue_lines[@]}; i++ )); do
-		cue_lines[${i}]="${cue_lines[${i}]}"
+				fn_found=$(find "$if_dn" -maxdepth 1 -type f -iname "$fn" 2>&- | head -n 1)
 
-		if [[ ${cue_lines[${i}]} =~ $regex_fn ]]; then
-			n=$(( n + 1 ))
+				if [[ -f $fn_found ]]; then
+					fn="$fn_found"
+				else
+					not_found+=("$fn")
+				fi
 
-# Extracting the filename from line, and removing path from it.
-			bin_tmp=$(sed -E "s/${regex_fn}/\2/" <<<"${cue_lines[${i}]}")
-			bin_tmp=$(tr -d '"' <<<"$bin_tmp")
+				files+=("$fn")
 
-# Adding the full path to filename.
-			bin_tmp="${if_dn}/${bin_tmp}"
-			bin_list+=("$bin_tmp")
+				string=$(sed -E "s/${regex_file}/\3/" <<<"$line")
+				string="FILE \"${fn}\" ${string}"
 
-# If $bin isn't set, set it. That means that the find command in the
-# beginning of the script didn't find a BIN file, but now we've found it
-# by parsing the input CUE file.
-# If the number of FILE commands is greater than 1, quit.
-			if [[ -z $bin ]]; then
-				bin="$bin_tmp"
+				track_n=$(( track_n + 1 ))
+				cue_lines[${track_n},'0','file']="$string"
+			;;
+			'track')
+				string="$line"
+
+				track_n=$(sed -E -e "s/${regex_track}/\2/" -e 's/^0//' <<<"$line")
+				cue_lines[${track_n},'1','track']="$string"
+			;;
+			'pregap')
+				string="$line"
+
+				cue_lines[${track_n},'2','pregap']="$string"
+			;;
+			'index')
+				string="$line"
+
+				index_n=$(sed -E -e "s/${regex_index}/\2/" -e 's/^0//' <<<"$line")
+				cue_lines[${track_n},'3','index',${index_n}]="$string"
+			;;
+			'postgap')
+				string="$line"
+
+				cue_lines[${track_n},'4','postgap']="$string"
+			;;
+		esac
+	}
+
+	sort_keys () {
+		for key in "${!cue_lines[@]}"; do
+			printf '%s\n' "$key"
+		done | sort -n
+	}
+
+	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
+
+	for (( i=0; i<${#cue_lines_if[@]}; i++ )); do
+		line="${cue_lines_if[${i}]}"
+
+		for (( j=0; j<${#cue_commands[@]}; j++ )); do
+			cue_command="${cue_commands[${j}]}"
+			regex_tmp="^${cue_command^^}"
+
+			if [[ $line =~ $regex_tmp ]]; then
+				handle_command "$cue_command"
+				break
 			fi
-			if [[ $n -gt 1 ]]; then
-				printf '\n%s\n' 'This CUE file contains multiple FILE commands!'
-				printf '%s\n\n' 'You need to merge all the containing files into one BIN file, using a tool like PowerISO.'
-				rm -f "$cue_tmp_f"
-				exit
-			fi
-
-# Getting the filetype information from line, and replacing line with a
-# new one containing the full path to file. We need this, since we're
-# creating a temporary input CUE file in /dev/shm, so its location will
-# be different from the files it points to.
-			f_type=$(sed -E "s/${regex_fn}/\3/" <<<"${cue_lines[${i}]}")
-			cue_lines[${i}]="FILE \"${bin_tmp}\" ${f_type}"
-		fi
-
-		printf '%s\n' "${cue_lines[${i}]}" >> "$cue_tmp_f"
+		done
 	done
 
-# If the filenames in the CUE aren't real files, then print the
-# filenames and quit.
-	for (( i=0; i<${#bin_list[@]}; i++ )); do
-		if [[ ! -f ${bin_list[${i}]} ]]; then
-			not_found+=("${bin_list[${i}]}")
-		fi
-	done
+	if [[ ${#files[@]} -gt 1 ]]; then
+		cat <<MERGE
+
+This CUE file contains multiple FILE commands!
+
+You need to merge all the containing files into one BIN file, using a
+tool like PowerISO.'
+
+MERGE
+
+		rm -f "$cue_tmp_f"
+		exit
+	fi
 
 	if [[ -n ${not_found[@]} ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
@@ -235,65 +277,16 @@ read_cue () {
 			printf '%s\n' "${not_found[${i}]}"
 		done
 
-		printf '\n' 
-
-		rm -f "$cue_tmp_f"
-		exit
+		printf '\n'
 	fi
 
-	n=0
+	keys_sorted=($(sort_keys))
 
-# The loop below adds MODE, PREGAP and POSTGAP commands to be processed
-# later by the 'create_cue' function.
-	for (( i=0; i<${#cue_lines[@]}; i++ )); do
-		line="${cue_lines[${i}]}"
+	for (( i=0; i<${#keys_sorted[@]}; i++ )); do
+		key="${keys_sorted[${i}]}"
 
-		case "$line" in
-			'TRACK'*)
-				n=$(( n + 1 ))
-
-# If line contains a MODE command, save it for later to be added by the
-# 'create_cue' function.
-				if [[ $line =~ $regex_mode ]]; then
-					modes[${n}]="$line"
-				fi
-
-				next=$(( i + 1 ))
-				line_next="${cue_lines[${next}]}"
-				next=$(( i + 2 ))
-				line_next_2="${cue_lines[${next}]}"
-
-# If the original CUE specifies a pregap using the INDEX command,
-# convert that to a PREGAP command.
-				if [[ $line_next =~ $regex_index && $line_next_2 =~ $regex_index ]]; then
-					index_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next")
-					index_next_n=$(sed -E "s/${regex_index}/\1/" <<<"$line_next_2")
-
-					if [[ $index_n == '00' && $index_next_n == '01' ]]; then
-						time_index=$(sed -E "s/${regex_index}/\2/" <<<"$line_next")
-						time_index_next=$(sed -E "s/${regex_index}/\2/" <<<"$line_next_2")
-						frames=$(time_convert "$time_index")
-						frames_next=$(time_convert "$time_index_next")
-
-						if [[ $frames_next -gt $frames ]]; then
-							frames_diff=$(( frames_next - frames ))
-							time_diff=$(time_convert "$frames_diff")
-
-							if [[ -z ${gaps[pre,${n}]} ]]; then
-								gaps[pre,${n}]="PREGAP ${time_diff}"
-							fi
-						fi
-					fi
-				fi
-			;;
-			'PREGAP'*)
-				gaps[pre,${n}]="$line"
-			;;
-			'POSTGAP'*)
-				gaps[post,${n}]="$line"
-			;;
-		esac
-	done
+		printf '%s\n' "${cue_lines[${key}]}"
+	done > "$cue_tmp_f"
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
@@ -333,10 +326,8 @@ bin_split () {
 		;;
 		'wav')
 # If WAV files have already been produced, skip this function.
-			if [[ $wav_switch -eq 1 ]]; then
+			if [[ -n ${bchunk_wav_stdout[@]} ]]; then
 				return
-			else
-				wav_switch=1
 			fi
 
 			mapfile -t bchunk_wav_stdout < <(eval "${wav_args[@]}"; printf '%s\n' "$?")
@@ -433,13 +424,35 @@ create_cue () {
 	add_gap () {
 		case "$1" in
 			'pre')
-				if [[ -n ${gaps[pre,${n}]} ]]; then
-					eval of_cue_${type}_list+=\(\""    ${gaps[pre,${n}]}"\"\)
+				string="${cue_lines[${track_n},2,pregap]}"
+
+				index_00="${cue_lines[${track_n},3,index,0]}"
+				index_01="${cue_lines[${track_n},3,index,1]}"
+
+				if [[ -n $index_00 && -n $index_01 ]]; then
+					index_00=$(sed -E "s/${regex_index}/\3/" <<<"$index_00")
+					index_01=$(sed -E "s/${regex_index}/\3/" <<<"$index_01")
+
+					index_00_frames=$(time_convert "$index_00")
+					index_01_frames=$(time_convert "$index_01")
+
+					if [[ $index_01_frames -gt $index_00_frames ]]; then
+						frames_diff=$(( index_01_frames - index_00_frames ))
+						time_diff=$(time_convert "$frames_diff")
+
+						eval of_cue_${type}_list+=\(\""    PREGAP ${time_diff}"\"\)
+					fi
+				fi
+
+				if [[ -n $string ]]; then
+					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
 				fi
 			;;
 			'post')
-				if [[ -n ${gaps[post,${n}]} ]]; then
-					eval of_cue_${type}_list+=\(\""    ${gaps[post,${n}]}"\"\)
+				string="${cue_lines[${track_n},4,postgap]}"
+
+				if [[ -n $string ]]; then
+					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
 				fi
 			;;
 		esac
@@ -448,11 +461,11 @@ create_cue () {
 	for (( i=0; i<elements; i++ )); do
 		line_ref="bchunk_${type_tmp}_list[${i}]"
 
-		n=$(( i + 1 ))
+		track_n=$(( i + 1 ))
 
 		if [[ ${!line_ref} =~ $regex_iso ]]; then
 			eval of_cue_${type}_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
-			eval of_cue_${type}_list+=\(\""  ${modes[${n}]}"\"\)
+			eval of_cue_${type}_list+=\(\""  ${cue_lines[1,1,track]}"\"\)
 			add_gap pre
 			eval of_cue_${type}_list+=\(\""    INDEX 01 00:00:00"\"\)
 			add_gap post
@@ -469,7 +482,7 @@ create_cue () {
 				;;
 			esac
 
-			line_tmp=$(printf "  TRACK %02d AUDIO" "$n")
+			line_tmp=$(printf "  TRACK %02d AUDIO" "$track_n")
 			
 			eval of_cue_${type}_list+=\(\""$line_tmp"\"\)
 			add_gap pre
@@ -514,41 +527,31 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'bin_data_track', which copies the raw
-# binary data from the original BIN file for the data track.
-bin_data_track () {
+# Creates a function called 'data_track', which copies the raw binary
+# data from the original BIN file for the data track.
+data_track () {
 	n=0
 	sector=('2048' '2352')
-	last=$(( ${#cue_lines[@]} - 1 ))
 
-	until [[ $n -eq $last ]]; do
-		cue_line="${cue_lines[${n}]}"
+	declare string
 
-		if [[ $cue_line =~ $regex_audio ]]; then
-			n=$(( n + 1 ))
-			cue_line="${cue_lines[${n}]}"
+	if [[ -n ${cue_lines[2,3,index,0]} ]]; then
+		string="${cue_lines[2,3,index,0]}"
+	else
+		string="${cue_lines[2,3,index,1]}"
+	fi
 
-			until [[ $cue_line =~ $regex_index ]]; do
-				n=$(( n + 1 ))
-				cue_line="${cue_lines[${n}]}"
+	time=$(sed -E "s/${regex_index}/\3/" <<<"$string")
 
-				if [[ $n -eq $last ]]; then
-					break
-				fi
-			done
+	if [[ -z $time ]]; then
+		return
+	fi
 
-			time=$(sed -E "s/${regex_index}/\2/" <<<"$cue_line")
-			data_frames=$(time_convert "$time")
-
-			break
-		fi
-
-		n=$(( n + 1 ))
-	done
+	frames=$(time_convert "$time")
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
 # bytes is the size of audio sectors.
-	dd if="$bin" of="$of_bin" bs="${sector[1]}" count="$data_frames"
+	dd if="$bin" of="$of_bin" bs="${sector[1]}" count="$frames"
 }
 
 # Creates a function called 'clean_up', which deletes temporary files,
@@ -621,4 +624,4 @@ printf '\n'
 clean_up
 
 # Copy data track from original BIN file.
-bin_data_track
+data_track
