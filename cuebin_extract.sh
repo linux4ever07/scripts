@@ -541,11 +541,11 @@ data_track () {
 		string="${cue_lines[2,3,index,1]}"
 	fi
 
-	time=$(sed -E "s/${regex_index}/\3/" <<<"$string")
-
-	if [[ -z $time ]]; then
+	if [[ -z $string ]]; then
 		return
 	fi
+
+	time=$(sed -E "s/${regex_index}/\3/" <<<"$string")
 
 	frames=$(time_convert "$time")
 
