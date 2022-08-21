@@ -531,7 +531,6 @@ time_convert () {
 # Creates a function called 'data_track', which copies the raw binary
 # data from the original BIN file for the data track.
 data_track () {
-	n=0
 	sector=('2048' '2352')
 
 	declare string
