@@ -466,7 +466,7 @@ create_cue () {
 
 		if [[ ${!line_ref} =~ $regex_iso ]]; then
 			eval of_cue_${type}_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
-			eval of_cue_${type}_list+=\(\""  ${cue_lines[1,1,track]}"\"\)
+			eval of_cue_${type}_list+=\(\""  ${cue_lines[${track_n},1,track]}"\"\)
 			add_gap pre
 			eval of_cue_${type}_list+=\(\""    INDEX 01 00:00:00"\"\)
 			add_gap post
