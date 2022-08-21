@@ -426,6 +426,10 @@ create_cue () {
 			'pre')
 				string="${cue_lines[${track_n},2,pregap]}"
 
+				if [[ -n $string ]]; then
+					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
+				fi
+
 				index_00="${cue_lines[${track_n},3,index,0]}"
 				index_01="${cue_lines[${track_n},3,index,1]}"
 
@@ -442,10 +446,6 @@ create_cue () {
 
 						eval of_cue_${type}_list+=\(\""    PREGAP ${time_diff}"\"\)
 					fi
-				fi
-
-				if [[ -n $string ]]; then
-					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
 				fi
 			;;
 			'post')
