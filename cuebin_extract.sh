@@ -281,7 +281,7 @@ MERGE
 		printf '\n'
 	fi
 
-	keys_sorted=($(sort_keys))
+	mapfile -t keys_sorted < <(sort_keys)
 
 	for (( i=0; i<${#keys_sorted[@]}; i++ )); do
 		key="${keys_sorted[${i}]}"
