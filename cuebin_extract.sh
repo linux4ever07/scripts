@@ -224,7 +224,7 @@ read_cue () {
 			'index')
 				string="$line"
 
-				index_n=$(sed -E -e "s/${regex_index}/\2/" -e 's/^0//' <<<"$line")
+				index_n=$(sed -E -e "s/${regex_index}/\2/" -e 's/^0//' <<<"$string")
 				cue_lines[${track_n},'3','index',${index_n}]="$string"
 			;;
 			'postgap')
