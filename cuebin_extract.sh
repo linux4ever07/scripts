@@ -263,7 +263,7 @@ read_cue () {
 This CUE file contains multiple FILE commands!
 
 You need to merge all the containing files into one BIN file, using a
-tool like PowerISO.'
+tool like PowerISO.
 
 MERGE
 
@@ -431,6 +431,8 @@ create_cue () {
 					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
 				fi
 
+# If the original CUE specifies a pregap using the INDEX command,
+# convert that to a PREGAP command.
 				index_00="${cue_lines[${track_n},3,index,0]}"
 				index_01="${cue_lines[${track_n},3,index,1]}"
 
