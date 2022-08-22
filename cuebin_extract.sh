@@ -213,7 +213,7 @@ read_cue () {
 			'track')
 				string="$line"
 
-				track_n=$(sed -E -e "s/${regex_track}/\2/" -e 's/^0//' <<<"$line")
+				track_n=$(sed -E -e "s/${regex_track}/\2/" -e 's/^0//' <<<"$string")
 				cue_lines[${track_n},'1','track']="$string"
 			;;
 			'pregap')
