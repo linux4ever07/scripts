@@ -485,7 +485,7 @@ create_cue () {
 				;;
 			esac
 
-			line_tmp=$(printf "  TRACK %02d AUDIO" "$track_n")
+			line_tmp=$(printf '  TRACK %02d AUDIO' "$track_n")
 			
 			eval of_cue_${type}_list+=\(\""$line_tmp"\"\)
 			add_gap pre
