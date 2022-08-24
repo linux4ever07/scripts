@@ -134,7 +134,11 @@ imdb () {
 
 			if [[ "${tmp_array[${z}]}" =~ ${!json_regex1_ref} ]]; then
 				n=$(( z + 1 ))
-				eval ${json_type}=\"$(sed -E "s/${!json_regex2_ref}/\1/" <<<"${tmp_array[${n}]}")\"
+
+				if [[ "${tmp_array[${n}]}" =~ ${!json_regex2_ref} ]]; then
+					eval ${json_type}=\"$(sed -E "s/${!json_regex2_ref}/\1/" <<<"${tmp_array[${n}]}")\"
+				fi
+
 				unset -v json_types[${json_type}]
 				break
 			fi
