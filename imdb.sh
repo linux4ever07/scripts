@@ -136,7 +136,7 @@ imdb () {
 				n=$(( z + 1 ))
 
 				if [[ "${tmp_array[${n}]}" =~ ${!json_regex2_ref} ]]; then
-					eval ${json_type}=\""${BASH_REMATCH[1]}")\"
+					eval ${json_type}=\""${BASH_REMATCH[1]}"\"
 				fi
 
 				unset -v json_types[${json_type}]
