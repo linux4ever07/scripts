@@ -385,7 +385,7 @@ imdb () {
 		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")")
 
 		if [[ $term =~ $t_y_regex ]]; then
-			y=$(sed -E "s/${t_y_regex}/\2/" <<<"${term}")
+			y="${BASH_REMATCH[2]}"
 		fi
 	fi
 
@@ -433,7 +433,7 @@ imdb () {
 				n=$(( z + 1 ))
 
 				if [[ "${tmp_array[${n}]}" =~ ${!json_regex2_ref} ]]; then
-					eval ${json_type}=\"$(sed -E "s/${!json_regex2_ref}/\1/" <<<"${tmp_array[${n}]}")\"
+					eval ${json_type}=\""${BASH_REMATCH[1]}")\"
 				fi
 
 				unset -v json_types[${json_type}]
