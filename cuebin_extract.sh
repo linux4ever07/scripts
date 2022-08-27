@@ -267,7 +267,6 @@ tool like PowerISO.
 
 MERGE
 
-		rm -f "$cue_tmp_f"
 		exit
 	fi
 
