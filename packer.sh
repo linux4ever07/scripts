@@ -213,7 +213,7 @@ CMD
 }
 
 # Creates a function, called 'output', which will let the user know if
-# the extraction went okay or not. If not, print the entire output from
+# the command succeeded or not. If not, print the entire output from
 # the compression program.
 output () {
 	print_stdout () {
