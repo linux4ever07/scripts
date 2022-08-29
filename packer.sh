@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# This script is a tool to handle archives, in various formats.
+# This script is a tool for handling archives, in various formats.
+# The archive format to be used is decided based on the file name
+# extension of the archive names given as argument.
 
 # The script has these modes:
 
@@ -124,6 +126,7 @@ if [[ $mode == 'pack' ]]; then
 	fi
 fi
 
+# Redirect STDERR to a file, to capture the output.
 touch "$stderr_f"
 exec 2>>"$stderr_f"
 
