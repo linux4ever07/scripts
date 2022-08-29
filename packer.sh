@@ -17,7 +17,7 @@
 # * list
 # List the content of archives.
 
-# The script lets you know if there were errors or not
+# The script lets you know if there were errors or not.
 
 set -o pipefail
 
