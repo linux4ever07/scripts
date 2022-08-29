@@ -2,7 +2,7 @@
 
 # This script is a tool for handling archives, in various formats.
 # The archive format to be used is decided based on the file name
-# extension of the archive names given as argument.
+# extension of the archive names given as arguments.
 
 # The script has these modes:
 
