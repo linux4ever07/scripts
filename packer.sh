@@ -465,7 +465,7 @@ arch_test () {
 	esac
 }
 
-# Creates a function called 'arch_test', which will list the content of
+# Creates a function called 'arch_list', which will list the content of
 # an archive.
 arch_list () {
 	case "$f_bn_lc" in
