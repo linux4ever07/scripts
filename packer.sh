@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# This script is a tool for handling archives, in various formats.
+# This script is a tool for handling archives in various formats.
 # The archive format to be used is decided based on the file name
 # extension of the archive names given as arguments.
 
 # The script has these modes:
 
 # * pack
-# Compress files / directories to archives (in chosen format). In all
-# cases, the maximum compression level is used.
+# Compress files / directories to archives. In all cases, the maximum
+# compression level is used.
 
 # * unpack
 # Extract archives.
@@ -342,12 +342,6 @@ arch_unpack () {
 			mapfile -t stdout_v < <(tar -xJf "$f"; printf '%s\n' "$?")
 			output
 		;;
-		*.lzh)
-			check_cmd lzh
-
-			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
-			output
-		;;
 		*.z|*.gz)
 			mapfile -t stdout_v < <(gunzip "$f"; printf '%s\n' "$?")
 			output
@@ -374,6 +368,12 @@ arch_unpack () {
 			check_cmd rar
 
 			mapfile -t stdout_v < <(rar x "$f"; printf '%s\n' "$?")
+			output
+		;;
+		*.lzh)
+			check_cmd lzh
+
+			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
 			output
 		;;
 		*.cab|*.exe)
@@ -410,19 +410,9 @@ arch_test () {
 			mapfile -t stdout_v < <(tar tf "$f"; printf '%s\n' "$?")
 			output "$f"
 		;;
-		*.zip)
-			mapfile -t stdout_v < <(unzip -t "$f"; printf '%s\n' "$?")
-			output "$f"
-		;;
 		*.z|*.gz)
 			mapfile -t stdout_v < <(gunzip -t "$f"; printf '%s\n' "$?")
 			output "$f"
-		;;
-		*.lzh)
-			check_cmd lzh
-
-			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
-			output
 		;;
 		*.bz2)
 			mapfile -t stdout_v < <(bunzip2 -t "$f"; printf '%s\n' "$?")
@@ -430,6 +420,10 @@ arch_test () {
 		;;
 		*.xz)
 			mapfile -t stdout_v < <(xz -t "$f"; printf '%s\n' "$?")
+			output "$f"
+		;;
+		*.zip)
+			mapfile -t stdout_v < <(unzip -t "$f"; printf '%s\n' "$?")
 			output "$f"
 		;;
 		*.7z)
@@ -443,6 +437,12 @@ arch_test () {
 
 			mapfile -t stdout_v < <(rar t "$f"; printf '%s\n' "$?")
 			output "$f"
+		;;
+		*.lzh)
+			check_cmd lzh
+
+			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
+			output
 		;;
 		*.cab|*.exe)
 			check_cmd cab
@@ -494,12 +494,6 @@ arch_list () {
 			mapfile -t stdout_v < <(tar -Jtvf "$f"; printf '%s\n' "$?")
 			output | less
 		;;
-		*.lzh)
-			check_cmd lzh
-
-			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
-			output
-		;;
 		*.z|*.gz)
 			mapfile -t stdout_v < <(gunzip -l "$f"; printf '%s\n' "$?")
 			output | less
@@ -528,6 +522,12 @@ arch_list () {
 			mapfile -t stdout_v < <(rar vb "$f"; printf '%s\n' "$?")
 			output | less
 		;;
+		*.lzh)
+			check_cmd lzh
+
+			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
+			output
+		;;
 		*.cab|*.exe)
 			check_cmd cab
 
@@ -541,7 +541,7 @@ arch_list () {
 			output | less
 		;;
 		*.iso)
-			check_cmd 7z
+			check_cmd iso
 
 			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
 			output | less
