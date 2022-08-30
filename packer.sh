@@ -115,7 +115,7 @@ if [[ $mode == 'pack' ]]; then
 
 # If the archive file name already exists, quit.
 	if [[ -f $f ]]; then
-		printf '%s\n\n' "${f}: File already exists"
+		printf '%s: File already exists\n\n' "$f"
 		exit
 	fi
 
@@ -232,13 +232,13 @@ output () {
 	fi
 
 	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		printf '%s\n\n' "${f}: Everything is Ok"
+		printf '%s: Everything is Ok\n\n' "$f"
 
 		if [[ $mode == 'list' ]]; then
 			print_stdout
 		fi
 	else
-		printf '%s\n\n' "${f}: Something went wrong"
+		printf '%s: Something went wrong\n\n' "$f"
 		print_stdout
 	fi
 }
@@ -284,10 +284,10 @@ arch_pack () {
 	esac
 }
 
-# Creates a function, called 'iso_extract', which will be used to mount,
+# Creates a function, called 'iso_unpack', which will be used to mount,
 # copy files from, and unmount an ISO file. This in effect means
 # extracting the ISO.
-iso_extract () {
+iso_unpack () {
 	iso_bn="${f_bn%.[^.]*}"
 	iso_mnt="/dev/shm/${iso_bn}-${session}"
 	iso_of="${PWD}/${iso_bn}-${session}"
@@ -389,7 +389,7 @@ arch_unpack () {
 			output
 		;;
 		*.iso)
-			iso_extract
+			iso_unpack
 		;;
 		*)
 			usage
