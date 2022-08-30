@@ -292,23 +292,23 @@ iso_unpack () {
 	iso_mnt="/dev/shm/${iso_bn}-${session}"
 	iso_of="${PWD}/${iso_bn}-${session}"
 
-	printf '%s\n\n' "${iso_of}: Creating output directory..."
+	printf '%s: Creating output directory...\n\n' "$iso_of"
 	mkdir "$iso_mnt" "$iso_of"
 
-	printf '%s\n\n' "${f}: Mounting..."
+	printf '%s: Mounting...\n\n' "$f"
 	sudo mount "$f" "$iso_mnt" -o loop
 
-	printf '%s\n\n' "${f}: Extracting files..."
+	printf '%s: Extracting files...\n\n' "$f"
 	cp -p -r "$iso_mnt"/* "$iso_of"
 
-	printf '%s\n\n' "${iso_of}: Changing owner to ${USER}..."
+	printf '%s: Changing owner to %s...\n\n' "$iso_of" "$USER"
 	sudo chown -R "${USER}:${USER}" "$iso_of"
 	sudo chmod -R +rw "$iso_of"
 
-	printf '%s\n\n' "${f}: Unmounting..."
+	printf '%s: Unmounting...\n\n' "$f"
 	sudo umount "$iso_mnt"
 
-	printf '%s\n\n' "${iso_mnt}: Removing mountpoint..."
+	printf '%s: Removing mountpoint...\n\n' "$iso_mnt"
 	rm -rf "$iso_mnt"
 }
 
