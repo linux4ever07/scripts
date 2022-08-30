@@ -29,8 +29,16 @@ time_convert () {
 
 # If argument is in the frame format...
 	elif [[ $time =~ $regex_frames ]]; then
-		f=$(( time % 75 ))
-		s=$(( time / 75 ))
+		f="$time"
+		s=0
+		m=0
+
+# While $f (frames) is equal to (or greater than) 75, clear the $f
+# variable and add 1 to the $s (seconds) variable.
+		while [[ $f -ge 75 ]]; do
+			s=$(( s + 1 ))
+			f=$(( f - 75 ))
+		done
 
 # While $s (seconds) is equal to (or greater than) 60, clear the $s
 # variable and add 1 to the $m (minutes) variable.
