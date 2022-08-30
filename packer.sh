@@ -4,6 +4,11 @@
 # The archive format to be used is decided based on the file name
 # extension of the archive names given as arguments.
 
+# The benefit of using this script instead of running the compression
+# programs directly, is that there's no need to remember the varying
+# syntax. And the appropriate program for each specific archive format
+# is automatically used.
+
 # The script has these modes:
 
 # * pack
