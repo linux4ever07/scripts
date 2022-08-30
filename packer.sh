@@ -155,13 +155,11 @@ restore () {
 # Creates a function called 'cat_stderr', which will print errors, if
 # there were any.
 cat_stderr () {
-	stderr_out=$(cat "$stderr_f")
+	while read stderr_out; do
+		printf '%s\n' "$stderr_out"
+	done <"$stderr_f"
 
 	truncate -s 0 "$stderr_f"
-
-	if [[ -n $stderr_out ]]; then
-		printf '%s\n' "$stderr_out"
-	fi
 }
 
 # Creates a function, called 'check_cmd', which will be used to
