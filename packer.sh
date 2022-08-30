@@ -110,27 +110,6 @@ if [[ -z $mode ]]; then
 	usage
 fi
 
-# If in 'pack' mode, create variables with the archive name, which is
-# supposed to be the second argument to the script.
-if [[ $mode == 'pack' ]]; then
-	create_names "$1"
-	of=$(sed -E "s/${regex_ext}//" <<<"$f")
-
-	shift
-
-# If the archive file name already exists, quit.
-	if [[ -f $f ]]; then
-		printf '%s: File already exists\n\n' "$f"
-		exit
-	fi
-
-# If no files / directories to be compressed were given as arguments,
-# quit.
-	if [[ -z $1 ]]; then
-		usage
-	fi
-fi
-
 # Redirect STDERR to a file, to capture the output.
 touch "$stderr_f"
 exec 2>>"$stderr_f"
@@ -165,6 +144,35 @@ cat_stderr () {
 	done <"$stderr_f"
 
 	truncate -s 0 "$stderr_f"
+}
+
+# Creates a function, called 'output', which will let the user know if
+# the command succeeded or not. If not, print the entire output from
+# the compression program.
+output () {
+	print_stdout () {
+		for (( n = 0; n < last; n++ )); do
+			printf '%s\n' "${stdout_v[${n}]}"
+		done
+
+		unset -v stdout_v
+		cat_stderr
+	}
+
+	if [[ ${#stdout_v[@]} -gt 0 ]]; then
+		last=$(( ${#stdout_v[@]} - 1 ))
+	fi
+
+	if [[ "${stdout_v[${last}]}" == "0" ]]; then
+		printf '%s: Everything is Ok\n\n' "$f"
+
+		if [[ $mode == 'list' ]]; then
+			print_stdout
+		fi
+	else
+		printf '%s: Something went wrong\n\n' "$f"
+		print_stdout
+	fi
 }
 
 # Creates a function, called 'check_cmd', which will be used to
@@ -216,34 +224,6 @@ CMD
 			fi
 		fi
 	done
-}
-
-# Creates a function, called 'output', which will let the user know if
-# the command succeeded or not. If not, print the entire output from
-# the compression program.
-output () {
-	print_stdout () {
-		for (( n = 0; n < last; n++ )); do
-			printf '%s\n' "${stdout_v[${n}]}"
-		done
-		unset -v stdout_v
-		cat_stderr
-	}
-
-	if [[ ${#stdout_v[@]} -gt 0 ]]; then
-		last=$(( ${#stdout_v[@]} - 1 ))
-	fi
-
-	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		printf '%s: Everything is Ok\n\n' "$f"
-
-		if [[ $mode == 'list' ]]; then
-			print_stdout
-		fi
-	else
-		printf '%s: Something went wrong\n\n' "$f"
-		print_stdout
-	fi
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
@@ -557,6 +537,23 @@ arch_list () {
 
 case "$mode" in
 	'pack')
+		create_names "$1"
+		of=$(sed -E "s/${regex_ext}//" <<<"$f")
+
+		shift
+
+# If the archive file name already exists, quit.
+		if [[ -f $f ]]; then
+			printf '%s: File already exists\n\n' "$f"
+			exit
+		fi
+
+# If no files / directories to be compressed were given as arguments,
+# quit.
+		if [[ -z $1 ]]; then
+			usage
+		fi
+
 		arch_pack "${@}"
 	;;
 	'unpack')
