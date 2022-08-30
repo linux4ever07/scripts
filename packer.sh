@@ -564,7 +564,7 @@ case "$mode" in
 				usage
 			fi
 
-			arch_unpack "${@}"
+			arch_unpack
 
 			shift
 		done
@@ -577,7 +577,7 @@ case "$mode" in
 				usage
 			fi
 
-			arch_test "${@}"
+			arch_test
 
 			shift
 		done
@@ -590,7 +590,7 @@ case "$mode" in
 				usage
 			fi
 
-			arch_list "${@}"
+			arch_list
 
 			shift
 		done
