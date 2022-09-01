@@ -391,35 +391,35 @@ arch_test () {
 		;;
 		*.tar)
 			mapfile -t stdout_v < <(tar tf "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.z|*.gz)
 			mapfile -t stdout_v < <(gunzip -t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.bz2)
 			mapfile -t stdout_v < <(bunzip2 -t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.xz)
 			mapfile -t stdout_v < <(xz -t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.zip)
 			mapfile -t stdout_v < <(unzip -t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.7z)
 			check_cmd 7z
 
 			mapfile -t stdout_v < <(7za t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.rar)
 			check_cmd rar
 
 			mapfile -t stdout_v < <(rar t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.lzh)
 			check_cmd lzh
@@ -431,19 +431,19 @@ arch_test () {
 			check_cmd cab
 
 			mapfile -t stdout_v < <(cabextract -t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.arj)
 			check_cmd arj
 
 			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*.iso)
 			check_cmd iso
 
 			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
-			output "$f"
+			output
 		;;
 		*)
 			usage
