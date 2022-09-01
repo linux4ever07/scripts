@@ -48,7 +48,7 @@ tar, tar.bz2|tbz|tbz2, tar.xz|txz, tar.gz|tgz, zip, 7z, rar
 These additional archive formats are supported by the 'unpack', 'test'
 and 'list' modes:
 
-dar, bz2, xz, gz, lzh, cab|exe, Z, arj, iso
+dar, bz2, xz, gz, lzh|lha, cab|exe, Z, arj, iso
 
 
 	Mode arguments:
@@ -353,7 +353,7 @@ arch_unpack () {
 			mapfile -t stdout_v < <(rar x "$f"; printf '%s\n' "$?")
 			output
 		;;
-		*.lzh)
+		*.lzh|*.lha)
 			check_cmd lzh
 
 			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
@@ -421,7 +421,7 @@ arch_test () {
 			mapfile -t stdout_v < <(rar t "$f"; printf '%s\n' "$?")
 			output
 		;;
-		*.lzh)
+		*.lzh|*.lha)
 			check_cmd lzh
 
 			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
@@ -505,7 +505,7 @@ arch_list () {
 			mapfile -t stdout_v < <(rar vb "$f"; printf '%s\n' "$?")
 			output | less
 		;;
-		*.lzh)
+		*.lzh|*.lha)
 			check_cmd lzh
 
 			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
