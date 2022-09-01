@@ -509,7 +509,7 @@ arch_list () {
 			check_cmd lzh
 
 			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
-			output
+			output | less
 		;;
 		*.cab|*.exe)
 			check_cmd cab
