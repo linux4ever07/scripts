@@ -302,12 +302,8 @@ arch_unpack () {
 		*.dar)
 			check_cmd dar
 
-			dar_of=$(sed -E "s/${regex_dar}//" <<<"$f_bn")
-			dar_of="${PWD}/${dar_of}-${session}"
-			mkdir "$dar_of"
-
-			dar -x "$f" -R "$dar_of"
-			cat_stderr
+			mapfile -t stdout_v < <(dar -x "$f" 2>&1; printf '%s\n' "$?")
+			output
 		;;
 		*.tar)
 			mapfile -t stdout_v < <(tar -xf "$f"; printf '%s\n' "$?")
@@ -386,8 +382,8 @@ arch_test () {
 		*.dar)
 			check_cmd dar
 
-			dar -t "$f"
-			cat_stderr
+			mapfile -t stdout_v < <(dar -t "$f" 2>&1; printf '%s\n' "$?")
+			output
 		;;
 		*.tar)
 			mapfile -t stdout_v < <(tar tf "$f"; printf '%s\n' "$?")
@@ -458,8 +454,8 @@ arch_list () {
 		*.dar)
 			check_cmd dar
 
-			dar -l "$f" 2>&1 | less
-			cat_stderr
+			mapfile -t stdout_v < <(dar -l "$f" 2>&1; printf '%s\n' "$?")
+			output | less
 		;;
 		*.tar)
 			mapfile -t stdout_v < <(tar -tvf "$f"; printf '%s\n' "$?")
