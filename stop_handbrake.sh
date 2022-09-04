@@ -26,6 +26,6 @@ for (( i = 0; i < ${#pids[@]}; i++ )); do
 		printf '%s\n' "$pid" >> "$pid_list_f"
 
 		printf '\n%s\n' 'Run this command later to resume:'
-		printf '%s\n\n' "start_handbrake.sh"
+		printf '%s\n\n' 'start_handbrake.sh'
 	fi
 done
