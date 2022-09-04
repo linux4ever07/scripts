@@ -995,9 +995,9 @@ get_name () {
 # Gets information from IMDb, and removes special characters.
 	mapfile -t imdb_tmp < <(fsencode "$(imdb "$bname_tmp")")
 
-# * If IMDb lookup succeeded, use that information.
-# * If not, use the information in $bname_tmp instead, but delete
-# special characters.
+# If IMDb lookup succeeded, use that information.
+# If not, use the information in $bname_tmp instead, but delete special
+# characters.
 	if [[ ${#imdb_tmp[@]} -eq 2 ]]; then
 		title="${imdb_tmp[0]}"
 		year="${imdb_tmp[1]}"
