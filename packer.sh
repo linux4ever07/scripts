@@ -48,7 +48,7 @@ tar, tar.gz|tgz, tar.bz2|tbz|tbz2, tar.xz|txz, zip, 7z, rar
 These additional archive formats are supported by the 'unpack', 'test'
 and 'list' modes:
 
-dar, gz, bz2, xz, lzh|lha, cab|exe, Z, arj, iso
+dar, z|gz, bz2, xz, lzh|lha, cab|exe, arj, iso
 
 
 	Mode arguments:
