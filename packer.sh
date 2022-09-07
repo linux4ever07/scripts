@@ -43,12 +43,12 @@ Usage: $(basename "$0") [mode] [archive] [files...]
 
 Supported archive formats in all modes:
 
-tar, tar.bz2|tbz|tbz2, tar.xz|txz, tar.gz|tgz, zip, 7z, rar
+tar, tar.gz|tgz, tar.bz2|tbz|tbz2, tar.xz|txz, zip, 7z, rar
 
 These additional archive formats are supported by the 'unpack', 'test'
 and 'list' modes:
 
-dar, bz2, xz, gz, lzh|lha, cab|exe, Z, arj, iso
+dar, gz, bz2, xz, lzh|lha, cab|exe, Z, arj, iso
 
 
 	Mode arguments:
