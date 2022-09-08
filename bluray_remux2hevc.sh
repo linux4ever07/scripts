@@ -549,7 +549,7 @@ dts_extract_remux () {
 # If the $audio_track_tmp line contains a bitrate, use that and
 # compare it against the $bps_limit variable.
 		if [[ $audio_track_tmp =~ $kbps_regex ]]; then
-			bps_if=$(sed -E "s/${kbps_regex}/\1/" <<<"${audio_track_tmp}")
+			bps_if="${BASH_REMATCH[1]}"
 			bps_if=$(( bps_if * 1000 ))
 
 			compare_bitrate
@@ -577,7 +577,7 @@ dts_extract_remux () {
 				if [[ ${if_info_tmp[${i}]} =~ $bps_regex ]]; then
 # Deletes everything on the line, except the number of bytes per second
 # (BPS).
-					bps_if=$(sed -E "s/${bps_regex}/\1/" <<<"${if_info_tmp[${i}]}")
+					bps_if="${BASH_REMATCH[1]}"
 
 # If input bitrate consists of at least 3 digits...
 					if [[ ${#bps_if} -ge 3 ]]; then
