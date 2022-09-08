@@ -998,7 +998,7 @@ get_name () {
 # If IMDb lookup succeeded, use that information.
 # If not, use the information in $bname_tmp instead, but delete special
 # characters.
-	if [[ ${#imdb_tmp[@]} -eq 2 ]]; then
+	if [[ -n ${imdb_tmp[0]} ]]; then
 		title="${imdb_tmp[0]}"
 		year="${imdb_tmp[1]}"
 	else
