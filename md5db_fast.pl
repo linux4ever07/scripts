@@ -543,6 +543,14 @@ sub md5sum {
 	my $fn = shift;
 	my $hash;
 
+	sub clear_stack {
+		{ lock($file_stack);
+		$file_stack -= length($file_contents{$fn}); }
+
+		{ lock(%file_contents);
+		delete($file_contents{$fn}); }
+	}
+
 	while ($busy) { yield(); }
 
 # If the file name is a FLAC file, test it with 'flac'.
@@ -550,8 +558,7 @@ sub md5sum {
 		$hash = md5flac($fn);
 
 		if ($mode eq 'test') {
-			{ lock(%file_contents);
-			delete($file_contents{$fn}); }
+			clear_stack;
 		}
 
 		return $hash;
@@ -571,11 +578,7 @@ sub md5sum {
 	} else {
 		$hash = md5_hex($file_contents{$fn});
 
-		{ lock($file_stack);
-		$file_stack -= length($file_contents{$fn}); }
-
-		{ lock(%file_contents);
-		delete($file_contents{$fn}); }
+		clear_stack;
 	}
 
 	return $hash;
