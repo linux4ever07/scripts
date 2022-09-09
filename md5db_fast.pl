@@ -418,7 +418,7 @@ sub if_empty {
 }
 
 # Subroutine for finding files. Finds all the files inside the directory
-# name passed to it, and sorts the output before storing it in the
+# name passed to it, and processes the output before storing it in the
 # @files array.
 sub getfiles {
 	my $dn = shift;
@@ -449,6 +449,19 @@ sub getfiles {
 	}
 
 	return(\@files, \@md5dbs);
+}
+
+# Subroutine for clearing files from RAM, once they've been processed.
+# It takes 1 argument:
+# 1) file name
+sub clear_stack {
+	my $fn = shift;
+
+	{ lock($file_stack);
+	$file_stack -= length($file_contents{$fn}); }
+
+	{ lock(%file_contents);
+	delete($file_contents{$fn}); }
 }
 
 # Subroutine for finding duplicate files, by checking the database hash.
@@ -543,14 +556,6 @@ sub md5sum {
 	my $fn = shift;
 	my $hash;
 
-	sub clear_stack {
-		{ lock($file_stack);
-		$file_stack -= length($file_contents{$fn}); }
-
-		{ lock(%file_contents);
-		delete($file_contents{$fn}); }
-	}
-
 	while ($busy) { yield(); }
 
 # If the file name is a FLAC file, test it with 'flac'.
@@ -558,7 +563,7 @@ sub md5sum {
 		$hash = md5flac($fn);
 
 		if ($mode eq 'test') {
-			clear_stack();
+			clear_stack($fn);
 		}
 
 		return $hash;
@@ -578,7 +583,7 @@ sub md5sum {
 	} else {
 		$hash = md5_hex($file_contents{$fn});
 
-		clear_stack();
+		clear_stack($fn);
 	}
 
 	return $hash;
