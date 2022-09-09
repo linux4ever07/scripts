@@ -2,7 +2,7 @@
 # This script uses lists of MD5 hashes ('md5.db' files) to recursively
 # keep track of changes in a directory.
 
-use 5.32.0;
+use 5.34.0;
 use strict;
 use warnings;
 # use feature 'unicode_strings';
