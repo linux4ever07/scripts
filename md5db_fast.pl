@@ -632,7 +632,9 @@ sub md5flac {
 	my $fn = shift;
 	my $hash;
 
-	if ($fn =~ /.flac$/i && scalar(@flac_req) == 2) {
+	if (! $fn =~ /.flac$/i) { return; }
+
+	if (scalar(@flac_req) == 2) {
 		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
 		if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
 
