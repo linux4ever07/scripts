@@ -181,9 +181,10 @@ if (!@lib or !$mode or $mode eq 'help') { usage(); exit; }
 # Subroutine is for loading files into RAM.
 sub file2ram {
 	my $fn = shift;
-
 	my $size = (stat($fn))[7];
+
 	if (!$size) { return(); }
+
 	if ($size < $disk_size) {
 		open(my $read_fn, '<:raw', $fn) or die "Can't open '$fn': $!";
 		sysread($read_fn, $file_contents{$fn}, $size);
@@ -412,7 +413,6 @@ sub if_empty {
 	if (!keys(%md5h)) {
 		say 'No database file. Run the script in \'index\' mode first' .
 		"\n" . 'to index the files.';
-
 		exit;
 	}
 }
@@ -552,10 +552,13 @@ sub md5sum {
 	if ($large{$fn}) {
 		lock($busy);
 		$busy = 1;
+
 		my $read_fn;
+
 		open($read_fn, '<:raw', $fn) or die "Can't open '$fn': $!";
 		$hash = Digest::MD5->new->addfile($read_fn)->hexdigest;
 		close($read_fn) or die "Can't close '$fn': $!";
+
 		$busy = 0;
 	} else {
 		$hash = md5_hex($file_contents{$fn});
@@ -581,7 +584,6 @@ sub md5index {
 		if (!$fn) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
-
 		if (! length($tmp_md5)) { next; }
 
 		$md5h{$fn} = $tmp_md5;
@@ -610,7 +612,6 @@ sub md5test {
 		if (!$fn) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
-
 		if (! length($tmp_md5)) { next; }
 
 		$new_md5 = $tmp_md5;
@@ -653,7 +654,7 @@ sub md5flac {
 		if ($mode eq 'test') {
 			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
 			or die "Can't open 'flac': $!";
-				print $flac_test $file_contents{$fn};
+			print $flac_test $file_contents{$fn};
 			close($flac_test);
 
 			if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
