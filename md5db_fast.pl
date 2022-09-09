@@ -558,7 +558,7 @@ sub md5sum {
 		$hash = md5flac($fn);
 
 		if ($mode eq 'test') {
-			clear_stack;
+			clear_stack();
 		}
 
 		return $hash;
@@ -578,7 +578,7 @@ sub md5sum {
 	} else {
 		$hash = md5_hex($file_contents{$fn});
 
-		clear_stack;
+		clear_stack();
 	}
 
 	return $hash;
