@@ -24,7 +24,11 @@ use POSIX qw(ceil);
 # Create the thread queue.
 my $q = Thread::Queue->new();
 
+# Get the number of available CPU cores.
 chomp(my $cores = `grep -c ^processor /proc/cpuinfo`);
+
+# Check if the necessary commands are installed to test FLAC files.
+chomp(@flac_req = ( `command -v flac metaflac 2>&-` ));
 
 my (@lib, $mode);
 
@@ -535,6 +539,13 @@ sub md5sum {
 
 	while ($busy) { yield(); }
 
+# If the file name is a FLAC file, test it with 'flac'.
+	$hash = md5flac($fn);
+
+	if (length($hash)) {
+		return $hash;
+	}
+
 	if ($large{$fn}) {
 		lock($busy);
 		$busy = 1;
@@ -562,7 +573,7 @@ sub md5index {
 	my $tid = threads->tid();
 
 # Loop through the thread que.
-	LOOP2: while ((my $fn = $q->dequeue_nb()) or !$stopping) {
+	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
 		if (!$fn) { yield(); next; }
 
 		$md5h{$fn} = md5sum($fn);
@@ -578,10 +589,6 @@ sub md5index {
 			iquit();
 		}
 	}
-
-	while (!$stopping) {
-		goto(LOOP2);
-	}
 }
 
 # Subroutine for testing to see if the MD5 sums in the database file are
@@ -591,7 +598,7 @@ sub md5test {
 	my ($oldmd5, $newmd5);
 
 # Loop through the thread queue.
-	LOOP: while ((my $fn = $q->dequeue_nb()) or !$stopping) {
+	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
 		if (!$fn) { yield(); next; }
 
 		$newmd5 = md5sum($fn);
@@ -616,10 +623,6 @@ sub md5test {
 			iquit();
 		}
 	}
-
-	while (!$stopping) {
-		goto(LOOP);
-	}
 }
 
 # Subroutine for checking the MD5 hash of FLAC files by reading their
@@ -627,30 +630,16 @@ sub md5test {
 # (1) file name
 sub md5flac {
 	my $fn = shift;
-	my (@req, $hash);
+	my $hash;
 
-	if ($fn =~ /.flac$/i) {
-		if (! @req) {
-			chomp(@req = ( `command -v flac metaflac 2>&-` ));
+	if ($fn =~ /.flac$/i && scalar(@flac_req) == 2) {
+		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+		if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
 
-			if (! $req[0] or ! $req[1]) {
-				say 'You need both \'flac\' and \'metaflac\' to test ' .
-				'FLAC files!' . "\n" . 'Using normal test method...' .
-				"\n";
-				@req = '0';
-				return;
-			}
-		}
+		system('flac', '--totally-silent', '--test', $fn);
+		if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
 
-		unless ($req[0] eq '0') {
-			chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-			if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
-
-			system('flac', '--totally-silent', '--test', $fn);
-			if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
-
-			return $hash;
-		}
+		return $hash;
 	}
 }
 
