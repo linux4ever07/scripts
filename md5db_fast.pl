@@ -420,9 +420,9 @@ sub getfiles {
 	my $dn = shift;
 	my(@files, @md5dbs);
 
-	open(FIND, '-|', 'find', $dn, '-type', 'f', '-name', '*', '-nowarn')
+	open(my $FIND, '-|', 'find', $dn, '-type', 'f', '-name', '*', '-nowarn')
 	or die "Can't run 'find': $!";
-	while (my $fn = (<FIND>)) {
+	while (my $fn = (<$FIND>)) {
 		chomp($fn);
 
 # If the file name matches "$HOME/.*", then ignore it. Directories in
@@ -442,7 +442,7 @@ sub getfiles {
 			push(@md5dbs, $fn);
 		}
 	}
-	close(FIND) or die "Can't close 'find': $!";
+	close($FIND) or die "Can't close 'find': $!";
 	return(\@files, \@md5dbs);
 }
 
@@ -487,12 +487,12 @@ sub md5import {
 # continue.
 	if ($md5fn =~ /.md5$/i) {
 # Open the *.MD5 file and read its contents to the @lines array.
-		open(MD5, '<', $md5fn) or die "Can't open '$md5fn': $!";
-		foreach my $line (<MD5>) {
+		open(my $MD5, '<', $md5fn) or die "Can't open '$md5fn': $!";
+		foreach my $line (<$MD5>) {
 			$line =~ s/(\r){0,}(\n){0,}$//g;
 			push(@lines, $line);
 		}
-		close(MD5) or die "Can't close '$md5fn': $!";
+		close($MD5) or die "Can't close '$md5fn': $!";
 
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
@@ -636,7 +636,8 @@ sub md5flac {
 		if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
 
 		if ($mode eq 'test') {
-			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-') or die "Can't open 'flac': $!";
+			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
+			or die "Can't open 'flac': $!";
 				print $flac_test $file_contents{$fn};
 			close($flac_test);
 
