@@ -303,6 +303,7 @@ sub logger {
 			close $LOG or die "Can't close '$LOG': $!";
 		}
 	}
+
 	$semaphore->up();
 }
 
