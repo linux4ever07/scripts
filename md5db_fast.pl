@@ -595,6 +595,7 @@ sub md5index {
 		if (! length($tmp_md5)) { next; }
 
 		$md5h{$fn} = $tmp_md5;
+
 		say $tid . ' ' . $fn . ': done indexing (' . $file_stack . ')';
 
 		{ lock($n);
