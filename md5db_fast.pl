@@ -2,6 +2,9 @@
 # This script uses lists of MD5 hashes ('md5.db' files) to recursively
 # keep track of changes in a directory.
 
+# The script checks FLAC files using 'flac' and 'metaflac', so if you
+# don't have those commands installed, those files will not be checked.
+
 use 5.34.0;
 use strict;
 use warnings;
@@ -409,6 +412,7 @@ sub if_empty {
 	if (!keys(%md5h)) {
 		say 'No database file. Run the script in \'index\' mode first' .
 		"\n" . 'to index the files.';
+
 		exit;
 	}
 }
@@ -542,7 +546,7 @@ sub md5sum {
 # If the file name is a FLAC file, test it with 'flac'.
 	if ($fn =~ /.flac$/i) {
 		$hash = md5flac($fn);
-		if (length($hash)) { return $hash; }
+		return $hash;
 	}
 
 	if ($large{$fn}) {
@@ -570,12 +574,17 @@ sub md5sum {
 # the database hash/file.
 sub md5index {
 	my $tid = threads->tid();
+	my $tmp_md5;
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
 		if (!$fn) { yield(); next; }
 
-		$md5h{$fn} = md5sum($fn);
+		$tmp_md5 = md5sum($fn);
+
+		if (! length($tmp_md5)) { next; }
+
+		$md5h{$fn} = $tmp_md5;
 		say $tid . ' ' . $fn . ': done indexing (' . $file_stack . ')';
 
 		{ lock($n);
@@ -594,22 +603,27 @@ sub md5index {
 # correct (i.e. have changed or not).
 sub md5test {
 	my $tid = threads->tid();
-	my ($oldmd5, $newmd5);
+	my ($tmp_md5, $old_md5, $new_md5);
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
 		if (!$fn) { yield(); next; }
 
-		$newmd5 = md5sum($fn);
+		$tmp_md5 = md5sum($fn);
+
+		if (! length($tmp_md5)) { next; }
+
+		$new_md5 = $tmp_md5;
+		$old_md5 = $md5h{$fn};
+
 		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
-		$oldmd5 = $md5h{$fn};
 
 # If the new MD5 sum doesn't match the one in the hash, and file doesn't
 # already exist in the %err hash, log it and replace the old MD5 sum in
 # the hash with the new one.
-		if ($newmd5 ne $oldmd5 && ! $err{$fn}) {
+		if ($new_md5 ne $old_md5 && ! length($err{$fn})) {
 			logger('diff', $fn);
-			$md5h{$fn} = $newmd5;
+			$md5h{$fn} = $new_md5;
 		}
 
 		{ lock($n);
@@ -624,8 +638,9 @@ sub md5test {
 	}
 }
 
-# Subroutine for checking the MD5 hash of FLAC files by reading their
-# metadata. It takes 1 argument:
+# Subroutine for getting the MD5 hash of FLAC files by reading their
+# metadata. If the mode is 'test', the FLAC files will also be tested.
+# It takes 1 argument:
 # (1) file name
 sub md5flac {
 	my $fn = shift;
@@ -759,9 +774,10 @@ foreach my $dn (@lib) {
 						yield();
 					}
 # Unless file name exists in the database hash, continue.
-					unless ($md5h{$fn}) {
-						file2ram($fn);
-					}
+					if ($md5h{$fn}) { next; }
+					
+					if ($fn =~ /.flac$/i) { $q->enqueue($fn); }
+					else { file2ram($fn); }
 				}
 			}
 			when ('test') {
@@ -772,6 +788,7 @@ foreach my $dn (@lib) {
 						say $file_stack . ' > ' . $disk_size;
 						yield();
 					}
+
 					file2ram($fn);
 				}
 			}
