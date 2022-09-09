@@ -546,6 +546,12 @@ sub md5sum {
 # If the file name is a FLAC file, test it with 'flac'.
 	if ($fn =~ /.flac$/i) {
 		$hash = md5flac($fn);
+
+		if ($mode eq 'test') {
+			{ lock(%file_contents);
+			delete($file_contents{$fn}); }
+		}
+
 		return $hash;
 	}
 
