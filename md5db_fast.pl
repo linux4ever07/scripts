@@ -123,6 +123,8 @@ Usage: $s [options] [directory 1] .. [directory N]
 	they've changed.
 
 HELP
+
+	exit;
 }
 
 # This loop goes through the argument list as passed to the script
@@ -134,31 +136,31 @@ foreach my $arg (@ARGV) {
 # When '-double', set script mode to 'double', and call the md5double
 # subroutine later.
 			when (/^-double$/) {
-				if (!$mode) { push(@cmd, $arg); $mode = 'double'; }
+				if (! length($mode)) { push(@cmd, $arg); $mode = 'double'; }
 			}
 
 # When '-import', set script mode to 'import', and call the md5import
 # subroutine later.
 			when (/^-import$/) {
-				if (!$mode) { push(@cmd, $arg); $mode = 'import'; }
+				if (! length($mode)) { push(@cmd, $arg); $mode = 'import'; }
 			}
 
 # When '-help', set script mode to 'help', and print usage instructions
 # later.
 			when (/^-help$/) {
-				if (!$mode) { push(@cmd, $arg); $mode = 'help'; }
+				if (! length($mode)) { push(@cmd, $arg); $mode = 'help'; }
 			}
 
 # When '-index', set script mode to 'index', and call the md5index
 # subroutine later.
 			when (/^-index$/) {
-				if (!$mode) { push(@cmd, $arg); $mode = 'index'; }
+				if (! length($mode)) { push(@cmd, $arg); $mode = 'index'; }
 			}
 
 # When '-test', set the script mode to 'test', and call the md5test
 # subroutine later.
 			when (/^-test$/) {
-				if (!$mode) { push(@cmd, $arg); $mode = 'test'; }
+				if (! length($mode)) { push(@cmd, $arg); $mode = 'test'; }
 			}
 		}
 # If argument is a directory, include it in the @lib array.
@@ -174,7 +176,7 @@ foreach my $arg (@ARGV) {
 }
 
 # If no switches were used, print usage instructions.
-if (!@lib or !$mode or $mode eq 'help') { usage(); exit; }
+if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 
 # say "@cmd\n";
 
@@ -183,7 +185,7 @@ sub file2ram {
 	my $fn = shift;
 	my $size = (stat($fn))[7];
 
-	if (!$size) { return(); }
+	if (! length($size)) { return(); }
 
 	if ($size < $disk_size) {
 		open(my $read_fn, '<:raw', $fn) or die "Can't open '$fn': $!";
@@ -288,11 +290,11 @@ sub logger {
 # If errors occurred print the %err hash.
 # Either way, print number of files processed.
 		when ('end') {
-			if (!%err) {
+			if (! keys(%err)) {
 				say $LOG "\n" . 'Everything is OK!' . "\n";
 			} else {
 				say "\n" . '**** Errors Occurred ****' . "\n";
-				foreach my $fn (sort keys %err) {
+				foreach my $fn (sort(keys(%err))) {
 					say $SE $fn . "\n\t" . $err{$fn};
 				}
 			}
@@ -352,7 +354,7 @@ sub file2hash {
 			}
 
 # If $abs_fn is a real file and not already in the hash, continue.
-			if (-f $abs_fn && ! $md5h{$abs_fn}) {
+			if (-f $abs_fn && ! length($md5h{$abs_fn})) {
 				$md5h{$abs_fn} = $hash;
 				say $abs_fn . $delim . $hash;
 
@@ -411,7 +413,7 @@ sub init_hash {
 
 # Subroutine for when the database file is empty, or doesn't exist.
 sub if_empty {
-	if (!keys(%md5h)) {
+	if (! keys(%md5h)) {
 		say 'No database file. Run the script in \'index\' mode first' .
 		"\n" . 'to index the files.';
 		exit;
@@ -458,9 +460,10 @@ sub md5double {
 # hash called %exists. Each of those keys will hold an anonymous array
 # with the matching file names.
 	my %exists;
+
 	foreach my $fn (keys(%md5h)) {
 		my $hash = $md5h{$fn};
-		if (!$exists{${hash}}) {
+		if (! scalar($exists{${hash}})) {
 			$exists{${hash}}->[0] = $fn;
 		} else {
 			push(@{$exists{${hash}}}, $fn);
@@ -518,7 +521,7 @@ sub md5import {
 
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
-				if (! $md5h{$fn} && -f $fn) {
+				if (! length($md5h{$fn}) && -f $fn) {
 					say $fn . "\n\t" . 'Imported MD5 sum from \'' .
 					basename($md5fn) . '\'.' . "\n";
 
@@ -589,7 +592,7 @@ sub md5index {
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
-		if (!$fn) { yield(); next; }
+		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
 		if (! length($tmp_md5)) { next; }
@@ -618,7 +621,7 @@ sub md5test {
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
-		if (!$fn) { yield(); next; }
+		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
 		if (! length($tmp_md5)) { next; }
@@ -678,8 +681,8 @@ sub md5flac {
 # from %gone. When done, loop through the %gone hash and echo each key
 # to the logger.
 sub p_gone {
-# Unless @gone_fn is non-empty, return from this subroutine.
-	unless (%gone_tmp) { return; }
+# If %gone_tmp is empty, return from this subroutine.
+	if (! keys(%gone_tmp)) { return; }
 
 	my %gone;
 	my @gone;
