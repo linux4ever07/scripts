@@ -762,7 +762,6 @@ foreach my $dn (@lib) {
 						file2ram($fn);
 					}
 				}
-
 			}
 			when ('test') {
 # Fetch all the keys for the database hash and put them in the queue.
