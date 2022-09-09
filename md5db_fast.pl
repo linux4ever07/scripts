@@ -540,11 +540,8 @@ sub md5sum {
 	while ($busy) { yield(); }
 
 # If the file name is a FLAC file, test it with 'flac'.
-	$hash = md5flac($fn);
-
-	if (length($hash)) {
-		return $hash;
-	}
+	if ($fn =~ /.flac$/i) { $hash = md5flac($fn); }
+	if (length($hash)) { return $hash; }
 
 	if ($large{$fn}) {
 		lock($busy);
@@ -631,8 +628,6 @@ sub md5test {
 sub md5flac {
 	my $fn = shift;
 	my $hash;
-
-	if (! $fn =~ /.flac$/i) { return; }
 
 	if (scalar(@flac_req) == 2) {
 		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
