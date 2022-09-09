@@ -28,7 +28,7 @@ my $q = Thread::Queue->new();
 chomp(my $cores = `grep -c ^processor /proc/cpuinfo`);
 
 # Check if the necessary commands are installed to test FLAC files.
-chomp(@flac_req = ( `command -v flac metaflac 2>&-` ));
+chomp(my @flac_req = ( `command -v flac metaflac 2>&-` ));
 
 my (@lib, $mode);
 
