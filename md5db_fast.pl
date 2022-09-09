@@ -742,7 +742,7 @@ given ($mode) {
 my @threads;
 if ($mode ne 'import' && $mode ne 'double') {
 	foreach (1 .. $cores) {
-		START_THREADS: push(@threads, threads->create(@run));
+		push(@threads, threads->create(@run));
 	}
 }
 
