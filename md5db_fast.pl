@@ -423,13 +423,14 @@ sub if_empty {
 # @files array.
 sub getfiles {
 	my $dn = shift;
-	my(@files, @md5dbs);
+	my(@files, @md5dbs, @lines);
 
-	open(my $FIND, '-|', 'find', $dn, '-type', 'f', '-name', '*', '-nowarn')
+	open(my $find, '-|', 'find', $dn, '-type', 'f', '-name', '*', '-nowarn')
 	or die "Can't run 'find': $!";
-	while (my $fn = (<$FIND>)) {
-		chomp($fn);
+	chomp(@lines = (<$find>));
+	close($find) or die "Can't close 'find': $!";
 
+	foreach my $fn (@lines) {
 # If the file name matches "$HOME/.*", then ignore it. Directories in
 # the home-dir of a user are usually configuration files for the desktop
 # and various applications. These files change often and will therefore
@@ -447,7 +448,7 @@ sub getfiles {
 			push(@md5dbs, $fn);
 		}
 	}
-	close($FIND) or die "Can't close 'find': $!";
+
 	return(\@files, \@md5dbs);
 }
 
@@ -492,12 +493,12 @@ sub md5import {
 # continue.
 	if ($md5fn =~ /.md5$/i) {
 # Open the *.MD5 file and read its contents to the @lines array.
-		open(my $MD5, '<', $md5fn) or die "Can't open '$md5fn': $!";
-		foreach my $line (<$MD5>) {
+		open(my $md5, '<', $md5fn) or die "Can't open '$md5fn': $!";
+		foreach my $line (<$md5>) {
 			$line =~ s/(\r){0,}(\n){0,}$//g;
 			push(@lines, $line);
 		}
-		close($MD5) or die "Can't close '$md5fn': $!";
+		close($md5) or die "Can't close '$md5fn': $!";
 
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
