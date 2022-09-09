@@ -104,10 +104,8 @@ open(my $SE, ">&STDERR") or die "Can't duplicate STDERR: $!";
 
 # Subroutine for printing usage instructions.
 sub usage {
-	my $s = basename($0);
-
-	say <<HELP
-Usage: $s [options] [directory 1] .. [directory N]
+	say "
+Usage: $cmd[0] [options] [directory 1] .. [directory N]
 
 	-help Print this help message.
 
@@ -121,8 +119,7 @@ Usage: $s [options] [directory 1] .. [directory N]
 
 	-test Test the MD5 sums of the files in the database to see if
 	they've changed.
-
-HELP
+";
 
 	exit;
 }
