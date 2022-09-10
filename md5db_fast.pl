@@ -460,7 +460,7 @@ sub md5double {
 
 	foreach my $fn (keys(%md5h)) {
 		my $hash = $md5h{$fn};
-		if (! scalar($exists{${hash}})) {
+		if (! scalar(@{$exists{${hash}}})) {
 			$exists{${hash}}->[0] = $fn;
 		} else {
 			push(@{$exists{${hash}}}, $fn);
@@ -470,7 +470,7 @@ sub md5double {
 # Loop through the %exists hash and print files that are identical, if
 # any.
 	foreach my $hash (keys(%exists)) {
-		if (@{$exists{${hash}}} > 1) {
+		if (scalar(@{$exists{${hash}}}) > 1) {
 			say 'These files have the same hash (' . $hash . '):';
 			foreach my $fn (@{$exists{${hash}}}) { say $fn; }
 			say "";
