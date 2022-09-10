@@ -162,7 +162,7 @@ foreach my $arg (@ARGV) {
 		}
 # If argument is a directory, include it in the @lib array.
 	} else {
-		if (-d $dn) {
+		if (-d $arg) {
 			my $dn = abs_path($arg);
 			push(@lib, $dn);
 			push(@cmd, $dn);
