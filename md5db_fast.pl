@@ -682,7 +682,6 @@ sub p_gone {
 
 	my %gone;
 	my @gone;
-	my $size = %gone_tmp;
 
 # Translates the %gone_tmp hash to the %gone hash / array. We need to do
 # it in this complicated way because 'threads::shared' has no support
