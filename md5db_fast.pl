@@ -347,7 +347,7 @@ sub file2hash {
 # are found in the search path given to the script.
 			} elsif (-f $abs_fn && $md5h{$abs_fn} ne $hash) {
 				logger('diff', $abs_fn);
-# Saves the names of deleted or moved files in '%gone'.
+# Saves the names of deleted or moved files in '%gone_tmp'.
 			} elsif (! -f $abs_fn) {
 				lock(%gone_tmp);
 				$gone_tmp{${abs_fn}} = $hash;
