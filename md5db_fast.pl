@@ -3,7 +3,8 @@
 # keep track of changes in a directory.
 
 # The script checks FLAC files using 'flac' and 'metaflac', so if you
-# don't have those commands installed, those files will not be checked.
+# don't have those commands installed, only non-FLAC files will be
+# checked.
 
 use 5.34.0;
 use strict;
