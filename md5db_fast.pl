@@ -162,9 +162,7 @@ foreach my $arg (@ARGV) {
 		}
 # If argument is a directory, include it in the @lib array.
 	} else {
-		my $dir_test = `file -b "${arg}"`;
-
-		if ($dir_test =~ 'directory') {
+		if (-d $dn) {
 			my $dn = abs_path($arg);
 			push(@lib, $dn);
 			push(@cmd, $dn);
