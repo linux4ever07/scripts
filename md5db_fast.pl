@@ -174,8 +174,6 @@ foreach my $arg (@ARGV) {
 # If no switches were used, print usage instructions.
 if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 
-# say "@cmd\n";
-
 # Subroutine is for loading files into RAM.
 sub file2ram {
 	my $fn = shift;
@@ -814,9 +812,10 @@ foreach my $dn (@lib) {
 		{ lock($stopping);
 		$stopping = 1; }
 
+# Join (aka close) all the threads.
 		foreach my $t (threads->list()) { $t->join(); }
-# say("All threads joined");
 
+# Print missing files.
 		p_gone();
 
 # Print the hash to the database file and close the log.
