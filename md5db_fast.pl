@@ -680,8 +680,7 @@ sub p_gone {
 # If %gone_tmp is empty, return from this subroutine.
 	if (! keys(%gone_tmp)) { return; }
 
-	my %gone;
-	my @gone;
+	my(%gone, @gone);
 
 # Translates the %gone_tmp hash to the %gone hash / array. We need to do
 # it in this complicated way because 'threads::shared' has no support
