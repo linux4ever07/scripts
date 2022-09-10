@@ -386,7 +386,7 @@ sub init_hash {
 
 # But first import hashes from any databases found in the search path to
 # avoid re-hashing them.
-	if (@{$md5dbs}) {
+	if (scalar(@{$md5dbs})) {
 		foreach my $db (@{$md5dbs}) {
 			my $dn = dirname($db);
 			file2hash($db, $dn);
