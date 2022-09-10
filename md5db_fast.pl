@@ -427,11 +427,11 @@ sub getfiles {
 # string as a regular expression when it's not.
 		$fn =~ s(^\Q$dn\E/)();
 
-		if (-f $fn && basename($fn) ne $db) {
-			push(@files, $fn);
+		if (-f $fn) {
+			my $bn = basename($fn);
 
-		} elsif (-f $fn && basename($fn) eq $db) {
-			push(@md5dbs, $fn);
+			if ($bn ne $db) { push(@files, $fn); }
+			elsif ($bn eq $db) { push(@md5dbs, $fn); }
 		}
 	}
 
