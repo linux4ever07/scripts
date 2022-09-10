@@ -543,9 +543,9 @@ sub md5sum {
 	my $fn = shift;
 	my $hash;
 
-	while ($busy) { yield(); }
-
 	if (! -r $fn) { return; }
+
+	while ($busy) { yield(); }
 
 # If the file name is a FLAC file, test it with 'flac'.
 	if ($fn =~ /.flac$/i) {
