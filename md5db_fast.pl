@@ -338,18 +338,6 @@ sub file2hash {
 			if ($dn ne '.') { $abs_fn = $dn . '/' . $rel_fn; }
 			else { $abs_fn = $rel_fn; }
 
-# If the file name matches "$HOME/.*", then ignore it. Directories in
-# the home-dir of a user are usually configuration files for the desktop
-# and various applications. These files change often and will therefore
-# clog the log file created by this script, making it hard to read.
-
-# If the file name starts with a dot, check further to see if it matches
-# "$HOME/.*".
-			if ($abs_fn =~ m/^\./) {
-				my $absabs_fn = abs_path($abs_fn);
-				if ($absabs_fn =~ m($dotskip)) { next; }
-			}
-
 # If $abs_fn is a real file and not already in the hash, continue.
 			if (-f $abs_fn && ! length($md5h{$abs_fn})) {
 				$md5h{$abs_fn} = $hash;
