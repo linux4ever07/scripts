@@ -799,7 +799,7 @@ foreach my $dn (@lib) {
 			}
 		}
 
-		if (%large) {
+		if (keys(%large)) {
 			while ($file_stack > 0) {
 				say $file_stack . ' > ' . '0';
 				yield();
