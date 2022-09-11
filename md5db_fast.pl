@@ -764,7 +764,7 @@ if ($mode ne 'import' && $mode ne 'double') {
 foreach my $dn (@lib) {
 	if (-d $dn) {
 # Change into $dn.
-		chdir($dn) or die "Can't change directory to '$dn': $!";
+		chdir($dn) or die "Can't change into '$dn': $!";
 
 # Start logging.
 		logger('start');
