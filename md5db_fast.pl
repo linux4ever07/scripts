@@ -396,9 +396,12 @@ sub init_hash {
 # Subroutine for when the database file is empty, or doesn't exist.
 sub if_empty {
 	if (! keys(%md5h)) {
-		say 'No database file. Run the script in \'index\' mode first' .
-		"\n" . 'to index the files.';
-		exit;
+		say "
+No database file. Run the script in 'index' mode first
+to index the files.
+";
+
+		iquit();
 	}
 }
 
