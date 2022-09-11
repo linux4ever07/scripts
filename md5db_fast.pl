@@ -699,7 +699,7 @@ sub ram_full {
 			say $msg;
 			yield();
 		}
-	elsif ($limit == 0) {
+	} elsif ($limit == 0) {
 		while ($file_stack > $limit) {
 			say $msg;
 			yield();
