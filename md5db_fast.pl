@@ -223,7 +223,7 @@ sub iquit {
 # multiple threads won't try to access it at once, just in case ;-)
 # It takes 2 arguments:
 # (1) switch
-# (2) file name / file size
+# (2) file name
 sub logger {
 	$semaphore->down();
 
@@ -735,6 +735,7 @@ given ($mode) {
 	}
 }
 
+# Start the threads.
 # If script mode is either 'import' or 'double' we'll start only one
 # thread, else we'll start as many as the available number of CPUs.
 my @threads;
