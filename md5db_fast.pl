@@ -623,7 +623,7 @@ sub md5index {
 	}
 }
 
-# Subroutine for testing to see if the MD5 sums in the database file are
+# Subroutine for testing if the MD5 sums in the database file are
 # correct (i.e. have changed or not).
 sub md5test {
 	my $tid = threads->tid();
@@ -685,6 +685,25 @@ sub md5flac {
 		}
 
 		return $hash;
+	}
+}
+
+# Subroutine for when RAM is full. It waits until RAM has been freed.
+sub ram_full {
+	my $limit = shift;
+	my $active = threads->running();
+	my $msg = $active . ': ' . $file_stack . ' > ' . $limit;
+
+	if ($limit > 0) {
+		while ($file_stack >= $limit) {
+			say $msg;
+			yield();
+		}
+	elsif ($limit == 0) {
+		while ($file_stack > $limit) {
+			say $msg;
+			yield();
+		}
 	}
 }
 
@@ -792,12 +811,8 @@ foreach my $dn (@lib) {
 # Index all the files in $dn.
 				foreach my $fn (@{$files}) {
 					if ($saw_sigint) { iquit(); }
-					while ($file_stack >= $disk_size) {
-						my $active = threads->running();
-						say $active . ': ' . $file_stack . ' > ' .
-						$disk_size;
-						yield();
-					}
+					ram_full($disk_size);
+
 # Unless file name exists in the database hash, continue.
 					if ($md5h{$fn}) { next; }
 
@@ -809,10 +824,7 @@ foreach my $dn (@lib) {
 # Fetch all the keys for the database hash and put them in the queue.
 				foreach my $fn (sort(keys(%md5h))) {
 					if ($saw_sigint) { iquit(); }
-					while ($file_stack >= $disk_size) {
-						say $file_stack . ' > ' . $disk_size;
-						yield();
-					}
+					ram_full($disk_size);
 
 					file2ram($fn);
 				}
@@ -820,10 +832,8 @@ foreach my $dn (@lib) {
 		}
 
 		if (keys(%large)) {
-			while ($file_stack > 0) {
-				say $file_stack . ' > ' . '0';
-				yield();
-			}
+			ram_full('0');
+
 			foreach my $fn (sort(keys(%large))) {
 				$q->enqueue($fn);
 			}
