@@ -92,6 +92,9 @@ my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
 
+# Creating a variable which sets a limit on the total number of bytes
+# that can be read into RAM at once. If you have plenty of RAM, it's
+# safe to increase this number. It will improve performance.
 my $disk_size = 1000000000;
 
 # This will be used to control access to the logger subroutine.
