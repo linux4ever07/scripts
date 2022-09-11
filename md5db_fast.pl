@@ -1,6 +1,19 @@
 #!/usr/bin/perl
+
 # This script uses lists of MD5 hashes ('md5.db' files) to recursively
 # keep track of changes in a directory.
+
+# The script is multithreaded and keeps 1 thread for reading files into
+# RAM, and a number of threads (based on CPU count) to process the
+# files.
+
+# Mechanical drives are slow, while RAM is much faster, so the reason
+# for processing the files this way is to maximize performance. It
+# guarantees that the hard drive only has to read 1 file at a time, even
+# though multiple files will be processed at a time.
+
+# File systems like Btrfs or ZFS already have checksumming built in.
+# This script is meant for file systems that lack that capability.
 
 # The script checks FLAC files using 'flac' and 'metaflac', so if you
 # don't have those commands installed, only non-FLAC files will be
@@ -329,28 +342,26 @@ sub file2hash {
 # If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
 # Split the line into relative file name, and MD5 sum.
-# Also create another variable that contains the absolute file name.
-			my ($rel_fn, $hash) = (split(/\Q$delim\E/, $line));
-			my $abs_fn;
-			if ($dn ne '.') { $abs_fn = $dn . '/' . $rel_fn; }
-			else { $abs_fn = $rel_fn; }
+# Add the full path to the file name, unless it's the current directory.
+			my ($fn, $hash) = (split(/\Q$delim\E/, $line));
+			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
-# If $abs_fn is a real file and not already in the hash, continue.
-			if (-f $abs_fn && ! length($md5h{$abs_fn})) {
-				$md5h{$abs_fn} = $hash;
-				say $abs_fn . $delim . $hash;
+# If $fn is a real file and not already in the hash, continue.
+			if (-f $fn && ! length($md5h{$fn})) {
+				$md5h{$fn} = $hash;
+				say $fn . $delim . $hash;
 
 # If the file is in the database hash but the MD5 sum found in the
 # database doesn't match the one in the hash, print to the log.
 
 # This will most likely only be the case for any extra databases that
 # are found in the search path given to the script.
-			} elsif (-f $abs_fn && $md5h{$abs_fn} ne $hash) {
-				logger('diff', $abs_fn);
+			} elsif (-f $fn && $md5h{$fn} ne $hash) {
+				logger('diff', $fn);
 # Saves the names of deleted or moved files in '%gone_tmp'.
-			} elsif (! -f $abs_fn) {
+			} elsif (! -f $fn) {
 				lock(%gone_tmp);
-				$gone_tmp{${abs_fn}} = $hash;
+				$gone_tmp{${fn}} = $hash;
 			}
 		}
 	}
@@ -749,7 +760,7 @@ if ($mode ne 'import' && $mode ne 'double') {
 # subroutines get called from).
 foreach my $dn (@lib) {
 	if (-d $dn) {
-# Change directory to $dn.
+# Change into $dn.
 		chdir($dn) or die "Can't change directory to '$dn': $!";
 
 # Start logging.
@@ -774,6 +785,7 @@ foreach my $dn (@lib) {
 
 			}
 			when ('index') {
+# Index all the files in $dn.
 				foreach my $fn (@{$files}) {
 					if ($saw_sigint) { iquit(); }
 					while ($file_stack >= $disk_size) {
