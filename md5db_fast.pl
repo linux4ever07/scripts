@@ -357,10 +357,9 @@ sub file2hash {
 				say $fn . $delim . $hash;
 
 # If the file is in the database hash but the MD5 sum found in the
-# database doesn't match the one in the hash, print to the log.
-
-# This will most likely only be the case for any extra databases that
-# are found in the search path given to the script.
+# database doesn't match the one in the hash, print to the log. This
+# will most likely only be the case for any extra databases that are
+# found in the search path given to the script.
 			} elsif (-f $fn && $md5h{$fn} ne $hash) {
 				logger('diff', $fn);
 # Saves the names of deleted or moved files in '%gone_tmp'.
