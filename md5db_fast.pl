@@ -223,7 +223,7 @@ sub iquit {
 # multiple threads won't try to access it at once, just in case ;-)
 # It takes 2 arguments:
 # (1) switch
-# (2) file name
+# (2) file name / number
 sub logger {
 	$semaphore->down();
 
