@@ -692,16 +692,15 @@ sub md5flac {
 sub ram_full {
 	my $limit = shift;
 	my $active = threads->running();
-	my $msg = $active . ': ' . $file_stack . ' > ' . $limit;
 
 	if ($limit > 0) {
 		while ($file_stack >= $limit) {
-			say $msg;
+			say $active . ': ' . $file_stack . ' > ' . $limit;
 			yield();
 		}
 	} elsif ($limit == 0) {
 		while ($file_stack > $limit) {
-			say $msg;
+			say $active . ': ' . $file_stack . ' > ' . $limit;
 			yield();
 		}
 	}
