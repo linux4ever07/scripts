@@ -812,9 +812,6 @@ foreach my $dn (@lib) {
 					if ($saw_sigint) { iquit(); }
 					ram_full($disk_size);
 
-# Unless file name exists in the database hash, continue.
-					if ($md5h{$fn}) { next; }
-
 					if ($fn =~ /.flac$/i) { $q->enqueue($fn); }
 					else { file2ram($fn); }
 				}
