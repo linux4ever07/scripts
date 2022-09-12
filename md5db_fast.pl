@@ -609,8 +609,7 @@ sub md5index {
 		{ lock($n);
 		$n++; }
 
-# If the $saw_sigint variable has been tripped.
-# Quit this 'while' loop, thereby closing the thread.
+# If the $saw_sigint variable has been tripped, close the thread.
 		if ($saw_sigint) {
 			say 'Closing thread: ' . $tid;
 			iquit();
@@ -647,8 +646,7 @@ sub md5test {
 		{ lock($n);
 		$n++; }
 
-# If the $saw_sigint variable has been tripped.
-# Quit this 'while' loop, thereby closing the thread.
+# If the $saw_sigint variable has been tripped, close the thread.
 		if ($saw_sigint) {
 			say 'Closing thread: ' . $tid;
 			iquit();
