@@ -815,9 +815,8 @@ foreach my $dn (@lib) {
 		}
 
 # Put all the large files in the queue, after all the smaller files are
-# done being processed. This is to make sure the 'files2ram' subroutine
-# can finish first. It's to prevent multiple files from being read at
-# once, slowing things down.
+# done being read into RAM. This is to prevent multiple files from being
+# read from the hard drive at once, slowing things down.
 		if (keys(%large)) {
 			foreach my $fn (sort(keys(%large))) {
 				$q->enqueue($fn);
