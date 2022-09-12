@@ -482,7 +482,8 @@ sub md5double {
 
 	foreach my $fn (keys(%md5h)) {
 		my $hash = $md5h{$fn};
-		if (! scalar(@{$exists{${hash}}})) {
+
+		if (! scalar($exists{${hash}})) {
 			$exists{${hash}}->[0] = $fn;
 		} else {
 			push(@{$exists{${hash}}}, $fn);
