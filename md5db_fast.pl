@@ -816,11 +816,6 @@ foreach my $dn (@lib) {
 		}
 
 		if (keys(%large)) {
-			while ($file_stack > 0) {
-				say $file_stack . ' > ' . '0';
-				yield();
-			}
-
 			foreach my $fn (sort(keys(%large))) {
 				$q->enqueue($fn);
 			}
