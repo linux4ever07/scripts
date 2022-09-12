@@ -105,7 +105,7 @@ my $disk_size = 1000000000;
 my $semaphore = Thread::Semaphore->new();
 
 POSIX::sigaction(SIGINT, POSIX::SigAction->new(\&handler))
-or die "Error setting SIGINT handler: $!\n";
+or die "Error setting SIGINT handler: $!";
 
 # Creating a custom POSIX signal handler. First we create a shared
 # variable that will work as a SIGINT switch. Then we define the handler
