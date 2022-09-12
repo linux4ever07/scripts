@@ -70,14 +70,6 @@ my $db = 'md5.db';
 # Clear screen command.
 my $clear = `clear && echo`;
 
-# Creating a hash that will store the names of files that are too big to
-# fit into RAM. We'll process them last.
-my %large :shared;
-
-# Creating the %gone_tmp hash that will store the names and hashes of
-# possibly deleted files.
-my %gone_tmp :shared;
-
 # Creating a few shared variables.
 # * %err will be used for errors.
 # * $n will be used to count the number of files processed.
@@ -88,6 +80,8 @@ my %gone_tmp :shared;
 # * $file_stack will be used to track the amount of file data currently
 # in RAM.
 # * $busy will be used to pause other threads when a thread is busy.
+# * %gone_tmp will store the names and hashes of possibly deleted files.
+# * %large will store the names of files that are too big to fit in RAM.
 my %err :shared;
 my $n :shared = 0;
 my %md5h :shared;
@@ -95,6 +89,8 @@ my %file_contents :shared;
 my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
+my %gone_tmp :shared;
+my %large :shared;
 
 # Creating a variable which sets a limit on the total number of bytes
 # that can be read into RAM at once. If you have plenty of RAM, it's
@@ -817,7 +813,7 @@ foreach my $dn (@lib) {
 		}
 
 # Put all the large files in the queue, after all the smaller files are
-# done being read into RAM. This is to prevent multiple files from being
+# done being processed. This is to prevent multiple files from being
 # read from the hard drive at once, slowing things down.
 		if (keys(%large)) {
 			while ($file_stack > 0) {
