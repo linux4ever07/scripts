@@ -328,10 +328,11 @@ sub logger {
 # it, cause without it we don't have a database hash to work with.
 sub file2hash {
 	my $db = shift;
-	my $dn = shift;
+	my $dn = dirname($db);
+	my($fn, $hash);
 
 # The format string which is used for parsing the database file.
-	my $format = qr/^.*\Q$delim\E[[:alnum:]]{32}$/;
+	my $format = qr/^(.*)\Q$delim\E([[:alnum:]]{32})$/;
 	my (@dbfile, $md5db_in);
 
 # Open the database file and read it into the @dbfile variable.
@@ -348,9 +349,11 @@ sub file2hash {
 	foreach my $line (@dbfile) {
 # If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
-# Split the line into relative file name, and MD5 sum.
+# Split the line into relative file name and MD5 sum.
+			$fn = $1;
+			$hash = $2;
+
 # Add the full path to the file name, unless it's the current directory.
-			my ($fn, $hash) = (split(/\Q$delim\E/, $line));
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # If $fn is a real file and not already in the hash, continue.
@@ -403,8 +406,7 @@ sub init_hash {
 # avoid re-hashing them.
 	if (scalar(@{$md5dbs})) {
 		foreach my $db (@{$md5dbs}) {
-			my $dn = dirname($db);
-			file2hash($db, $dn);
+			file2hash($db);
 		}
 	}
 	return($files, $md5dbs);
@@ -501,11 +503,12 @@ sub md5double {
 # (1) file name
 sub md5import {
 	my $md5fn = shift;
+	my $dn = dirname($md5fn);
 
-	my ($fn, $hash, @fields, @lines);
+	my ($fn, $hash, @lines);
 
 # The format string which is used for parsing the *.MD5 files.
-	my $format = qr/^[[:alnum:]]{32}\s\*.*/;
+	my $format = qr/^([[:alnum:]]{32})\s\*(.*)$/;
 
 # Open the *.MD5 file and read its contents to the @lines array.
 	open(my $md5, '<', $md5fn) or die "Can't open '$md5fn': $!";
@@ -520,16 +523,15 @@ sub md5import {
 	foreach my $line (@lines) {
 # If format string matches the line(s) in the *.MD5 file, continue.
 		if ($line =~ /$format/) {
-# Split the line so that the hash and file name go into @fields array.
-# After that strip the path (if any) of the file name, and prepend the
-# path of the *.MD5 file to it instead. Store hash and file name in the
-# $hash and $fn variables for readability.
-			@fields = split(/\s\*/, $line, 2);
-			my $path = dirname($md5fn);
-			$hash = $fields[0];
+# Split the line into file name and MD5 sum.
+# Strip the path (if any) of the file name.
+			$hash = $1;
+			$fn = basename($2);
 
-			if ($path eq '.') { $fn = basename($fields[1]); }
-			else { $fn = dirname($md5fn) . '/' . basename($fields[1]); }
+# Add the full path to the file name, unless it's the current directory.
+			if ($dn ne '.') {
+				$fn = $dn . '/' . $fn;
+			}
 
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
