@@ -693,24 +693,6 @@ sub md5flac {
 	}
 }
 
-# Subroutine for when RAM is full. It waits until RAM has been freed.
-sub ram_full {
-	my $limit = shift;
-	my $active = threads->running();
-
-	if ($limit > 0) {
-		while ($file_stack >= $limit) {
-			say $active . ': ' . $file_stack . ' > ' . $limit;
-			yield();
-		}
-	} elsif ($limit == 0) {
-		while ($file_stack > $limit) {
-			say $active . ': ' . $file_stack . ' > ' . $limit;
-			yield();
-		}
-	}
-}
-
 # Subroutine for figuring out which files have gone missing. If
 # identical MD5 hashes can be found in %md5h, then delete those keys
 # from %gone. When done, loop through the %gone hash and echo each key
@@ -815,7 +797,6 @@ foreach my $dn (@lib) {
 # Index all the files in $dn.
 				foreach my $fn (@{$files}) {
 					if ($saw_sigint) { iquit(); }
-					ram_full($disk_size);
 
 # If file name already exists in the database hash, skip it.
 					if ($md5h{$fn}) { next; }
@@ -830,7 +811,6 @@ foreach my $dn (@lib) {
 # Fetch all the keys for the database hash and put them in the queue.
 				foreach my $fn (sort(keys(%md5h))) {
 					if ($saw_sigint) { iquit(); }
-					ram_full($disk_size);
 
 					my $size = (stat($fn))[7];
 
@@ -840,7 +820,10 @@ foreach my $dn (@lib) {
 		}
 
 		if (keys(%large)) {
-			ram_full('0');
+			while ($file_stack > 0) {
+				say $file_stack . ' > ' . '0';
+				yield();
+			}
 
 			foreach my $fn (sort(keys(%large))) {
 				$q->enqueue($fn);
