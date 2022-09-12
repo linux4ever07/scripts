@@ -389,9 +389,8 @@ sub hash2file {
 }
 
 # Subroutine for initializing the database hash, and the files array.
-# The init_hash subroutine returns references. This is
-# the first subroutine that will be executed and all others depend upon
-# it.
+# This subroutine returns references. This is the first subroutine that
+# will be executed and all others depend upon it.
 # It takes 1 argument:
 # (1) directory name
 sub init_hash {
