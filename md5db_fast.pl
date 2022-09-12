@@ -329,24 +329,23 @@ sub logger {
 sub file2hash {
 	my $db = shift;
 	my $dn = dirname($db);
-	my($fn, $hash);
+	my($fn, $hash, @lines);
 
 # The format string which is used for parsing the database file.
 	my $format = qr/^(.*)\Q$delim\E([[:alnum:]]{32})$/;
-	my (@dbfile, $md5db_in);
 
-# Open the database file and read it into the @dbfile variable.
-	open($md5db_in, '<', $db) or die "Can't open '$db': $!";
+# Open the database file and read it into the @lines array.
+	open(my $md5db_in, '<', $db) or die "Can't open '$db': $!";
 	foreach my $line (<$md5db_in>) {
 		$line =~ s/(\r){0,}(\n){0,}$//g;
-		push(@dbfile, $line);
+		push(@lines, $line);
 	}
 	close($md5db_in) or die "Can't close '$db': $!";
 
 # Loop through all the lines in the database file and split them before
 # storing in the database hash. Also, print each line to STDOUT for
 # debug purposes.
-	foreach my $line (@dbfile) {
+	foreach my $line (@lines) {
 # If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
 # Split the line into relative file name and MD5 sum.
