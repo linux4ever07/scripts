@@ -522,8 +522,7 @@ sub md5import {
 	foreach my $line (@lines) {
 # If format string matches the line(s) in the *.MD5 file, continue.
 		if ($line =~ /$format/) {
-# Split the line into file name and MD5 sum.
-# Strip the path (if any) of the file name.
+# Split the line into MD5 sum and relative file name.
 			$hash = $1;
 			$fn = basename($2);
 
