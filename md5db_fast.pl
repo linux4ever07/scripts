@@ -819,11 +819,6 @@ foreach my $dn (@lib) {
 # can finish first. It's to prevent multiple files from being read at
 # once, slowing things down.
 		if (keys(%large)) {
-			while ($file_stack > 0) {
-				say $file_stack . ' > ' . '0';
-				yield();
-			}
-
 			foreach my $fn (sort(keys(%large))) {
 				$q->enqueue($fn);
 			}
