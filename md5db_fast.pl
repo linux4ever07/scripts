@@ -400,8 +400,8 @@ sub init_hash {
 # Get all the file names in the path.
 	my($files, $md5dbs) = getfiles($dn);
 
-# But first import hashes from any databases found in the search path to
-# avoid re-hashing them.
+# Import hashes from any databases found in the search path to avoid
+# re-hashing them.
 	if (scalar(@{$md5dbs})) {
 		foreach my $db (@{$md5dbs}) {
 			file2hash($db);
