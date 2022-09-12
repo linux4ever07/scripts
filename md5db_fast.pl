@@ -323,9 +323,9 @@ sub logger {
 	$semaphore->up();
 }
 
-# Subroutine for reading a database file into the database hash. This is
-# the first subroutine that will be executed and all others depend upon
-# it, cause without it we don't have a database hash to work with.
+# Subroutine for reading a database file into the database hash.
+# It takes 1 argument:
+# (1) file name
 sub file2hash {
 	my $db = shift;
 	my $dn = dirname($db);
@@ -392,7 +392,9 @@ sub hash2file {
 }
 
 # Subroutine for initializing the database hash, and the files array.
-# The init_hash subroutine returns references.
+# The init_hash subroutine returns references. This is
+# the first subroutine that will be executed and all others depend upon
+# it.
 # It takes 1 argument:
 # (1) directory name
 sub init_hash {
@@ -459,7 +461,7 @@ sub getfiles {
 
 # Subroutine for clearing files from RAM, once they've been processed.
 # It takes 1 argument:
-# 1) file name
+# (1) file name
 sub clear_stack {
 	my $fn = shift;
 
