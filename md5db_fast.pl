@@ -791,7 +791,6 @@ foreach my $dn (@lib) {
 			when ('import') {
 # For all the files in $dn, run md5import.
 				foreach my $fn (@{$files}) { md5import($fn); }
-
 			}
 			when ('index') {
 # Index all the files in $dn.
