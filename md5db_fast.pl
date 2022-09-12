@@ -213,9 +213,9 @@ sub file2ram {
 
 		{ lock($file_stack);
 		$file_stack += length($file_contents{$fn}); }
-
-		$q->enqueue($fn);
 	} else { $large{$fn} = 1; }
+
+	$q->enqueue($fn);
 }
 
 # This subroutine is called if something goes wrong and the script needs
@@ -812,12 +812,6 @@ foreach my $dn (@lib) {
 
 					file2ram($fn);
 				}
-			}
-		}
-
-		if (keys(%large)) {
-			foreach my $fn (sort(keys(%large))) {
-				$q->enqueue($fn);
 			}
 		}
 
