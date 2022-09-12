@@ -215,9 +215,7 @@ sub file2ram {
 		$file_stack += length($file_contents{$fn}); }
 
 		$q->enqueue($fn);
-	} else {
-		$large{$fn} = 1;
-	}
+	} else { $large{$fn} = 1; }
 }
 
 # This subroutine is called if something goes wrong and the script needs
