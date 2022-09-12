@@ -536,7 +536,7 @@ sub md5import {
 			if (! length($md5h{$fn}) && -f $fn) {
 				$md5h{$fn} = $hash;
 
-				say $md5fn . ': done indexing';
+				say $fn . ': done indexing';
 
 # If file name is not a real file, add $fn to %gone hash.. If file name
 # is in database hash but the MD5 sum from the MD5 file doesn't match,
