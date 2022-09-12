@@ -425,9 +425,10 @@ to index the files.
 	}
 }
 
-# Subroutine for finding files. Finds all the files inside the directory
-# name passed to it, and processes the output before storing it in the
-# @files array.
+# Subroutine for finding all files inside the directory name passed to
+# it, and processes the output before storing it in the @files array.
+# It takes 1 argument:
+# (1) directory name
 sub getfiles {
 	my $dn = shift;
 	my(@files, @md5dbs, @lines);
