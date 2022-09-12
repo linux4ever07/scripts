@@ -195,11 +195,18 @@ if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 # Subroutine is for loading files into RAM.
 sub file2ram {
 	my $fn = shift;
-	my $size = (stat($fn))[7];
+	my $size = shift;
 
 	if (! length($size)) { return(); }
 
 	if ($size < $disk_size) {
+		my $free = $disk_size - $file_stack;
+
+		while ($size > $free) {
+			yield();
+			$free = $disk_size - $file_stack;
+		}
+
 		open(my $read_fn, '<:raw', $fn) or die "Can't open '$fn': $!";
 		sysread($read_fn, $file_contents{$fn}, $size);
 		close($read_fn) or die "Can't close '$fn': $!";
@@ -208,7 +215,7 @@ sub file2ram {
 		$file_stack += length($file_contents{$fn}); }
 
 		$q->enqueue($fn);
-	} elsif ($size) {
+	} else {
 		$large{$fn} = 1;
 	}
 }
@@ -815,8 +822,10 @@ foreach my $dn (@lib) {
 # If file name already exists in the database hash, skip it.
 					if ($md5h{$fn}) { next; }
 
+					my $size = (stat($fn))[7];
+
 					if ($fn =~ /.flac$/i) { $q->enqueue($fn); }
-					else { file2ram($fn); }
+					else { file2ram($fn, $size); }
 				}
 			}
 			when ('test') {
@@ -825,7 +834,9 @@ foreach my $dn (@lib) {
 					if ($saw_sigint) { iquit(); }
 					ram_full($disk_size);
 
-					file2ram($fn);
+					my $size = (stat($fn))[7];
+
+					file2ram($fn, $size);
 				}
 			}
 		}
