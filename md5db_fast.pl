@@ -818,6 +818,11 @@ foreach my $dn (@lib) {
 # done being read into RAM. This is to prevent multiple files from being
 # read from the hard drive at once, slowing things down.
 		if (keys(%large)) {
+			while ($file_stack > 0) {
+				say $file_stack . ' > ' . '0';
+				yield();
+			}
+
 			foreach my $fn (sort(keys(%large))) {
 				$q->enqueue($fn);
 			}
