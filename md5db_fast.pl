@@ -213,9 +213,9 @@ sub file2ram {
 
 		{ lock($file_stack);
 		$file_stack += length($file_contents{$fn}); }
-	} else { $large{$fn} = 1; }
 
-	$q->enqueue($fn);
+		$q->enqueue($fn);
+	} else { $large{$fn} = 1; }
 }
 
 # This subroutine is called if something goes wrong and the script needs
@@ -812,6 +812,21 @@ foreach my $dn (@lib) {
 
 					file2ram($fn);
 				}
+			}
+		}
+
+# Put all the large files in the queue, after all the smaller files are
+# done being processed. This is to make sure the 'files2ram' subroutine
+# can finish first. It's to prevent multiple files from being read at
+# once, slowing things down.
+		if (keys(%large)) {
+			while ($file_stack > 0) {
+				say $file_stack . ' > ' . '0';
+				yield();
+			}
+
+			foreach my $fn (sort(keys(%large))) {
+				$q->enqueue($fn);
 			}
 		}
 
