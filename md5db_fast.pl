@@ -195,7 +195,7 @@ if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 # Subroutine is for loading files into RAM.
 sub file2ram {
 	my $fn = shift;
-	my $size = shift;
+	my $size = (stat($fn))[7];
 
 	if (! length($size)) { return(); }
 
@@ -801,10 +801,8 @@ foreach my $dn (@lib) {
 # If file name already exists in the database hash, skip it.
 					if ($md5h{$fn}) { next; }
 
-					my $size = (stat($fn))[7];
-
 					if ($fn =~ /.flac$/i) { $q->enqueue($fn); }
-					else { file2ram($fn, $size); }
+					else { file2ram($fn); }
 				}
 			}
 			when ('test') {
@@ -812,9 +810,7 @@ foreach my $dn (@lib) {
 				foreach my $fn (sort(keys(%md5h))) {
 					if ($saw_sigint) { iquit(); }
 
-					my $size = (stat($fn))[7];
-
-					file2ram($fn, $size);
+					file2ram($fn);
 				}
 			}
 		}
