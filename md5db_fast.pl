@@ -589,8 +589,8 @@ sub md5sum {
 	return $hash;
 }
 
-# Subroutine to index the files, i.e calculate and store the MD5 sums in
-# the database hash/file.
+# Subroutine to index the files (i.e calculate and store the MD5 sums in
+# the database hash).
 sub md5index {
 	my $tid = threads->tid();
 	my $tmp_md5;
