@@ -536,7 +536,7 @@ sub md5import {
 
 				say $fn . ': done indexing';
 
-# If file name is not a real file, add $fn to %gone hash.. If file name
+# If file name is not a real file, add $fn to %gone hash. If file name
 # is in database hash but the MD5 sum from the MD5 file doesn't match,
 # print to the log.
 			} elsif (! -f $fn) {
