@@ -72,13 +72,12 @@ my $clear = `clear && echo`;
 
 # Creating a few shared variables.
 # * %err will be used for errors.
-# * $n will be used to count the number of files processed.
+# * $n will store the number of files that have been processed.
 # * %md5h is the database hash.
-# * %file_contents will be used to store the contents of files.
+# * %file_contents will store the contents of files.
 # * $stopping will be used to stop the threads if the script is
 # interrupted.
-# * $file_stack will be used to track the amount of file data currently
-# in RAM.
+# * $file_stack will track the amount of file data currently in RAM.
 # * $busy will be used to pause other threads when a thread is busy.
 # * %gone_tmp will store the names and hashes of possibly deleted files.
 # * %large will store the names of files that are too big to fit in RAM.
