@@ -528,9 +528,7 @@ sub md5import {
 			$fn = basename($2);
 
 # Add the full path to the file name, unless it's the current directory.
-			if ($dn ne '.') {
-				$fn = $dn . '/' . $fn;
-			}
+			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
