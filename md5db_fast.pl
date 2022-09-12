@@ -373,9 +373,6 @@ sub file2hash {
 			}
 		}
 	}
-
-# Clears the screen, thereby scrolling past the database file print.
-	print $clear;
 }
 
 # Subroutine for printing the database hash to the database file.
@@ -410,6 +407,10 @@ sub init_hash {
 			file2hash($db);
 		}
 	}
+
+# Clears the screen, thereby scrolling past the database file print.
+	print $clear;
+
 	return($files, $md5dbs);
 }
 
