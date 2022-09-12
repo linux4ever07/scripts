@@ -236,7 +236,7 @@ sub iquit {
 		exit;
 # If the thread calling this subroutine isn't thread 0/1, yield until
 # $stopping is set.
-	} elsif ($tid > 1) { while (!$stopping) { yield(); } }
+	} elsif ($tid > 1) { while (! $stopping) { yield(); } }
 }
 
 # Subroutine for controlling the log file Applying a semaphore so
@@ -383,8 +383,8 @@ sub hash2file {
 	open($md5db_out, '>', $db) or die "Can't open '$db': $!";
 # Loops through all the keys in the database hash and prints the entries
 # (divided by the $delim variable) to the database file.
-	foreach my $k (sort(keys(%md5h))) {
-		say $md5db_out $k . $delim . $md5h{$k} . "\r";
+	foreach my $fn (sort(keys(%md5h))) {
+		say $md5db_out $fn . $delim . $md5h{$fn} . "\r";
 	}
 	close($md5db_out) or die "Can't close '$db': $!";
 }
@@ -507,49 +507,44 @@ sub md5import {
 # The format string which is used for parsing the *.MD5 files.
 	my $format = qr/^[[:alnum:]]{32}\s\*.*/;
 
-# If the file extension is *.MD5 in either upper- or lowercase,
-# continue.
-	if ($md5fn =~ /.md5$/i) {
 # Open the *.MD5 file and read its contents to the @lines array.
-		open(my $md5, '<', $md5fn) or die "Can't open '$md5fn': $!";
-		foreach my $line (<$md5>) {
-			$line =~ s/(\r){0,}(\n){0,}$//g;
-			push(@lines, $line);
-		}
-		close($md5) or die "Can't close '$md5fn': $!";
+	open(my $md5, '<', $md5fn) or die "Can't open '$md5fn': $!";
+	foreach my $line (<$md5>) {
+		$line =~ s/(\r){0,}(\n){0,}$//g;
+		push(@lines, $line);
+	}
+	close($md5) or die "Can't close '$md5fn': $!";
 
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
-		foreach my $line (@lines) {
+	foreach my $line (@lines) {
 # If format string matches the line(s) in the *.MD5 file, continue.
-			if ($line =~ /$format/) {
+		if ($line =~ /$format/) {
 # Split the line so that the hash and file name go into @fields array.
 # After that strip the path (if any) of the file name, and prepend the
 # path of the *.MD5 file to it instead. Store hash and file name in the
 # $hash and $fn variables for readability.
-				@fields = split(/\s\*/, $line, 2);
-				my $path = dirname($md5fn);
-				$hash = $fields[0];
+			@fields = split(/\s\*/, $line, 2);
+			my $path = dirname($md5fn);
+			$hash = $fields[0];
 
-				if ($path eq '.') { $fn = basename($fields[1]); }
-				else { $fn = dirname($md5fn) . '/' . basename($fields[1]); }
+			if ($path eq '.') { $fn = basename($fields[1]); }
+			else { $fn = dirname($md5fn) . '/' . basename($fields[1]); }
 
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
-				if (! length($md5h{$fn}) && -f $fn) {
-					say $fn . "\n\t" . 'Imported MD5 sum from \'' .
-					basename($md5fn) . '\'.' . "\n";
+			if (! length($md5h{$fn}) && -f $fn) {
+				$md5h{$fn} = $hash;
 
-					$md5h{$fn} = $hash;
+				say $md5fn . ': done indexing';
 
 # If file name is not a real file, add $fn to %gone hash.. If file name
 # is in database hash but the MD5 sum from the MD5 file doesn't match,
 # print to the log.
-				} elsif (! -f $fn) {
-					lock(%gone_tmp);
-					$gone_tmp{${fn}} = $hash;
-				} elsif ($md5h{$fn} ne $hash) { logger('diff', $md5fn); }
-			}
+			} elsif (! -f $fn) {
+				lock(%gone_tmp);
+				$gone_tmp{${fn}} = $hash;
+			} elsif ($md5h{$fn} ne $hash) { logger('diff', $md5fn); }
 		}
 	}
 }
@@ -603,7 +598,7 @@ sub md5index {
 	my $tmp_md5;
 
 # Loop through the thread que.
-	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
+	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -632,7 +627,7 @@ sub md5test {
 	my ($tmp_md5, $old_md5, $new_md5);
 
 # Loop through the thread queue.
-	while ((my $fn = $q->dequeue_nb()) or !$stopping) {
+	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -787,7 +782,9 @@ foreach my $dn (@lib) {
 			}
 			when ('import') {
 # For all the files in $dn, run md5import.
-				foreach my $fn (@{$files}) { md5import($fn); }
+				foreach my $fn (@{$files}) {
+					if ($fn =~ /.md5$/i) { md5import($fn); }
+				}
 			}
 			when ('index') {
 # Index all the files in $dn.
