@@ -22,21 +22,17 @@
 use 5.34.0;
 use strict;
 use warnings;
-# use feature 'unicode_strings';
 use Cwd qw(abs_path cwd);
 use Digest::MD5 qw(md5_hex);
 use IO::Handle qw(autoflush);
 use File::Basename qw(basename dirname);
-# use File::Slurp qw(read_file);
 use diagnostics;
 
 use threads qw(yield);
 use threads::shared;
 use Thread::Queue;
 use Thread::Semaphore;
-# use Fcntl qw(:flock);
-use POSIX qw(SIGINT);
-use POSIX qw(ceil);
+use POSIX qw(SIGINT ceil);
 
 # Create the thread queue.
 my $q = Thread::Queue->new();
@@ -49,7 +45,7 @@ $cores++;
 # Check if the necessary commands are installed to test FLAC files.
 chomp(my @flac_req = ( `command -v flac metaflac 2>&-` ));
 
-my (@lib, $mode);
+my(@lib, $mode);
 
 # Path to and name of log file to be used for logging.
 my $logf = $ENV{HOME} . '/' . 'md5db.log';
@@ -189,7 +185,9 @@ foreach my $arg (@ARGV) {
 # If no switches were used, print usage instructions.
 if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 
-# Subroutine is for loading files into RAM.
+# Subroutine for loading files into RAM.
+# It takes 1 argument:
+# (1) file name
 sub file2ram {
 	my $fn = shift;
 	my $size = (stat($fn))[7];
@@ -497,13 +495,14 @@ sub md5double {
 }
 
 # Subroutine for finding and parsing *.MD5 files, adding the hashes to
-# the database hash and thereby also to the file. It takes 1 argument:
+# the database hash and thereby also to the file.
+# It takes 1 argument:
 # (1) file name
 sub md5import {
 	my $md5fn = shift;
 	my $dn = dirname($md5fn);
 
-	my ($fn, $hash, @lines);
+	my($fn, $hash, @lines);
 
 # The format string which is used for parsing the *.MD5 files.
 	my $format = qr/^([[:alnum:]]{32})\s\*(.*)$/;
@@ -620,7 +619,7 @@ sub md5index {
 # correct (i.e. have changed or not).
 sub md5test {
 	my $tid = threads->tid();
-	my ($tmp_md5, $old_md5, $new_md5);
+	my($tmp_md5, $old_md5, $new_md5);
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {

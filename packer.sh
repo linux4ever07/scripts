@@ -302,7 +302,9 @@ arch_unpack () {
 		*.dar)
 			check_cmd dar
 
-			mapfile -t stdout_v < <(dar -x "$f" 2>&1; printf '%s\n' "$?")
+			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
+
+			mapfile -t stdout_v < <(dar -x "$f_tmp" 2>&1; printf '%s\n' "$?")
 			output
 		;;
 		*.tar)
@@ -382,7 +384,9 @@ arch_test () {
 		*.dar)
 			check_cmd dar
 
-			mapfile -t stdout_v < <(dar -t "$f" 2>&1; printf '%s\n' "$?")
+			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
+
+			mapfile -t stdout_v < <(dar -t "$f_tmp" 2>&1; printf '%s\n' "$?")
 			output
 		;;
 		*.tar)
@@ -454,7 +458,9 @@ arch_list () {
 		*.dar)
 			check_cmd dar
 
-			mapfile -t stdout_v < <(dar -l "$f" 2>&1; printf '%s\n' "$?")
+			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
+
+			mapfile -t stdout_v < <(dar -l "$f_tmp" 2>&1; printf '%s\n' "$?")
 			output | less
 		;;
 		*.tar)
