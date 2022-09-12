@@ -426,7 +426,7 @@ to index the files.
 }
 
 # Subroutine for finding all files inside the directory name passed to
-# it, and processes the output before storing it in the @files array.
+# it.
 # It takes 1 argument:
 # (1) directory name
 sub getfiles {
