@@ -560,9 +560,7 @@ sub md5sum {
 	if ($fn =~ /.flac$/i) {
 		$hash = md5flac($fn);
 
-		if ($mode eq 'test') {
-			clear_stack($fn);
-		}
+		if ($mode eq 'test') { clear_stack($fn); }
 
 		return $hash;
 	}
@@ -715,30 +713,22 @@ sub p_gone {
 # Translates the %gone hash to @gone array.
 # Because then we can sort by filename before printing to the logger.
 	foreach my $hash (keys(%gone)) {
-		foreach my $fn (@{$gone{${hash}}}) {
-			push(@gone, $fn);
-		}
+		foreach my $fn (@{$gone{${hash}}}) { push(@gone, $fn); }
 	}
 
 # Deletes the %gone hash as it's not needed anymore.
 	undef(%gone);
 
 # Logs all missing files.
-	foreach my $fn (sort(@gone)) {
-		logger('gone', $fn);
-	}
+	foreach my $fn (sort(@gone)) { logger('gone', $fn); }
 }
 
 # Depending on which script mode is active, set the @run array to the
 # correct arguments. This will be used to start the threads later.
 my @run;
 given ($mode) {
-	when ('index') {
-		@run = (\&md5index);
-	}
-	when ('test') {
-		@run = (\&md5test);
-	}
+	when ('index') { @run = (\&md5index); }
+	when ('test') { @run = (\&md5test); }
 }
 
 # Start the threads.
@@ -765,9 +755,7 @@ foreach my $dn (@lib) {
 # The init_hash subroutine returns references.
 		my($files, $md5dbs) = init_hash($dn);
 
-		if ($mode ne 'import' && $mode ne 'index') {
-			if_empty();
-		}
+		if ($mode ne 'import' && $mode ne 'index') { if_empty(); }
 
 		given ($mode) {
 			when ('double') {
@@ -811,9 +799,7 @@ foreach my $dn (@lib) {
 				yield();
 			}
 
-			foreach my $fn (sort(keys(%large))) {
-				$q->enqueue($fn);
-			}
+			foreach my $fn (sort(keys(%large))) { $q->enqueue($fn); }
 		}
 
 		{ lock($stopping);
