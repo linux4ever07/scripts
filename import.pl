@@ -72,7 +72,6 @@ sub gettags {
 
 		$tagname = lc($tag[0]);
 		$tagname =~ s/[[:space:]]//g;
-
 		$tag[1] =~ s/(^\s*)|(\s*$)//g;
 		$tag[1] =~ tr/a-zA-Z0-9\.\-_ //dc;
 		$tag[1] =~ s/ +/ /g;
