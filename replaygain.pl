@@ -228,13 +228,16 @@ sub gettags {
 # passed to it. If it doesn't find the tag, it quits.
 sub existstag {
 	my $fn = shift;
+	my $switch = 0;
 
 	foreach my $tag (@_) {
 		if (! defined($t{$tag})) {
 			say $fn . ': doesn\'t have ' . $tag . ' tag';
-			exit;
+			$switch = 1;
 		}
 	}
+
+	if ($switch == 1) { exit; }
 }
 
 # The 'vendor' subroutine re-encodes the FLAC file, if it was encoded
