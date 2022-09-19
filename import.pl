@@ -32,7 +32,6 @@ foreach my $dn (@ARGV) {
 	sub action {
 		if (-d) {
 			my $dn = abs_path($File::Find::name);
-			undef %files;
 			@log = getfiles($dn);
 			my $fc = keys(%files);
 			if ($fc > 0) {
@@ -104,6 +103,8 @@ sub checktags {
 sub getfiles {
 	my $dn = shift;
 	my @log;
+
+	undef %files;
 
 	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
 	foreach (readdir $dh) {
