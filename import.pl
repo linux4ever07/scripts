@@ -68,12 +68,10 @@ sub gettags {
 
 		@tag = split('=');
 
-		if (defined($tag[0])) {
-			$tagname = lc($tag[0]);
-			$tagname =~ s/[[:space:]]//g;
-		} else { next; }
+		if (! defined($tag[0] or ! defined($tag[1])) { next; }
 
-		if (! defined($tag[1])) { next; }
+		$tagname = lc($tag[0]);
+		$tagname =~ s/[[:space:]]//g;
 
 		$tag[1] =~ s/(^\s*)|(\s*$)//g;
 		$tag[1] =~ tr/a-zA-Z0-9\.\-_ //dc;
