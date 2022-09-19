@@ -73,19 +73,17 @@ sub gettags {
 			$tagname =~ s/[[:space:]]//g;
 		} else { next; }
 
-		if (defined($tag[1])) { $tag[1] =~ s/(^\s*)|(\s*$)//g; }
-		else { next; }
+		if (! defined($tag[1])) { next; }
 
-		if (defined($tag[1])) {
-			$tag[1] =~ tr/a-zA-Z0-9\.\-_ //dc;
-			$tag[1] =~ s/ +/ /g;
+		$tag[1] =~ s/(^\s*)|(\s*$)//g;
+		$tag[1] =~ tr/a-zA-Z0-9\.\-_ //dc;
+		$tag[1] =~ s/ +/ /g;
 
-			if ($tagname eq 'album' or $tagname eq 'albumartist') {
-				$tag[1] =~ s/^\.+//g;
-			}
-
-			push(@{$alltags{$tagname}}, $tag[1]);
+		if ($tagname eq 'album' or $tagname eq 'albumartist') {
+			$tag[1] =~ s/^\.+//g;
 		}
+
+		push(@{$alltags{$tagname}}, $tag[1]);
 	}
 
 	return(%alltags);

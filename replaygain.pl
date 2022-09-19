@@ -211,13 +211,11 @@ sub gettags {
 			push(@{$mflac_if{$fn}}, $_);
 			@tag = split('=');
 
-			if (defined($tag[0])) {
-				$tagname = lc($tag[0]);
-				$tagname =~ s/[[:space:]]//g;
-			} else { next; }
+			if (! defined($tag[0] or ! defined($tag[1])) { next; }
 
-			if (defined($tag[1])) { $tag[1] =~ s/(^\s*)|(\s*$)//g; }
-			else { next; }
+			$tagname = lc($tag[0]);
+			$tagname =~ s/[[:space:]]//g;
+			$tag[1] =~ s/(^\s*)|(\s*$)//g;
 		}
 
 		if (defined($tag[1])) { push(@{$alltags{$tagname}}, $tag[1]); }
@@ -230,17 +228,13 @@ sub gettags {
 # passed to it. If it doesn't find the tag, it quits.
 sub existstag {
 	my $fn = shift;
-	my $switch = 0;
 
 	foreach my $tag (@_) {
 		if (! defined($t{$tag})) {
 			say $fn . ': doesn\'t have ' . $tag . ' tag';
-			$switch = 1;
-			last;
+			exit;
 		}
 	}
-
-	if ($switch == 1) { exit; }
 }
 
 # The 'vendor' subroutine re-encodes the FLAC file, if it was encoded
