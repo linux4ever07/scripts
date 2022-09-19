@@ -3,8 +3,6 @@
 # directory.
 
 use v5.34;
-# use feature qw(postderef);
-# no warnings qw(experimental::postderef);
 use strict;
 use warnings;
 use Cwd qw(abs_path);
@@ -19,12 +17,9 @@ my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyrip
 my (@log, %t, %files, $library);
 
 if (defined($ARGV[0])) {
-	if (scalar(@ARGV) < 2 or ! -d $ARGV[0]) {
-		usage();
-	} else { $library = abs_path(shift); }
-} else {
-	usage();
-}
+	if (scalar(@ARGV) < 2 or ! -d $ARGV[0]) { usage(); }
+	else { $library = abs_path(shift); }
+} else { usage(); }
 
 foreach my $dn (@ARGV) {
 	if (! -d $dn) {
@@ -78,9 +73,8 @@ sub gettags {
 			$tagname =~ s/[[:space:]]//g;
 		} else { next; }
 
-		if (defined($tag[1])) {
-			$tag[1] =~ s/(^\s*)|(\s*$)//g;
-		} else { next; }
+		if (defined($tag[1])) { $tag[1] =~ s/(^\s*)|(\s*$)//g; }
+		else { next; }
 
 		if (defined($tag[1])) {
 			$tag[1] =~ tr/a-zA-Z0-9\.\-_ //dc;
@@ -126,9 +120,7 @@ sub getfiles {
 		if ($fn_bn_lc =~ /.log$/ && -f $fn) {
 			my $log_tmp = check_log($fn);
 
-			if (defined($log_tmp)) {
-				push(@log, $fn);
-			}
+			if (defined($log_tmp)) { push(@log, $fn); }
 		}
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
@@ -163,7 +155,7 @@ sub albumartist {
 # to properly match the words.
 sub check_log {
 	my $fn = shift;
-	my($enc,$line1);
+	my($enc, $line1);
 
 	open(OUTPUT, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
 	chomp(my $file_output = <OUTPUT>);
@@ -174,23 +166,15 @@ sub check_log {
 
 	my $enc_tmp = find_encoding($file_enc);
 
-	if (defined($enc_tmp)) {
-		$enc = $enc_tmp->name;
-	}
+	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
 
 	open(my $text, $fn) or die "Can't open file '$fn': $!";
-	if (defined($enc)) {
-		$line1 = decode($enc, <$text>);
-		chomp($line1);
-	} else {
-		chomp($line1 = <$text>);
-	}
+	chomp($line1 = <$text>);
+	if (defined($enc)) { $line1 = decode($enc, $line1); }
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@lacc) {
-	    if ($line1 =~ /$req/) {
-			return($fn);
-		}
+	    if ($line1 =~ /$req/) { return($fn); }
 	}
 }
 
@@ -220,9 +204,7 @@ sub import {
 			say $path . ': already exists';
 			say 'Skipping...' . "\n";
 			return;
-		} else {
-			make_path($path);
-		}
+		} else { make_path($path); }
 
 		if (defined($t{discnumber})) {
 		  $newfn = sprintf('%s-%02s. %s.flac', $ct{discnumber}, $ct{tracknumber}, $ct{title});

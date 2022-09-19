@@ -54,12 +54,9 @@ sub version {
 version();
 
 if (defined($ARGV[0])) {
-	if (scalar(@ARGV) != 1 or ! -d $ARGV[0]) {
-		usage();
-	} else { $library = abs_path($ARGV[0]); }
-} else {
-	usage();
-}
+	if (scalar(@ARGV) != 1 or ! -d $ARGV[0]) { usage(); }
+	else { $library = abs_path($ARGV[0]); }
+} else { usage(); }
 
 # Find all the sub-directories under the FLAC library directory.
 getdirs($library);
@@ -191,7 +188,8 @@ sub gettags {
 
 	my $regex = qr/^(\")|(\")$/;
 
-	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--show-vendor-tag', '--export-tags-to=-', $fn) or die "Can't open 'metaflac': $!";
+	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--show-vendor-tag', '--export-tags-to=-', $fn)
+	or die "Can't open 'metaflac': $!";
 	chomp(@lines = (<$output>));
 	close($output) or die "Can't close 'metaflac': $!";
 
@@ -202,9 +200,8 @@ sub gettags {
 			@tag = split(' ');
 			$tagname = 'vendor_ref';
 
-			if (defined($tag[2])) {
-				$tag[1] = $tag[2];
-			} else {
+			if (defined($tag[2])) { $tag[1] = $tag[2]; }
+			else {
 				undef(@tag);
 				$tag[1] = $_;
 			}
@@ -219,14 +216,11 @@ sub gettags {
 				$tagname =~ s/[[:space:]]//g;
 			} else { next; }
 
-			if (defined($tag[1])) {
-				$tag[1] =~ s/(^\s*)|(\s*$)//g;
-			} else { next; }
+			if (defined($tag[1])) { $tag[1] =~ s/(^\s*)|(\s*$)//g; }
+			else { next; }
 		}
 
-		if (defined($tag[1])) {
-			push(@{$alltags{$tagname}}, $tag[1]);
-		}
+		if (defined($tag[1])) { push(@{$alltags{$tagname}}, $tag[1]); }
 	}
 
 	return(%alltags);
@@ -259,51 +253,59 @@ sub vendor {
 
 	sub sigint {
 		say "Interrupted by user!";
+
 		foreach my $fn (@_) {
 			if (-f $fn) {
 				unlink($fn) or die "Can't remove '$fn': $!";
 			}
 		}
+
 		exit;
 	}
 
-	if (! defined($t{vendor_ref}) or $t{vendor_ref} ne $flac_version[1]) {
-		$newfn = $fn;
-		$newfn =~ s/\.[^.]*$//;
-		$newfn = $newfn . '-' . int(rand(10000));
-		$newfn_flac = $newfn . '.flac';
-		$newfn_wav = $newfn . '.wav';
-		$newfn_art = $newfn . '.albumart';
-		$newfn_stderr = $newfn . '.stderr';
+	unless (! defined($t{vendor_ref}) or $t{vendor_ref} ne $flac_version[1]) {
+		return();
+	}
 
-		print $fn . ': ' . 'old encoder (' . $t{vendor_ref} . '), re-encoding... ';
+	$newfn = $fn;
+	$newfn =~ s/\.[^.]*$//;
+	$newfn = $newfn . '-' . int(rand(10000));
+	$newfn_flac = $newfn . '.flac';
+	$newfn_wav = $newfn . '.wav';
+	$newfn_art = $newfn . '.albumart';
+	$newfn_stderr = $newfn . '.stderr';
+
+	print $fn . ': ' . 'old encoder (' . $t{vendor_ref} . '), re-encoding... ';
 
 # Duplicate STDERR (for restoration later).
 # Redirect STDERR to a file ($newfn_stderr).
-		open(my $olderr, ">&STDERR") or die "Can't dup STDERR: $!";
-		close(STDERR) or die "Can't close STDERR: $!";
-		open(STDERR, '>', $newfn_stderr) or die "Can't open '$newfn_stderr': $!";
+	open(my $olderr, ">&STDERR") or die "Can't dup STDERR: $!";
+	close(STDERR) or die "Can't close STDERR: $!";
+	open(STDERR, '>', $newfn_stderr) or die "Can't open '$newfn_stderr': $!";
 
-		system('flac', '--silent', '-8', $fn, "--output-name=$newfn_flac");
-		or_warn("Can't encode file");
+	system('flac', '--silent', '-8', $fn, "--output-name=$newfn_flac");
+	or_warn("Can't encode file");
 
 # Close the STDERR file ($newfn_stderr).
 # Restore STDERR from $olderr.
 # Close the $olderr filehandle.
-		close(STDERR) or die;
-		open(STDERR, ">&", $olderr) or die "Can't dup STDERR: $!";
-		close($olderr) or die "Can't close STDERR: $!";
+	close(STDERR) or die;
+	open(STDERR, ">&", $olderr) or die "Can't dup STDERR: $!";
+	close($olderr) or die "Can't close STDERR: $!";
 
-		if ($? == 0) {
+	given ($?) {
+		when (0) {
 			move($newfn_flac, $fn) or die "Can't rename '$newfn_flac': $!";
-
 			say 'done';
-		} elsif ($? == 2) {
+		}
+		when (2) {
 			sigint($newfn_flac, $newfn_stderr);
-		} else {
+		}
+		default {
 # Open a filehandle that reads from the STDERR file ($newfn_stderr).
 # Save the content of the file in an array (@stderra).
-			open(my $fh_stderrf, '<', $newfn_stderr) or die "Can't open '$newfn_stderr': $!";
+			open(my $fh_stderrf, '<', $newfn_stderr)
+			or die "Can't open '$newfn_stderr': $!";
 			chomp(my @stderra = (<$fh_stderrf>));
 			close($fh_stderrf) or die "Can't close '$newfn_stderr': $!";
 
@@ -315,9 +317,7 @@ sub vendor {
 					system('flac', '--silent', '--decode', $fn, "--output-name=$newfn_wav");
 					or_warn("Can't decode file");
 
-					if ($? == 2) {
-						sigint($newfn_wav, $newfn_stderr);
-					}
+					if ($? == 2) { sigint($newfn_wav, $newfn_stderr); }
 
 # Back up the album art, if it exists.
 					system("metaflac --export-picture-to=\"$newfn_art\" \"$fn\" 1>&- 2>&-");
@@ -327,17 +327,19 @@ sub vendor {
 						system('flac', '--silent', '-8', "--picture=$newfn_art", $newfn_wav, "--output-name=$newfn_flac");
 						or_warn("Can't encode file");
 
-						unlink($newfn_art) or die "Can't remove '$newfn_art': $!";
+						unlink($newfn_art)
+						or die "Can't remove '$newfn_art': $!";
 					} else {
 						system('flac', '--silent', '-8', $newfn_wav, "--output-name=$newfn_flac");
 						or_warn("Can't encode file");
 					}
 
-					unlink($newfn_wav) or die "Can't remove '$newfn_wav': $!";
+					unlink($newfn_wav)
+					or die "Can't remove '$newfn_wav': $!";
 
 					if ($? == 0) {
-						move($newfn_flac, $fn) or die "Can't move '$newfn_flac': $!";
-
+						move($newfn_flac, $fn)
+						or die "Can't move '$newfn_flac': $!";
 						say 'done';
 
 # Clearing the %mflac_if hash key representing $fn, to force the
@@ -350,9 +352,10 @@ sub vendor {
 				}
 			}
 		}
-# Delete the STDERR file.
-		unlink($newfn_stderr) or die "Can't remove '$newfn_stderr': $!";
 	}
+
+# Delete the STDERR file.
+	unlink($newfn_stderr) or die "Can't remove '$newfn_stderr': $!";
 }
 
 # The 'rmtag' subroutine removes tags of choice.
@@ -412,9 +415,7 @@ sub discnum {
 			$disc_str = ${^MATCH};
 			${^MATCH} =~ m/$regex3/;
 			$t{discnumber} = ${^MATCH};
-		} else {
-			$t{discnumber} = 1;
-		}
+		} else { $t{discnumber} = 1; }
 
 		say $fn . ': adding discnumber tag';
 	}
@@ -578,10 +579,9 @@ sub writetags {
 # Import the tags from the @mflac_of array.
 		system('metaflac', '--remove-all-tags', $fn);
 		or_warn("Can't remove tags");
-		open(my $output, '|-', 'metaflac', '--import-tags-from=-', $fn) or die "Can't import tags: $!";
-		foreach my $line (@mflac_of) {
-			say $output $line;
-		}
+		open(my $output, '|-', 'metaflac', '--import-tags-from=-', $fn)
+		or die "Can't import tags: $!";
+		foreach my $line (@mflac_of) { say $output $line; }
 		close($output) or die "Can't close 'metaflac': $!";
 	}
 }
@@ -655,7 +655,8 @@ sub totaltracks {
 # under the FLAC library directory, and removes them.
 sub rm_empty_dirs {
 	sub read_find {
-		open(my $find, '-|', 'find', $library, ,'-mindepth', '1', '-type', 'd', '-empty') or die "Can't open 'find': $!";
+		open(my $find, '-|', 'find', $library, ,'-mindepth', '1', '-type', 'd', '-empty')
+		or die "Can't open 'find': $!";
 		chomp(my @lines = (<$find>));
 		close($find) or die "Can't close 'find': $!";
 

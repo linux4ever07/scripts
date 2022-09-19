@@ -271,7 +271,7 @@ sub logger {
 			. "\n\n" . 'Running script in \'' . $mode . '\' mode on:' .
 			"\n";
 			foreach my $dn (@lib) { say $LOG $dn; }
-			say $LOG "";
+			say $LOG '';
 		}
 # When the script is interrupted by user pressing ^C, say so in STDOUT,
 # close the log.
@@ -489,7 +489,7 @@ sub md5double {
 		if (scalar(@{$exists{${hash}}}) > 1) {
 			say 'These files have the same hash (' . $hash . '):';
 			foreach my $fn (@{$exists{${hash}}}) { say $fn; }
-			say "";
+			say '';
 		}
 	}
 }
