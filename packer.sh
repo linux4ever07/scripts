@@ -137,8 +137,7 @@ restore () {
 	rm -f "$stdout_f"
 }
 
-# Creates a function called 'print_stdout', which will print errors, if
-# there were any.
+# Creates a function called 'print_stdout', which will print STDOUT.
 print_stdout () {
 	while read line; do
 		printf '%s\n' "$line"
@@ -159,11 +158,6 @@ output () {
 		printf '\n%s: %s\n' "$f" 'Everything is Ok'
 	else
 		printf '\n%s: %s\n' "$f" 'Something went wrong'
-
-		for (( i = 0; i < ${#stdout_lines[@]}; i++ )); do
-			line="${stdout_lines[${i}]}"
-			printf '%s\n' "$line"
-		done
 	fi
 }
 
