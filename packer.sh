@@ -147,8 +147,10 @@ print_stdout () {
 }
 
 # Creates a function, called 'output', which will let the user know if
-# the command succeeded or not. If not, print the entire output from
-# the compression program.
+# the command succeeded or not. The output from STDOUT is captured, but
+# I see no reason to print it, as all the useful information will
+# already have been printed by default, due to STDERR effectively
+# replacing STDOUT in this script.
 output () {
 	exit_status="$1"
 
