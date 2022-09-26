@@ -535,7 +535,7 @@ case "$mode" in
 # If the archive file name already exists, quit.
 		if [[ -f $f ]]; then
 			printf '\n%s: %s\n' "$f" 'File already exists' 1>&2
-			exit
+			restore_n_quit
 		fi
 
 # If no files / directories to be compressed were given as arguments,
