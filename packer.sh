@@ -36,7 +36,34 @@ c_tty=$(tty)
 regex_ext='(\.tar){0,1}(\.[^.]*)$'
 regex_dar='(\.[0-9]+){0,1}(\.dar)$'
 
-# This function prints usage instructions and then exits.
+# Redirect STDOUT to a file, to capture the output. Only STDERR will be
+# displayed, which ensures that errors and prompts will always be
+# visible.
+touch "$stdout_f"
+exec 1>>"$stdout_f"
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
+
+ctrl_c () {
+	printf '%s\n' '** Trapped CTRL-C' 1>&2
+	restore_n_quit
+}
+
+# Creates a function called 'restore_n_quit', which will restore STDOUT
+# to the shell, and then quit.
+restore_n_quit () {
+	regex_dev='^/dev'
+
+	if [[ $c_tty =~ $regex_dev ]]; then
+		exec 1>"$c_tty"
+	fi
+
+	rm -f "$stdout_f"
+	exit
+}
+
+# This function prints usage instructions and then quits.
 usage () {
 	cat <<USAGE
 Usage: $(basename "$0") [mode] [archive] [files...]
@@ -67,7 +94,7 @@ l
 
 USAGE
 
-	exit
+	restore_n_quit
 }
 
 # Creates a function called 'create_names', which will create variables
@@ -78,9 +105,9 @@ create_names () {
 	f_bn_lc="${f_bn,,}"
 }
 
-# If there are no arguments to the script, print usage and then exit.
+# If there are no arguments to the script, print usage and then quit.
 if [[ -z $1 || -z $2 ]]; then
-	usage
+	usage 1>&2
 fi
 
 # The part below sets the mode to be used, based on the first argument
@@ -99,43 +126,16 @@ case "$1" in
 		mode='list'
 	;;
 	*)
-		usage
+		usage 1>&2
 	;;
 esac
 
 shift
 
-# If no mode was specified through the arguments, print usage and exit.
+# If no mode was specified through the arguments, print usage and quit.
 if [[ -z $mode ]]; then
-	usage
+	usage 1>&2
 fi
-
-# Redirect STDOUT to a file, to capture the output. Only STDERR will be
-# displayed, which ensures that errors and prompts will always be
-# visible.
-touch "$stdout_f"
-exec 1>>"$stdout_f"
-
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
-
-ctrl_c () {
-	printf '%s\n' '** Trapped CTRL-C' 1>&2
-	restore_n_quit
-}
-
-# Creates a function called 'restore_n_quit', which will restore STDOUT
-# to the shell, and then quit.
-restore_n_quit () {
-	regex_dev='^/dev'
-
-	if [[ $c_tty =~ $regex_dev ]]; then
-		exec 1>"$c_tty"
-	fi
-
-	rm -f "$stdout_f"
-	exit
-}
 
 # Creates a function called 'print_stdout', which will print STDOUT.
 print_stdout () {
@@ -208,7 +208,7 @@ this line:
 PATH="\${HOME}/bin:\${PATH}"
 
 CMD
-				exit
+				restore_n_quit
 			fi
 		fi
 	done
