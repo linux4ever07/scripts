@@ -97,14 +97,6 @@ USAGE
 	restore_n_quit
 }
 
-# Creates a function called 'create_names', which will create variables
-# for file names.
-create_names () {
-	f=$(readlink -f "$1")
-	f_bn=$(basename "$f")
-	f_bn_lc="${f_bn,,}"
-}
-
 # If there are no arguments to the script, print usage and then quit.
 if [[ -z $1 || -z $2 ]]; then
 	usage 1>&2
@@ -212,6 +204,14 @@ CMD
 			fi
 		fi
 	done
+}
+
+# Creates a function called 'create_names', which will create variables
+# for file names.
+create_names () {
+	f=$(readlink -f "$1")
+	f_bn=$(basename "$f")
+	f_bn_lc="${f_bn,,}"
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
