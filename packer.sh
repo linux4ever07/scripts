@@ -30,7 +30,7 @@ set -o pipefail
 
 declare f f_bn f_bn_lc of
 session="${RANDOM}-${RANDOM}"
-stderr_f="/dev/shm/packer_stderr-${session}.txt"
+stdout_f="/dev/shm/packer_stdout-${session}.txt"
 c_tty=$(tty)
 
 regex_ext='(\.tar){0,1}(\.[^.]*)$'
@@ -110,9 +110,11 @@ if [[ -z $mode ]]; then
 	usage
 fi
 
-# Redirect STDERR to a file, to capture the output.
-touch "$stderr_f"
-exec 2>>"$stderr_f"
+# Redirect STDOUT to a file, to capture the output. Only STDERR will be
+# displayed, which ensures that errors and prompts will always be
+# visible.
+touch "$stdout_f"
+exec 1>>"$stdout_f"
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -123,55 +125,45 @@ ctrl_c () {
 	exit
 }
 
-# Creates a function called 'restore', which will restore STDERR to the
+# Creates a function called 'restore', which will restore STDOUT to the
 # shell.
 restore () {
 	regex_dev='^/dev'
 
 	if [[ $c_tty =~ $regex_dev ]]; then
-		exec 2>"$c_tty"
+		exec 1>"$c_tty"
 	fi
 
-	cat_stderr
-	rm -f "$stderr_f"
+	rm -f "$stdout_f"
 }
 
-# Creates a function called 'cat_stderr', which will print errors, if
+# Creates a function called 'print_stdout', which will print errors, if
 # there were any.
-cat_stderr () {
-	while read stderr_out; do
-		printf '%s\n' "$stderr_out"
-	done <"$stderr_f"
+print_stdout () {
+	while read line; do
+		printf '%s\n' "$line"
+	done <"$stdout_f"
 
-	truncate -s 0 "$stderr_f"
+	truncate -s 0 "$stdout_f"
 }
 
 # Creates a function, called 'output', which will let the user know if
 # the command succeeded or not. If not, print the entire output from
 # the compression program.
 output () {
-	print_stdout () {
-		for (( n = 0; n < last; n++ )); do
-			printf '%s\n' "${stdout_v[${n}]}"
-		done
+	exit_status="$1"
 
-		unset -v stdout_v
-		cat_stderr
-	}
+	mapfile -t stdout_lines < <(print_stdout)
 
-	if [[ ${#stdout_v[@]} -gt 0 ]]; then
-		last=$(( ${#stdout_v[@]} - 1 ))
-	fi
-
-	if [[ "${stdout_v[${last}]}" == "0" ]]; then
-		printf '%s: Everything is Ok\n\n' "$f"
-
-		if [[ $mode == 'list' ]]; then
-			print_stdout
-		fi
+	if [[ $exit_status -eq 0 ]]; then
+		printf '\n%s: %s\n' "$f" 'Everything is Ok'
 	else
-		printf '%s: Something went wrong\n\n' "$f"
-		print_stdout
+		printf '\n%s: %s\n' "$f" 'Something went wrong'
+
+		for (( i = 0; i < ${#stdout_lines[@]}; i++ )); do
+			line="${stdout_lines[${i}]}"
+			printf '%s\n' "$line"
+		done
 	fi
 }
 
@@ -230,39 +222,39 @@ CMD
 arch_pack () {
 	case "$f_bn_lc" in
 		*.tar)
-			mapfile -t stdout_v < <(tar -cf "${of}.tar" "${@}"; printf '%s\n' "$?")
-			output
+			tar -cf "${of}.tar" "${@}"
+			output "$?" 1>&2
 		;;
 		*.tar.gz|*.tgz)
-			mapfile -t stdout_v < <(tar -c "${@}" | gzip -9 > "${of}.tar.gz"; printf '%s\n' "$?")
-			output
+			tar -c "${@}" | gzip -9 > "${of}.tar.gz"
+			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			mapfile -t stdout_v < <(tar -c "${@}" | bzip2 --compress -9 > "${of}.tar.bz2"; printf '%s\n' "$?")
-			output
+			tar -c "${@}" | bzip2 --compress -9 > "${of}.tar.bz2"
+			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			mapfile -t stdout_v < <(tar -c "${@}" | xz --compress -9 > "${of}.tar.xz"; printf '%s\n' "$?")
-			output
+			tar -c "${@}" | xz --compress -9 > "${of}.tar.xz"
+			output "$?" 1>&2
 		;;
 		*.zip)
-			mapfile -t stdout_v < <(zip -r -9 "$f" "${@}"; printf '%s\n' "$?")
-			output
+			zip -r -9 "$f" "${@}"
+			output "$?" 1>&2
 		;;
 		*.7z)
-			check_cmd 7z
+			check_cmd 7z 1>&2
 
-			mapfile -t stdout_v < <(7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "${@}"; printf '%s\n' "$?")
-			output
+			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "${@}"
+			output "$?" 1>&2
 		;;
 		*.rar)
-			check_cmd rar
+			check_cmd rar 1>&2
 
-			mapfile -t stdout_v < <(rar a -m5 "$f" "${@}"; printf '%s\n' "$?")
-			output
+			rar a -m5 "$f" "${@}"
+			output "$?" 1>&2
 		;;
 		*)
-			usage
+			usage 1>&2
 		;;
 	esac
 }
@@ -300,80 +292,80 @@ iso_unpack () {
 arch_unpack () {
 	case "$f_bn_lc" in
 		*.dar)
-			check_cmd dar
+			check_cmd dar 1>&2
 
 			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
 
-			mapfile -t stdout_v < <(dar -x "$f_tmp" 2>&1; printf '%s\n' "$?")
-			output
+			dar -x "$f_tmp"
+			output "$?" 1>&2
 		;;
 		*.tar)
-			mapfile -t stdout_v < <(tar -xf "$f"; printf '%s\n' "$?")
-			output
+			tar -xf "$f"
+			output "$?" 1>&2
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			mapfile -t stdout_v < <(tar -xzf "$f"; printf '%s\n' "$?")
-			output
+			tar -xzf "$f"
+			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			mapfile -t stdout_v < <(tar -xjf "$f"; printf '%s\n' "$?")
-			output
+			tar -xjf "$f"
+			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			mapfile -t stdout_v < <(tar -xJf "$f"; printf '%s\n' "$?")
-			output
+			tar -xJf "$f"
+			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			mapfile -t stdout_v < <(gunzip "$f"; printf '%s\n' "$?")
-			output
+			gunzip "$f"
+			output "$?" 1>&2
 		;;
 		*.bz2)
-			mapfile -t stdout_v < <(bunzip2 "$f"; printf '%s\n' "$?")
-			output
+			bunzip2 "$f"
+			output "$?" 1>&2
 		;;
 		*.xz)
-			mapfile -t stdout_v < <(unxz "$f"; printf '%s\n' "$?")
-			output
+			unxz "$f"
+			output "$?" 1>&2
 		;;
 		*.zip)
-			mapfile -t stdout_v < <(unzip "$f"; printf '%s\n' "$?")
-			output
+			unzip "$f"
+			output "$?" 1>&2
 		;;
 		*.7z)
-			check_cmd 7z
+			check_cmd 7z 1>&2
 
-			mapfile -t stdout_v < <(7za x "$f"; printf '%s\n' "$?")
-			output
+			7za x "$f"
+			output "$?" 1>&2
 		;;
 		*.rar)
-			check_cmd rar
+			check_cmd rar 1>&2
 
-			mapfile -t stdout_v < <(rar x "$f"; printf '%s\n' "$?")
-			output
+			rar x "$f"
+			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
-			check_cmd lzh
+			check_cmd lzh 1>&2
 
-			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
-			output
+			7z x "$f"
+			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
-			check_cmd cab
+			check_cmd cab 1>&2
 
-			mapfile -t stdout_v < <(cabextract "$f"; printf '%s\n' "$?")
-			output
+			cabextract "$f"
+			output "$?" 1>&2
 		;;
 		*.arj)
-			check_cmd arj
+			check_cmd arj 1>&2
 
-			mapfile -t stdout_v < <(7z x "$f"; printf '%s\n' "$?")
-			output
+			7z x "$f"
+			output "$?" 1>&2
 		;;
 		*.iso)
-			iso_unpack
+			iso_unpack 1>&2
 		;;
 		*)
-			usage
+			usage 1>&2
 		;;
 	esac
 }
@@ -382,71 +374,71 @@ arch_unpack () {
 arch_test () {
 	case "$f_bn_lc" in
 		*.dar)
-			check_cmd dar
+			check_cmd dar 1>&2
 
 			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
 
-			mapfile -t stdout_v < <(dar -t "$f_tmp" 2>&1; printf '%s\n' "$?")
-			output
+			dar -t "$f_tmp"
+			output "$?" 1>&2
 		;;
 		*.tar)
-			mapfile -t stdout_v < <(tar tf "$f"; printf '%s\n' "$?")
-			output
+			tar tf "$f"
+			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			mapfile -t stdout_v < <(gunzip -t "$f"; printf '%s\n' "$?")
-			output
+			gunzip -t "$f"
+			output "$?" 1>&2
 		;;
 		*.bz2)
-			mapfile -t stdout_v < <(bunzip2 -t "$f"; printf '%s\n' "$?")
-			output
+			bunzip2 -t "$f"
+			output "$?" 1>&2
 		;;
 		*.xz)
-			mapfile -t stdout_v < <(xz -t "$f"; printf '%s\n' "$?")
-			output
+			xz -t "$f"
+			output "$?" 1>&2
 		;;
 		*.zip)
-			mapfile -t stdout_v < <(unzip -t "$f"; printf '%s\n' "$?")
-			output
+			unzip -t "$f"
+			output "$?" 1>&2
 		;;
 		*.7z)
-			check_cmd 7z
+			check_cmd 7z 1>&2
 
-			mapfile -t stdout_v < <(7za t "$f"; printf '%s\n' "$?")
-			output
+			7za t "$f"
+			output "$?" 1>&2
 		;;
 		*.rar)
-			check_cmd rar
+			check_cmd rar 1>&2
 
-			mapfile -t stdout_v < <(rar t "$f"; printf '%s\n' "$?")
-			output
+			rar t "$f"
+			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
-			check_cmd lzh
+			check_cmd lzh 1>&2
 
-			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
-			output
+			7z t "$f"
+			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
-			check_cmd cab
+			check_cmd cab 1>&2
 
-			mapfile -t stdout_v < <(cabextract -t "$f"; printf '%s\n' "$?")
-			output
+			cabextract -t "$f"
+			output "$?" 1>&2
 		;;
 		*.arj)
-			check_cmd arj
+			check_cmd arj 1>&2
 
-			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
-			output
+			7z t "$f"
+			output "$?" 1>&2
 		;;
 		*.iso)
-			check_cmd iso
+			check_cmd iso 1>&2
 
-			mapfile -t stdout_v < <(7z t "$f"; printf '%s\n' "$?")
-			output
+			7z t "$f"
+			output "$?" 1>&2
 		;;
 		*)
-			usage
+			usage 1>&2
 		;;
 	esac
 }
@@ -456,83 +448,83 @@ arch_test () {
 arch_list () {
 	case "$f_bn_lc" in
 		*.dar)
-			check_cmd dar
+			check_cmd dar 1>&2
 
 			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
 
-			mapfile -t stdout_v < <(dar -l "$f_tmp" 2>&1; printf '%s\n' "$?")
-			output | less
+			dar -l "$f_tmp" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.tar)
-			mapfile -t stdout_v < <(tar -tvf "$f"; printf '%s\n' "$?")
-			output | less
+			tar -tvf "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			mapfile -t stdout_v < <(tar -ztvf "$f"; printf '%s\n' "$?")
-			output | less
+			tar -ztvf "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			mapfile -t stdout_v < <(tar -jtvf "$f"; printf '%s\n' "$?")
-			output | less
+			tar -jtvf "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			mapfile -t stdout_v < <(tar -Jtvf "$f"; printf '%s\n' "$?")
-			output | less
+			tar -Jtvf "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			mapfile -t stdout_v < <(gunzip -l "$f"; printf '%s\n' "$?")
-			output | less
+			gunzip -l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.bz2)
-			mapfile -t stdout_v < <(bunzip2 -t "$f"; printf '%s\n' "$?")
-			output | less
+			bunzip2 -t "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.xz)
-			mapfile -t stdout_v < <(unxz -l "$f"; printf '%s\n' "$?")
-			output | less
+			unxz -l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.zip)
-			mapfile -t stdout_v < <(unzip -l "$f"; printf '%s\n' "$?")
-			output | less
+			unzip -l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.7z)
-			check_cmd 7z
+			check_cmd 7z 1>&2
 
-			mapfile -t stdout_v < <(7za l "$f"; printf '%s\n' "$?")
-			output | less
+			7za l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.rar)
-			check_cmd rar
+			check_cmd rar 1>&2
 
-			mapfile -t stdout_v < <(rar vb "$f"; printf '%s\n' "$?")
-			output | less
+			rar vb "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
-			check_cmd lzh
+			check_cmd lzh 1>&2
 
-			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
-			output | less
+			7z l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
-			check_cmd cab
+			check_cmd cab 1>&2
 
-			mapfile -t stdout_v < <(cabextract -l "$f"; printf '%s\n' "$?")
-			output | less
+			cabextract -l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.arj)
-			check_cmd arj
+			check_cmd arj 1>&2
 
-			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
-			output | less
+			7z l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*.iso)
-			check_cmd iso
+			check_cmd iso 1>&2
 
-			mapfile -t stdout_v < <(7z l "$f"; printf '%s\n' "$?")
-			output | less
+			7z l "$f" | less 1>&2
+			output "$?" 1>&2
 		;;
 		*)
-			usage
+			usage 1>&2
 		;;
 	esac
 }
@@ -546,14 +538,14 @@ case "$mode" in
 
 # If the archive file name already exists, quit.
 		if [[ -f $f ]]; then
-			printf '%s: File already exists\n\n' "$f"
+			printf '%s: File already exists\n\n' "$f" 1>&2
 			exit
 		fi
 
 # If no files / directories to be compressed were given as arguments,
 # quit.
 		if [[ -z $1 ]]; then
-			usage
+			usage 1>&2
 		fi
 
 		arch_pack "${@}"
@@ -563,7 +555,7 @@ case "$mode" in
 			create_names "$1"
 
 			if [[ ! -f $f || ! -r $f ]]; then
-				usage
+				usage 1>&2
 			fi
 
 			arch_unpack
@@ -576,7 +568,7 @@ case "$mode" in
 			create_names "$1"
 
 			if [[ ! -f $f || ! -r $f ]]; then
-				usage
+				usage 1>&2
 			fi
 
 			arch_test
@@ -589,7 +581,7 @@ case "$mode" in
 			create_names "$1"
 
 			if [[ ! -f $f || ! -r $f ]]; then
-				usage
+				usage 1>&2
 			fi
 
 			arch_list
@@ -598,5 +590,7 @@ case "$mode" in
 		done
 	;;
 esac
+
+printf '\n' 1>&2
 
 restore
