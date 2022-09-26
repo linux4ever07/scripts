@@ -120,14 +120,13 @@ exec 1>>"$stdout_f"
 trap ctrl_c INT
 
 ctrl_c () {
-	restore
-	printf '%s\n' '** Trapped CTRL-C'
-	exit
+	printf '%s\n' '** Trapped CTRL-C' 1>&2
+	restore_n_quit
 }
 
-# Creates a function called 'restore', which will restore STDOUT to the
-# shell.
-restore () {
+# Creates a function called 'restore_n_quit', which will restore STDOUT
+# to the shell, and then quit.
+restore_n_quit () {
 	regex_dev='^/dev'
 
 	if [[ $c_tty =~ $regex_dev ]]; then
@@ -135,6 +134,7 @@ restore () {
 	fi
 
 	rm -f "$stdout_f"
+	exit
 }
 
 # Creates a function called 'print_stdout', which will print STDOUT.
@@ -589,4 +589,4 @@ esac
 
 printf '\n' 1>&2
 
-restore
+restore_n_quit
