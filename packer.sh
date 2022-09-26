@@ -538,7 +538,7 @@ case "$mode" in
 
 # If the archive file name already exists, quit.
 		if [[ -f $f ]]; then
-			printf '%s: File already exists\n\n' "$f" 1>&2
+			printf '\n%s: %s\n' "$f" 'File already exists' 1>&2
 			exit
 		fi
 
