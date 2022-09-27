@@ -66,6 +66,7 @@ restore_n_quit () {
 # This function prints usage instructions and then quits.
 usage () {
 	cat <<USAGE
+
 Usage: $(basename "$0") [mode] [archive] [files...]
 
 Supported archive formats in all modes:
@@ -218,35 +219,35 @@ create_names () {
 arch_pack () {
 	case "$f_bn_lc" in
 		*.tar)
-			tar -cf "${of}.tar" "${@}"
+			tar -cf "${of}.tar" "$@"
 			output "$?" 1>&2
 		;;
 		*.tar.gz|*.tgz)
-			tar -c "${@}" | gzip -9 > "${of}.tar.gz"
+			tar -c "$@" | gzip -9 > "${of}.tar.gz"
 			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			tar -c "${@}" | bzip2 --compress -9 > "${of}.tar.bz2"
+			tar -c "$@" | bzip2 --compress -9 > "${of}.tar.bz2"
 			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			tar -c "${@}" | xz --compress -9 > "${of}.tar.xz"
+			tar -c "$@" | xz --compress -9 > "${of}.tar.xz"
 			output "$?" 1>&2
 		;;
 		*.zip)
-			zip -r -9 "$f" "${@}"
+			zip -r -9 "$f" "$@"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "${@}"
+			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "$@"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar a -m5 "$f" "${@}"
+			rar a -m5 "$f" "$@"
 			output "$?" 1>&2
 		;;
 		*)
@@ -544,7 +545,7 @@ case "$mode" in
 			usage 1>&2
 		fi
 
-		arch_pack "${@}"
+		arch_pack "$@"
 	;;
 	'unpack')
 		while [[ $# -gt 0 ]]; do
