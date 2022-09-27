@@ -38,7 +38,7 @@ regex_dar='(\.[0-9]+){0,1}(\.dar)$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
-# visible.
+# visible in real-time.
 touch "$stdout_f"
 exec 1>>"$stdout_f"
 
@@ -159,7 +159,7 @@ output () {
 # Creates a function, called 'check_cmd', which will be used to
 # check if the needed commands are installed.
 check_cmd () {
-	check() {
+	check () {
 		command -v "$1"
 	}
 
