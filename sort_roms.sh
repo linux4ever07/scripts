@@ -52,7 +52,7 @@ priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$'
 cd "$dn"
 mkdir "$sorted_dn"
 
-mapfile -t files < <(find "$dn" -maxdepth 1 -type f -iname "*" 2>&- | sort)
+mapfile -t files < <(find "$dn" -maxdepth 1 -type f -iname "*" 2>&-)
 
 set_target () {
 	set_vars () {
