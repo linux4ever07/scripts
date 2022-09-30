@@ -7,6 +7,10 @@
 # According to GoodTools naming practices, good (verified) ROM dumps,
 # have the '[!]' tag.
 
+# For best results, run your ROM collection through GoodTools before
+# using this script, if it has not been already. That will properly
+# format all the ROM filenames, so the tags will be recognized.
+
 # The region priority order is: U, UK, A, W, E, J.
 
 # U = US
@@ -24,7 +28,7 @@
 # 5 = NTSC
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") [dir]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [ROM directory]"
 	exit
 }
 
