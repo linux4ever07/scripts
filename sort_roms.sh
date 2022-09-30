@@ -4,6 +4,9 @@
 # It will prefer US ROMs, but use another region if that's not
 # available.
 
+# According to GoodTools naming practices, good (verified) ROM dumps,
+# have the '[!]' tag.
+
 # The region priority order is: U, UK, A, W, E, J.
 
 # U = US
