@@ -44,8 +44,9 @@ declare -A titles
 global_vars=(fn bn region region_n)
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex1='\(([A-Z]{1,3}|[0-9]{1})\).*(\.[^.]*)$'
-regex2='^.*(\[\!\]).*(\.[^.]*)$'
+regex_ext='\.([^.]*)$'
+regex1='\(([A-Z]{1,3}|[0-9]{1})\).*${regex_ext}'
+regex2='^.*(\[\!\]).*${regex_ext}'
 
 priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$' '^5$')
 
