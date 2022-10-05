@@ -192,6 +192,8 @@ read_cue () {
 
 				fn_found=$(find "$if_dn" -maxdepth 1 -type f -iname "$fn" 2>&- | head -n 1)
 
+				track_n=$(( track_n + 1 ))
+
 				if [[ -f $fn_found ]]; then
 					fn="$fn_found"
 				else
@@ -207,7 +209,6 @@ read_cue () {
 				string=$(sed -E "s/${regex_file}/\3/" <<<"$line")
 				string="FILE \"${fn}\" ${string}"
 
-				track_n=$(( track_n + 1 ))
 				cue_lines[${track_n},'0','file']="$string"
 			;;
 			'track')
