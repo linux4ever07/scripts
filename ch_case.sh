@@ -51,7 +51,7 @@ done
 
 unset -v files path_parts
 
-for (( i = ${depth}; i > 0; i-- )); do
+for (( i = depth; i > 0; i-- )); do
 	find "$dir" -mindepth "$i" -maxdepth "$i" -iname "*" | while read f; do
 		dn=$(dirname "$f")
 		bn=$(basename "$f")
