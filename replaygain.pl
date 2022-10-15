@@ -44,7 +44,8 @@ my(@flac_version, $library, %t, %files, @files, @dirs, %mflac_if, @mflac_of);
 sub version {
 	my(@lines);
 
-	open(my $flac_v, '-|', 'flac', '--version') or die "Can't open 'flac': $!";
+	open(my $flac_v, '-|', 'flac', '--version')
+	or die "Can't open 'flac': $!";
 	chomp(@lines = (<$flac_v>));
 	close($flac_v) or die "Can't close 'flac': $!";
 
@@ -154,7 +155,8 @@ sub getdirs {
 
 	undef(@dirs);
 
-	open(my $find, '-|', 'find', $dn, '-type', 'd', '-iname', '*') or die "Can't open 'find': $!";
+	open(my $find, '-|', 'find', $dn, '-type', 'd', '-iname', '*')
+	or die "Can't open 'find': $!";
 	chomp(@dirs = (<$find>));
 	close($find) or die "Can't close 'find': $!";
 }
@@ -169,7 +171,8 @@ sub getfiles {
 	undef(@files);
 	undef(%mflac_if);
 
-	open(my $find, '-|', 'find', $dn, '-mindepth', '1', '-maxdepth', '1', '-type', 'f', '-iname', '*') or die "Can't open 'find': $!";
+	open(my $find, '-|', 'find', $dn, '-mindepth', '1', '-maxdepth', '1', '-type', 'f', '-iname', '*')
+	or die "Can't open 'find': $!";
 	chomp(@lines = (<$find>));
 	close($find) or die "Can't close 'find': $!";
 
