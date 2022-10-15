@@ -25,10 +25,12 @@ uriencode () {
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" <<<"${@}" | sed -E 's/..(.*).../\1/'
 }
 
-# Creates a function called 'c_time_calc', which will translate seconds
-# into the HH:MM:SS format.
-c_time_calc () {
+# Creates a function called 'time_calc', which will translate seconds
+# into the hh:mm:ss format.
+time_calc () {
 	s="$1"
+	m=0
+	h=0
 
 # While $s (seconds) is equal to (or greater than) 60, clear the $s
 # variable and add 1 to the $m (minutes) variable.
@@ -145,7 +147,7 @@ imdb () {
 		done
 	done
 
-	runtime=$(c_time_calc "$runtime")
+	runtime=$(time_calc "$runtime")
 
 	cat <<IMDB
 ${title} (${year})
