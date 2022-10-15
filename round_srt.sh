@@ -13,9 +13,11 @@
 # adjusted so they don't overlap. They will all differ by at least 1
 # centisecond.
 
-regex_p='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
+regex_time='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
+regex_cs='^[0-9]+$'
 delim=' --> '
-regex_f="^${regex_p}${delim}${regex_p}$"
+regex_full="^${regex_time}${delim}${regex_time}$"
+regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 
 usage () {
 	printf '%s\n' "Usage: $(basename "$0") [srt]"
@@ -32,160 +34,119 @@ fi
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
-declare -a duration
-
-# Creates a function called 'time_break', which breaks the 'time line'
-# up in parts ($h $m $s $cs).
-time_break () {
+# Creates a function called 'time_convert', which converts the
+# 'time line' back and forth between the time (hh:mm:ss) format and
+# centiseconds.
+time_convert () {
 	time="$1"
 
-	mapfile -d' ' -t time_split < <(sed -E "s/${regex_p}/\1 \2 \3 \4/" <<<"$time")
+	h=0
+	m=0
+	s=0
+	cs=0
 
-	h=$(sed -E 's/^0//' <<<"${time_split[0]}")
-	m=$(sed -E 's/^0//' <<<"${time_split[1]}")
-	s=$(sed -E 's/^0//' <<<"${time_split[2]}")
-	cs=$(sed -E 's/^0{1,2}//' <<<"${time_split[3]}")
+# If argument is in the hh:mm:ss format...
+	if [[ $time =~ $regex_time ]]; then
+		mapfile -d' ' -t time_split < <(sed -E "s/${regex_time}/\1 \2 \3 \4/" <<<"$time")
 
-	printf '%s' "$h $m $s $cs"
-}
-
-# Creates a function called 't_time_break', which will be used by the
-# 't_time_calc' function to figure out if the time value of the previous
-# 'time line' is equal to (or greater than) the current one.
-t_time_break () {
-	h="$1"
-	m="$2"
-	s="$3"
-	cs="$4"
+		h=$(sed -E 's/^0//' <<<"${time_split[0]}")
+		m=$(sed -E 's/^0//' <<<"${time_split[1]}")
+		s=$(sed -E 's/^0//' <<<"${time_split[2]}")
+		cs=$(sed -E 's/^0{1,2}//' <<<"${time_split[3]}")
 
 # Converts all the numbers to centiseconds, because those kind of values
-# will be easier to compare in the 't_time_calc' function.
-	h=$(( h * 60 * 60 * 1000 ))
-	m=$(( m * 60 * 1000 ))
-	s=$(( s * 1000 ))
+# will be easier to compare in the 'time_calc' function.
+		h=$(( h * 60 * 60 * 1000 ))
+		m=$(( m * 60 * 1000 ))
+		s=$(( s * 1000 ))
 
-	total_time=$(( h + m + s + cs ))
-
-	printf '%s' "$total_time"
-}
-
-# Creates a function called 'cs_calc', which will calculate the total
-# number of centiseconds.
-cs_calc () {
-	cs_in="$1"
-
-# Saves the last 2 (or 1) digits of $cs_in in $cs_tmp
-	cs_tmp=$(sed -E -e 's/.*(..)$/\1/' -e 's/^0//' <<<"$cs_in")
+# Saves the last 2 (or 1) digits of $cs in $cs_tmp
+		cs_tmp=$(sed -E -e 's/.*(..)$/\1/' -e 's/^0//' <<<"$cs")
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
-	if [[ $cs_tmp -ge 50 ]]; then
-		cs=$(( (cs_in - cs_tmp) + 100 ))
-	else
-		cs=$(( cs_in - cs_tmp ))
-	fi
+		if [[ $cs_tmp -ge 50 ]]; then
+			cs=$(( (cs - cs_tmp) + 100 ))
+		else
+			cs=$(( cs - cs_tmp ))
+		fi
 
-	printf '%s' "$cs"
-}
+		time=$(( h + m + s + cs ))
 
-# Creates a function called 'c_time_calc', which will calculate the
-# total time of the current 'time line'.
-c_time_calc () {
-	h="$1"
-	m="$2"
-	s="$3"
-	cs="$4"
-
-	cs=$(cs_calc "$cs")
+# If argument is in the frame format...
+	elif [[ $time =~ $regex_cs ]]; then
+		cs="$time"
 
 # While $cs (centiseconds) is equal to (or greater than) 1000, clear the
 # $cs variable and add 1 to the $s (seconds) variable.
-	while [[ $cs -ge 1000 ]]; do
-		s=$(( s + 1 ))
-		cs=$(( cs - 1000 ))
-	done
+		while [[ $cs -ge 1000 ]]; do
+			s=$(( s + 1 ))
+			cs=$(( cs - 1000 ))
+		done
 
 # While $s (seconds) is equal to (or greater than) 60, clear the $s
 # variable and add 1 to the $m (minutes) variable.
-	while [[ $s -ge 60 ]]; do
-		m=$(( m + 1 ))
-		s=$(( s - 60 ))
-	done
+		while [[ $s -ge 60 ]]; do
+			m=$(( m + 1 ))
+			s=$(( s - 60 ))
+		done
 
 # While $m (minutes) is equal to (or greater than) 60, clear the $m
 # variable and add 1 to the $h (hours) variable.
-	while [[ $m -ge 60 ]]; do
-		h=$(( h + 1 ))
-		m=$(( m - 60 ))
-	done
+		while [[ $m -ge 60 ]]; do
+			h=$(( h + 1 ))
+			m=$(( m - 60 ))
+		done
 
 # While $h (hours) is equal to 100 (or greater than), clear the $h
 # variable.
-	while [[ $h -ge 100 ]]; do
-		h=$(( h - 100 ))
-	done
+		while [[ $h -ge 100 ]]; do
+			h=$(( h - 100 ))
+		done
 
-	printf '%s' "$h $m $s $cs"
+		time=$(printf '%02d:%02d:%02d,%03d' "$h" "$m" "$s" "$cs")
+	fi
+
+	printf '%s' "$time"
 }
 
-# Creates a function called 't_time_calc', which will add the total time
+# Creates a function called 'time_calc', which will add the total time
 # of the previous 'time line' to the current 'time line', plus a
 # centisecond if centiseconds are identical with previous 'time line'.
-t_time_calc () {
-	total_start_time=("$1" "$2" "$3" "$4")
-	total_stop_time=("$5" "$6" "$7" "$8")
-
-# Converts previous and current 'time line' to centiseconds...
-	c_tmp=$(t_time_break "${total_start_time[@]}")
-	p_tmp=$(t_time_break "${total_stop_time[@]}")
+time_calc () {
+	start_time_tmp="$1"
+	stop_time_tmp="$2"
 
 # Until the value of the current 'time_line' is higher than the
 # previous, add 1 centisecond.
-	until [[ $c_tmp -gt $p_tmp ]]; do
-		total_start_time[3]=$(( ${total_start_time[3]} + 100 ))
-		c_tmp=$(t_time_break "${total_start_time[@]}")
+	until [[ $start_time_tmp -gt $stop_time_tmp ]]; do
+		start_time_tmp=$(( start_time_tmp + 100 ))
 	done
 
-	mapfile -d' ' -t total_start_time < <(c_time_calc "${total_start_time[@]}")
-
-	printf '%s\n' "${total_start_time[@]}"
+	printf '%s' "$start_time_tmp"
 }
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	line="${lines[${i}]}"
+	line=$(sed -E "s/${regex_blank}/\1/" <<<"${lines[${i}]}")
 
-	if [[ ! $line =~ $regex_f ]]; then
+	if [[ ! $line =~ $regex_full ]]; then
 		continue
 	fi
 
 	mapfile -d' ' -t duration <<<"${line/${delim}/ }"
-	duration[0]=$(tr -d '[:blank:]' <<<"${duration[0]}")
-	duration[1]=$(tr -d '[:blank:]' <<<"${duration[1]}")
 
-	mapfile -d' ' -t c_total_start_time < <(time_break "${duration[0]}")
-	mapfile -d' ' -t c_total_start_time < <(c_time_calc "${c_total_start_time[@]}")
+	start_time=$(time_convert "${duration[0]}")
+	stop_time=$(time_convert "${duration[1]}")
 
-	mapfile -d' ' -t c_total_stop_time < <(time_break "${duration[1]}")
-	mapfile -d' ' -t c_total_stop_time < <(c_time_calc "${c_total_stop_time[@]}")
-
-	if [[ -n ${p_total_stop_time[@]} ]]; then
-		mapfile -t c_total_start_time < <(t_time_calc "${c_total_start_time[@]}" "${p_total_stop_time[@]}")
+	if [[ -n $previous ]]; then
+		start_time=$(time_calc "$start_time" "$previous")
 	fi
 
-	p_total_stop_time=("${c_total_stop_time[@]}")
+	previous="$stop_time"
 
-	start_h="${c_total_start_time[0]}"
-	start_m="${c_total_start_time[1]}"
-	start_s="${c_total_start_time[2]}"
-	start_cs="${c_total_start_time[3]}"
+	start_time=$(time_convert "$start_time")
+	stop_time=$(time_convert "$stop_time")
 
-	stop_h="${c_total_stop_time[0]}"
-	stop_m="${c_total_stop_time[1]}"
-	stop_s="${c_total_stop_time[2]}"
-	stop_cs="${c_total_stop_time[3]}"
-
-	finished_line_start=$(printf '%02d:%02d:%02d,%03d' "$start_h" "$start_m" "$start_s" "$start_cs")
-	finished_line_stop=$(printf '%02d:%02d:%02d,%03d' "$stop_h" "$stop_m" "$stop_s" "$stop_cs")
-	finished_line="${finished_line_start}${delim}${finished_line_stop}"
+	finished_line="${start_time}${delim}${stop_time}"
 	lines[${i}]="$finished_line"
 
 	printf '%s\n' '***'

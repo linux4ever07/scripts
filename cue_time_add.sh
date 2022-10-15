@@ -16,22 +16,25 @@ regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
 time_convert () {
 	time="$1"
 
+	m=0
+	s=0
+	f=0
+
 # If argument is in the mm:ss:ff format...
 	if [[ $time =~ $regex_time ]]; then
 		mapfile -t time_split < <(tr ':' '\n'  <<<"$time" | sed -E 's/^0//')
 
 # Converting minutes and seconds to frames, and adding all the numbers
 # together.
-		time_split[0]=$(( ${time_split[0]} * 60 * 75 ))
-		time_split[1]=$(( ${time_split[1]} * 75 ))
+		m=$(( ${time_split[0]} * 60 * 75 ))
+		s=$(( ${time_split[1]} * 75 ))
+		f="${time_split[2]}"
 
-		time=$(( ${time_split[0]} + ${time_split[1]} + ${time_split[2]} ))
+		time=$(( m + s + f ))
 
 # If argument is in the frame format...
 	elif [[ $time =~ $regex_frames ]]; then
 		f="$time"
-		s=0
-		m=0
 
 # While $f (frames) is equal to (or greater than) 75, clear the $f
 # variable and add 1 to the $s (seconds) variable.
