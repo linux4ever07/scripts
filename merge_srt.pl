@@ -259,8 +259,8 @@ sub parse_srt {
 						push(@lines, $line);
 					}
 
-					if (scalar(@tmp) == 1) { push(@lines, "", ""); }
-					else { push(@lines, ""); }
+					if (scalar(@tmp) == 1) { push(@lines, '', ''); }
+					else { push(@lines, ''); }
 				}
 
 				undef(@tmp);
