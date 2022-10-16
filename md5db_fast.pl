@@ -202,7 +202,7 @@ sub file2ram {
 			$free = $disk_size - $file_stack;
 		}
 
-		open(my $read_fn, '<:raw', $fn) or die "Can't open '$fn': $!";
+		open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
 		sysread($read_fn, $file_contents{$fn}, $size);
 		close($read_fn) or die "Can't close '$fn': $!";
 
@@ -571,7 +571,7 @@ sub md5sum {
 
 		my $read_fn;
 
-		open($read_fn, '<:raw', $fn) or die "Can't open '$fn': $!";
+		open($read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
 		$hash = Digest::MD5->new->addfile($read_fn)->hexdigest;
 		close($read_fn) or die "Can't close '$fn': $!";
 
