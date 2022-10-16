@@ -77,7 +77,7 @@ sub read_decode_fn {
 
 	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
 
-	open(my $text, '<', $fn) or die "Can't open file '$fn': $!";
+	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	foreach my $line (<$text>) {
 		if (defined($enc)) {
 			$line = decode($enc, $line);
@@ -283,7 +283,7 @@ foreach my $fn (@files) {
 	push(@lines, parse_srt($fn));
 }
 
-open(my $srt, '>', $of) or die "Can't open file '$of': $!";
+open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
 foreach my $line (@lines) {
 	say $srt $line;
 }

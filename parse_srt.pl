@@ -52,7 +52,7 @@ sub read_decode_fn {
 
 	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
 
-	open(my $text, '<', $fn) or die "Can't open file '$fn': $!";
+	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	foreach my $line (<$text>) {
 		if (defined($enc)) {
 			$line = decode($enc, $line);

@@ -165,7 +165,7 @@ sub check_log {
 
 	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
 
-	open(my $text, '<', $fn) or die "Can't open file '$fn': $!";
+	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	$line1 = <$text>;
 	$line1 =~ s/(\r){0,}(\n){0,}$//g;
 	if (defined($enc)) { $line1 = decode($enc, $line1); }
