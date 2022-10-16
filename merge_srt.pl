@@ -162,27 +162,27 @@ sub time_convert {
 # The 'time_calc' subroutine adds the total time of the previous SRT
 # subtitle file to the current 'time line'.
 sub time_calc {
-	my $offset_tmp = shift;
-	my $start_time_tmp = shift;
-	my $stop_time_tmp = shift;
+	my $offset = shift;
+	my $start_time = shift;
+	my $stop_time = shift;
 
 	my(@times);
 
-	$start_time_tmp = time_convert($start_time_tmp);
-	$stop_time_tmp = time_convert($stop_time_tmp);
+	$start_time = time_convert($start_time);
+	$stop_time = time_convert($stop_time);
 
-	if ($offset_tmp > 0 and $start_time_tmp == 0) {
-		$start_time_tmp = $start_time_tmp + 100;
-		$stop_time_tmp = $stop_time_tmp + 100;
+	if ($offset > 0 and $start_time == 0) {
+		$start_time = $start_time + 100;
+		$stop_time = $stop_time + 100;
 	}
 
-	$start_time_tmp = $offset_tmp + $start_time_tmp;
-	$stop_time_tmp = $offset_tmp + $stop_time_tmp;
+	$start_time = $offset + $start_time;
+	$stop_time = $offset + $stop_time;
 
-	$start_time_tmp = time_convert($start_time_tmp);
-	$stop_time_tmp = time_convert($stop_time_tmp);
+	$start_time = time_convert($start_time);
+	$stop_time = time_convert($stop_time);
 
-	@times = ($start_time_tmp, $stop_time_tmp);
+	@times = ($start_time, $stop_time);
 
 	return(@times);
 }
