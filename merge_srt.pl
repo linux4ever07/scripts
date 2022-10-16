@@ -285,6 +285,6 @@ foreach my $fn (@files) {
 
 open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
 foreach my $line (@lines) {
-	say $srt $line;
+	print $srt $line . "\r\n";
 }
 close($srt) or die "Can't close file '$of': $!";
