@@ -639,13 +639,13 @@ sub totaltracks {
 
 		$tracks = ${tracks}{$t{discnumber}};
 
-		if (! defined($t{totaltracks}) && ! defined($t{tracktotal})) {
+		if (! defined($t{totaltracks}) and ! defined($t{tracktotal})) {
 			say $fn . ': adding totaltracks tag';
 			$t{totaltracks} = $tracks;
 		}
 	}
 
-	if (defined($t{tracktotal}) && ! defined($t{totaltracks})) {
+	if (defined($t{tracktotal}) and ! defined($t{totaltracks})) {
 		say $fn . ': adding totaltracks tag';
 		$t{totaltracks} = $t{tracktotal};
 	}

@@ -110,11 +110,11 @@ sub getfiles {
 		my $fn = "$dn/$_";
 		my $fn_bn_lc = lc($_);
 
-		if ($fn_bn_lc =~ /.flac$/ && -f $fn) {
+		if ($fn_bn_lc =~ /.flac$/ and -f $fn) {
 			$files{$fn} = { gettags($fn) };
 		}
 
-		if ($fn_bn_lc =~ /.log$/ && -f $fn) {
+		if ($fn_bn_lc =~ /.log$/ and -f $fn) {
 			my $log_tmp = check_log($fn);
 
 			if (defined($log_tmp)) { push(@log, $fn); }
@@ -158,15 +158,16 @@ sub check_log {
 	chomp(my $file_output = <OUTPUT>);
 	close(OUTPUT) or die "Can't close file: $!";
 
-	$file_output =~ /(charset=)(.*)([[:space:]]|$)/;
-	my $file_enc = $2;
+	$file_output =~ /charset=(.*)[[:space:]]*$/;
+	my $file_enc = $1;
 
 	my $enc_tmp = find_encoding($file_enc);
 
 	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
 
-	open(my $text, $fn) or die "Can't open file '$fn': $!";
-	chomp($line1 = <$text>);
+	open(my $text, '<', $fn) or die "Can't open file '$fn': $!";
+	$line1 = <$text>;
+	$line1 =~ s/(\r){0,}(\n){0,}$//g;
 	if (defined($enc)) { $line1 = decode($enc, $line1); }
 	close $text or die "Can't close file '$fn': $!";
 
@@ -197,7 +198,7 @@ sub import {
 
 		$path = $library . '/' . $ct{albumartist} . '/' . $ct{album};
 
-		if ($cp == 0 && -d $path) {
+		if ($cp == 0 and -d $path) {
 			say $path . ': already exists';
 			say 'Skipping...' . "\n";
 			return;

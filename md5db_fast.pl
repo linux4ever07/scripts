@@ -194,7 +194,7 @@ sub file2ram {
 
 	if (! length($size)) { return(); }
 
-	if ($size < $disk_size) {
+	if ($size <= $disk_size) {
 		my $free = $disk_size - $file_stack;
 
 		while ($size > $free) {
@@ -354,7 +354,7 @@ sub file2hash {
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # If $fn is a real file and not already in the hash, continue.
-			if (-f $fn && ! length($md5h{$fn})) {
+			if (-f $fn and ! length($md5h{$fn})) {
 				$md5h{$fn} = $hash;
 				say $fn . $delim . $hash;
 
@@ -362,7 +362,7 @@ sub file2hash {
 # database doesn't match the one in the hash, print to the log. This
 # will most likely only be the case for any extra databases that are
 # found in the search path given to the script.
-			} elsif (-f $fn && $md5h{$fn} ne $hash) {
+			} elsif (-f $fn and $md5h{$fn} ne $hash) {
 				logger('diff', $fn);
 # Saves the names of deleted or moved files in '%gone_tmp'.
 			} elsif (! -f $fn) {
@@ -529,7 +529,7 @@ sub md5import {
 
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
-			if (! length($md5h{$fn}) && -f $fn) {
+			if (! length($md5h{$fn}) and -f $fn) {
 				$md5h{$fn} = $hash;
 
 				say $fn . ': done indexing';
@@ -634,7 +634,7 @@ sub md5test {
 # If the new MD5 sum doesn't match the one in the hash, and file doesn't
 # already exist in the %err hash, log it and replace the old MD5 sum in
 # the hash with the new one.
-		if ($new_md5 ne $old_md5 && ! length($err{$fn})) {
+		if ($new_md5 ne $old_md5 and ! length($err{$fn})) {
 			logger('diff', $fn);
 			$md5h{$fn} = $new_md5;
 		}
@@ -662,7 +662,7 @@ sub md5flac {
 
 	if (scalar(@flac_req) == 2) {
 		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-		if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
+		if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
 
 		if ($mode eq 'test') {
 			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
@@ -670,7 +670,7 @@ sub md5flac {
 			print $flac_test $file_contents{$fn};
 			close($flac_test);
 
-			if ($? != 0 && $? != 2) { logger('corr', $fn); return; }
+			if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
 		}
 
 		return $hash;
@@ -735,7 +735,7 @@ given ($mode) {
 # If script mode is either 'import' or 'double' we'll start only one
 # thread, else we'll start as many as the available number of CPUs.
 my @threads;
-if ($mode ne 'import' && $mode ne 'double') {
+if ($mode ne 'import' and $mode ne 'double') {
 	foreach (1 .. $cores) {
 		push(@threads, threads->create(@run));
 	}
@@ -755,7 +755,7 @@ foreach my $dn (@lib) {
 # The init_hash subroutine returns references.
 		my($files, $md5dbs) = init_hash($dn);
 
-		if ($mode ne 'import' && $mode ne 'index') { if_empty(); }
+		if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 		given ($mode) {
 			when ('double') {
