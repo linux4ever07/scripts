@@ -268,11 +268,8 @@ sub parse_srt {
 			}
 		}
 
-		if ($switch eq 0) {
-			$i = $i + 1;
-		} else {
-			$switch = 0;
-		}
+		if ($switch eq 0) { $i = $i + 1; }
+		else { $switch = 0; }
 	}
 
 	$offset = $offset + time_convert($stop_time);
