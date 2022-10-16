@@ -283,8 +283,8 @@ foreach my $fn (@files) {
 	push(@lines, parse_srt($fn));
 }
 
-open(my $srt, '>', $of) or die "Can\'t open 'SRT': $!";
+open(my $srt, '>', $of) or die "Can't open file '$of': $!";
 foreach my $line (@lines) {
 	say $srt $line;
 }
-close($srt) or die "Can\'t close 'SRT': $!";
+close($srt) or die "Can't close file '$of': $!";
