@@ -90,10 +90,10 @@ sub parse_srt {
 		$this = $lines[$i];
 		$next = $lines[$j];
 
-		my(@tmp);
-
 		if (length($this) and $this =~ /$format[0]/) {
 			if (length($next) and $next =~ /$format[2]/) {
+				my(@tmp);
+
 				$i = $i + 2;
 				$j = $i + 1;
 

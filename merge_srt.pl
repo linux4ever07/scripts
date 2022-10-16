@@ -207,12 +207,12 @@ sub parse_srt {
 		$this = $lines_tmp[$i];
 		$next = $lines_tmp[$j];
 
-		my(@times, @tmp);
-
 		if (length($this) and $this =~ /$format[0]/) {
 			if (length($next) and $next =~ /$format[3]/) {
 				$start_time = $1;
 				$stop_time = $2;
+
+				my(@times, @tmp);
 
 				if ($offset > 0) {
 					push(@times, time_calc($offset, $start_time, $stop_time));
@@ -263,8 +263,8 @@ sub parse_srt {
 					else { push(@lines, ''); }
 				}
 
-				undef(@tmp);
 				undef(@times);
+				undef(@tmp);
 			}
 		}
 
