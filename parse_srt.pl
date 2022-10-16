@@ -100,9 +100,7 @@ sub parse_srt {
 				$this = $lines[$i];
 				$next = $lines[$j];
 
-				if (length($this)) {
-					push(@tmp, $this);
-				}
+				if (length($this)) { push(@tmp, $this); }
 
 				until ($i >= $end) {
 					$i = $i + 1;
@@ -118,9 +116,7 @@ sub parse_srt {
 						}
 					}
 
-					if (length($this)) {
-						push(@tmp, $this);
-					}
+					if (length($this)) { push(@tmp, $this); }
 				}
 
 				if (scalar(@tmp) > 0) {
