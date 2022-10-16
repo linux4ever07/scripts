@@ -29,7 +29,7 @@ $offset = 0;
 $n = 0;
 
 $dn = cwd();
-$of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000));
+$of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
 if (scalar(@ARGV) == 0) { usage(); }
 
