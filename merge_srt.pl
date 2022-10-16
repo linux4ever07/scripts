@@ -215,7 +215,7 @@ sub parse_srt {
 				$stop_time = $2;
 
 				if ($offset > 0) {
-					@times = (time_calc($offset, $start_time, $stop_time));
+					push(@times, time_calc($offset, $start_time, $stop_time));
 					$time_line = $times[0] . $delim . $times[1];
 				} else { $time_line = $next; }
 
@@ -264,6 +264,7 @@ sub parse_srt {
 				}
 
 				undef(@tmp);
+				undef(@times);
 			}
 		}
 
