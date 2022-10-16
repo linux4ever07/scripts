@@ -66,9 +66,9 @@ sub read_decode_fn {
 	my($enc);
 	my(@lines);
 
-	open(OUTPUT, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
-	chomp(my $file_output = <OUTPUT>);
-	close(OUTPUT) or die "Can't close file: $!";
+	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
+	chomp(my $file_output = <$info>);
+	close($info) or die "Can't close file: $!";
 
 	$file_output =~ /charset=(.*)[[:space:]]*$/;
 	my $file_enc = $1;

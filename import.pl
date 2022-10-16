@@ -154,9 +154,9 @@ sub check_log {
 	my $fn = shift;
 	my($enc, $line1);
 
-	open(OUTPUT, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
-	chomp(my $file_output = <OUTPUT>);
-	close(OUTPUT) or die "Can't close file: $!";
+	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
+	chomp(my $file_output = <$info>);
+	close($info) or die "Can't close file: $!";
 
 	$file_output =~ /charset=(.*)[[:space:]]*$/;
 	my $file_enc = $1;
