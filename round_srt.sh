@@ -72,7 +72,7 @@ time_convert () {
 
 		time=$(( h + m + s + cs ))
 
-# If argument is in the frame format...
+# If argument is in the centisecond format...
 	elif [[ $time =~ $regex_cs ]]; then
 		cs="$time"
 
