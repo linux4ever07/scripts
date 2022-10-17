@@ -166,14 +166,17 @@ sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
+	my($diff);
 	my(@times);
 
 	$start_time = time_convert($start_time);
 	$stop_time = time_convert($stop_time);
 
-	if ($offset > 0 and $start_time == 0) {
-		$start_time = $start_time + 100;
-		$stop_time = $stop_time + 100;
+	if ($offset > 0 and $start_time < 100) {
+		$diff = 100 - $start_time;
+
+		$start_time = $start_time + $diff;
+		$stop_time = $stop_time + $diff;
 	}
 
 	$start_time = $offset + $start_time;
@@ -182,7 +185,7 @@ sub time_calc {
 	$start_time = time_convert($start_time);
 	$stop_time = time_convert($stop_time);
 
-	@times = ($start_time, $stop_time);
+	push(@times, $start_time, $stop_time);
 
 	return(@times);
 }
