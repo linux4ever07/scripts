@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script will round all the centiseconds in an SRT subtitle file.
 # Every start time and end time of a subtitle will now end in ,?00
 
@@ -25,8 +26,9 @@ usage () {
 }
 
 if=$(readlink -f "$1" 2>&-)
-of_tmp="${if%.[^.]*}"
-of="${of_tmp}-${RANDOM}.srt"
+session="${RANDOM}-${RANDOM}"
+of="${if%.[^.]*}"
+of="${of}-${session}.srt"
 
 if [[ ! -f $if ]]; then
 	usage
@@ -60,8 +62,12 @@ time_convert () {
 		m=$(( m * 60 * 1000 ))
 		s=$(( s * 1000 ))
 
-# Saves the last 2 (or 1) digits of $cs in $cs_tmp
-		cs_tmp=$(sed -E -e 's/.*(..)$/\1/' -e 's/^0//' <<<"$cs")
+# Saves the last 2 (or 1) digits of $cs in $cs_tmp.
+		cs_tmp=$(sed -E -e 's/^.*(..)$/\1/' -e 's/^0//' <<<"$cs")
+
+		if [[ -z $cs_tmp ]]; then
+			cs_tmp=0
+		fi
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
 		if [[ $cs_tmp -ge 50 ]]; then

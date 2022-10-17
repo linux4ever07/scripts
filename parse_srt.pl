@@ -12,17 +12,21 @@ use Encode qw(encode decode find_encoding);
 
 my $script = basename($0);
 
-my(@format);
+my(@lines, @format);
+
+my $regex_ext = qr/\.([^.]*)$/;
+
 my($fn, $ext);
 
 if (scalar(@ARGV) == 0) { usage(); }
 
 if (length($ARGV[0])) {
 	$fn = abs_path($ARGV[0]);
-	$ext = lc(substr($fn, -4));
+	$fn =~ /$regex_ext/;
+	$ext = lc($1);
 }
 
-if (! -f $fn or $ext ne '.srt') { usage(); }
+if (! -f $fn or $ext ne 'srt') { usage(); }
 
 $format[0] = qr/^[0-9]+$/;
 $format[1] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
@@ -76,19 +80,19 @@ sub parse_srt {
 	my $n = 0;
 	my $switch = 0;
 	my($this, $next, $end);
-	my(@lines);
+	my(@lines_tmp);
 
-	push(@lines, read_decode_fn($fn));
+	push(@lines_tmp, read_decode_fn($fn));
 
-	say $fn . "\n";
+	push(@lines, $fn, '');
 
-	$end = $#lines - 1;
+	$end = $#lines_tmp - 1;
 
 	until ($i >= $end) {
 		$j = $i + 1;
 
-		$this = $lines[$i];
-		$next = $lines[$j];
+		$this = $lines_tmp[$i];
+		$next = $lines_tmp[$j];
 
 		if (length($this) and $this =~ /$format[0]/) {
 			if (length($next) and $next =~ /$format[2]/) {
@@ -97,8 +101,8 @@ sub parse_srt {
 				$i = $i + 2;
 				$j = $i + 1;
 
-				$this = $lines[$i];
-				$next = $lines[$j];
+				$this = $lines_tmp[$i];
+				$next = $lines_tmp[$j];
 
 				if (length($this)) { push(@tmp, $this); }
 
@@ -106,8 +110,8 @@ sub parse_srt {
 					$i = $i + 1;
 					$j = $i + 1;
 
-					$this = $lines[$i];
-					$next = $lines[$j];
+					$this = $lines_tmp[$i];
+					$next = $lines_tmp[$j];
 
 					if (length($this) and $this =~ /$format[0]/) {
 						if (length($next) and $next =~ /$format[2]/) {
@@ -122,10 +126,10 @@ sub parse_srt {
 				if (scalar(@tmp) > 0) {
 					$n = $n + 1;
 
-					say "";
+					push(@lines, '');
 
 					foreach my $line (@tmp) {
-						say $n . ': ' . $line;
+						push(@lines, $n . ': ' . $line);
 					}
 				}
 
@@ -139,3 +143,7 @@ sub parse_srt {
 }
 
 parse_srt($fn);
+
+foreach my $line (@lines) {
+	say $line
+}

@@ -1,17 +1,18 @@
 #!/usr/bin/perl
 
-# This script merges an arbitrary number of SRT subtitle files to 1
-# file, and adjusts the timings. This is useful when a movie that's
-# split accross multiple discs has been merged to 1 file, and the
-# subtitles also need to be merged. Or just merging SRT subtitle files
-# in general.
+# This script will round all the centiseconds in an SRT subtitle file.
+# Every start time and end time of a subtitle will now end in ,?00
 
-# The charset of the input files will be decoded and then encoded to
-# UTF-8 in the output file.
+# Example: 00:20:47,500 --> 00:20:52,600
+# Instead of: 00:20:47,457 --> 00:20:52,611
 
-# The output file will probably still need to be edited in a subtitle
-# editor to be properly synced to the movie file, but at least most of
-# the work will already be done.
+# This makes it a lot easier to edit the subtitle in for example Gnome
+# Subtitles, if needed. Even if you're not going to edit the subtitle
+# afterwards, it just looks better using whole centiseconds. The output
+# filename is the same as the input filename, only a random number is
+# added to the name. The start and end times of every subtitle line are
+# adjusted so they don't overlap. They will all differ by at least 1
+# centisecond.
 
 use 5.34.0;
 use strict;
@@ -22,16 +23,10 @@ use Encode qw(encode decode find_encoding);
 
 my $script = basename($0);
 
-my($dn, $of, $delim, $offset, $n);
-my(@files, @lines, @format);
+my($delim);
+my(@files, @format);
 
 my $regex_ext = qr/\.([^.]*)$/;
-
-$offset = 0;
-$n = 0;
-
-$dn = cwd();
-$of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
 if (scalar(@ARGV) == 0) { usage(); }
 
@@ -123,6 +118,19 @@ sub time_convert {
 		$m = $m * 60 * 1000;
 		$s = $s * 1000;
 
+# Saves the last 2 (or 1) digits of $cs in $cs_tmp.
+		my $cs_tmp = $cs;
+		$cs_tmp =~ s/^.*(..)$/$1/;
+		$cs_tmp =~ s/^0//;
+
+		if (! length($cs_tmp)) {
+			$cs_tmp = 0;
+		}
+
+# If $cs_tmp is greater than 50, round it up, and if not, round it down.
+		if ($cs_tmp >= 50) { $cs = ($cs - $cs_tmp) + 100; }
+		else { $cs = $cs - $cs_tmp; }
+
 		$time = $h + $m + $s + $cs;
 
 # If argument is in the centisecond format...
@@ -162,35 +170,20 @@ sub time_convert {
 	return($time);
 }
 
-# The 'time_calc' subroutine adds the total time of the previous SRT
-# subtitle file to the current 'time line'.
+# The'time_calc' subroutine adds the total time of the previous
+# 'time line' to the current 'time line', plus a centisecond if
+# centiseconds are identical with previous 'time line'.
 sub time_calc {
-	my $offset = shift;
 	my $start_time = shift;
 	my $stop_time = shift;
 
-	my($diff);
-	my(@times);
-
-	$start_time = time_convert($start_time);
-	$stop_time = time_convert($stop_time);
-
-	if ($offset > 0 and $start_time < 100) {
-		$diff = 100 - $start_time;
-
-		$start_time = $start_time + $diff;
-		$stop_time = $stop_time + $diff;
+# Until the value of the current 'time_line' is higher than the
+# previous, add 1 centisecond.
+	until ($start_time > $stop_time) {
+		$start_time = $start_time + 100;
 	}
 
-	$start_time = $offset + $start_time;
-	$stop_time = $offset + $stop_time;
-
-	$start_time = time_convert($start_time);
-	$stop_time = time_convert($stop_time);
-
-	push(@times, $start_time, $stop_time);
-
-	return(@times);
+	return($start_time);
 }
 
 # The 'parse_srt' subroutine reads the SRT subtitle file passed to it,
@@ -199,8 +192,9 @@ sub parse_srt {
 	my $fn = shift;
 	my $i = 0;
 	my $j = 0;
+	my $n = 0;
 	my $switch = 0;
-	my($this, $next, $end, $start_time, $stop_time, $time_line);
+	my($this, $next, $end, $start_time, $stop_time, $time_line, $previous);
 	my(@lines, @lines_tmp);
 
 	push(@lines_tmp, read_decode_fn($fn));
@@ -218,12 +212,21 @@ sub parse_srt {
 				$start_time = $1;
 				$stop_time = $2;
 
-				my(@times, @tmp);
+				my(@tmp);
 
-				if ($offset > 0) {
-					push(@times, time_calc($offset, $start_time, $stop_time));
-					$time_line = $times[0] . $delim . $times[1];
-				} else { $time_line = $next; }
+				$start_time = time_convert($start_time);
+				$stop_time = time_convert($stop_time);
+
+				if (length($previous)) {
+					$start_time = time_calc($start_time, $previous);
+				}
+
+				$previous = $stop_time;
+
+				$start_time = time_convert($start_time);
+				$stop_time = time_convert($stop_time);
+
+				$time_line = $start_time . $delim . $stop_time;
 
 				push(@tmp, $time_line);
 
@@ -265,7 +268,6 @@ sub parse_srt {
 					else { push(@lines, ''); }
 				}
 
-				undef(@times);
 				undef(@tmp);
 			}
 		}
@@ -274,17 +276,23 @@ sub parse_srt {
 		else { $switch = 0; }
 	}
 
-	$offset = $offset + time_convert($stop_time);
-
 	return(@lines);
 }
 
 foreach my $fn (@files) {
-	push(@lines, parse_srt($fn));
-}
+	my $of = $fn;
+	$of =~ s/$regex_ext//;
+	$of = $of . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
-open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
-foreach my $line (@lines) {
-	print $srt $line . "\r\n";
+	my(@lines);
+
+	push(@lines, parse_srt($fn));
+
+	open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
+	foreach my $line (@lines) {
+		print $srt $line . "\r\n";
+	}
+	close($srt) or die "Can't close file '$of': $!";
+
+	undef(@lines);
 }
-close($srt) or die "Can't close file '$of': $!";
