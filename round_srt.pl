@@ -170,7 +170,7 @@ sub time_convert {
 	return($time);
 }
 
-# The'time_calc' subroutine adds the total time of the previous
+# The 'time_calc' subroutine adds the total time of the previous
 # 'time line' to the current 'time line', plus a centisecond if
 # centiseconds are identical with previous 'time line'.
 sub time_calc {
