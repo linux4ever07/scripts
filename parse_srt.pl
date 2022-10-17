@@ -28,7 +28,7 @@ if (length($ARGV[0])) {
 
 if (! -f $fn or $ext ne 'srt') { usage(); }
 
-$format[0] = qr/^[0-9]+$/;
+$format[0] = qr/[0-9]+/;
 $format[1] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
 $format[2] = qr/^$format[1] --> $format[1]$/;
 

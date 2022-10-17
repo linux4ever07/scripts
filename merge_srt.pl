@@ -51,7 +51,7 @@ foreach my $arg (@ARGV) {
 
 $delim = ' --> ';
 
-$format[0] = qr/^[0-9]+$/;
+$format[0] = qr/[0-9]+/;
 $format[1] = qr/([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})/;
 $format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
 $format[3] = qr/^($format[2])$delim($format[2])$/;
