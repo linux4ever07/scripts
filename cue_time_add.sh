@@ -7,8 +7,10 @@
 # around an infinite while loop, and only quits once killed or Ctrl+C is
 # pressed.
 
-regex_frames='^[0-9]+$'
-regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
+declare -a format
+
+format[0]='^[0-9]+$'
+format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
 
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
@@ -21,19 +23,20 @@ time_convert () {
 	f=0
 
 # If argument is in the mm:ss:ff format...
-	if [[ $time =~ $regex_time ]]; then
-		mapfile -t time_split < <(tr ':' '\n'  <<<"$time" | sed -E 's/^0//')
+	if [[ $time =~ ${format[1]} ]]; then
+		m="${BASH_REMATCH[1]#0}"
+		s="${BASH_REMATCH[2]#0}"
+		f="${BASH_REMATCH[3]#0}"
 
 # Converting minutes and seconds to frames, and adding all the numbers
 # together.
-		m=$(( ${time_split[0]} * 60 * 75 ))
-		s=$(( ${time_split[1]} * 75 ))
-		f="${time_split[2]}"
+		m=$(( m * 60 * 75 ))
+		s=$(( s * 75 ))
 
 		time=$(( m + s + f ))
 
 # If argument is in the frame format...
-	elif [[ $time =~ $regex_frames ]]; then
+	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
 # While $f (frames) is equal to (or greater than) 75, clear the $f
@@ -69,7 +72,7 @@ while true; do
 # Read input.
 	read in
 
-	if [[ ! $in =~ $regex_time ]]; then
+	if [[ ! $in =~ ${format[1]} ]]; then
 		continue
 	fi
 
