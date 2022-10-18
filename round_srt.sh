@@ -47,7 +47,6 @@ time_convert () {
 	m=0
 	s=0
 	cs=0
-	cs_tmp=0
 
 	regex_last2='^.*(..)$'
 
@@ -67,6 +66,10 @@ time_convert () {
 # Saves the last 2 (or 1) digits of $cs in $cs_tmp.
 		if [[ $cs =~ $regex_last2 ]]; then
 			cs_tmp=$(sed -E 's/^0//' <<<"${BASH_REMATCH[1]}")
+		fi
+
+		if [[ -z $cs_tmp ]]; then
+			cs_tmp=0
 		fi
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
@@ -159,4 +162,4 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	printf '%s\r\n' "${lines[${i}]}"
 done > "$of"
 
-printf '\n%s %s\n' "Wrote file:' "$of"
+printf '\n%s %s\n' 'Wrote file:' "$of"

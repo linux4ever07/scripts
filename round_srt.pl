@@ -99,7 +99,6 @@ sub time_convert {
 	my $m = 0;
 	my $s = 0;
 	my $cs = 0;
-	my $cs_tmp = 0;
 
 	my $regex_last2 = qr/^.*(..)$/;
 
@@ -122,10 +121,14 @@ sub time_convert {
 		$s = $s * 1000;
 
 # Saves the last 2 (or 1) digits of $cs in $cs_tmp.
+		my($cs_tmp);
+
 		if ($cs =~ $regex_last2) {
 			$cs_tmp = $1;
 			$cs_tmp =~ s/^0//;
 		}
+
+		if (! length($cs_tmp)) { $cs_tmp = 0; }
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
 		if ($cs_tmp >= 50) { $cs = ($cs - $cs_tmp) + 100; }
