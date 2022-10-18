@@ -99,6 +99,9 @@ sub time_convert {
 	my $m = 0;
 	my $s = 0;
 	my $cs = 0;
+	my $cs_tmp = 0;
+
+	my $regex_last2 = qr/^.*(..)$/;
 
 # If argument is in the hh:mm:ss format...
 	if ($time =~ /$format[1]/) {
@@ -119,12 +122,9 @@ sub time_convert {
 		$s = $s * 1000;
 
 # Saves the last 2 (or 1) digits of $cs in $cs_tmp.
-		my $cs_tmp = $cs;
-		$cs_tmp =~ s/^.*(..)$/$1/;
-		$cs_tmp =~ s/^0//;
-
-		if (! length($cs_tmp)) {
-			$cs_tmp = 0;
+		if ($cs =~ $regex_last2) {
+			$cs_tmp = $1;
+			$cs_tmp =~ s/^0//;
 		}
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
@@ -295,4 +295,6 @@ foreach my $fn (@files) {
 	close($srt) or die "Can't close file '$of': $!";
 
 	undef(@lines);
+
+	say "\n" . 'Wrote file: ' . $of . "\n";
 }

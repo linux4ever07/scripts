@@ -15,9 +15,10 @@
 # centisecond.
 
 regex_time='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
+regex_time2='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
 regex_cs='^[0-9]+$'
 delim=' --> '
-regex_full="^${regex_time}${delim}${regex_time}$"
+regex_full="^(${regex_time2})${delim}(${regex_time2})$"
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 
 usage () {
@@ -46,15 +47,16 @@ time_convert () {
 	m=0
 	s=0
 	cs=0
+	cs_tmp=0
+
+	regex_last2='^.*(..)$'
 
 # If argument is in the hh:mm:ss format...
 	if [[ $time =~ $regex_time ]]; then
-		mapfile -d' ' -t time_split < <(sed -E "s/${regex_time}/\1 \2 \3 \4/" <<<"$time")
-
-		h=$(sed -E 's/^0//' <<<"${time_split[0]}")
-		m=$(sed -E 's/^0//' <<<"${time_split[1]}")
-		s=$(sed -E 's/^0//' <<<"${time_split[2]}")
-		cs=$(sed -E 's/^0{1,2}//' <<<"${time_split[3]}")
+		h=$(sed -E 's/^0//' <<<"${BASH_REMATCH[1]}")
+		m=$(sed -E 's/^0//' <<<"${BASH_REMATCH[2]}")
+		s=$(sed -E 's/^0//' <<<"${BASH_REMATCH[3]}")
+		cs=$(sed -E 's/^0{1,2}//' <<<"${BASH_REMATCH[4]}")
 
 # Converts all the numbers to centiseconds, because those kind of values
 # will be easier to compare in the 'time_calc' function.
@@ -63,10 +65,8 @@ time_convert () {
 		s=$(( s * 1000 ))
 
 # Saves the last 2 (or 1) digits of $cs in $cs_tmp.
-		cs_tmp=$(sed -E -e 's/^.*(..)$/\1/' -e 's/^0//' <<<"$cs")
-
-		if [[ -z $cs_tmp ]]; then
-			cs_tmp=0
+		if [[ $cs =~ $regex_last2 ]]; then
+			cs_tmp=$(sed -E 's/^0//' <<<"${BASH_REMATCH[1]}")
 		fi
 
 # If $cs_tmp is greater than 50, round it up, and if not, round it down.
@@ -138,10 +138,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	mapfile -d' ' -t duration <<<"${line/${delim}/ }"
-
-	start_time=$(time_convert "${duration[0]}")
-	stop_time=$(time_convert "${duration[1]}")
+	start_time=$(time_convert "${BASH_REMATCH[1]}")
+	stop_time=$(time_convert "${BASH_REMATCH[2]}")
 
 	if [[ -n $previous ]]; then
 		start_time=$(time_calc "$start_time" "$previous")
@@ -152,14 +150,13 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	start_time=$(time_convert "$start_time")
 	stop_time=$(time_convert "$stop_time")
 
-	finished_line="${start_time}${delim}${stop_time}"
-	lines[${i}]="$finished_line"
-
-	printf '%s\n' '***'
-	printf '%s\n' "$finished_line"
+	time_line="${start_time}${delim}${stop_time}"
+	lines[${i}]="$time_line"
 done
 
 # Writes the array to $of (output file).
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	printf '%s\r\n' "${lines[${i}]}"
 done > "$of"
+
+printf '\n%s %s\n' "Wrote file:' "$of"

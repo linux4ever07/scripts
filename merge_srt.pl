@@ -288,3 +288,5 @@ foreach my $line (@lines) {
 	print $srt $line . "\r\n";
 }
 close($srt) or die "Can't close file '$of': $!";
+
+say "\n" . 'Wrote file: ' . $of . "\n";
