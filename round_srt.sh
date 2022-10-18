@@ -14,13 +14,6 @@
 # adjusted so they don't overlap. They will all differ by at least 1
 # centisecond.
 
-regex_time='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
-regex_time2='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
-regex_cs='^[0-9]+$'
-delim=' --> '
-regex_full="^(${regex_time2})${delim}(${regex_time2})$"
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-
 usage () {
 	printf '%s\n' "Usage: $(basename "$0") [srt]"
 	exit
@@ -34,6 +27,17 @@ of="${of}-${session}.srt"
 if [[ ! -f $if ]]; then
 	usage
 fi
+
+declare -a format
+
+delim=' --> '
+
+format[0]='^[0-9]+$'
+format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})'
+format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
+format[3]="^(${format[2]})${delim}(${format[2]})$"
+
+regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
@@ -51,7 +55,7 @@ time_convert () {
 	regex_last2='^.*(..)$'
 
 # If argument is in the hh:mm:ss format...
-	if [[ $time =~ $regex_time ]]; then
+	if [[ $time =~ ${format[1]} ]]; then
 		h=$(sed -E 's/^0//' <<<"${BASH_REMATCH[1]}")
 		m=$(sed -E 's/^0//' <<<"${BASH_REMATCH[2]}")
 		s=$(sed -E 's/^0//' <<<"${BASH_REMATCH[3]}")
@@ -82,7 +86,7 @@ time_convert () {
 		time=$(( h + m + s + cs ))
 
 # If argument is in the centisecond format...
-	elif [[ $time =~ $regex_cs ]]; then
+	elif [[ $time =~ ${format[0]} ]]; then
 		cs="$time"
 
 # While $cs (centiseconds) is equal to (or greater than) 1000, clear the
@@ -137,7 +141,7 @@ time_calc () {
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line=$(sed -E "s/${regex_blank}/\1/" <<<"${lines[${i}]}")
 
-	if [[ ! $line =~ $regex_full ]]; then
+	if [[ ! $line =~ ${format[3]} ]]; then
 		continue
 	fi
 
