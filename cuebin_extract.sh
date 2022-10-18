@@ -134,15 +134,19 @@ cue="$if"
 cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
+declare -a format
+
+format[0]='^[0-9]+$'
+format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
+format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2}'
+format[3]='^(FILE) (.*) (.*)$'
+format[4]='^(TRACK) ([0-9]{2,}) (.*)$'
+format[5]="^(PREGAP) (${format[2]})$"
+format[6]="^(INDEX) ([0-9]{2,}) (${format[2]})$"
+format[7]="^(POSTGAP) (${format[2]})$"
+
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_path='^(.*[\/])'
-regex_file='^(FILE) (.*) (.*)$'
-regex_track='^(TRACK) ([0-9]{2,}) (.*)$'
-regex_frames='^[0-9]+$'
-regex_time='[0-9]{2}:[0-9]{2}:[0-9]{2}'
-regex_pregap="^(PREGAP) (${regex_time})$"
-regex_index="^(INDEX) ([0-9]{2,}) (${regex_time})$"
-regex_postgap="^(POSTGAP) (${regex_time})$"
 
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 regex_iso='\.iso$'
@@ -187,7 +191,7 @@ read_cue () {
 	handle_command () {
 		case "$1" in
 			'file')
-				fn=$(sed -E "s/${regex_file}/\2/" <<<"$line" | tr -d '"')
+				fn=$(sed -E "s/${format[3]}/\2/" <<<"$line" | tr -d '"')
 				fn=$(sed -E "s/${regex_path}//" <<<"$fn")
 
 				fn_found=$(find "$if_dn" -maxdepth 1 -type f -iname "$fn" 2>&- | head -n 1)
@@ -206,7 +210,7 @@ read_cue () {
 
 				files+=("$fn")
 
-				string=$(sed -E "s/${regex_file}/\3/" <<<"$line")
+				string=$(sed -E "s/${format[3]}/\3/" <<<"$line")
 				string="FILE \"${fn}\" ${string}"
 
 				cue_lines[${track_n},'0','file']="$string"
@@ -214,7 +218,7 @@ read_cue () {
 			'track')
 				string="$line"
 
-				track_n=$(sed -E -e "s/${regex_track}/\2/" -e 's/^0//' <<<"$string")
+				track_n=$(sed -E -e "s/${format[4]}/\2/" -e 's/^0//' <<<"$string")
 				cue_lines[${track_n},'1','track']="$string"
 			;;
 			'pregap')
@@ -225,7 +229,7 @@ read_cue () {
 			'index')
 				string="$line"
 
-				index_n=$(sed -E -e "s/${regex_index}/\2/" -e 's/^0//' <<<"$string")
+				index_n=$(sed -E -e "s/${format[6]}/\2/" -e 's/^0//' <<<"$string")
 				cue_lines[${track_n},'3','index',${index_n}]="$string"
 			;;
 			'postgap')
@@ -437,8 +441,8 @@ create_cue () {
 				index_01="${cue_lines[${track_n},3,index,1]}"
 
 				if [[ -n $index_00 && -n $index_01 ]]; then
-					index_00=$(sed -E "s/${regex_index}/\3/" <<<"$index_00")
-					index_01=$(sed -E "s/${regex_index}/\3/" <<<"$index_01")
+					index_00=$(sed -E "s/${format[6]}/\3/" <<<"$index_00")
+					index_01=$(sed -E "s/${format[6]}/\3/" <<<"$index_01")
 
 					index_00_frames=$(time_convert "$index_00")
 					index_01_frames=$(time_convert "$index_01")
@@ -506,19 +510,20 @@ time_convert () {
 	f=0
 
 # If argument is in the mm:ss:ff format...
-	if [[ $time =~ $regex_time ]]; then
-		mapfile -t time_split < <(tr ':' '\n'  <<<"$time" | sed -E 's/^0//')
+	if [[ $time =~ ${format[1]} ]]; then
+		m="${BASH_REMATCH[1]#0}"
+		s="${BASH_REMATCH[2]#0}"
+		f="${BASH_REMATCH[3]#0}"
 
 # Converting minutes and seconds to frames, and adding all the numbers
 # together.
-		m=$(( ${time_split[0]} * 60 * 75 ))
-		s=$(( ${time_split[1]} * 75 ))
-		f="${time_split[2]}"
+		m=$(( m * 60 * 75 ))
+		s=$(( s * 75 ))
 
 		time=$(( m + s + f ))
 
 # If argument is in the frame format...
-	elif [[ $time =~ $regex_frames ]]; then
+	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
 # While $f (frames) is equal to (or greater than) 75, clear the $f
@@ -558,7 +563,7 @@ data_track () {
 		return
 	fi
 
-	time=$(sed -E "s/${regex_index}/\3/" <<<"$string")
+	time=$(sed -E "s/${format[6]}/\3/" <<<"$string")
 	frames=$(time_convert "$time")
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352

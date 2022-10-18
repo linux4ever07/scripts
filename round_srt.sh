@@ -56,10 +56,11 @@ time_convert () {
 
 # If argument is in the hh:mm:ss format...
 	if [[ $time =~ ${format[1]} ]]; then
-		h=$(sed -E 's/^0//' <<<"${BASH_REMATCH[1]}")
-		m=$(sed -E 's/^0//' <<<"${BASH_REMATCH[2]}")
-		s=$(sed -E 's/^0//' <<<"${BASH_REMATCH[3]}")
-		cs=$(sed -E 's/^0{1,2}//' <<<"${BASH_REMATCH[4]}")
+		h="${BASH_REMATCH[1]#0}"
+		m="${BASH_REMATCH[2]#0}"
+		s="${BASH_REMATCH[3]#0}"
+		cs="${BASH_REMATCH[4]#0}"
+		cs="${cs#0}"
 
 # Converts all the numbers to centiseconds, because those kind of values
 # will be easier to compare in the 'time_calc' function.
@@ -69,7 +70,7 @@ time_convert () {
 
 # Saves the last 2 (or 1) digits of $cs in $cs_tmp.
 		if [[ $cs =~ $regex_last2 ]]; then
-			cs_tmp=$(sed -E 's/^0//' <<<"${BASH_REMATCH[1]}")
+			cs_tmp="${BASH_REMATCH[1]#0}"
 		fi
 
 		if [[ -z $cs_tmp ]]; then
