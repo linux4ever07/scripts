@@ -166,4 +166,4 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	printf '%s\r\n' "${lines[${i}]}"
 done > "$of"
 
-printf '\n%s %s\n' 'Wrote file:' "$of"
+printf '\n%s %s\n\n' 'Wrote file:' "$of"
