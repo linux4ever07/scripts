@@ -8,13 +8,17 @@
 
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
-regex_sink='^id ([0-9]+),'
-regex_target='^media\.class = \"Audio/Sink\"'
+cfg_fn="${HOME}/lower_volume_pw.cfg"
+
+regex_id='^id ([0-9]+),'
+regex_sink='^media\.class = \"Audio/Sink\"'
 regex_volume='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
 full_volume='1000000'
 no_volume='0'
 target_volume='0'
 interval='10'
+
+device=0
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -31,16 +35,94 @@ ctrl_c () {
 	exit
 }
 
+# Creates a function called 'get_device', which decides the audio device
+# to use, based on user selection or the existence of a configuration
+# file.
+get_device () {
+	declare -a devices
+
+	regex_cfg_id='^device = ([0-9]+)$'
+	regex_node='^node.description = \"(.*)\"'
+
+	if [[ -f $cfg_fn ]]; then
+		mapfile -t cfg_lines <"$cfg_fn"
+
+		for (( i = 0; i < ${#cfg_lines[@]}; i++ )); do
+			line="${cfg_lines[${i}]}"
+
+			if [[ $line =~ $regex_cfg_id ]]; then
+				device="${BASH_REMATCH[1]}"
+				break
+			fi
+		done
+	fi
+
+	if [[ $device -eq 0 ]]; then
+		mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
+
+		for (( i = 0; i < ${#pw_info[@]}; i++ )); do
+			line_i="${pw_info[${i}]}"
+
+			if [[ $line_i =~ $regex_id ]]; then
+				pw_id="${BASH_REMATCH[1]}"
+
+				n=$(( i + 1 ))
+
+				for (( j = n; j < ${#pw_info[@]}; j++ )); do
+					line_j="${pw_info[${j}]}"
+
+					if [[ $line_j =~ $regex_node ]]; then
+						device_name="${BASH_REMATCH[1]}"
+					fi
+
+					if [[ $line_j =~ $regex_id ]]; then
+						break
+					elif [[ $line_j =~ $regex_sink ]]; then
+						if [[ -n $device_name ]]; then
+							devices+=("$device_name")
+						fi
+
+						break
+					fi
+				done
+			fi
+		done
+
+		if [[ ${#devices[@]} -eq 0 ]]; then
+			return
+		fi
+
+		printf '\n%s\n\n' 'Select your audio device:'
+
+		select device_name in "${devices[@]}"; do
+			n=$(( REPLY - 1 ))
+
+			if [[ -n ${devices[${n}]} ]]; then
+				device="$REPLY"
+				break
+			fi
+		done
+
+		if [[ $device -ne 0 ]]; then
+			line="device = $device"
+			printf '%s\n\n' "$line" > "$cfg_fn"
+
+			printf '\n%s: %s\n\n' 'Wrote selected audio device to' "$cfg_fn"
+		fi
+	fi
+}
+
 # Creates a function called 'get_volume', which gets the current volume.
 get_volume () {
-	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
-
+	device_tmp=0
 	switch='0'
+
+	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
 
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
 		line_i="${pw_info[${i}]}"
 
-		if [[ $line_i =~ $regex_sink ]]; then
+		if [[ $line_i =~ $regex_id ]]; then
 			pw_id="${BASH_REMATCH[1]}"
 
 			n=$(( i + 1 ))
@@ -48,10 +130,15 @@ get_volume () {
 			for (( j = n; j < ${#pw_info[@]}; j++ )); do
 				line_j="${pw_info[${j}]}"
 
-				if [[ $line_j =~ $regex_sink ]]; then
+				if [[ $line_j =~ $regex_id ]]; then
 					break
-				elif [[ $line_j =~ $regex_target ]]; then
-					switch='1'
+				elif [[ $line_j =~ $regex_sink ]]; then
+					device_tmp=$(( device_tmp + 1 ))
+
+					if [[ $device_tmp -eq $device ]]; then
+						switch='1'
+					fi
+
 					break
 				fi
 			done
@@ -88,6 +175,7 @@ get_volume () {
 
 	printf '%s' "${volume} ${pw_id}"
 }
+
 
 # Creates a function called 'set_volume', which sets the volume.
 set_volume () {
@@ -197,6 +285,9 @@ spin () {
 		done
 	done
 }
+
+# Gets the audio device.
+get_device
 
 # Gets the volume and id.
 mapfile -d' ' -t volume_out < <(get_volume)
