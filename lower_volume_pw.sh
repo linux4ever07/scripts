@@ -58,8 +58,8 @@ get_node_id () {
 		if [[ $line =~ $regex_id ]]; then
 			pw_id="${BASH_REMATCH[1]}"
 
-			pw_info_hash[${n},id]="$pw_id"
 			n=$(( n + 1 ))
+			pw_info_hash[${n},id]="$pw_id"
 		fi
 
 		if [[ $line =~ $regex_node ]]; then
@@ -77,7 +77,7 @@ get_node_id () {
 		unset -v pw_id pw_node pw_class
 	done
 
-	for (( i = 0; i < n; i++ )); do
+	for (( i = 1; i < n; i++ )); do
 		if [[ ${pw_info_hash[${i},class]} =~ $regex_sink ]]; then
 			nodes+=("${pw_info_hash[${i},node]}")
 			ids+=("${pw_info_hash[${i},id]}")
