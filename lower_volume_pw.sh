@@ -13,14 +13,17 @@
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
 regex_id='^id ([0-9]+),'
-regex_sink='^media\.class = \"Audio/Sink\"'
+regex_node='^node.description = \"(.*)\"'
+regex_class='^media\.class = \"(.*)\"'
+regex_sink='Audio/Sink'
 regex_volume='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
 full_volume='1000000'
 no_volume='0'
 target_volume='0'
 interval='10'
 
-device=0
+declare -a node_id
+declare -A pw_info_hash
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -37,124 +40,102 @@ ctrl_c () {
 	exit
 }
 
-# Creates a function called 'get_device', which decides the audio device
-# to use, based on user selection or the existence of a configuration
-# file.
-get_device () {
-	declare -a devices
+# Creates a function called 'get_node_id', which decides the audio
+# output to use, based on user selection or the existence of a
+# configuration file.
+get_node_id () {
+	declare -a nodes ids
 
-	regex_cfg_id='^device = ([0-9]+)$'
-	regex_node='^node.description = \"(.*)\"'
+	regex_cfg_node='^node = ([0-9]+)$'
+
+	n=0
+
+	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
+
+	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
+		line="${pw_info[${i}]}"
+		
+		if [[ $line =~ $regex_id ]]; then
+			pw_id="${BASH_REMATCH[1]}"
+
+			n=$(( n + 1 ))
+
+			pw_info_hash[${n},id]="$pw_id"
+		fi
+
+		if [[ $line =~ $regex_node ]]; then
+			pw_node="${BASH_REMATCH[1]}"
+
+			pw_info_hash[${n},node]="$pw_node"
+		fi
+
+		if [[ $line =~ $regex_class ]]; then
+			pw_class="${BASH_REMATCH[1]}"
+
+			pw_info_hash[${n},class]="$pw_class"
+		fi
+
+		unset -v pw_id pw_node pw_class
+	done
+
+	for (( i = 0; i < n; i++ )); do
+		if [[ ${pw_info_hash[${i},class]} =~ $regex_sink ]]; then
+			nodes+=("${pw_info_hash[${i},node]}")
+			ids+=("${pw_info_hash[${i},id]}")
+		fi
+	done
+
+	unset -v n
 
 	if [[ -f $cfg_fn ]]; then
-		mapfile -t cfg_lines <"$cfg_fn"
+		mapfile -t lines <"$cfg_fn"
 
-		for (( i = 0; i < ${#cfg_lines[@]}; i++ )); do
-			line="${cfg_lines[${i}]}"
+		for (( i = 0; i < ${#lines[@]}; i++ )); do
+			line="${lines[${i}]}"
 
-			if [[ $line =~ $regex_cfg_id ]]; then
-				device="${BASH_REMATCH[1]}"
+			if [[ $line =~ $regex_cfg_node ]]; then
+				pw_node="${BASH_REMATCH[1]}"
+				n=$(( pw_node - 1 ))
+
+				if [[ -n ${ids[${n}]} ]]; then
+					pw_id="${ids[${n}]}"
+				fi
+
 				break
 			fi
 		done
 	fi
 
-	if [[ $device -eq 0 ]]; then
-		mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
+	if [[ -z $pw_node ]]; then
+		printf '\n%s\n\n' 'Select your audio output:'
 
-		for (( i = 0; i < ${#pw_info[@]}; i++ )); do
-			line_i="${pw_info[${i}]}"
-
-			if [[ $line_i =~ $regex_id ]]; then
-				pw_id="${BASH_REMATCH[1]}"
-
-				n=$(( i + 1 ))
-
-				for (( j = n; j < ${#pw_info[@]}; j++ )); do
-					line_j="${pw_info[${j}]}"
-
-					if [[ $line_j =~ $regex_node ]]; then
-						device_name="${BASH_REMATCH[1]}"
-					fi
-
-					if [[ $line_j =~ $regex_id ]]; then
-						break
-					elif [[ $line_j =~ $regex_sink ]]; then
-						if [[ -n $device_name ]]; then
-							devices+=("$device_name")
-						fi
-
-						break
-					fi
-				done
-			fi
-		done
-
-		if [[ ${#devices[@]} -eq 0 ]]; then
-			return
-		fi
-
-		printf '\n%s\n\n' 'Select your audio device:'
-
-		select device_name in "${devices[@]}"; do
+		select node in "${nodes[@]}"; do
 			n=$(( REPLY - 1 ))
 
-			if [[ -n ${devices[${n}]} ]]; then
-				device="$REPLY"
+			if [[ -n ${nodes[${n}]} ]]; then
+				pw_node="$REPLY"
+				pw_id="${ids[${n}]}"
 				break
 			fi
 		done
 
-		if [[ $device -ne 0 ]]; then
-			line="device = ${device}"
+		if [[ -n $pw_node ]]; then
+			line="node = ${pw_node}"
 			printf '%s\n\n' "$line" > "$cfg_fn"
 
-			printf '\n%s: %s\n\n' 'Wrote selected audio device to' "$cfg_fn"
+			printf '\n%s: %s\n\n' 'Wrote selected audio output to' "$cfg_fn"
 		fi
+	fi
+
+	if [[ -z $pw_node || -z $pw_id ]]; then
+		exit
+	else
+		node_id=("$pw_node" "$pw_id")
 	fi
 }
 
 # Creates a function called 'get_volume', which gets the current volume.
 get_volume () {
-	device_tmp=0
-	switch='0'
-
-	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
-
-	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
-		line_i="${pw_info[${i}]}"
-
-		if [[ $line_i =~ $regex_id ]]; then
-			pw_id="${BASH_REMATCH[1]}"
-
-			n=$(( i + 1 ))
-
-			for (( j = n; j < ${#pw_info[@]}; j++ )); do
-				line_j="${pw_info[${j}]}"
-
-				if [[ $line_j =~ $regex_id ]]; then
-					break
-				elif [[ $line_j =~ $regex_sink ]]; then
-					device_tmp=$(( device_tmp + 1 ))
-
-					if [[ $device_tmp -eq $device ]]; then
-						switch='1'
-					fi
-
-					break
-				fi
-			done
-		fi
-
-		if [[ $switch -eq 1 ]]; then
-			break
-		fi
-	done
-
-	if [[ -z $pw_id ]]; then
-		exit
-	fi
-
 	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
 
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
@@ -175,9 +156,8 @@ get_volume () {
 		exit
 	fi
 
-	printf '%s' "${volume} ${pw_id}"
+	printf '%s' "$volume"
 }
-
 
 # Creates a function called 'set_volume', which sets the volume.
 set_volume () {
@@ -288,15 +268,14 @@ spin () {
 	done
 }
 
-# Gets the audio device.
-get_device
+# Gets the PipeWire node and id.
+get_node_id
+pw_node="${node_id[0]}"
+pw_id="${node_id[1]}"
 
-# Gets the volume and id.
-mapfile -d' ' -t volume_out < <(get_volume)
-
-volume_og="${volume_out[0]}"
-pw_id="${volume_out[1]}"
-volume="$volume_og"
+# Gets the volume.
+volume=$(get_volume)
+volume_og="$volume"
 
 # We (re)set the original volume as full volume, cause otherwise the
 # first lowering of volume is going to be much lower to the ears than
