@@ -1,8 +1,10 @@
 #!/bin/bash
+
 # This script slowly and gradually lowers the volume until it's equal to
 # 0%. Although, any target volume can be set using the $target_volume
 # variable. The script takes 1 hour (360 * 10 seconds) all in all, to
 # completely lower the volume to the target volume.
+
 # I'm using this script to automatically lower the volume when I fall
 # asleep to watching a movie or YouTube.
 
