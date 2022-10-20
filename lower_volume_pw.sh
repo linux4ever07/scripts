@@ -13,7 +13,7 @@
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
 regex_id='^id ([0-9]+),'
-regex_node='^node.description = \"(.*)\"'
+regex_node='^node\.description = \"(.*)\"'
 regex_class='^media\.class = \"(.*)\"'
 regex_sink='^Audio/Sink$'
 regex_volume='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
