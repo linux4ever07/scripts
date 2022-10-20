@@ -58,9 +58,8 @@ get_node_id () {
 		if [[ $line =~ $regex_id ]]; then
 			pw_id="${BASH_REMATCH[1]}"
 
-			n=$(( n + 1 ))
-
 			pw_info_hash[${n},id]="$pw_id"
+			n=$(( n + 1 ))
 		fi
 
 		if [[ $line =~ $regex_node ]]; then
@@ -121,8 +120,8 @@ get_node_id () {
 
 		if [[ -n $pw_node ]]; then
 			line="node = ${pw_node}"
-			printf '%s\n\n' "$line" > "$cfg_fn"
 
+			printf '%s\n\n' "$line" > "$cfg_fn"
 			printf '\n%s: %s\n\n' 'Wrote selected audio output to' "$cfg_fn"
 		fi
 	fi
