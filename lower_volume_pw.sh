@@ -104,7 +104,7 @@ get_device () {
 		done
 
 		if [[ $device -ne 0 ]]; then
-			line="device = $device"
+			line="device = ${device}"
 			printf '%s\n\n' "$line" > "$cfg_fn"
 
 			printf '\n%s: %s\n\n' 'Wrote selected audio device to' "$cfg_fn"
