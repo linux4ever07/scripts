@@ -23,7 +23,6 @@ target_volume='0'
 interval='10'
 
 declare -a node_id
-declare -A pw_info_hash
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -44,6 +43,7 @@ ctrl_c () {
 # output to use, based on user selection or the existence of a
 # configuration file.
 get_node_id () {
+	declare -A pw_info_hash
 	declare -a nodes ids
 
 	regex_cfg_node='^node = ([0-9]+)$'
