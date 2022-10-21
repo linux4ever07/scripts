@@ -143,7 +143,7 @@ get_volume () {
 		if [[ $line =~ $regex_volume ]]; then
 			volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}" | sed -E 's/^0+//')
 
-			if [[ ${#volume} -eq 0 ]]; then
+			if [[ -z $volume ]]; then
 				volume='0'
 			fi
 
