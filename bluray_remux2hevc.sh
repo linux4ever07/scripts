@@ -1027,7 +1027,9 @@ get_name () {
 # input file is an unfinished download, and waits for the file to fully
 # download before processing it.
 is_torrent () {
-	if [[ $if =~ .part$ ]]; then
+	part_regex='\.part$'
+
+	if [[ $if =~ $part_regex ]]; then
 		if_tmp="$if"
 	else
 		if_tmp="${if}.part"
