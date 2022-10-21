@@ -170,7 +170,7 @@ set_volume () {
 		volume_2="${BASH_REMATCH[2]}"
 		volume_2=$(sed -E 's/^0+//' <<<"$volume_2")
 
-		if [[ ${#volume_2} -eq 0 ]]; then
+		if [[ -z $volume_2 ]]; then
 			volume_2='0'
 		fi
 	else
