@@ -493,6 +493,7 @@ dts_extract_remux () {
 	get_bitrate () {
 		first_line_regex='^ +Metadata:'
 		last_line_regex='^ +Stream #'
+		last3_regex='^.*(...)$'
 
 		compare_bitrate () {
 # If $high_bps (the maximum DTS bitrate) is greater than $bps_if,
@@ -580,9 +581,10 @@ dts_extract_remux () {
 					bps_if="${BASH_REMATCH[1]}"
 
 # If input bitrate consists of at least 3 digits...
-					if [[ ${#bps_if} -ge 3 ]]; then
+					if [[ $bps_if =~ $last3_regex ]]; then
 # Gets the last 3 digits of the input bitrate.
-						bps_last=$(sed -E 's/^0{1,2}//' <<<"${bps_if: -3}")
+						bps_last="${BASH_REMATCH[1]#0}"
+						bps_last="${bps_last#0}"
 						bps_if=$(( bps_if - bps_last ))
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
