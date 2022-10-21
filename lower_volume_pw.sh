@@ -167,8 +167,7 @@ set_volume () {
 
 	if [[ $volume_tmp =~ $regex ]]; then
 		volume_1="${BASH_REMATCH[1]}"
-		volume_2="${BASH_REMATCH[2]}"
-		volume_2=$(sed -E 's/^0+//' <<<"$volume_2")
+		volume_2=$(sed -E 's/^0+//' <<<"${BASH_REMATCH[2]}")
 
 		if [[ -z $volume_2 ]]; then
 			volume_2='0'
