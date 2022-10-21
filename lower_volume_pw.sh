@@ -163,9 +163,11 @@ set_volume () {
 	volume_tmp="$1"
 	mute_tmp="$2"
 
-	if [[ ${#volume_tmp} -gt 6 ]]; then
-		volume_1="${volume_tmp%??????}"
-		volume_2="${volume_tmp#${volume_1}}"
+	regex='^([0-9]+)([0-9]{6})$'
+
+	if [[ $volume_tmp =~ $regex ]]; then
+		volume_1="${BASH_REMATCH[1]}"
+		volume_2="${BASH_REMATCH[2]}"
 		volume_2=$(sed -E 's/^0+//' <<<"$volume_2")
 
 		if [[ ${#volume_2} -eq 0 ]]; then
