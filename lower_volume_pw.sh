@@ -290,7 +290,7 @@ if [[ $volume -gt $target_volume ]]; then
 	diff=$(( volume - target_volume ))
 
 # If the difference is greater than 360 (the unit used in this script),
-# then run the get_count function, otherwise just decrease by 0 until
+# then run the 'get_count' function, otherwise just decrease by 0 until
 # the very last second, and then decrease volume by the full difference.
 # There's no need to lower the volume gradually, if the difference is
 # very small.
