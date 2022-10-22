@@ -295,9 +295,9 @@ if [[ $volume -gt $target_volume ]]; then
 # There's no need to lower the volume gradually, if the difference is
 # very small.
 	if [[ $diff -gt 360 ]]; then
-		mapfile -t count < <(get_count "${diff}")
+		mapfile -t count < <(get_count "$diff")
 	else
-		count=('0' '0' "${diff}")
+		count=('0' '0' "$diff")
 	fi
 
 # Starts the spinner animation...
