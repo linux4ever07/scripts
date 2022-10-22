@@ -523,7 +523,7 @@ dts_extract_remux () {
 			map_tmp=$(sed -E "s/${regex_audio}/\1/" <<<"${!audio_track_ref}")
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
-			eval "${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""$flac_tmp"\"
+			eval "${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""${flac_tmp}"\"
 			eval "${cmd[4]}" -d \""$flac_tmp"\"
 			rm "$flac_tmp"
 
@@ -940,8 +940,8 @@ is_handbrake () {
 			pid=$(sed -E "s/${pid_regex}/\1/" <<<"${hb_pids[${i}]}")
 			comm=$(sed -E "s/${comm_regex}/\1/" <<<"${hb_pids[${i}]}")
 
-			printf '%s\n' "PID: ${pid}"
-			printf '%s\n\n' "COMMAND: ${comm}"
+			printf '%s: %s\n' 'PID' "$pid"
+			printf '%s: %s\n\n' 'COMMAND' "$comm"
 		done
 	fi
 
@@ -1037,7 +1037,7 @@ is_torrent () {
 
 	if [[ -f $if_tmp ]]; then
 		printf '\n%s\n' 'Waiting for this download to finish:'
-		printf '%s\n\n' "${if_tmp}"
+		printf '%s\n\n' "$if_tmp"
 
 		while [[ -f $if_tmp ]]; do
 			sleep 5
