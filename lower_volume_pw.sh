@@ -48,7 +48,7 @@ get_node_id () {
 
 	regex_cfg_node='^node = ([0-9]+)$'
 
-	n=0
+	n='0'
 
 	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
 
