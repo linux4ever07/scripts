@@ -262,7 +262,7 @@ spin () {
 
 	while true; do
 		for s in "${spinner[@]}"; do
-			printf '\r%s' "Wait${s}"
+			printf '\r%s%s' 'Wait' "$s"
 			sleep 0.5
 		done
 	done
