@@ -235,10 +235,10 @@ get_count () {
 	diff=$(( volume_tmp - target_volume ))
 	unit='354'
 
-# If the difference is greater than 360 (the unit used in this script),
-# do some calculations, otherwise just decrease by 0 until the very last
-# second, and then decrease volume by the full difference. There's no
-# need to lower the volume gradually, if the difference is very small.
+# If the difference is greater than (or equal to) 354, do some
+# calculations. Otherwise just decrease by 0 until the very last second,
+# and then decrease volume by the full difference. There's no need to
+# lower the volume gradually, if the difference is very small.
 	if [[ $diff -ge $unit ]]; then
 		count[0]=$(( diff / unit ))
 		rem=$(( diff % unit ))
