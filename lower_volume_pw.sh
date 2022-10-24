@@ -252,7 +252,7 @@ get_count () {
 			count[2]=$(( rem % 5 ))
 		fi
 	else
-		count[3]="$diff"
+		count[2]="$diff"
 	fi
 
 	printf '%s\n' "${count[@]}"
