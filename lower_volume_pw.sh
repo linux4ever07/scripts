@@ -229,7 +229,7 @@ sleep_low () {
 # remaining value.
 get_count () {
 	volume_tmp="$1"
-	declare -a count
+	count=('0' '0' '0')
 
 # Calculates the difference between current volume and target volume.
 	diff=$(( volume_tmp - target_volume ))
@@ -250,12 +250,9 @@ get_count () {
 		if [[ $rem -gt 0 ]]; then
 			count[1]=$(( rem / 5 ))
 			count[2]=$(( rem % 5 ))
-		else
-			count[1]='0'
-			count[2]='0'
 		fi
 	else
-		count=('0' '0' "$diff")
+		count[3]="$diff"
 	fi
 
 	printf '%s\n' "${count[@]}"
