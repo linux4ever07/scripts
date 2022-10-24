@@ -239,7 +239,7 @@ get_count () {
 # do some calculations, otherwise just decrease by 0 until the very last
 # second, and then decrease volume by the full difference. There's no
 # need to lower the volume gradually, if the difference is very small.
-	if [[ $diff -gt 360 ]]; then
+	if [[ $diff -ge $unit ]]; then
 		count[0]=$(( diff / unit ))
 		rem=$(( diff % unit ))
 
