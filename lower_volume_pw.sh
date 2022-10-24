@@ -238,10 +238,7 @@ get_count () {
 	if [[ $test -lt $diff ]]; then
 		tmp=$(( diff - test ))
 		count[1]=$(( tmp / 5 ))
-
-		for n in {1..5}; do
-			tmp=$(( tmp - ${count[1]} ))
-		done
+		tmp=$(( tmp - (${count[1]} * 5) ))
 
 # If there's still a remaining value, then set ${count[2]} to that
 # value. This will be used for the last instance of running the 'pw-cli'
