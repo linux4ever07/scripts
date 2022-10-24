@@ -163,9 +163,9 @@ set_volume () {
 	volume_tmp="$1"
 	mute_tmp="$2"
 
-	regex='^([0-9]+)([0-9]{6})$'
+	regex_split='^([0-9]+)([0-9]{6})$'
 
-	if [[ $volume_tmp =~ $regex ]]; then
+	if [[ $volume_tmp =~ $regex_split ]]; then
 		volume_1="${BASH_REMATCH[1]}"
 		volume_2=$(sed -E 's/^0+//' <<<"${BASH_REMATCH[2]}")
 
@@ -231,19 +231,17 @@ get_count () {
 	diff="$1"
 	unit='354'
 	count[0]=$(( diff / unit ))
-	test=$(( unit * ${count[0]} ))
+	rem=$(( diff % unit ))
 
 # If there's a remaining value, then divide that value by 5, which will
 # be for 354-359.
-	if [[ $test -lt $diff ]]; then
-		tmp=$(( diff - test ))
-		count[1]=$(( tmp / 5 ))
-		tmp=$(( tmp % 5 ))
+	if [[ $rem -gt 0 ]]; then
+		count[1]=$(( rem / 5 ))
 
 # If there's still a remaining value, then set ${count[2]} to that
 # value. This will be used for the last instance of running the 'pw-cli'
 # command (and lowering the volume).
-		count[2]="$tmp"
+		count[2]=$(( rem % 5 ))
 	else
 		count[1]='0'
 		count[2]='0'
