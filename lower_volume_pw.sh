@@ -228,23 +228,34 @@ sleep_low () {
 # because then it'll be exactly 1 minute left to take care of potential
 # remaining value.
 get_count () {
-	diff="$1"
+	volume_tmp="$1"
+	declare -a count
+
+# Calculates the difference between current volume and target volume.
+	diff=$(( volume_tmp - target_volume ))
 	unit='354'
-	count[0]=$(( diff / unit ))
-	rem=$(( diff % unit ))
+
+# If the difference is greater than 360 (the unit used in this script),
+# do some calculations, otherwise just decrease by 0 until the very last
+# second, and then decrease volume by the full difference. There's no
+# need to lower the volume gradually, if the difference is very small.
+	if [[ $diff -gt 360 ]]; then
+		count[0]=$(( diff / unit ))
+		rem=$(( diff % unit ))
 
 # If there's a remaining value, then divide that value by 5, which will
-# be for 354-359.
-	if [[ $rem -gt 0 ]]; then
-		count[1]=$(( rem / 5 ))
-
-# If there's still a remaining value, then set ${count[2]} to that
-# value. This will be used for the last instance of running the 'pw-cli'
-# command (and lowering the volume).
-		count[2]=$(( rem % 5 ))
+# be for 354-359. If there's still a remaining value after that, then
+# set ${count[2]} to that value. This will be used for the last instance
+# of lowering the volume.
+		if [[ $rem -gt 0 ]]; then
+			count[1]=$(( rem / 5 ))
+			count[2]=$(( rem % 5 ))
+		else
+			count[1]='0'
+			count[2]='0'
+		fi
 	else
-		count[1]='0'
-		count[2]='0'
+		count=('0' '0' "$diff")
 	fi
 
 	printf '%s\n' "${count[@]}"
@@ -281,19 +292,7 @@ volume=$(reset_volume)
 
 # If volume is greater than target volume, then...
 if [[ $volume -gt $target_volume ]]; then
-# Calculates the difference between current volume and target volume.
-	diff=$(( volume - target_volume ))
-
-# If the difference is greater than 360 (the unit used in this script),
-# then run the 'get_count' function, otherwise just decrease by 0 until
-# the very last second, and then decrease volume by the full difference.
-# There's no need to lower the volume gradually, if the difference is
-# very small.
-	if [[ $diff -gt 360 ]]; then
-		mapfile -t count < <(get_count "$diff")
-	else
-		count=('0' '0' "$diff")
-	fi
+	mapfile -t count < <(get_count "$volume")
 
 # Starts the spinner animation...
 	spin &
