@@ -229,11 +229,12 @@ sleep_low () {
 # remaining value.
 get_count () {
 	volume_tmp="$1"
+
+	unit='354'
 	count=('0' '0' '0')
 
 # Calculates the difference between current volume and target volume.
 	diff=$(( volume_tmp - target_volume ))
-	unit='354'
 
 # If the difference is greater than (or equal to) 354, do some
 # calculations. Otherwise just decrease by 0 until the very last second,
