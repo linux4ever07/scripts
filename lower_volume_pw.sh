@@ -47,9 +47,11 @@ get_id () {
 	regex_cfg_node='^node = (.*)$'
 
 	match_node () {
-		for node in "${!nodes[@]}"; do
-			if [[ $node == "$pw_node" ]]; then
-				pw_id="${nodes[${node}]}"
+		for pw_id_tmp in "${!nodes[@]}"; do
+			pw_node_tmp="${nodes[${pw_id_tmp}]}"
+
+			if [[ $pw_node_tmp == "$pw_node" ]]; then
+				pw_id="$pw_id_tmp"
 
 				break
 			fi
@@ -78,10 +80,10 @@ get_id () {
 		fi
 	done
 
-# Save the node names and ids of every node that's an audio sink.
+# Save the ids and node names of every node that's an audio sink.
 	for (( i = 1; i < n; i++ )); do
 		if [[ ${pw_parsed[${i},class]} =~ $regex_sink ]]; then
-			nodes["${pw_parsed[${i},node]}"]="${pw_parsed[${i},id]}"
+			nodes["${pw_parsed[${i},id]}"]="${pw_parsed[${i},node]}"
 		fi
 	done
 
@@ -117,7 +119,7 @@ get_id () {
 	if [[ -z $pw_node ]]; then
 		printf '\n%s\n\n' 'Select your audio output:'
 
-		select pw_node in "${!nodes[@]}"; do
+		select pw_node in "${nodes[@]}"; do
 			match_node
 
 			break
