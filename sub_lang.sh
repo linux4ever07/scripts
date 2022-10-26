@@ -12,8 +12,8 @@ if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
 regex_sub='^.*Track type: subtitles'
-regex_lang='^.*Language( \(.*\)){0,1}: '
-regex_name='^.*Name: '
+regex_lang='^.*Language( \(.*\)){0,1}: (.*)$'
+regex_name='^.*Name: (.*)$'
 
 usage () {
 	printf '%s\n\n' "Usage: $(basename "$0") [mkv]"
@@ -40,12 +40,12 @@ for (( i = 0; i < ${#mkv_info_list[@]}; i++ )); do
 
 	if [[ $switch -eq 1 ]]; then
 		if [[ $line =~ $regex_lang ]]; then
-			lang_list+=( "$(sed -E "s/${regex_lang}//" <<<"$line")" )
+			lang_list+=("${BASH_REMATCH[2]}")
 			switch=0
 		fi
 
 		if [[ $line =~ $regex_name ]]; then
-			lang_list+=( "$(sed -E "s/${regex_name}//" <<<"$line")" )
+			lang_list+=("${BASH_REMATCH[1]}")
 			switch=0
 		fi
 	fi

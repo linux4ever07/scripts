@@ -242,15 +242,15 @@ get_count () {
 # lower the volume gradually, if the difference is very small.
 	if [[ $diff -ge $unit ]]; then
 		count[0]=$(( diff / unit ))
-		rem=$(( diff % unit ))
+		count[1]=$(( diff % unit ))
 
 # If there's a remaining value, then divide that value by 5, which will
 # be for 354-359. If there's still a remaining value after that, then
 # set ${count[2]} to that value. This will be used for the last instance
 # of lowering the volume.
-		if [[ $rem -gt 0 ]]; then
-			count[1]=$(( rem / 5 ))
-			count[2]=$(( rem % 5 ))
+		if [[ ${count[1]} -ge 5 ]]; then
+			count[1]=$(( ${count[1]} / 5 ))
+			count[2]=$(( ${count[1]} % 5 ))
 		fi
 	else
 		count[2]="$diff"
