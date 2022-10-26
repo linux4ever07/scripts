@@ -22,7 +22,7 @@ no_volume='0'
 target_volume='0'
 interval='10'
 
-declare -a node_id
+declare pw_id
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -30,7 +30,7 @@ trap ctrl_c INT
 # If a SIGINT signal is captured, then put the volume back to where it
 # was before running this script.
 ctrl_c () {
-	if [[ $pw_id ]]; then
+	if [[ -n $pw_id ]]; then
 		set_volume "$volume_og" 'false'
 	fi
 
@@ -39,53 +39,55 @@ ctrl_c () {
 	exit
 }
 
-# Creates a function called 'get_node_id', which decides the audio
-# output to use, based on user selection or the existence of a
-# configuration file.
-get_node_id () {
-	declare -A pw_info_hash
-	declare -a nodes ids
+# Creates a function called 'get_id', which decides the audio output to
+# use, based on user selection or the existence of a configuration file.
+get_id () {
+	declare -A pw_parsed nodes
 
-	regex_cfg_node='^node = ([0-9]+)$'
+	regex_cfg_node='^node = (.*)$'
+
+	match_node () {
+		for node in "${!nodes[@]}"; do
+			if [[ $node == "$pw_node" ]]; then
+				pw_id="${nodes[${node}]}"
+
+				break
+			fi
+		done
+	}
 
 	n='0'
 
 	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
 
+# Parse the output from 'pw-cli'...
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
 		line="${pw_info[${i}]}"
 		
 		if [[ $line =~ $regex_id ]]; then
-			pw_id="${BASH_REMATCH[1]}"
-
 			n=$(( n + 1 ))
-			pw_info_hash[${n},id]="$pw_id"
+			pw_parsed[${n},id]="${BASH_REMATCH[1]}"
 		fi
 
 		if [[ $line =~ $regex_node ]]; then
-			pw_node="${BASH_REMATCH[1]}"
-
-			pw_info_hash[${n},node]="$pw_node"
+			pw_parsed[${n},node]="${BASH_REMATCH[1]}"
 		fi
 
 		if [[ $line =~ $regex_class ]]; then
-			pw_class="${BASH_REMATCH[1]}"
-
-			pw_info_hash[${n},class]="$pw_class"
+			pw_parsed[${n},class]="${BASH_REMATCH[1]}"
 		fi
-
-		unset -v pw_id pw_node pw_class
 	done
 
+# Save the node names and ids of every node that's an audio sink.
 	for (( i = 1; i < n; i++ )); do
-		if [[ ${pw_info_hash[${i},class]} =~ $regex_sink ]]; then
-			nodes+=("${pw_info_hash[${i},node]}")
-			ids+=("${pw_info_hash[${i},id]}")
+		if [[ ${pw_parsed[${i},class]} =~ $regex_sink ]]; then
+			nodes["${pw_parsed[${i},node]}"]="${pw_parsed[${i},id]}"
 		fi
 	done
 
 	unset -v n
 
+# If the configuration file exists, get the node name from that.
 	if [[ -f $cfg_fn ]]; then
 		mapfile -t lines <"$cfg_fn"
 
@@ -94,28 +96,31 @@ get_node_id () {
 
 			if [[ $line =~ $regex_cfg_node ]]; then
 				pw_node="${BASH_REMATCH[1]}"
-				n=$(( pw_node - 1 ))
-
-				if [[ -n ${ids[${n}]} ]]; then
-					pw_id="${ids[${n}]}"
-				fi
 
 				break
 			fi
 		done
+
+		if [[ -n $pw_node ]]; then
+			match_node
+		fi
+
+# If the node name found in configuration file doesn't exist, clear
+# the $pw_node variable so a new one can be created.
+		if [[ -z $pw_id ]]; then
+			unset -v pw_node
+		fi
 	fi
 
+# If there's no configuration file, then ask the user to select audio
+# output. That will get written to the configuration file.
 	if [[ -z $pw_node ]]; then
 		printf '\n%s\n\n' 'Select your audio output:'
 
-		select node in "${nodes[@]}"; do
-			n=$(( REPLY - 1 ))
+		select pw_node in "${!nodes[@]}"; do
+			match_node
 
-			if [[ -n ${nodes[${n}]} ]]; then
-				pw_node="$REPLY"
-				pw_id="${ids[${n}]}"
-				break
-			fi
+			break
 		done
 
 		if [[ -n $pw_node ]]; then
@@ -126,10 +131,8 @@ get_node_id () {
 		fi
 	fi
 
-	if [[ -z $pw_node || -z $pw_id ]]; then
+	if [[ -z $pw_id ]]; then
 		exit
-	else
-		node_id=("$pw_node" "$pw_id")
 	fi
 }
 
@@ -206,14 +209,14 @@ reset_volume () {
 # Creates a function called 'sleep_low', which sleeps and then lowers
 # the volume.
 sleep_low () {
-	n="$1"
+	diff="$1"
 
 	sleep "$interval"
 
-	if [[ $n -ge $volume ]]; then
+	if [[ $diff -ge $volume ]]; then
 		volume='0'
 	else
-		volume=$(( volume - n ))
+		volume=$(( volume - diff ))
 	fi
 
 	set_volume "$volume" 'false'
@@ -242,15 +245,17 @@ get_count () {
 # lower the volume gradually, if the difference is very small.
 	if [[ $diff -ge $unit ]]; then
 		count[0]=$(( diff / unit ))
-		count[1]=$(( diff % unit ))
+		rem=$(( diff % unit ))
 
 # If there's a remaining value, then divide that value by 5, which will
 # be for 354-359. If there's still a remaining value after that, then
 # set ${count[2]} to that value. This will be used for the last instance
 # of lowering the volume.
-		if [[ ${count[1]} -ge 5 ]]; then
-			count[1]=$(( count[1] / 5 ))
-			count[2]=$(( count[1] % 5 ))
+		if [[ $rem -ge 5 ]]; then
+			count[1]=$(( rem / 5 ))
+			count[2]=$(( rem % 5 ))
+		else
+			count[1]="$rem"
 		fi
 	else
 		count[2]="$diff"
@@ -272,10 +277,8 @@ spin () {
 	done
 }
 
-# Gets the PipeWire node and id.
-get_node_id
-pw_node="${node_id[0]}"
-pw_id="${node_id[1]}"
+# Gets the PipeWire id.
+get_id
 
 # Gets the volume.
 volume=$(get_volume)
