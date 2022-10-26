@@ -249,8 +249,8 @@ get_count () {
 # set ${count[2]} to that value. This will be used for the last instance
 # of lowering the volume.
 		if [[ ${count[1]} -ge 5 ]]; then
-			count[1]=$(( ${count[1]} / 5 ))
-			count[2]=$(( ${count[1]} % 5 ))
+			count[1]=$(( count[1] / 5 ))
+			count[2]=$(( count[1] % 5 ))
 		fi
 	else
 		count[2]="$diff"
