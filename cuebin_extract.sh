@@ -193,8 +193,7 @@ read_cue () {
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
 			track_n=$(( track_n + 1 ))
-			fn=$(tr -d '"' <<<"${match[1]}")
-			fn=$(sed -E "s/${regex_path}//" <<<"$fn")
+			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex_path}//")
 
 			fn_found=$(find "$if_dn" -maxdepth 1 -type f -iname "$fn" 2>&- | head -n 1)
 
