@@ -134,7 +134,7 @@ cue="$if"
 cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
-declare -a format
+declare -a format offset
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -152,7 +152,8 @@ regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 regex_iso='\.iso$'
 regex_wav='\.wav$'
 
-cue_commands=('file' 'track' 'pregap' 'index' 'postgap')
+index1='INDEX 01 00:00:00'
+offset=('  ' '    ')
 
 declare -A cue_lines
 declare -a bchunk_cdr_list bchunk_wav_list of_cue_cdr_list of_cue_ogg_list of_cue_flac_list
@@ -183,67 +184,79 @@ check_cmd () {
 # file, add full path to filenames listed in the CUE file, and create a
 # new temporary CUE file in /dev/shm based on this.
 read_cue () {
-	declare -a files not_found
-	declare string
+	declare -a files not_found cue_tmp
 
 	track_n=0
 
 	handle_command () {
-		case "$1" in
-			'file')
-				fn=$(sed -E "s/${format[3]}/\2/" <<<"$line" | tr -d '"')
-				fn=$(sed -E "s/${regex_path}//" <<<"$fn")
+# If line is a file command...
+		if [[ $1 =~ ${format[3]} ]]; then
+			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
+			track_n=$(( track_n + 1 ))
+			fn=$(tr -d '"' <<<"${match[1]}")
+			fn=$(sed -E "s/${regex_path}//" <<<"$fn")
 
-				fn_found=$(find "$if_dn" -maxdepth 1 -type f -iname "$fn" 2>&- | head -n 1)
+			fn_found=$(find "$if_dn" -maxdepth 1 -type f -iname "$fn" 2>&- | head -n 1)
 
-				track_n=$(( track_n + 1 ))
+			if [[ -f $fn_found ]]; then
+				fn="$fn_found"
+			else
+				not_found+=("$fn")
 
-				if [[ -f $fn_found ]]; then
-					fn="$fn_found"
-				else
-					not_found+=("$fn")
-
-					if [[ $track_n -eq 1 && -f $bin ]]; then
-						fn="$bin"
-					fi
+				if [[ $track_n -eq 1 && -f $bin ]]; then
+					fn="$bin"
 				fi
+			fi
 
-				files+=("$fn")
+			files+=("$fn")
 
-				string=$(sed -E "s/${format[3]}/\3/" <<<"$line")
-				string="FILE \"${fn}\" ${string}"
+			string="${match[0]} \"${fn}\" ${match[2]}"
 
-				cue_lines[${track_n},'0','file']="$string"
-			;;
-			'track')
-				string="$line"
+			cue_lines[${track_n},'file']="$string"
+		fi
 
-				track_n=$(sed -E -e "s/${format[4]}/\2/" -e 's/^0//' <<<"$string")
-				cue_lines[${track_n},'1','track']="$string"
-			;;
-			'pregap')
-				string="$line"
+# If line is a track command...
+		if [[ $1 =~ ${format[4]} ]]; then
+			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
+			track_n="${match[1]#0}"
 
-				cue_lines[${track_n},'2','pregap']="$string"
-			;;
-			'index')
-				string="$line"
+			string="$1"
 
-				index_n=$(sed -E -e "s/${format[6]}/\2/" -e 's/^0//' <<<"$string")
-				cue_lines[${track_n},'3','index',${index_n}]="$string"
-			;;
-			'postgap')
-				string="$line"
+			cue_lines[${track_n},'track']="$string"
+		fi
 
-				cue_lines[${track_n},'4','postgap']="$string"
-			;;
-		esac
-	}
+# If line is a pregap command...
+		if [[ $1 =~ ${format[5]} ]]; then
+			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
 
-	sort_keys () {
-		for key in "${!cue_lines[@]}"; do
-			printf '%s\n' "$key"
-		done | sort -n
+			string="$1"
+
+			cue_lines[${track_n},'pregap']="$string"
+		fi
+
+# If line is an index command...
+		if [[ $1 =~ ${format[6]} ]]; then
+			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
+			index_n="${match[1]#0}"
+
+			string="$1"
+
+			cue_lines[${track_n},'index',${index_n}]="$string"
+		fi
+
+# If line is a postgap command...
+		if [[ $1 =~ ${format[7]} ]]; then
+			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
+
+			string="$1"
+
+			cue_lines[${track_n},'postgap']="$string"
+		fi
+
+# If a string has been created, add it to the 'cue_tmp' array.
+		if [[ -n $string ]]; then
+			cue_tmp+=("$string")
+		fi
 	}
 
 	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
@@ -251,15 +264,7 @@ read_cue () {
 	for (( i=0; i<${#cue_lines_if[@]}; i++ )); do
 		line="${cue_lines_if[${i}]}"
 
-		for (( j=0; j<${#cue_commands[@]}; j++ )); do
-			cue_command="${cue_commands[${j}]}"
-			regex_tmp="^${cue_command^^}"
-
-			if [[ $line =~ $regex_tmp ]]; then
-				handle_command "$cue_command"
-				break
-			fi
-		done
+		handle_command "$line"
 	done
 
 	if [[ ${#files[@]} -gt 1 ]]; then
@@ -285,13 +290,7 @@ MERGE
 		printf '\n'
 	fi
 
-	mapfile -t keys_sorted < <(sort_keys)
-
-	for (( i=0; i<${#keys_sorted[@]}; i++ )); do
-		key="${keys_sorted[${i}]}"
-
-		printf '%s\n' "${cue_lines[${key}]}"
-	done > "$cue_tmp_f"
+	printf '%s\n' "${cue_tmp[@]}" > "$cue_tmp_f"
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
@@ -429,16 +428,16 @@ create_cue () {
 	add_gap () {
 		case "$1" in
 			'pre')
-				string="${cue_lines[${track_n},2,pregap]}"
+				string="${cue_lines[${track_n},pregap]}"
 
 				if [[ -n $string ]]; then
-					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
+					eval of_cue_${type}_list+=\(\""${offset[1]}${string}"\"\)
 				fi
 
 # If the original CUE specifies a pregap using the INDEX command,
 # convert that to a PREGAP command.
-				index_00="${cue_lines[${track_n},3,index,0]}"
-				index_01="${cue_lines[${track_n},3,index,1]}"
+				index_00="${cue_lines[${track_n},index,0]}"
+				index_01="${cue_lines[${track_n},index,1]}"
 
 				if [[ -n $index_00 && -n $index_01 ]]; then
 					index_00=$(sed -E "s/${format[6]}/\3/" <<<"$index_00")
@@ -451,15 +450,15 @@ create_cue () {
 						frames_diff=$(( index_01_frames - index_00_frames ))
 						time_diff=$(time_convert "$frames_diff")
 
-						eval of_cue_${type}_list+=\(\""    PREGAP ${time_diff}"\"\)
+						eval of_cue_${type}_list+=\(\""${offset[1]}PREGAP ${time_diff}"\"\)
 					fi
 				fi
 			;;
 			'post')
-				string="${cue_lines[${track_n},4,postgap]}"
+				string="${cue_lines[${track_n},postgap]}"
 
 				if [[ -n $string ]]; then
-					eval of_cue_${type}_list+=\(\""    ${string}"\"\)
+					eval of_cue_${type}_list+=\(\""${offset[1]}${string}"\"\)
 				fi
 			;;
 		esac
@@ -472,9 +471,9 @@ create_cue () {
 
 		if [[ ${!line_ref} =~ $regex_iso ]]; then
 			eval of_cue_${type}_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
-			eval of_cue_${type}_list+=\(\""  ${cue_lines[${track_n},1,track]}"\"\)
+			eval of_cue_${type}_list+=\(\""${offset[0]}${cue_lines[${track_n},track]}"\"\)
 			add_gap pre
-			eval of_cue_${type}_list+=\(\""    INDEX 01 00:00:00"\"\)
+			eval of_cue_${type}_list+=\(\""${offset[1]}${index1}"\"\)
 			add_gap post
 		else
 			case "$type" in
@@ -489,11 +488,11 @@ create_cue () {
 				;;
 			esac
 
-			line_tmp=$(printf '  TRACK %02d AUDIO' "$track_n")
+			string=$(printf 'TRACK %02d AUDIO' "$track_n")
 			
-			eval of_cue_${type}_list+=\(\""$line_tmp"\"\)
+			eval of_cue_${type}_list+=\(\""${offset[0]}${string}"\"\)
 			add_gap pre
-			eval of_cue_${type}_list+=\(\""    INDEX 01 00:00:00"\"\)
+			eval of_cue_${type}_list+=\(\""${offset[1]}${index1}"\"\)
 			add_gap post
 		fi
 	done
@@ -553,10 +552,10 @@ data_track () {
 
 	declare string
 
-	if [[ -n ${cue_lines[2,3,index,0]} ]]; then
-		string="${cue_lines[2,3,index,0]}"
+	if [[ -n ${cue_lines[2,index,0]} ]]; then
+		string="${cue_lines[2,index,0]}"
 	else
-		string="${cue_lines[2,3,index,1]}"
+		string="${cue_lines[2,index,1]}"
 	fi
 
 	if [[ -z $string ]]; then
@@ -613,24 +612,10 @@ for type in "${!audio_types[@]}"; do
 		continue
 	fi
 
-	case "$type" in
-		'cdr')
-			elements="${#of_cue_cdr_list[@]}"
-		;;
-		'ogg')
-			elements="${#of_cue_ogg_list[@]}"
-		;;
-		'flac')
-			elements="${#of_cue_flac_list[@]}"
-		;;
-	esac
-
 	of_cue_ref="of_${type}_cue"
 
-	for (( i=0; i<elements; i++ )); do
-		line_ref="of_cue_${type}_list[${i}]"
-		printf '%s\r\n' "${!line_ref}"
-	done | tee "${!of_cue_ref}"
+	lines_ref="of_cue_${type}_list[@]"
+	printf '%s\r\n' "${!lines_ref}" | tee "${!of_cue_ref}"
 
 	printf '\n'
 done

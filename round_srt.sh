@@ -163,8 +163,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 done
 
 # Writes the array to $of (output file).
-for (( i = 0; i < ${#lines[@]}; i++ )); do
-	printf '%s\r\n' "${lines[${i}]}"
-done > "$of"
+printf '%s\r\n' "${lines[@]}" > "$of"
 
 printf '\n%s %s\n\n' 'Wrote file:' "$of"

@@ -849,18 +849,6 @@ info_txt () {
 # Gets information about output file from 'mediainfo'.
 	mapfile -t mediainfo_info < <(eval "${cmd[5]}" -f \""${of}"\" 2>&-)
 
-	declare -A info_elements
-
-	info_elements[if_info]="${#if_info[@]}"
-	info_elements[of_info]="${#of_info[@]}"
-	info_elements[of_remux_info]="${#of_remux_info[@]}"
-	info_elements[hb_version_info]="${#hb_version_info[@]}"
-	info_elements[hb_opts_info]="${#hb_opts_info[@]}"
-	info_elements[ff_version_info]="${#ff_version_info[@]}"
-	info_elements[ff_opts_info]="${#ff_opts_info[@]}"
-	info_elements[size_info]="${#size_info[@]}"
-	info_elements[mediainfo_info]="${#mediainfo_info[@]}"
-
 # Prints the information gathered from the input file, by ffmpeg.
 # Prints the information gathered from the output file, by ffmpeg.
 # Prints the information gathered from the remux output file, by ffmpeg.
@@ -872,13 +860,9 @@ info_txt () {
 
 	for type in "${info_list_3[@]}"; do
 		info_f_ref="${type}_f"
-		elements="${info_elements[${type}]}"
+		info_ref="${type}[@]"
 
-		for (( i = 0; i < elements; i++ )); do
-			info_ref="${type}[${i}]"
-
-			printf '%s\r\n' "${!info_ref}" >> "${!info_f_ref}"
-		done
+		printf '%s\r\n' "${!info_ref}" > "${!info_f_ref}"
 	done
 }
 
