@@ -257,7 +257,7 @@ get_count () {
 			count[1]=$(( rem / 5 ))
 			count[2]=$(( rem % 5 ))
 		else
-			count[1]="$rem"
+			count[2]="$rem"
 		fi
 	else
 		count[2]="$diff"
