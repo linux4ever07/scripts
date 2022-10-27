@@ -52,9 +52,7 @@ for (( i = 0; i < ${#mkv_info_list[@]}; i++ )); do
 done
 
 sort_list () {
-	for (( i = 0; i < ${#lang_list[@]}; i++ )); do
-		printf '%s\n' "${lang_list[${i}]}"
-	done | sort
+	printf '%s\n' "${lang_list[@]}" | sort
 }
 
 mapfile -t lang_list_sorted < <(sort_list)

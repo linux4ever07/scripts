@@ -9,7 +9,7 @@ if=$(readlink -f "$1")
 of="${if%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
 	exit
 }
 

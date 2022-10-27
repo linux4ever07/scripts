@@ -10,7 +10,7 @@
 # parsing.)
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") \"movie title (year)\""
+	printf '\n%s\n\n' "Usage: $(basename "$0") \"movie title (year)\""
 	exit
 }
 

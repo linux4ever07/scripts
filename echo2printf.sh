@@ -23,6 +23,11 @@ regex1='^([[:space:]]*)#'
 regex2='echo( \-[[:alpha:]]+){0,} *'
 regex3='printf '\''%s\\n'\'' '
 
+if [[ ! -f $if ]]; then
+	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
+	exit
+fi
+
 mapfile -t lines <"$if"
 
 for (( i=0; i<${#lines[@]}; i++ )); do
@@ -39,8 +44,4 @@ done
 
 truncate -s 0 "$if"
 
-for (( i=0; i<${#lines[@]}; i++ )); do
-	line="${lines[${i}]}"
-
-	printf '%s\n' "$line" >> "$if"
-done
+printf '%s\n' "${lines[@]}" > "$if"

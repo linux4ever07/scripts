@@ -5,10 +5,13 @@
 
 if=$(readlink -f "$1")
 
+if [[ ! -f $if ]]; then
+	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
+	exit
+fi
+
 regex='^([[:space:]]*)(#+)'
 
 mapfile -t lines < <(grep -Ev "$regex" "$if")
 
-for (( i = 0; i < ${#lines[@]}; i++ )); do
-	printf '%s\n' "${lines[${i}]}"
-done
+printf '%s\n' "${lines[@]}"

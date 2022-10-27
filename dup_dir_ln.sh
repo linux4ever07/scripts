@@ -19,20 +19,20 @@
 set -eo pipefail
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
 	exit
 }
 
 # If the script isn't run with sudo / root privileges, then quit.
 if [[ $(whoami) != root ]]; then
-	printf '%s\n\n' "You need to be root to run this script!"
+	printf '\n%s\n\n' "You need to be root to run this script!"
 	exit
 fi
 
 if [[ ! -d $1 || -z $2 ]]; then
 	usage
 elif [[ -d $2 || -f $2 ]]; then
-	printf '%s\n\n' "\"${2}\" already exists!"
+	printf '\n%s\n\n' "\"${2}\" already exists!"
 	exit
 fi
 
@@ -55,7 +55,7 @@ mapfile -t files < <(find "$in_dir" -type f -iname "*")
 
 # Directories.
 
-mkdir -p "$2"
+mkdir -p "$out_dir"
 
 for (( i = 0; i < ${#dirs[@]}; i++ )); do
 	if="${dirs[${i}]}"
@@ -68,7 +68,7 @@ for (( i = 0; i < ${#dirs[@]}; i++ )); do
 	start=$(( ${#path_parts[@]} + 1 ))
 	bn=$(cut -d'/' -f${start}- <<<"${if}")
 
-	of="${2}/${bn}"
+	of="${out_dir}/${bn}"
 
 	mkdir -p "$of"
 done
@@ -86,12 +86,12 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	start=$(( ${#path_parts[@]} + 1 ))
 	bn=$(cut -d'/' -f${start}- <<<"${if}")
 
-	of="${2}/${bn}"
+	of="${out_dir}/${bn}"
 
 	ln -s "$if" "$of"
 done
 
 # Change the permissions of the output directory.
 
-chown -R root:root "$2"
-chmod -R +r "$2"
+chown -R root:root "$out_dir"
+chmod -R +r "$out_dir"

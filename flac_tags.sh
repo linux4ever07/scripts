@@ -3,7 +3,7 @@
 # select individual tracks from a simple menu, and display the tags.
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") [dir]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [dir]"
 	exit
 }
 

@@ -22,7 +22,7 @@
 # tracker_list.sh 'trackers.txt' | tee 'trackers_checked.txt'
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") [tracker txt] [-nocheck]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [tracker txt] [-nocheck]"
 	exit
 }
 
