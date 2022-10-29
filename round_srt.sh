@@ -53,7 +53,7 @@ time_convert () {
 	s=0
 	cs=0
 
-	regex_last2='^[0-9]+([0-9]{2})$'
+	regex_last2='^[0-9]*([0-9]{2})$'
 
 # If argument is in the hh:mm:ss format...
 	if [[ $time =~ ${format[1]} ]]; then

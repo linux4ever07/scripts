@@ -496,9 +496,9 @@ dts_extract_remux () {
 
 	if_info_tmp=("${if_info[@]}")
 
-# Creates a function called 'parse_streams', which will parse the output
+# Creates a function called 'parse_ffmpeg', which will parse the output
 # from ffmpeg, get all the streams and bitrates.
-	parse_streams () {
+	parse_ffmpeg () {
 		n=0
 
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
@@ -521,10 +521,9 @@ dts_extract_remux () {
 				bps="${BASH_REMATCH[1]}"
 
 				if [[ -z ${bitrates[${n}]} ]]; then
-
-# If input bitrate consists of at least 3 digits...
+# If input bitrate consists of at least 4 digits, get the last 3 digits
+# of the input bitrate.
 					if [[ $bps =~ $regex_last3 ]]; then
-# Gets the last 3 digits of the input bitrate.
 						bps_last="${BASH_REMATCH[1]}"
 
 						if [[ $bps_last =~ $regex_zero ]]; then
@@ -573,7 +572,7 @@ dts_extract_remux () {
 
 			unset -v streams bitrates
 			declare -A streams bitrates
-			parse_streams
+			parse_ffmpeg
 
 			printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
 # See if the current line is an audio track. If so, save the bitrate.
@@ -608,7 +607,7 @@ dts_extract_remux () {
 	}
 
 	declare -A streams bitrates
-	parse_streams
+	parse_ffmpeg
 
 # Go through the information about the input file, and see if any of the
 # lines are audio, and if they match the types of audio we're looking
