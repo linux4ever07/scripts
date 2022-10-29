@@ -520,27 +520,30 @@ dts_extract_remux () {
 			if [[ $line =~ $regex_bps ]]; then
 				bps="${BASH_REMATCH[1]}"
 
-				if [[ -z ${bitrates[${n}]} ]]; then
+# If bitrate has already been set, skip this line.
+				if [[ -n ${bitrates[${n}]} ]]; then
+					continue
+				fi
+
 # If input bitrate consists of at least 4 digits, get the last 3 digits
 # of the input bitrate.
-					if [[ $bps =~ $regex_last3 ]]; then
+				if [[ $bps =~ $regex_last3 ]]; then
+					bps_last="${BASH_REMATCH[1]}"
+
+					if [[ $bps_last =~ $regex_zero ]]; then
 						bps_last="${BASH_REMATCH[1]}"
+					fi
 
-						if [[ $bps_last =~ $regex_zero ]]; then
-							bps_last="${BASH_REMATCH[1]}"
-						fi
-
-						bps=$(( bps - bps_last ))
+					bps=$(( bps - bps_last ))
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
-						if [[ $bps_last -ge 500 ]]; then
-							bps=$(( bps + 1000 ))
-						fi
+					if [[ $bps_last -ge 500 ]]; then
+						bps=$(( bps + 1000 ))
 					fi
-
-					bitrates[${n}]="$bps"
 				fi
+
+				bitrates[${n}]="$bps"
 			fi
 		done
 	}
