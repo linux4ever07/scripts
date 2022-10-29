@@ -100,7 +100,9 @@ sub time_convert {
 	my $s = 0;
 	my $cs = 0;
 
-	my $regex_last2 = qr/^.*(..)$/;
+	my $cs_last = 0;
+
+	my $regex_last2 = qr/^[0-9]*([0-9]{2})$/;
 
 # If argument is in the hh:mm:ss format...
 	if ($time =~ /$format[1]/) {
@@ -120,19 +122,15 @@ sub time_convert {
 		$m = $m * 60 * 1000;
 		$s = $s * 1000;
 
-# Saves the last 2 (or 1) digits of $cs in $cs_tmp.
-		my($cs_tmp);
-
+# Saves the last 2 (or 1) digits of $cs in $cs_last.
 		if ($cs =~ $regex_last2) {
-			$cs_tmp = $1;
-			$cs_tmp =~ s/^0//;
+			$cs_last = $1;
+			$cs_last =~ s/^0//;
 		}
 
-		if (! length($cs_tmp)) { $cs_tmp = 0; }
-
-# If $cs_tmp is greater than 50, round it up, and if not, round it down.
-		if ($cs_tmp >= 50) { $cs = ($cs - $cs_tmp) + 100; }
-		else { $cs = $cs - $cs_tmp; }
+# If $cs_last is greater than 50, round it up, and if not, round it down.
+		if ($cs_last >= 50) { $cs = ($cs - $cs_last) + 100; }
+		else { $cs = $cs - $cs_last; }
 
 		$time = $h + $m + $s + $cs;
 

@@ -53,6 +53,8 @@ time_convert () {
 	s=0
 	cs=0
 
+	cs_last=0
+
 	regex_last2='^[0-9]*([0-9]{2})$'
 
 # If argument is in the hh:mm:ss format...
@@ -72,20 +74,16 @@ time_convert () {
 		m=$(( m * 60 * 1000 ))
 		s=$(( s * 1000 ))
 
-# Saves the last 2 (or 1) digits of $cs in $cs_tmp.
+# Saves the last 2 (or 1) digits of $cs in $cs_last.
 		if [[ $cs =~ $regex_last2 ]]; then
-			cs_tmp="${BASH_REMATCH[1]#0}"
+			cs_last="${BASH_REMATCH[1]#0}"
 		fi
 
-		if [[ -z $cs_tmp ]]; then
-			cs_tmp=0
-		fi
-
-# If $cs_tmp is greater than 50, round it up, and if not, round it down.
-		if [[ $cs_tmp -ge 50 ]]; then
-			cs=$(( (cs - cs_tmp) + 100 ))
+# If $cs_last is greater than 50, round it up, and if not, round it down.
+		if [[ $cs_last -ge 50 ]]; then
+			cs=$(( (cs - cs_last) + 100 ))
 		else
-			cs=$(( cs - cs_tmp ))
+			cs=$(( cs - cs_last ))
 		fi
 
 		time=$(( h + m + s + cs ))
