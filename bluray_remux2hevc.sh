@@ -476,7 +476,7 @@ dts_extract_remux () {
 	bps_limit=$(( (high_bps - low_bps) / 2 ))
 	use_kbps="${high_kbps}k"
 
-	declare -A type elements
+	declare -A type elements audio_tracks
 	type[dts_hdma]='dts \(DTS-HD MA\)'
 	type[truehd]='truehd'
 	type[pcm]='pcm_bluray'
@@ -492,21 +492,24 @@ dts_extract_remux () {
 
 	audio_types=('dts_hdma' 'truehd' 'pcm' 'flac' 'dts' 'ac3')
 
-	declare -A audio_tracks
-
 	if_info_tmp=("${if_info[@]}")
 
 # Creates a function called 'parse_ffmpeg', which will parse the output
 # from ffmpeg, get all the streams and bitrates.
 	parse_ffmpeg () {
-		n=0
+		declare n
 
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
 			line=${if_info_tmp[${i}]}
 
 # If line is a stream...
 			if [[ $line =~ $regex_stream ]]; then
-				n=$(( n + 1 ))
+				if [[ -z $n ]]; then
+					n=0
+				else
+					n=$(( n + 1 ))
+				fi
+
 				streams[${n}]="$line"
 
 # If stream line contains bitrate, use that.
@@ -577,19 +580,19 @@ dts_extract_remux () {
 			declare -A streams bitrates
 			parse_ffmpeg
 
-			printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
+			for (( i = 0; i < ${#streams[@]}; i++ )); do
 # See if the current line is an audio track. If so, save the bitrate.
-				if [[ ${streams[${key}]} =~ $regex_audio ]]; then
-					bps_if="${bitrates[${key}]}"
+				if [[ ${streams[${i}]} =~ $regex_audio ]]; then
+					bps_if="${bitrates[${i}]}"
 					break
 				fi
 			done
 		else
-			printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
+			for (( i = 0; i < ${#streams[@]}; i++ )); do
 # See if the current line matches the chosen audio track. If so, save
 # the bitrate.
-				if [[ ${streams[${key}]} == "${!audio_track_ref}" ]]; then
-					bps_if="${bitrates[${key}]}"
+				if [[ ${streams[${i}]} == "${!audio_track_ref}" ]]; then
+					bps_if="${bitrates[${i}]}"
 					break
 				fi
 			done
@@ -609,21 +612,21 @@ dts_extract_remux () {
 		fi
 	}
 
-	declare -A streams bitrates
+	declare -a streams bitrates
 	parse_ffmpeg
 
 # Go through the information about the input file, and see if any of the
 # lines are audio, and if they match the types of audio we're looking
 # for.
-	printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
+	for (( i = 0; i < ${#streams[@]}; i++ )); do
 # See if the current line is an audio track, and the same language as
 # $lang.
-		if [[ ${streams[${key}]} =~ $regex_audio ]]; then
+		if [[ ${streams[${i}]} =~ $regex_audio ]]; then
 			for tmp_type in "${audio_types[@]}"; do
 				n="elements[${tmp_type}]"
 
-				if [[ ${streams[${key}]} =~ ${type[${tmp_type}]} ]]; then
-					audio_tracks[${tmp_type},${!n}]="${streams[${key}]}"
+				if [[ ${streams[${i}]} =~ ${type[${tmp_type}]} ]]; then
+					audio_tracks[${tmp_type},${!n}]="${streams[${i}]}"
 					elements[${tmp_type}]=$(( ${!n} + 1 ))
 				fi
 			done
