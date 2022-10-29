@@ -531,7 +531,7 @@ dts_extract_remux () {
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
 						if [[ $bps_last -ge 500 ]]; then
-							bps=$(( bps  + 1000 ))
+							bps=$(( bps + 1000 ))
 						fi
 					fi
 
