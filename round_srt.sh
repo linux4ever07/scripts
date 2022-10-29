@@ -38,6 +38,7 @@ format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
 format[3]="^(${format[2]})${delim}(${format[2]})$"
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex_zero='^0+([0-9]+)$'
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
@@ -52,15 +53,18 @@ time_convert () {
 	s=0
 	cs=0
 
-	regex_last2='^.*(..)$'
+	regex_last2='^[0-9]+([0-9]{2})$'
 
 # If argument is in the hh:mm:ss format...
 	if [[ $time =~ ${format[1]} ]]; then
 		h="${BASH_REMATCH[1]#0}"
 		m="${BASH_REMATCH[2]#0}"
 		s="${BASH_REMATCH[3]#0}"
-		cs="${BASH_REMATCH[4]#0}"
-		cs="${cs#0}"
+		cs="${BASH_REMATCH[4]}"
+
+		if [[ $cs =~ $regex_zero ]]; then
+			cs="${BASH_REMATCH[1]}"
+		fi
 
 # Converts all the numbers to centiseconds, because those kind of values
 # will be easier to compare in the 'time_calc' function.

@@ -466,7 +466,8 @@ dts_extract_remux () {
 	regex_kbps=', ([0-9]+) kb\/s'
 
 	regex_stream='^ +Stream #'
-	regex_last3='^.*(...)$'
+	regex_last3='^[0-9]+([0-9]{3})$'
+	regex_zero='^0+([0-9]+)$'
 
 	high_kbps='1536'
 	low_kbps='768'
@@ -524,8 +525,12 @@ dts_extract_remux () {
 # If input bitrate consists of at least 3 digits...
 					if [[ $bps =~ $regex_last3 ]]; then
 # Gets the last 3 digits of the input bitrate.
-						bps_last="${BASH_REMATCH[1]#0}"
-						bps_last="${bps_last#0}"
+						bps_last="${BASH_REMATCH[1]}"
+
+						if [[ $bps_last =~ $regex_zero ]]; then
+							bps_last="${BASH_REMATCH[1]}"
+						fi
+
 						bps=$(( bps - bps_last ))
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
