@@ -923,8 +923,7 @@ check_res () {
 is_handbrake () {
 	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
 
-	regex_pid='^[[:space:]]*([[:digit:]]+).*'
-	regex_comm='^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)'
+	regex_pid_comm='^[[:space:]]*([[:digit:]]+)[[:space:]]*(.*)$'
 
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")
@@ -934,11 +933,13 @@ is_handbrake () {
 	if [[ -n ${hb_pids[@]} ]]; then
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-			pid=$(sed -E "s/${regex_pid}/\1/" <<<"${hb_pids[${i}]}")
-			comm=$(sed -E "s/${regex_comm}/\1/" <<<"${hb_pids[${i}]}")
+			if [[ ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+				pid="${BASH_REMATCH[1]}"
+				comm="${BASH_REMATCH[2]}"
 
-			printf '%s: %s\n' 'PID' "$pid"
-			printf '%s: %s\n\n' 'COMMAND' "$comm"
+				printf '%s: %s\n' 'PID' "$pid"
+				printf '%s: %s\n\n' 'COMMAND' "$comm"
+			fi
 		done
 	fi
 
