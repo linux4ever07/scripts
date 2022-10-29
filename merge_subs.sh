@@ -60,10 +60,10 @@ while [[ -n $@ ]]; do
 		'-lang')
 			shift
 
-			lang_regex='^[[:alpha:]]{3}$'
-			name_regex='^-name$'
+			regex_lang='^[[:alpha:]]{3}$'
+			regex_name='^-name$'
 
-			if [[ ! $1 =~ $lang_regex ]]; then
+			if [[ ! $1 =~ $regex_lang ]]; then
 				usage
 			else
 				srt_lang[${n}]="${1,,}"
@@ -71,7 +71,7 @@ while [[ -n $@ ]]; do
 
 			shift
 
-			if [[ $1 =~ $name_regex ]]; then
+			if [[ $1 =~ $regex_name ]]; then
 				shift
 
 				srt_name[${n}]="$1"
