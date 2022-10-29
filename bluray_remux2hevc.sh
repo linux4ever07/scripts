@@ -576,7 +576,7 @@ dts_extract_remux () {
 			run_or_quit
 
 			unset -v streams bitrates
-			declare -A streams bitrates
+			declare -a streams bitrates
 			parse_ffmpeg
 
 			for (( i = 0; i < ${#streams[@]}; i++ )); do
