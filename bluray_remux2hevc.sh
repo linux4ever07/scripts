@@ -67,7 +67,7 @@
 # Generates a random number, which can be used for these filenames:
 # output, output remux, input info txt, output info txt, output remux
 # info txt.
-session="$RANDOM"
+session="${RANDOM}-${RANDOM}"
 
 # Creates a variable that will work as a switch. If this variable is set
 # to '1', it will skip running the 'dts_extract_remux' and 'remux_mkv'
@@ -462,8 +462,11 @@ imdb () {
 dts_extract_remux () {
 	regex_audio="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: Audio: .*$"
 	regex_51=', 5.1\(.*\),'
-	bps_regex='^ +BPS.*: ([0-9]+)$'
-	kbps_regex='.* ([0-9]+) kb\/s$'
+	regex_bps='^ +BPS.*: ([0-9]+)$'
+	regex_kbps=', ([0-9]+) kb\/s'
+
+	regex_stream='^ +Stream #'
+	regex_last3='^.*(...)$'
 
 	high_kbps='1536'
 	low_kbps='768'
@@ -490,25 +493,58 @@ dts_extract_remux () {
 
 	declare -A audio_tracks
 
-	get_bitrate () {
-		first_line_regex='^ +Metadata:'
-		last_line_regex='^ +Stream #'
-		last3_regex='^.*(...)$'
+	if_info_tmp=("${if_info[@]}")
 
-		compare_bitrate () {
-# If $high_bps (the maximum DTS bitrate) is greater than $bps_if,
-# then...
-			if [[ $high_bps -gt $bps_if ]]; then
-# Gets the exact difference between max DTS bitrate and input bitrate.
-				bps_diff=$(( high_bps - bps_if ))
+# Creates a function called 'parse_streams', which will parse the output
+# from ffmpeg, get all the streams and bitrates.
+	parse_streams () {
+		n=0
 
-# If the difference is greater than $bps_limit, then set the $use_kbps
-# variable to $low_kbps.
-				if [[ $bps_diff -ge $bps_limit ]]; then
-					use_kbps="${low_kbps}k"
+		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
+			line=${if_info_tmp[${i}]}
+
+# If line is a stream...
+			if [[ $line =~ $regex_stream ]]; then
+				n=$(( n + 1 ))
+				streams[${n}]="$line"
+
+# If stream line contains bitrate, use that.
+				if [[ $line =~ $regex_kbps ]]; then
+					bps=$(( ${BASH_REMATCH[1]} * 1000 ))
+					bitrates[${n}]="$bps"
 				fi
 			fi
-		}
+
+# If line is a bitrate...
+			if [[ $line =~ $regex_bps ]]; then
+				bps="${BASH_REMATCH[1]}"
+
+				if [[ -z ${bitrates[${n}]} ]]; then
+
+# If input bitrate consists of at least 3 digits...
+					if [[ $bps =~ $regex_last3 ]]; then
+# Gets the last 3 digits of the input bitrate.
+						bps_last="${BASH_REMATCH[1]#0}"
+						bps_last="${bps_last#0}"
+						bps=$(( bps - bps_last ))
+
+# If the last 3 digits are equal to (or higher than) 500, then round up
+# that number, otherwise round it down.
+						if [[ $bps_last -ge 500 ]]; then
+							bps=$(( bps  + 1000 ))
+						fi
+					fi
+
+					bitrates[${n}]="$bps"
+				fi
+			fi
+		done
+	}
+
+# Creates a function called 'get_bitrate', which will decide what DTS
+# bitrate to use for the output file.
+	get_bitrate () {
+		declare bps_if
 
 # If $audio_format is 'flac', we will decode the FLAC audio track in
 # order to get the correct (uncompressed) bitrate, which will later be
@@ -523,96 +559,69 @@ dts_extract_remux () {
 			map_tmp=$(sed -E "s/${regex_audio}/\1/" <<<"${!audio_track_ref}")
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
-			eval "${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""${flac_tmp}"\"
-			eval "${cmd[4]}" -d \""$flac_tmp"\"
-			rm "$flac_tmp"
+			args=("${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""${flac_tmp}"\")
+			run_or_quit
+			args=("${cmd[4]}" -d \""${flac_tmp}"\")
+			run_or_quit
+			args=(rm \""${flac_tmp}"\")
+			run_or_quit
 
 # Gets information about the WAV file.
-			mapfile -t flac_info < <(eval "${cmd[1]}" -hide_banner -i \""${wav_tmp}"\" 2>&1)
-			rm "$wav_tmp"
+			mapfile -t if_info_tmp < <(eval "${cmd[1]}" -hide_banner -i \""${wav_tmp}"\" 2>&1)
+			args=(rm \""${wav_tmp}"\")
+			run_or_quit
 
-# Go through the information about the input file, and see if any of the
-# lines are audio, and if they match the type of audio we're looking
-# for.
-			for (( i = 0; i < ${#flac_info[@]}; i++ )); do
-# See if the current line is an audio track.
-				if [[ ${flac_info[${i}]} =~ $regex_audio ]]; then
-					audio_track_tmp="${flac_info[${i}]}"
-					if_info_tmp=("${flac_info[@]}")
+			unset -v streams bitrates
+			declare -A streams bitrates
+			parse_streams
+
+			printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
+# See if the current line is an audio track. If so, save the bitrate.
+				if [[ ${streams[${key}]} =~ $regex_audio ]]; then
+					bps_if="${bitrates[${key}]}"
 					break
 				fi
 			done
 		else
-			audio_track_tmp="${!audio_track_ref}"
-			if_info_tmp=("${if_info[@]}")
-		fi
-
-# If the $audio_track_tmp line contains a bitrate, use that and
-# compare it against the $bps_limit variable.
-		if [[ $audio_track_tmp =~ $kbps_regex ]]; then
-			bps_if="${BASH_REMATCH[1]}"
-			bps_if=$(( bps_if * 1000 ))
-
-			compare_bitrate
-			return
-		fi
-
-# This loop looks for the line number of $audio_track_tmp...
-		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
-			if [[ ${if_info_tmp[${i}]} == "$audio_track_tmp" ]]; then
-				j=$(( i + 1 ))
-				break
-			fi
-		done
-
-# If line matches $first_line_regex, continue looking for the bitrate in
-# the metadata.
-		if [[ ${if_info_tmp[${j}]} =~ $first_line_regex ]]; then
-			for (( i = j; i < ${#if_info_tmp[@]}; i++ )); do
-# If line matches $last_line_regex, break this loop.
-				if [[ ${if_info_tmp[${i}]} =~ $last_line_regex ]]; then
-					break
-				fi
-
-# If line matches $bps_regex...
-				if [[ ${if_info_tmp[${i}]} =~ $bps_regex ]]; then
-# Deletes everything on the line, except the number of bytes per second
-# (BPS).
-					bps_if="${BASH_REMATCH[1]}"
-
-# If input bitrate consists of at least 3 digits...
-					if [[ $bps_if =~ $last3_regex ]]; then
-# Gets the last 3 digits of the input bitrate.
-						bps_last="${BASH_REMATCH[1]#0}"
-						bps_last="${bps_last#0}"
-						bps_if=$(( bps_if - bps_last ))
-
-# If the last 3 digits are equal to (or higher than) 500, then round up
-# that number, otherwise round it down.
-						if [[ $bps_last -ge 500 ]]; then
-							bps_if=$(( bps_if  + 1000 ))
-						fi
-					fi
-
-					compare_bitrate
+			printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
+# See if the current line matches the chosen audio track. If so, save
+# the bitrate.
+				if [[ ${streams[${key}]} == "${!audio_track_ref}" ]]; then
+					bps_if="${bitrates[${key}]}"
 					break
 				fi
 			done
 		fi
+
+# If $high_bps (the maximum DTS bitrate) is greater than $bps_if,
+# then...
+		if [[ $high_bps -gt $bps_if ]]; then
+# Gets the exact difference between max DTS bitrate and input bitrate.
+			bps_diff=$(( high_bps - bps_if ))
+
+# If the difference is greater than $bps_limit, then set the $use_kbps
+# variable to $low_kbps.
+			if [[ $bps_diff -ge $bps_limit ]]; then
+				use_kbps="${low_kbps}k"
+			fi
+		fi
 	}
+
+	declare -A streams bitrates
+	parse_streams
 
 # Go through the information about the input file, and see if any of the
 # lines are audio, and if they match the types of audio we're looking
 # for.
-	for (( i = 0; i < ${#if_info[@]}; i++ )); do
+	printf '%s\n' "${!streams[@]}" | sort -n | while read key; do
 # See if the current line is an audio track, and the same language as
 # $lang.
-		if [[ ${if_info[${i}]} =~ $regex_audio ]]; then
+		if [[ ${streams[${key}]} =~ $regex_audio ]]; then
 			for tmp_type in "${audio_types[@]}"; do
 				n="elements[${tmp_type}]"
 
-				if [[ ${if_info[${i}]} =~ ${type[${tmp_type}]} ]]; then
-					audio_tracks[${tmp_type},${!n}]="${if_info[${i}]}"
+				if [[ ${streams[${key}]} =~ ${type[${tmp_type}]} ]]; then
+					audio_tracks[${tmp_type},${!n}]="${streams[${key}]}"
 					elements[${tmp_type}]=$(( ${!n} + 1 ))
 				fi
 			done
