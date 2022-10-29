@@ -528,8 +528,7 @@ dts_extract_remux () {
 					continue
 				fi
 
-# If input bitrate consists of at least 4 digits, get the last 3 digits
-# of the input bitrate.
+# If input bitrate consists of at least 4 digits, get the last 3 digits.
 				if [[ $bps =~ $regex_last3 ]]; then
 					bps_last="${BASH_REMATCH[1]}"
 
