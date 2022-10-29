@@ -172,9 +172,9 @@ while [[ -n $@ ]]; do
 		'-lang')
 			shift
 
-			lang_regex='^[[:alpha:]]{3}$'
+			regex_lang='^[[:alpha:]]{3}$'
 
-			if [[ ! $1 =~ $lang_regex ]]; then
+			if [[ ! $1 =~ $regex_lang ]]; then
 				usage
 			else
 				lang="${1,,}"
@@ -289,8 +289,8 @@ break_name () {
 # although limit the string by 64 characters, and remove possible
 # trailing whitespace from the string.
 	if [[ $bname =~ $regex ]]; then
-		temp=$(sed -E "s/${regex}/\1/" <<<"$bname")
-		year=$(sed -E "s/${regex}/\(\3\)/" <<<"$bname")
+		temp="${BASH_REMATCH[1]}"
+		year="(${BASH_REMATCH[3]})"
 	else
 		temp=$(sed -E "s/${regex_blank}/\1/" <<<"${bname:0:64}")
 	fi
@@ -923,8 +923,8 @@ check_res () {
 is_handbrake () {
 	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
 
-	pid_regex='^[[:space:]]*([[:digit:]]+).*'
-	comm_regex='^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)'
+	regex_pid='^[[:space:]]*([[:digit:]]+).*'
+	regex_comm='^[[:space:]]*[[:digit:]]+[[:space:]]*(.*)'
 
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")
@@ -934,8 +934,8 @@ is_handbrake () {
 	if [[ -n ${hb_pids[@]} ]]; then
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-			pid=$(sed -E "s/${pid_regex}/\1/" <<<"${hb_pids[${i}]}")
-			comm=$(sed -E "s/${comm_regex}/\1/" <<<"${hb_pids[${i}]}")
+			pid=$(sed -E "s/${regex_pid}/\1/" <<<"${hb_pids[${i}]}")
+			comm=$(sed -E "s/${regex_comm}/\1/" <<<"${hb_pids[${i}]}")
 
 			printf '%s: %s\n' 'PID' "$pid"
 			printf '%s: %s\n\n' 'COMMAND' "$comm"
@@ -961,9 +961,9 @@ is_handbrake () {
 # filename doesn't match regex '/BDMV/STREAM/[[:digit:]]{5}.m2ts$',
 # return from this function, hence leaving the $if_m2ts variable empty.
 if_m2ts () {
-	m2ts_regex='/BDMV/STREAM/[[:digit:]]{5}.m2ts$'
+	regex_m2ts='/BDMV/STREAM/[[:digit:]]{5}.m2ts$'
 
-	if [[ ! $if =~ $m2ts_regex ]]; then
+	if [[ ! $if =~ $regex_m2ts ]]; then
 		return
 	fi
 
@@ -1004,8 +1004,8 @@ get_name () {
 		bname_tmp_fs=$(fsencode "$bname_tmp")
 
 		if [[ $bname_tmp_fs =~ $regex ]]; then
-			title=$(sed -E "s/${regex}/\1/" <<<"$bname_tmp_fs")
-			year=$(sed -E "s/${regex}/\2/" <<<"$bname_tmp_fs")
+			title="${BASH_REMATCH[1]}"
+			year="${BASH_REMATCH[2]}"
 		else
 			title="$bname_tmp_fs"
 		fi
@@ -1024,9 +1024,9 @@ get_name () {
 # input file is an unfinished download, and waits for the file to fully
 # download before processing it.
 is_torrent () {
-	part_regex='\.part$'
+	regex_part='\.part$'
 
-	if [[ $if =~ $part_regex ]]; then
+	if [[ $if =~ $regex_part ]]; then
 		if_tmp="$if"
 	else
 		if_tmp="${if}.part"
