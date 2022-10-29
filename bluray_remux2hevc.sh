@@ -548,9 +548,7 @@ dts_extract_remux () {
 
 # If $audio_format is 'flac', we will decode the FLAC audio track in
 # order to get the correct (uncompressed) bitrate, which will later be
-# used to calculate the output bitrate. This is the part where we set
-# the $audio_track_tmp variable, which will be used later in this
-# function to find the bitrate.
+# used to calculate the output bitrate.
 		if [[ $audio_format == 'flac' ]]; then
 			flac_tmp="${of_dir}/FLAC.TMP-${session}.flac"
 			wav_tmp="${of_dir}/FLAC.TMP-${session}.wav"
