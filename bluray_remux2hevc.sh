@@ -932,6 +932,7 @@ is_handbrake () {
 # running, if any.
 	if [[ -n ${hb_pids[@]} ]]; then
 		printf '\n%s\n\n' 'Waiting for this to finish:'
+
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 			if [[ ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
 				pid="${BASH_REMATCH[1]}"
@@ -948,9 +949,7 @@ is_handbrake () {
 # Sleeps for 5 seconds.
 		sleep 5
 
-# Unsets the $hb_pids array.
-		unset -v hb_pids
-
+# Checks again if HandBrake is running.
 		mapfile -t hb_pids < <(eval "${args[@]}")
 	done
 }
