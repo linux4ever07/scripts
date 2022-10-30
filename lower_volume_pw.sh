@@ -17,6 +17,7 @@ regex_node='^node\.description = \"(.*)\"'
 regex_class='^media\.class = \"(.*)\"'
 regex_sink='^Audio/Sink$'
 regex_volume='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
+regex_zero='^0+([0-9]+)$'
 full_volume='1000000'
 no_volume='0'
 target_volume='0'
@@ -146,10 +147,10 @@ get_volume () {
 		line="${pw_dump[${i}]}"
 
 		if [[ $line =~ $regex_volume ]]; then
-			volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}" | sed -E 's/^0+//')
+			volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
 
-			if [[ -z $volume ]]; then
-				volume='0'
+			if [[ $volume =~ $regex_zero ]]; then
+				volume="${BASH_REMATCH[1]}"
 			fi
 
 			break
@@ -172,10 +173,10 @@ set_volume () {
 
 	if [[ $volume_tmp =~ $regex_split ]]; then
 		volume_1="${BASH_REMATCH[1]}"
-		volume_2=$(sed -E 's/^0+//' <<<"${BASH_REMATCH[2]}")
+		volume_2="${BASH_REMATCH[2]}"
 
-		if [[ -z $volume_2 ]]; then
-			volume_2='0'
+		if [[ $volume_2 =~ $regex_zero ]]; then
+			volume_2="${BASH_REMATCH[1]}"
 		fi
 	else
 		volume_1='0'
