@@ -500,7 +500,7 @@ dts_extract_remux () {
 		declare n
 
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
-			line=${if_info_tmp[${i}]}
+			line="${if_info_tmp[${i}]}"
 
 # If line is a stream...
 			if [[ $line =~ $regex_stream ]]; then
