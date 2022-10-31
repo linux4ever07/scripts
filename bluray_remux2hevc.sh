@@ -597,6 +597,11 @@ dts_extract_remux () {
 			done
 		fi
 
+# If audio track bitrate could not be found, return from this function.
+		if [[ -z $bps_if ]]; then
+			return
+		fi
+
 # If $high_bps (the maximum DTS bitrate) is greater than $bps_if,
 # then...
 		if [[ $high_bps -gt $bps_if ]]; then
