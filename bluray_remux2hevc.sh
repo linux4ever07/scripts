@@ -462,10 +462,10 @@ imdb () {
 dts_extract_remux () {
 	regex_audio="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: Audio: .*$"
 	regex_51=', 5.1\(.*\),'
-	regex_bps='^ +BPS.*: ([0-9]+)$'
-	regex_kbps=', ([0-9]+) kb\/s'
 
 	regex_stream='^ +Stream #'
+	regex_bps='^ +BPS.*: ([0-9]+)$'
+	regex_kbps=', ([0-9]+) kb\/s'
 	regex_last3='^[0-9]+([0-9]{3})$'
 	regex_zero='^0+([0-9]+)$'
 
