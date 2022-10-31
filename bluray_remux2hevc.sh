@@ -851,7 +851,7 @@ info_txt () {
 	done
 
 # Gets information about output file.
-# Gets information about output remux file.
+# Gets information about remux output file.
 # Gets the HandBrake version.
 # Gets the HandBrake options.
 # Gets the ffmpeg version.
