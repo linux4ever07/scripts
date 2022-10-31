@@ -635,8 +635,7 @@ dts_extract_remux () {
 	switch=0
 
 # Go through the different types of audio and see if we have a matching
-# 5.1 track in one of those formats. If not, use the first track in the
-# list, in the preferred available format.
+# 5.1 track in one of those formats.
 	for tmp_type in "${audio_types[@]}"; do
 		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
 			array_ref="audio_tracks[${tmp_type},${i}]"
@@ -654,8 +653,8 @@ dts_extract_remux () {
 		fi
 	done
 
-# Pick the first audio track in the list, if $audio_track_ref is still
-# empty.
+# Pick the first audio track in the list, in the preferred available
+# format, if $audio_track_ref is still empty.
 	if [[ -z $audio_track_ref ]]; then
 		for tmp_type in "${audio_types[@]}"; do
 			if [[ ${elements[${tmp_type}]} -gt 0 ]]; then
@@ -667,9 +666,22 @@ dts_extract_remux () {
 	fi
 
 	if [[ -z $audio_track_ref ]]; then
-		printf '\n%s\n\n' 'There are no DTS-HD MA audio tracks in:'
-		printf '%s\n\n' "$if"
-		printf '%s\n' 'Choose a different input file that has DTS-HD MA!'
+		cat <<NO_MATCH
+
+${if}
+
+There are no suitable audio tracks in input file. It either has no audio
+tracks at all, or they're in the wrong format or have the wrong language
+code. A possible fix is checking the language of the input file and
+specifying the correct language code as argument to the script.
+		
+Listing all streams found in the input file:
+
+NO_MATCH
+
+		printf '%s\n' "${streams[@]}"
+		printf '\n'
+
 		exit
 	fi
 
@@ -839,27 +851,20 @@ info_txt () {
 	done
 
 # Gets information about output file.
-	mapfile -t of_info < <(eval "${cmd[1]}" -hide_banner -i \""${of}"\" 2>&1)
-
-# Gets information about output file.
-	mapfile -t of_remux_info < <(eval "${cmd[1]}" -hide_banner -i \""${of_remux}"\" 2>&1)
-
+# Gets information about output remux file.
 # Gets HandBrake version.
-	mapfile -t hb_version_info < <(eval "${cmd[0]}" --version 2>&-)
-
 # Gets the list of HandBrake options.
-	mapfile -t hb_opts_info < <(eval "${cmd[0]}" --help 2>&-)
-
 # Gets the ffmpeg version.
-	mapfile -t ff_version_info < <(eval "${cmd[1]}" -version)
-
 # Gets the ffmpeg options.
-	mapfile -t ff_opts_info < <(eval "${cmd[1]}" -hide_banner -help full)
-
 # Gets the file size of '$if', '$of_remux' and '$of'.
-	mapfile -t size_info < <(du -BM "${if}" "${of_remux}" "${of}" 2>&-)
-
 # Gets information about output file from 'mediainfo'.
+	mapfile -t of_info < <(eval "${cmd[1]}" -hide_banner -i \""${of}"\" 2>&1)
+	mapfile -t of_remux_info < <(eval "${cmd[1]}" -hide_banner -i \""${of_remux}"\" 2>&1)
+	mapfile -t hb_version_info < <(eval "${cmd[0]}" --version 2>&-)
+	mapfile -t hb_opts_info < <(eval "${cmd[0]}" --help 2>&-)
+	mapfile -t ff_version_info < <(eval "${cmd[1]}" -version)
+	mapfile -t ff_opts_info < <(eval "${cmd[1]}" -hide_banner -help full)
+	mapfile -t size_info < <(du -BM "${if}" "${of_remux}" "${of}" 2>&-)
 	mapfile -t mediainfo_info < <(eval "${cmd[5]}" -f \""${of}"\" 2>&-)
 
 # Prints the information gathered from the input file, by ffmpeg.
@@ -870,7 +875,6 @@ info_txt () {
 # Prints file size information.
 # Prints the information gathered from the output file, by mediainfo
 # (if that command is installed).
-
 	for type in "${info_list_3[@]}"; do
 		info_f_ref="${type}_f"
 		info_ref="${type}[@]"
