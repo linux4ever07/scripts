@@ -852,8 +852,8 @@ info_txt () {
 
 # Gets information about output file.
 # Gets information about output remux file.
-# Gets HandBrake version.
-# Gets the list of HandBrake options.
+# Gets the HandBrake version.
+# Gets the HandBrake options.
 # Gets the ffmpeg version.
 # Gets the ffmpeg options.
 # Gets the file size of '$if', '$of_remux' and '$of'.
