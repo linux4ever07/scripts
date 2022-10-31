@@ -672,10 +672,10 @@ ${if}
 
 There are no suitable audio tracks in input file. It either has no audio
 tracks at all, or they're in the wrong format or have the wrong language
-code. A possible fix is checking the language of the input file and
+code. A possible fix is checking the language of the input file, and
 specifying the correct language code as argument to the script.
 		
-Listing all streams found in the input file:
+Listing all streams found in input file:
 
 NO_MATCH
 
