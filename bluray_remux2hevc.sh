@@ -86,8 +86,9 @@ hb_subs=0
 # the script till look for when extracting the core DTS track.
 lang='eng'
 
-anime=0
-grain=0
+# Creates a variable that will decide what kind of x265 tuning to use,
+# if any.
+declare tune
 
 # Gets full path of input file.
 if=$(readlink -f "$1")
@@ -195,20 +196,20 @@ while [[ -n $@ ]]; do
 		'-anime')
 			shift
 
-			if [[ $grain -eq 1 ]]; then
+			if [[ -n $tune ]]; then
 				usage
 			fi
 
-			anime=1
+			tune='anime'
 		;;
 		'-grain')
 			shift
 
-			if [[ $anime -eq 1 ]]; then
+			if [[ -n $tune ]]; then
 				usage
 			fi
 
-			grain=1
+			tune='grain'
 		;;
 		*)
 			usage
@@ -745,19 +746,23 @@ hb_encode () {
 
 	args3=(2\> \>\(tee \""${hb_log_f}"\"\))
 
-	grain_tune='--encoder-tune grain'
 	anime_tune='--encoder-tune animation'
+	grain_tune='--encoder-tune grain'
 
 # Creates the HandBrake command, which will be used to encode the input
-# file to a HEVC output file. Depending on whether $grain is set to 1 or
-# 0, we get a different HandBrake command.
-	if [[ $grain -eq 1 ]]; then
-		args=("${args1[@]}" "${grain_tune}" "${args2[@]}" "${args3[@]}")
-	elif [[ $anime -eq 1 ]]; then
-		args=("${args1[@]}" "${anime_tune}" "${args2[@]}" "${args3[@]}")
-	else
-		args=("${args1[@]}" "${args2[@]}" "${args3[@]}")
-	fi
+# file to a HEVC output file. Depending on whether $tune is set or not,
+# we get a different HandBrake command.
+	case "$tune" in
+		'anime')
+			args=("${args1[@]}" "${anime_tune}" "${args2[@]}" "${args3[@]}")
+		;;
+		'grain')
+			args=("${args1[@]}" "${grain_tune}" "${args2[@]}" "${args3[@]}")
+		;;
+		*)
+			args=("${args1[@]}" "${args2[@]}" "${args3[@]}")
+		;;
+	esac
 
 # Prints the full HandBrake command, and executes it.
 	args_string="${args[@]}"
