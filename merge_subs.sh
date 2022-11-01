@@ -238,7 +238,7 @@ done
 printf '\nDefault subtitle track: %s\n' "$default"
 
 if [[ -n ${sub_tracks[${default},num]} ]]; then
-	printf '(Track ID: %s)\n' "${sub_tracks[${default},num]}"
+	printf '(Track ID: %s)\n\n' "${sub_tracks[${default},num]}"
 fi
 
 # Puts together the mkvmerge command. The loop below deals with
