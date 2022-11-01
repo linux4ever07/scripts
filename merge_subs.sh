@@ -94,7 +94,12 @@ done
 srt_tracks_n=$(( srt_tracks_n + 1 ))
 srt_tracks_total_n="$srt_tracks_n"
 
-command -v mkvinfo 1>&- 2>&- || exit
+command -v mkvinfo 1>&- 2>&-
+
+if [[ $? -ne 0 ]]; then
+	printf '\nThis script needs %s installed!%s\n\n' 'mkvtoolnix'
+	exit
+fi
 
 mapfile -t mkvinfo_lines < <(mkvinfo "$if" 2>&-)
 
