@@ -18,10 +18,11 @@ regex_class='^media\.class = \"(.*)\"'
 regex_sink='^Audio/Sink$'
 regex_volume='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
 regex_zero='^0+([0-9]+)$'
-full_volume='1000000'
-no_volume='0'
-target_volume='0'
-interval='10'
+regex_split='^([0-9]+)([0-9]{6})$'
+full_volume=1000000
+no_volume=0
+target_volume=0
+interval=10
 
 declare pw_id
 
@@ -59,7 +60,7 @@ get_id () {
 		done
 	}
 
-	n='0'
+	declare n
 
 	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
 
@@ -68,7 +69,12 @@ get_id () {
 		line="${pw_info[${i}]}"
 		
 		if [[ $line =~ $regex_id ]]; then
-			n=$(( n + 1 ))
+			if [[ -z $n ]]; then
+				n=0
+			else
+				n=$(( n + 1 ))
+			fi
+
 			pw_parsed[${n},id]="${BASH_REMATCH[1]}"
 		fi
 
@@ -81,8 +87,10 @@ get_id () {
 		fi
 	done
 
+	n=$(( n + 1 ))
+
 # Save the ids and node names of every node that's an audio sink.
-	for (( i = 1; i < n; i++ )); do
+	for (( i = 0; i < n; i++ )); do
 		if [[ ${pw_parsed[${i},class]} =~ $regex_sink ]]; then
 			nodes["${pw_parsed[${i},id]}"]="${pw_parsed[${i},node]}"
 		fi
@@ -169,8 +177,6 @@ set_volume () {
 	volume_tmp="$1"
 	mute_tmp="$2"
 
-	regex_split='^([0-9]+)([0-9]{6})$'
-
 	if [[ $volume_tmp =~ $regex_split ]]; then
 		volume_1="${BASH_REMATCH[1]}"
 		volume_2="${BASH_REMATCH[2]}"
@@ -179,7 +185,7 @@ set_volume () {
 			volume_2="${BASH_REMATCH[1]}"
 		fi
 	else
-		volume_1='0'
+		volume_1=0
 		volume_2="$volume_tmp"
 	fi
 
@@ -217,7 +223,7 @@ sleep_low () {
 	sleep "$interval"
 
 	if [[ $diff -ge $volume ]]; then
-		volume='0'
+		volume=0
 	else
 		volume=$(( volume - diff ))
 	fi
@@ -236,8 +242,8 @@ sleep_low () {
 get_count () {
 	volume_tmp="$1"
 
-	unit='354'
-	count=('0' '0' '0')
+	unit=354
+	count=(0 0 0)
 
 # Calculates the difference between current volume and target volume.
 	diff=$(( volume_tmp - target_volume ))
