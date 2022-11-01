@@ -836,8 +836,7 @@ info_txt () {
 	info_list_3=("${info_list_1[@]}" "${info_list_2[@]}")
 
 # If the info txt filenames (in list 1) already exist, add a random
-# number to the end of the filename. Also, create empty files with those
-# names.
+# number to the end of the filename.
 	for txt_f in "${info_list_1[@]}"; do
 		txt_ref="${txt_f}_f"
 
@@ -849,7 +848,6 @@ info_txt () {
 	done
 
 # If the info txt filenames (in list 2) already exist, remove them.
-# Also, create empty files with those names.
 	for txt_f in "${info_list_2[@]}"; do
 		txt_ref="${txt_f}_f"
 
