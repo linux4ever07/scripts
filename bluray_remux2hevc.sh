@@ -847,15 +847,6 @@ info_txt () {
 		fi
 	done
 
-# If the info txt filenames (in list 2) already exist, remove them.
-	for txt_f in "${info_list_2[@]}"; do
-		txt_ref="${txt_f}_f"
-
-		if [[ -f ${!txt_ref} ]]; then
-			rm "${!txt_ref}"
-		fi
-	done
-
 # Gets information about output file.
 # Gets information about remux output file.
 # Gets the HandBrake version.
