@@ -11,7 +11,7 @@ session="${RANDOM}-${RANDOM}"
 of="${if%.[^.]*}-${session}.mkv"
 
 declare sub_tracks_total_n srt_tracks_total_n
-declare -a mkvinfo_tracks
+declare -a mkvinfo_tracks args1 args2
 declare -A tracks sub_tracks srt_tracks
 
 regex_start='^\|\+ Tracks$'
