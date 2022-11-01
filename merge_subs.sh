@@ -97,7 +97,7 @@ srt_tracks_total_n="$srt_tracks_n"
 command -v mkvinfo 1>&- 2>&-
 
 if [[ $? -ne 0 ]]; then
-	printf '\nThis script needs %s installed!%s\n\n' 'mkvtoolnix'
+	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
 	exit
 fi
 
