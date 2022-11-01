@@ -846,8 +846,6 @@ info_txt () {
 
 			eval ${txt_f}_f="${txt_tmp}-${session}.txt"
 		fi
-
-		touch "${!txt_ref}"
 	done
 
 # If the info txt filenames (in list 2) already exist, remove them.
@@ -858,8 +856,6 @@ info_txt () {
 		if [[ -f ${!txt_ref} ]]; then
 			rm "${!txt_ref}"
 		fi
-
-		touch "${!txt_ref}"
 	done
 
 # Gets information about output file.
@@ -1098,6 +1094,7 @@ for txt_f in "$command_f" "$hb_log_f"; do
 	if [[ -f $txt_f ]]; then
 		rm "$txt_f"
 	fi
+
 	touch "$txt_f"
 done
 
