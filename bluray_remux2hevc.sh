@@ -90,9 +90,25 @@ lang='eng'
 # if any.
 declare tune
 
+# Creates some global regexes.
+regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex_zero='^0+([0-9]+)$'
+
 # Gets full path of input file.
 if=$(readlink -f "$1")
 bname=$(basename "$if")
+
+# Setting some variables that will be used to create a full HandBrake
+# command, with args.
+format='av_mkv'
+v_encoder='x265_10bit'
+preset='slow'
+v_bitrate=5000
+a_encoder='copy:dts'
+
+# Creates a variable which contains the last part of the output
+# filename.
+rls_type='1080p.BluRay.x265.DTS'
 
 # Creates a function called 'usage', which prints the syntax,
 # some basic info, and quits.
@@ -245,18 +261,6 @@ for cmd_tmp in "${cmd[@]}"; do
 	fi
 done
 
-# Setting some variables that will be used to create a full HandBrake
-# command, with args.
-format='av_mkv'
-v_encoder='x265_10bit'
-preset='slow'
-v_bitrate=5000
-a_encoder='copy:dts'
-
-# Creates a variable which contains the last part of the output
-# filename.
-rls_type='1080p.BluRay.x265.DTS'
-
 # This creates a function called 'fsencode', which will delete special
 # characters that are not allowed in filenames on certain filesystems.
 # The characters in the regex are allowed. All others are deleted. Based
@@ -284,7 +288,6 @@ break_name () {
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
 	regex='^(.*)([[:punct:]]|[[:space:]]){1,}([0-9]{4})([[:punct:]]|[[:space:]]){1,}(.*)$'
-	regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
@@ -468,7 +471,6 @@ dts_extract_remux () {
 	regex_kbps=', ([0-9]+) kb\/s'
 	regex_bps='^ +BPS.*: ([0-9]+)$'
 	regex_last3='^[0-9]+([0-9]{3})$'
-	regex_zero='^0+([0-9]+)$'
 
 	high_kbps='1536'
 	low_kbps='768'
