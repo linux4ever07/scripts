@@ -25,8 +25,6 @@ regex_name="${regex_line}Name: (.*)$"
 
 regex_lang_arg='^[[:alpha:]]{3}$'
 
-declare offset
-
 usage () {
 	cat <<USAGE
 
