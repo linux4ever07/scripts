@@ -285,7 +285,7 @@ for (( i = 1; i < files_n; i++ )); do
 
 		if [[ $i -ne 1 ]]; then
 			args_tmp+=('--language' \""${num_tmp}:${lang_tmp}"\")
-			args_tmp+=('--name' \""${num_tmp}:${name_tmp}"\")
+			args_tmp+=('--track-name' \""${num_tmp}:${name_tmp}"\")
 		fi
 
 		if [[ $j -eq $default ]]; then
@@ -303,7 +303,7 @@ done
 full_args=(mkvmerge -o \""$of"\" "${args[@]}")
 
 # Runs mkvmerge.
-eval "${full_args[@]}"
+#eval "${full_args[@]}"
 
 # Removes temporary MKV files.
 rm "${files_tmp[@]}"
