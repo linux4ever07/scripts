@@ -62,6 +62,9 @@ if [[ $? -ne 0 ]]; then
 	exit
 fi
 
+# Creates a function called 'get_tracks', which will read the metadata
+# of media files, and if they contain subtitle tracks, store those in
+# the 'sub_tracks' hash.
 get_tracks () {
 	if_tmp=$(readlink -f "$1")
 	bn_tmp=$(basename "$if_tmp")
