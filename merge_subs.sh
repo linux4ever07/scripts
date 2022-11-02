@@ -34,6 +34,8 @@ regex_name="${regex_line}Name: (.*)$"
 regex_fn='^(.*)\.([^.]*)$'
 regex_lang_arg='^[[:alpha:]]{3}$'
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	cat <<USAGE
 
