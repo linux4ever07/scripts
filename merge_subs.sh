@@ -1,18 +1,26 @@
 #!/bin/bash
 
-# This script is meant to mux extra subtitles into an MKV file, and
-# also set the default subtitle. It asks the user to select the default
-# subtitle from a menu.
+# This script is meant to mux extra subtitles into an MKV (Matroska)
+# file, and also set the default subtitle. It asks the user to select
+# the default subtitle from a menu.
+
+# Even if the video file given as first argument is not an MKV, it will
+# still probably be able to be processed, as long as 'mkvmerge' supports
+# it. The output file will be MKV no matter what.
+
+# All video / subtitle files passed to the script that are not Matroska
+# will be temporarily converted to Matroska so their metadata can be
+# read by 'mkvinfo'. The temporary files are deleted after the script is
+# done.
 
 if=$(readlink -f "$1")
-if_bn=$(basename "$if")
-if_bn_lc="${if_bn,,}"
+
 session="${RANDOM}-${RANDOM}"
 of="${if%.[^.]*}-${session}.mkv"
 
-declare sub_tracks_total_n srt_tracks_total_n
-declare -a mkvinfo_tracks args1 args2
-declare -A tracks sub_tracks srt_tracks
+sub_tracks_n=0
+declare -a files tmp_files args1 args2
+declare -A sub_tracks
 
 regex_start='^\|\+ Tracks$'
 regex_stop='^\|\+ '
@@ -23,6 +31,7 @@ regex_sub="${regex_line}Track type: subtitles$"
 regex_lang="${regex_line}Language( \(.*\)){0,1}: (.*)$"
 regex_name="${regex_line}Name: (.*)$"
 
+regex_fn='^(.*)\.([^.]*)$'
 regex_lang_arg='^[[:alpha:]]{3}$'
 
 usage () {
@@ -46,22 +55,140 @@ USAGE
 	exit
 }
 
-if [[ ! -f $if || ${if_bn_lc##*.} != 'mkv' ]]; then
-	usage
+command -v mkvinfo 1>&- 2>&-
+
+if [[ $? -ne 0 ]]; then
+	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
+	exit
 fi
 
+get_tracks () {
+	if_tmp=$(readlink -f "$1")
+	bn_tmp=$(basename "$if_tmp")
+	dn_tmp=$(dirname "$if_tmp")
+
+	declare ext_tmp of_tmp
+	declare -a mkvinfo_tracks
+	declare -A tracks
+
+# Parses the input file name, and separates basename from extension.
+# If this fails, return from the function.
+	if [[ ${bn_tmp,,} =~ $regex_fn ]]; then
+		match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
+		ext_tmp="${match[1]}"
+		session_tmp="${RANDOM}-${RANDOM}"
+		of_tmp="${dn_tmp}/${match[0]}-${session_tmp}.mkv"
+	else
+		return
+	fi
+
+# If input file is not a Matroska file, remux it to a temporary MKV,
+# add the file name to the 'tmp_files' array, so it can be deleted
+# later.
+	if [[ $ext_tmp != 'mkv' ]]; then
+		mapfile -t mkvmerge_lines < <(mkvmerge -o "$of_tmp" "$if_tmp" 2>&-)
+
+		if [[ $? -ne 0 ]]; then
+			return
+		fi
+
+		tmp_files+=("$of_tmp")
+		if_tmp="$of_tmp"
+	fi
+
+	files+=("$if_tmp")
+
+	mapfile -t mkvinfo_lines < <(mkvinfo "$if_tmp" 2>&-)
+
+# Singles out the part that lists the tracks, and ignores the rest of
+# the output from 'mkvinfo'.
+	switch=0
+
+	for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
+		line="${mkvinfo_lines[${i}]}"
+
+		if [[ $line =~ $regex_start ]]; then
+			switch=1
+			continue
+		fi
+
+		if [[ $switch -eq 1 ]]; then
+			if [[ $line =~ $regex_stop ]]; then
+				switch=0
+				break
+			fi
+
+			mkvinfo_tracks+=("$line")
+		fi
+	done
+
+# Gets all tracks from Matroska file.
+	tracks_n=0
+
+	for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
+		line="${mkvinfo_tracks[${i}]}"
+
+		if [[ $line =~ $regex_track ]]; then
+			tracks_n=$(( tracks_n + 1 ))
+
+			tracks[${tracks_n},sub]=0
+		fi
+
+		if [[ $line =~ $regex_num ]]; then
+			tracks[${tracks_n},num]="${BASH_REMATCH[1]}"
+		fi
+
+		if [[ $line =~ $regex_sub ]]; then
+			tracks[${tracks_n},sub]=1
+		fi
+
+		if [[ $line =~ $regex_lang ]]; then
+			tracks[${tracks_n},lang]="${BASH_REMATCH[2]}"
+		fi
+
+		if [[ $line =~ $regex_name ]]; then
+			tracks[${tracks_n},name]="${BASH_REMATCH[1]}"
+		fi
+	done
+
+	tracks_n=$(( tracks_n + 1 ))
+
+# Gets all subtitle tracks specifically.
+	for (( i = 1; i < tracks_n; i++ )); do
+		if [[ ${tracks[${i},sub]} -eq 1 ]]; then
+			sub_tracks_n=$(( sub_tracks_n + 1 ))
+		else
+			continue
+		fi
+
+		sub_tracks[${sub_tracks_n},file]="$if_tmp"
+
+		if [[ -n ${tracks[${i},num]} ]]; then
+			sub_tracks[${sub_tracks_n},num]="${tracks[${i},num]}"
+		fi
+
+		if [[ -n ${tracks[${i},lang]} ]]; then
+			if [[ -z ${sub_tracks[${sub_tracks_n},lang]} ]]; then
+				sub_tracks[${sub_tracks_n},lang]="${tracks[${i},lang]}"
+			fi
+		fi
+
+		if [[ -n ${tracks[${i},name]} ]]; then
+			if [[ -z ${sub_tracks[${sub_tracks_n},name]} ]]; then
+				sub_tracks[${sub_tracks_n},name]="${tracks[${i},name]}"
+			fi
+		fi
+	done
+}
+
 # The loop below handles the arguments to the script.
-shift
-
-srt_tracks_n=0
-
 while [[ -n $@ ]]; do
 	case "$1" in
 		'-lang')
 			shift
 
 			if [[ $1 =~ $regex_lang_arg ]]; then
-				srt_tracks[${srt_tracks_n},lang]="${1,,}"
+				sub_tracks[${sub_tracks_n},lang]="${1,,}"
 			else
 				usage
 			fi
@@ -71,15 +198,13 @@ while [[ -n $@ ]]; do
 		'-name')
 			shift
 
-			srt_tracks[${srt_tracks_n},name]="$1"
+			sub_tracks[${sub_tracks_n},name]="$1"
 
 			shift
 		;;
 		*)
 			if [[ -f $1 ]]; then
-				srt_tracks_n=$(( srt_tracks_n + 1 ))
-
-				srt_tracks[${srt_tracks_n},file]=$(readlink -f "$1")
+				get_tracks "$1"
 
 				shift
 			else
@@ -89,132 +214,20 @@ while [[ -n $@ ]]; do
 	esac
 done
 
-srt_tracks_n=$(( srt_tracks_n + 1 ))
-srt_tracks_total_n="$srt_tracks_n"
-
-command -v mkvinfo 1>&- 2>&-
-
-if [[ $? -ne 0 ]]; then
-	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
-	exit
+# If no subtitles have been found, quit.
+if [[ ${#sub_tracks[@]} -eq 0 ]]; then
+	usage
 fi
 
-mapfile -t mkvinfo_lines < <(mkvinfo "$if" 2>&-)
-
-# Singles out the part that lists the tracks, and ignores the rest of
-# the output from 'mkvinfo'.
-switch=0
-
-for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
-	line="${mkvinfo_lines[${i}]}"
-
-	if [[ $line =~ $regex_start ]]; then
-		switch=1
-		continue
-	fi
-
-	if [[ $switch -eq 1 ]]; then
-		if [[ $line =~ $regex_stop ]]; then
-			switch=0
-			break
-		fi
-
-		mkvinfo_tracks+=("$line")
-	fi
-done
-
-# Gets all tracks from Matroska file.
-tracks_n=0
-
-for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
-	line="${mkvinfo_tracks[${i}]}"
-
-	if [[ $line =~ $regex_track ]]; then
-		tracks_n=$(( tracks_n + 1 ))
-
-		tracks[${tracks_n},sub]=0
-	fi
-
-	if [[ $line =~ $regex_num ]]; then
-		tracks[${tracks_n},num]="${BASH_REMATCH[1]}"
-	fi
-
-	if [[ $line =~ $regex_sub ]]; then
-		tracks[${tracks_n},sub]=1
-	fi
-
-	if [[ $line =~ $regex_lang ]]; then
-		tracks[${tracks_n},lang]="${BASH_REMATCH[2]}"
-	fi
-
-	if [[ $line =~ $regex_name ]]; then
-		tracks[${tracks_n},name]="${BASH_REMATCH[1]}"
-	fi
-done
-
-tracks_n=$(( tracks_n + 1 ))
-
-sub_tracks_n=0
-
-# Gets all subtitle tracks specifically.
-for (( i = 1; i < tracks_n; i++ )); do
-	if [[ ${tracks[${i},sub]} -eq 1 ]]; then
-		sub_tracks_n=$(( sub_tracks_n + 1 ))
-	else
-		continue
-	fi
-
-	if [[ -n ${tracks[${i},num]} ]]; then
-		sub_tracks[${sub_tracks_n},num]="${tracks[${i},num]}"
-	fi
-
-	if [[ -n ${tracks[${i},lang]} ]]; then
-		sub_tracks[${sub_tracks_n},lang]="${tracks[${i},lang]}"
-	fi
-
-	if [[ -n ${tracks[${i},name]} ]]; then
-		sub_tracks[${sub_tracks_n},name]="${tracks[${i},name]}"
-	fi
-done
-
-sub_tracks_total_n=$(( sub_tracks_n + 1 ))
-
-# Adds all the SRT files that were given as arguments to the script, to
-# the 'sub_tracks' hash.
-for (( i = 1; i < srt_tracks_total_n; i++ )); do
-	if [[ -n ${srt_tracks[${i},file]} ]]; then
-		sub_tracks_n=$(( sub_tracks_n + 1 ))
-
-		sub_tracks[${sub_tracks_n},file]="${srt_tracks[${i},file]}"
-	fi
-
-	if [[ -n ${srt_tracks[${i},lang]} ]]; then
-		sub_tracks[${sub_tracks_n},lang]="${srt_tracks[${i},lang]}"
-	fi
-
-	if [[ -n ${srt_tracks[${i},name]} ]]; then
-		sub_tracks[${sub_tracks_n},name]="${srt_tracks[${i},name]}"
-	fi
-done
-
+# Adds 1 to $sub_tracks_n, so we can loop through all the elements.
+# Otherwise, the last element will be skipped.
 sub_tracks_n=$(( sub_tracks_n + 1 ))
-
-printf '\n%s\n\n' "$if"
 
 # Prints all the subtitle tracks, and asks the user to choose the
 # default track, saves that choice in the $default variable.
-printf '%s\n\n' 'Choose the default track:'
+printf '\n%s\n\n' 'Choose the default track:'
 
-for (( i = 1; i < sub_tracks_total_n; i++ )); do
-	lang_tmp="${sub_tracks[${i},lang]}"
-	name_tmp="${sub_tracks[${i},name]}"
-
-	printf '%s)\n' "$i"
-	printf '  language: %s\n' "$lang_tmp"
-	printf '  name: %s\n' "$name_tmp"
-done
-
-for (( i = sub_tracks_total_n; i < sub_tracks_n; i++ )); do
+for (( i = 1; i < sub_tracks_n; i++ )); do
 	file_tmp="${sub_tracks[${i},file]}"
 	lang_tmp="${sub_tracks[${i},lang]}"
 	name_tmp="${sub_tracks[${i},name]}"
@@ -240,23 +253,26 @@ if [[ -n ${sub_tracks[${default},num]} ]]; then
 fi
 
 # Puts together the mkvmerge command. The loop below deals with
-# subtitles that are in the Matroska file.
-for (( i = 1; i < sub_tracks_total_n; i++ )); do
-	num_tmp="${sub_tracks[${i},num]}"
-
-	if [[ $i -eq $default ]]; then
-		args1+=("--default-track-flag ${num_tmp}:1")
-	else
-		args1+=("--default-track-flag ${num_tmp}:0")
-	fi
-done
-
-# This loop deals with the SRT subtitles given as arguments to the
-# script.
-for (( i = sub_tracks_total_n; i < sub_tracks_n; i++ )); do
+# subtitles that are in the Matroska file, and the subtitle files given
+# as arguments to the script.
+for (( i = 1; i < sub_tracks_n; i++ )); do
 	file_tmp="${sub_tracks[${i},file]}"
+	num_tmp="${sub_tracks[${i},num]}"
 	lang_tmp="${sub_tracks[${i},lang]}"
 	name_tmp="${sub_tracks[${i},name]}"
+
+# If the current subtitle line belongs to the 1st file passed to the
+# script (likely a Matroska file), then no need to carry on with the
+# rest of the loop.
+	if [[ $file_tmp == "${files[0]}" ]]; then
+		if [[ $i -eq $default ]]; then
+			args1+=("--default-track-flag ${num_tmp}:1")
+		else
+			args1+=("--default-track-flag ${num_tmp}:0")
+		fi
+
+		continue
+	fi
 
 	if [[ -n $lang_tmp ]]; then
 		args2+=('--language' 0:\""${lang_tmp}"\")
@@ -267,9 +283,9 @@ for (( i = sub_tracks_total_n; i < sub_tracks_n; i++ )); do
 	fi
 
 	if [[ $i -eq $default ]]; then
-		args2+=('--default-track-flag 0:1')
+		args2+=("--default-track-flag ${num_tmp}:1")
 	else
-		args2+=('--default-track-flag 0:0')
+		args2+=("--default-track-flag ${num_tmp}:0")
 	fi
 
 	if [[ -n $file_tmp ]]; then
@@ -277,8 +293,13 @@ for (( i = sub_tracks_total_n; i < sub_tracks_n; i++ )); do
 	fi
 done
 
+# Runs mkvmerge.
 eval mkvmerge -o \""$of"\" "${args1[@]}" \""$if"\" "${args2[@]}"
 
+# Removes temporary MKV files.
+rm "${tmp_files[@]}"
+
+# Prints the mkvmerge command.
 printf '\n'
 
 string="mkvmerge -o \"$of\" ${args1[@]} \"$if\" ${args2[@]}"
