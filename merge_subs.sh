@@ -18,8 +18,9 @@ if=$(readlink -f "$1")
 session="${RANDOM}-${RANDOM}"
 of="${if%.[^.]*}-${session}.mkv"
 
+files_n=0
 sub_tracks_n=0
-declare -a files tmp_files args1 args2 full_args
+declare -a files files_tmp args full_args range1 range2
 declare -A sub_tracks
 
 regex_start='^\|\+ Tracks$'
@@ -73,7 +74,7 @@ get_tracks () {
 	dn_tmp=$(dirname "$if_tmp")
 
 	declare ext_tmp of_tmp
-	declare -a mkvinfo_tracks
+	declare -a mkvinfo_tracks args_tmp
 	declare -A tracks
 
 # Parses the input file name, and separates basename from extension.
@@ -88,7 +89,7 @@ get_tracks () {
 	fi
 
 # If input file is not a Matroska file, remux it to a temporary MKV,
-# add the file name to the 'tmp_files' array, so it can be deleted
+# add the file name to the 'files_tmp' array, so it can be deleted
 # later.
 	if [[ $ext_tmp != 'mkv' ]]; then
 		mapfile -t mkvmerge_lines < <(mkvmerge -o "$of_tmp" "$if_tmp" 2>&-)
@@ -97,11 +98,11 @@ get_tracks () {
 			return
 		fi
 
-		tmp_files+=("$of_tmp")
+		files_tmp+=("$of_tmp")
 		if_tmp="$of_tmp"
 	fi
 
-	files+=("$if_tmp")
+	files["${files_n}"]="$if_tmp"
 
 	mapfile -t mkvinfo_lines < <(mkvinfo "$if_tmp" 2>&-)
 
@@ -160,27 +161,30 @@ get_tracks () {
 
 # Gets all subtitle tracks specifically.
 	for (( i = 1; i < tracks_n; i++ )); do
-		if [[ ${tracks[${i},sub]} -eq 1 ]]; then
+		sub_tmp="${tracks[${i},sub]}"
+		num_tmp="${tracks[${i},num]}"
+		lang_tmp="${tracks[${i},lang]}"
+		name_tmp="${tracks[${i},name]}"
+
+		if [[ $sub_tmp -eq 1 ]]; then
 			sub_tracks_n=$(( sub_tracks_n + 1 ))
 		else
 			continue
 		fi
 
-		sub_tracks[${sub_tracks_n},file]="$if_tmp"
-
-		if [[ -n ${tracks[${i},num]} ]]; then
-			sub_tracks[${sub_tracks_n},num]="${tracks[${i},num]}"
+		if [[ -n $num_tmp ]]; then
+			sub_tracks[${sub_tracks_n},num]="$num_tmp"
 		fi
 
-		if [[ -n ${tracks[${i},lang]} ]]; then
+		if [[ -n $lang_tmp ]]; then
 			if [[ -z ${sub_tracks[${sub_tracks_n},lang]} ]]; then
-				sub_tracks[${sub_tracks_n},lang]="${tracks[${i},lang]}"
+				sub_tracks[${sub_tracks_n},lang]="$lang_tmp"
 			fi
 		fi
 
-		if [[ -n ${tracks[${i},name]} ]]; then
+		if [[ -n $name_tmp ]]; then
 			if [[ -z ${sub_tracks[${sub_tracks_n},name]} ]]; then
-				sub_tracks[${sub_tracks_n},name]="${tracks[${i},name]}"
+				sub_tracks[${sub_tracks_n},name]="$name_tmp"
 			fi
 		fi
 	done
@@ -209,7 +213,11 @@ while [[ -n $@ ]]; do
 		;;
 		*)
 			if [[ -f $1 ]]; then
+				files_n=$(( files_n + 1 ))
+
+				range1["${files_n}"]=$(( $sub_tracks_n + 1 ))
 				get_tracks "$1"
+				range2["${files_n}"]=$(( $sub_tracks_n + 1 ))
 
 				shift
 			else
@@ -224,23 +232,28 @@ if [[ ${#sub_tracks[@]} -eq 0 ]]; then
 	usage
 fi
 
-# Adds 1 to $sub_tracks_n, so we can loop through all the elements.
-# Otherwise, the last element will be skipped.
+# Adds 1 to $files_n and $sub_tracks_n, so we can loop through all the
+# elements. Otherwise, the last element will be skipped.
+files_n=$(( files_n + 1 ))
 sub_tracks_n=$(( sub_tracks_n + 1 ))
 
 # Prints all the subtitle tracks, and asks the user to choose the
 # default track, saves that choice in the $default variable.
 printf '\n%s\n\n' 'Choose the default track:'
 
-for (( i = 1; i < sub_tracks_n; i++ )); do
-	file_tmp="${sub_tracks[${i},file]}"
-	lang_tmp="${sub_tracks[${i},lang]}"
-	name_tmp="${sub_tracks[${i},name]}"
+for (( i = 1; i < files_n; i++ )); do
+	range1_tmp="${range1[${i}]}"
+	range2_tmp="${range2[${i}]}"
 
-	printf '%s)\n' "$i"
-	printf '  file: %s\n' "$file_tmp"
-	printf '  language: %s\n' "$lang_tmp"
-	printf '  name: %s\n' "$name_tmp"
+	for (( j = range1_tmp; j < range2_tmp; j++ )); do
+		lang_tmp="${sub_tracks[${j},lang]}"
+		name_tmp="${sub_tracks[${j},name]}"
+
+		printf '%s)\n' "$j"
+		printf '  file: %s\n' "${files[${i}]}"
+		printf '  language: %s\n' "$lang_tmp"
+		printf '  name: %s\n' "$name_tmp"
+	done
 done
 
 printf '\n%s' '>'
@@ -252,67 +265,48 @@ until [[ $default -lt $sub_tracks_n ]]; do
 done
 
 printf '\nDefault subtitle track: %s\n' "$default"
-
-if [[ -n ${sub_tracks[${default},num]} ]]; then
-	printf '(Track ID: %s)\n\n' "${sub_tracks[${default},num]}"
-fi
+printf '(Track ID: %s)\n\n' "${sub_tracks[${default},num]}"
 
 # Puts together the mkvmerge command. The loop below deals with
 # subtitles that are in the Matroska file, and the subtitle files given
-# as arguments to the script.
-for (( i = 1; i < sub_tracks_n; i++ )); do
-	file_tmp="${sub_tracks[${i},file]}"
-	num_tmp="${sub_tracks[${i},num]}"
-	lang_tmp="${sub_tracks[${i},lang]}"
-	name_tmp="${sub_tracks[${i},name]}"
+# as arguments to the script. The loop below makes sure a file name can
+# only be listed once. This is for when a subtitle file has multiple
+# subtitle tracks.
+for (( i = 1; i < files_n; i++ )); do
+	range1_tmp="${range1[${i}]}"
+	range2_tmp="${range2[${i}]}"
 
-# If the current subtitle line belongs to the 1st file passed to the
-# script (likely a Matroska file), then no need to carry on with the
-# rest of the loop.
-	if [[ $file_tmp == "${files[0]}" ]]; then
-		if [[ $i -eq $default ]]; then
-			args1+=('--default-track-flag' \""${num_tmp}:1"\")
-		else
-			args1+=('--default-track-flag' \""${num_tmp}:0"\")
+	declare -a args_tmp
+
+	for (( j = range1_tmp; j < range2_tmp; j++ )); do
+		num_tmp="${sub_tracks[${j},num]}"
+		lang_tmp="${sub_tracks[${j},lang]}"
+		name_tmp="${sub_tracks[${j},name]}"
+
+		if [[ $i -ne 1 ]]; then
+			args_tmp+=('--language' \""${num_tmp}:${lang_tmp}"\")
+			args_tmp+=('--name' \""${num_tmp}:${name_tmp}"\")
 		fi
 
-		continue
-	fi
+		if [[ $j -eq $default ]]; then
+			args_tmp+=('--default-track-flag' \""${num_tmp}:1"\")
+		else
+			args_tmp+=('--default-track-flag' \""${num_tmp}:0"\")
+		fi
+	done
 
-	if [[ -n $lang_tmp ]]; then
-		args2+=('--language' \""${num_tmp}:${lang_tmp}"\")
-	fi
-
-	if [[ -n $name_tmp ]]; then
-		args2+=('--track-name' \""${num_tmp}:${name_tmp}"\")
-	fi
-
-	if [[ $i -eq $default ]]; then
-		args2+=('--default-track-flag' \""${num_tmp}:1"\")
-	else
-		args2+=('--default-track-flag' \""${num_tmp}:0"\")
-	fi
-
-# The loop below makes sure a file name can only be listed once. This
-# is for when a subtitle file has multiple subtitle tracks.
-	if [[ -n $file_tmp ]]; then
-		for (( j = 0; j < ${#files[@]}; j++ )); do
-			if [[ $file_tmp == "${files[${j}]}" ]]; then
-				args2+=(\""${file_tmp}"\")
-				unset -v files[${j}]
-				break
-			fi
-		done
-	fi
+	args_tmp+=(\""${files[${i}]}"\")
+	args+=("${args_tmp[@]}")
+	unset -v args_tmp
 done
 
-full_args=(mkvmerge -o \""$of"\" "${args1[@]}" \""$if"\" "${args2[@]}")
+full_args=(mkvmerge -o \""$of"\" "${args[@]}")
 
 # Runs mkvmerge.
 eval "${full_args[@]}"
 
 # Removes temporary MKV files.
-rm "${tmp_files[@]}"
+rm "${files_tmp[@]}"
 
 # Prints the mkvmerge command.
 string="${full_args[@]}"
