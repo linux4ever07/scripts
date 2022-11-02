@@ -294,7 +294,13 @@ for (( i = 1; i < sub_tracks_n; i++ )); do
 	fi
 
 	if [[ -n $file_tmp ]]; then
-		args2+=(\""${file_tmp}"\")
+		for (( j = 0; j < ${#files[@]}; j++ )); do
+			if [[ $file_tmp == "${files[${j}]}" ]]; then
+				args2+=(\""${file_tmp}"\")
+				unset -v files[${j}]
+				break
+			fi
+		done
 	fi
 done
 
