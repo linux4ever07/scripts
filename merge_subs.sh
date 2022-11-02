@@ -74,7 +74,7 @@ get_tracks () {
 	dn_tmp=$(dirname "$if_tmp")
 
 	declare ext_tmp of_tmp
-	declare -a mkvinfo_tracks args_tmp
+	declare -a mkvinfo_tracks
 	declare -A tracks
 
 # Parses the input file name, and separates basename from extension.
@@ -92,9 +92,10 @@ get_tracks () {
 # add the file name to the 'files_tmp' array, so it can be deleted
 # later.
 	if [[ $ext_tmp != 'mkv' ]]; then
-		mapfile -t mkvmerge_lines < <(mkvmerge -o "$of_tmp" "$if_tmp" 2>&-)
+		mapfile -t mkvmerge_lines < <(mkvmerge -o "$of_tmp" "$if_tmp")
 
 		if [[ $? -ne 0 ]]; then
+			printf '%s\n' "${mkvmerge_lines[@]}"
 			return
 		fi
 
