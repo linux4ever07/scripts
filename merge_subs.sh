@@ -301,7 +301,7 @@ done
 full_args=(mkvmerge -o \""$of"\" "${args1[@]}" \""$if"\" "${args2[@]}")
 
 # Runs mkvmerge.
-eval mkvmerge -o \""$of"\" "${args1[@]}" \""$if"\" "${args2[@]}"
+eval "${full_args[@]}"
 
 # Removes temporary MKV files.
 rm "${tmp_files[@]}"
