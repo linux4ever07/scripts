@@ -307,7 +307,5 @@ eval "${full_args[@]}"
 rm "${tmp_files[@]}"
 
 # Prints the mkvmerge command.
-printf '\n'
-
 string="${full_args[@]}"
-printf '%s\n\n' "$string"
+printf '\n%s\n\n' "$string"
