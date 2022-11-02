@@ -293,6 +293,8 @@ for (( i = 1; i < sub_tracks_n; i++ )); do
 		args2+=('--default-track-flag' \""${num_tmp}:0"\")
 	fi
 
+# The loop below makes sure a file name can only be listed once. This
+# is for when a subtitle file has multiple subtitle tracks.
 	if [[ -n $file_tmp ]]; then
 		for (( j = 0; j < ${#files[@]}; j++ )); do
 			if [[ $file_tmp == "${files[${j}]}" ]]; then
