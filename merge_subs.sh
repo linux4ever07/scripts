@@ -174,7 +174,7 @@ get_tracks () {
 		fi
 
 		if [[ -n $num_tmp ]]; then
-			sub_tracks[${sub_tracks_n},num]="$num_tmp"
+			sub_tracks["${sub_tracks_n},num"]="$num_tmp"
 		fi
 
 		if [[ -n $lang_tmp ]]; then
