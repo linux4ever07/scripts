@@ -280,11 +280,11 @@ for (( i = 1; i < sub_tracks_n; i++ )); do
 	fi
 
 	if [[ -n $lang_tmp ]]; then
-		args2+=('--language' 0:\""${lang_tmp}"\")
+		args2+=('--language' \""${num_tmp}:${lang_tmp}"\")
 	fi
 
 	if [[ -n $name_tmp ]]; then
-		args2+=('--track-name' 0:\""${name_tmp}"\")
+		args2+=('--track-name' \""${num_tmp}:${name_tmp}"\")
 	fi
 
 	if [[ $i -eq $default ]]; then
