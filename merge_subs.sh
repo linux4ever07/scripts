@@ -138,23 +138,23 @@ get_tracks () {
 		if [[ $line =~ $regex_track ]]; then
 			tracks_n=$(( tracks_n + 1 ))
 
-			tracks[${tracks_n},sub]=0
+			tracks["${tracks_n},sub"]=0
 		fi
 
 		if [[ $line =~ $regex_num ]]; then
-			tracks[${tracks_n},num]="${BASH_REMATCH[1]}"
+			tracks["${tracks_n},num"]="${BASH_REMATCH[1]}"
 		fi
 
 		if [[ $line =~ $regex_sub ]]; then
-			tracks[${tracks_n},sub]=1
+			tracks["${tracks_n},sub"]=1
 		fi
 
 		if [[ $line =~ $regex_lang ]]; then
-			tracks[${tracks_n},lang]="${BASH_REMATCH[2]}"
+			tracks["${tracks_n},lang"]="${BASH_REMATCH[2]}"
 		fi
 
 		if [[ $line =~ $regex_name ]]; then
-			tracks[${tracks_n},name]="${BASH_REMATCH[1]}"
+			tracks["${tracks_n},name"]="${BASH_REMATCH[1]}"
 		fi
 	done
 
@@ -179,13 +179,13 @@ get_tracks () {
 
 		if [[ -n $lang_tmp ]]; then
 			if [[ -z ${sub_tracks[${sub_tracks_n},lang]} ]]; then
-				sub_tracks[${sub_tracks_n},lang]="$lang_tmp"
+				sub_tracks["${sub_tracks_n},lang"]="$lang_tmp"
 			fi
 		fi
 
 		if [[ -n $name_tmp ]]; then
 			if [[ -z ${sub_tracks[${sub_tracks_n},name]} ]]; then
-				sub_tracks[${sub_tracks_n},name]="$name_tmp"
+				sub_tracks["${sub_tracks_n},name"]="$name_tmp"
 			fi
 		fi
 	done
@@ -198,7 +198,7 @@ while [[ -n $@ ]]; do
 			shift
 
 			if [[ $1 =~ $regex_lang_arg ]]; then
-				sub_tracks[${sub_tracks_n},lang]="${1,,}"
+				sub_tracks["${sub_tracks_n},lang"]="${1,,}"
 			else
 				usage
 			fi
@@ -208,7 +208,7 @@ while [[ -n $@ ]]; do
 		'-name')
 			shift
 
-			sub_tracks[${sub_tracks_n},name]="$1"
+			sub_tracks["${sub_tracks_n},name"]="$1"
 
 			shift
 		;;
