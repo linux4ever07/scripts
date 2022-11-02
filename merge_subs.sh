@@ -35,6 +35,13 @@ regex_name="${regex_line}Name: (.*)$"
 regex_fn='^(.*)\.([^.]*)$'
 regex_lang_arg='^[[:alpha:]]{3}$'
 
+command -v mkvinfo 1>&- 2>&-
+
+if [[ $? -ne 0 ]]; then
+	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
+	exit
+fi
+
 # Creates a function called 'usage', which will print usage instructions
 # and then quit.
 usage () {
@@ -57,13 +64,6 @@ Usage: $(basename "$0") [mkv] [srt] [args] [...]
 USAGE
 	exit
 }
-
-command -v mkvinfo 1>&- 2>&-
-
-if [[ $? -ne 0 ]]; then
-	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
-	exit
-fi
 
 # Creates a function called 'get_tracks', which will read the metadata
 # of media files, and if they contain subtitle tracks, store those in
