@@ -19,7 +19,7 @@ session="${RANDOM}-${RANDOM}"
 of="${if%.[^.]*}-${session}.mkv"
 
 sub_tracks_n=0
-declare -a files tmp_files args1 args2
+declare -a files tmp_files args1 args2 full_args
 declare -A sub_tracks
 
 regex_start='^\|\+ Tracks$'
@@ -298,6 +298,8 @@ for (( i = 1; i < sub_tracks_n; i++ )); do
 	fi
 done
 
+full_args=(mkvmerge -o \""$of"\" "${args1[@]}" \""$if"\" "${args2[@]}")
+
 # Runs mkvmerge.
 eval mkvmerge -o \""$of"\" "${args1[@]}" \""$if"\" "${args2[@]}"
 
@@ -307,5 +309,5 @@ rm "${tmp_files[@]}"
 # Prints the mkvmerge command.
 printf '\n'
 
-string="mkvmerge -o \"$of\" ${args1[@]} \"$if\" ${args2[@]}"
+string="${full_args[@]}"
 printf '%s\n\n' "$string"
