@@ -16,7 +16,7 @@
 if=$(readlink -f "$1")
 
 session="${RANDOM}-${RANDOM}"
-of="${if%.[^.]*}-of-${session}.mkv"
+of="${if%.[^.]*}-${session}.mkv"
 
 sub_tracks_n=0
 declare -a files tmp_files args1 args2
@@ -82,7 +82,7 @@ get_tracks () {
 		match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
 		ext_tmp="${match[1]}"
 		session_tmp="${RANDOM}-${RANDOM}"
-		of_tmp="${dn_tmp}/${match[0]}-${session_tmp}.mkv"
+		of_tmp="${dn_tmp}/${match[0]}-tmp-${session_tmp}.mkv"
 	else
 		return
 	fi
