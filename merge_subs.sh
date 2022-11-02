@@ -271,9 +271,9 @@ for (( i = 1; i < sub_tracks_n; i++ )); do
 # rest of the loop.
 	if [[ $file_tmp == "${files[0]}" ]]; then
 		if [[ $i -eq $default ]]; then
-			args1+=("--default-track-flag ${num_tmp}:1")
+			args1+=('--default-track-flag' \""${num_tmp}:1"\")
 		else
-			args1+=("--default-track-flag ${num_tmp}:0")
+			args1+=('--default-track-flag' \""${num_tmp}:0"\")
 		fi
 
 		continue
@@ -288,9 +288,9 @@ for (( i = 1; i < sub_tracks_n; i++ )); do
 	fi
 
 	if [[ $i -eq $default ]]; then
-		args2+=("--default-track-flag ${num_tmp}:1")
+		args2+=('--default-track-flag' \""${num_tmp}:1"\")
 	else
-		args2+=("--default-track-flag ${num_tmp}:0")
+		args2+=('--default-track-flag' \""${num_tmp}:0"\")
 	fi
 
 	if [[ -n $file_tmp ]]; then
