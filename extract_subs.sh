@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script is meant to extract all the subtitles from a Matroska
 # (.mkv) file. The output filename is the same as the input filename,
 # only a random number is added to the name.

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script removes duplicate lines from IRC logs in the current
 # directory.
 
