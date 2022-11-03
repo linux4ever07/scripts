@@ -27,8 +27,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	if [[ $line =~ $regex_start ]]; then
-		regex_stop="^${BASH_REMATCH[1]}\}"
 		switch=1
+		regex_stop="^${BASH_REMATCH[1]}\}"
 	fi
 
 	if [[ $switch -eq 1 ]]; then
@@ -36,7 +36,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 		if [[ $line =~ $regex_stop ]]; then
 			switch=0
-
 			printf '\n'
 		fi
 	fi
