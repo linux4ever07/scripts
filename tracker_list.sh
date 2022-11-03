@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script parses a BitTorrent tracker list text file, sorts, removes
 # duplicates, checks online status of each URL, and prints the list to
 # STDOUT in the correct format.
@@ -66,7 +67,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 				line_l="${#line}"
 
 				if [[ $line_l > $array_l && $line =~ $regex4 ]]; then
-					trackers[${j}]="$line"
+					trackers["${j}"]="$line"
 				fi
 			fi
 		done
@@ -87,7 +88,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 	if [[ ${md5h[${md5}]} -eq 1 ]]; then
 		continue
 	else
-		md5h[${md5}]=1
+		md5h["${md5}"]=1
 	fi
 
 	if [[ $nocheck -eq 1 ]]; then
