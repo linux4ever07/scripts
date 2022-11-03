@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script echoes all the subtitle languages of an MKV file
 # in a comma-separated list. The MKV file should be given as the 1st
 # argument to this script.
