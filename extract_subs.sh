@@ -7,7 +7,7 @@ usage () {
 	msg[0]="You need mkvtoolnix installed to run this script."
 	msg[1]="Usage: $(basename "$0") [mkv]"
 	msg[2]="There are no subtitles in: ${bn}"
-	printf '%s\n\n' "${msg[${1}]}"
+	printf '\n%s\n\n' "${msg[${1}]}"
 	exit
 }
 
