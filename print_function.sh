@@ -14,8 +14,8 @@ if [[ ! -f $if || -z $2 ]]; then
 	usage
 fi
 
-regex_start="^ *${2} *\(\) \{"
-regex_stop='^\}'
+regex_start="^([[:blank:]]*)${2} *\(\) \{"
+regex_stop='\}'
 
 switch=0
 
@@ -27,6 +27,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	if [[ $line =~ $regex_start ]]; then
+		regex_stop="^${BASH_REMATCH[1]}${regex_stop}"
 		switch=1
 	fi
 
@@ -34,7 +35,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		printf '%s\n' "$line"
 	fi
 
-	if [[ $line =~ $regex_stop ]]; then
+	if [[ $switch -eq 1 && $line =~ $regex_stop ]]; then
 		switch=0
 	fi
 done
