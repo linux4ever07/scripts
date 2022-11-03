@@ -161,7 +161,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	stop_time=$(time_convert "$stop_time")
 
 	time_line="${start_time}${delim}${stop_time}"
-	lines[${i}]="$time_line"
+	lines["${i}"]="$time_line"
 done
 
 # Writes the array to $of (output file).

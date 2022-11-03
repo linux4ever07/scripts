@@ -243,11 +243,11 @@ cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
 # Declares an associative array (hash), which contains the package names
 # of the commands that are needed by the script.
 declare -A pkg
-pkg[${cmd[0]}]='HandBrake'
-pkg[${cmd[1]}]='ffmpeg'
-pkg[${cmd[2]}]='mkvtoolnix'
-pkg[${cmd[3]}]='curl'
-pkg[${cmd[4]}]='flac'
+pkg["${cmd[0]}"]='HandBrake'
+pkg["${cmd[1]}"]='ffmpeg'
+pkg["${cmd[2]}"]='mkvtoolnix'
+pkg["${cmd[3]}"]='curl'
+pkg["${cmd[4]}"]='flac'
 
 # Checks if HandBrake, ffmpeg, mkvtoolnix and curl are available on
 # this system. If not, display a message, and quit.

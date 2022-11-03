@@ -38,7 +38,7 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 	fi
 
 	if [[ $line =~ $regex2 ]]; then
-		lines[${i}]=$(sed -E "s/${regex2}/${regex3}/g" <<<"$line")
+		lines["${i}"]=$(sed -E "s/${regex2}/${regex3}/g" <<<"$line")
 	fi
 done
 
