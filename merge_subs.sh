@@ -96,6 +96,7 @@ get_tracks () {
 
 		if [[ $? -ne 0 ]]; then
 			printf '%s\n' "${mkvmerge_lines[@]}"
+			printf '\n'
 			return
 		fi
 
@@ -141,7 +142,6 @@ get_tracks () {
 
 		if [[ $line =~ $regex_track ]]; then
 			tracks_n=$(( tracks_n + 1 ))
-
 			tracks["${tracks_n},sub"]=0
 		fi
 
