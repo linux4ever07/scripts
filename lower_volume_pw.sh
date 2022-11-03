@@ -75,19 +75,17 @@ get_id () {
 				n=$(( n + 1 ))
 			fi
 
-			pw_parsed[${n},id]="${BASH_REMATCH[1]}"
+			pw_parsed["${n},id"]="${BASH_REMATCH[1]}"
 		fi
 
 		if [[ $line =~ $regex_node ]]; then
-			pw_parsed[${n},node]="${BASH_REMATCH[1]}"
+			pw_parsed["${n},node"]="${BASH_REMATCH[1]}"
 		fi
 
 		if [[ $line =~ $regex_class ]]; then
-			pw_parsed[${n},class]="${BASH_REMATCH[1]}"
+			pw_parsed["${n},class"]="${BASH_REMATCH[1]}"
 		fi
 	done
-
-	n=$(( n + 1 ))
 
 # Save the ids and node names of every node that's an audio sink.
 	for (( i = 0; i < n; i++ )); do

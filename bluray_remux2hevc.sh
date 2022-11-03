@@ -513,12 +513,12 @@ dts_extract_remux () {
 					n=$(( n + 1 ))
 				fi
 
-				streams[${n}]="$line"
+				streams["${n}"]="$line"
 
 # If stream line contains bitrate, use that.
 				if [[ $line =~ $regex_kbps ]]; then
 					bps=$(( ${BASH_REMATCH[1]} * 1000 ))
-					bitrates[${n}]="$bps"
+					bitrates["${n}"]="$bps"
 				fi
 			fi
 
@@ -548,7 +548,7 @@ dts_extract_remux () {
 					fi
 				fi
 
-				bitrates[${n}]="$bps"
+				bitrates["${n}"]="$bps"
 			fi
 		done
 	}
@@ -633,8 +633,8 @@ dts_extract_remux () {
 				n="elements[${tmp_type}]"
 
 				if [[ ${streams[${i}]} =~ ${type[${tmp_type}]} ]]; then
-					audio_tracks[${tmp_type},${!n}]="${streams[${i}]}"
-					elements[${tmp_type}]=$(( ${!n} + 1 ))
+					audio_tracks["${tmp_type},${!n}"]="${streams[${i}]}"
+					elements["${tmp_type}"]=$(( ${!n} + 1 ))
 				fi
 			done
 		fi

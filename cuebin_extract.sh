@@ -211,7 +211,7 @@ read_cue () {
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			cue_lines[${track_n},'file']="$string"
+			cue_lines["${track_n},file"]="$string"
 		fi
 
 # If line is a track command...
@@ -221,7 +221,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines[${track_n},'track']="$string"
+			cue_lines["${track_n},track"]="$string"
 		fi
 
 # If line is a pregap command...
@@ -230,7 +230,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines[${track_n},'pregap']="$string"
+			cue_lines["${track_n},pregap"]="$string"
 		fi
 
 # If line is an index command...
@@ -240,7 +240,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines[${track_n},'index',${index_n}]="$string"
+			cue_lines["${track_n},index,${index_n}"]="$string"
 		fi
 
 # If line is a postgap command...
@@ -249,7 +249,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines[${track_n},'postgap']="$string"
+			cue_lines["${track_n},postgap"]="$string"
 		fi
 
 # If a string has been created, add it to the 'cue_tmp' array.
