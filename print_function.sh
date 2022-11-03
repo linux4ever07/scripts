@@ -33,10 +33,10 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	if [[ $switch -eq 1 ]]; then
 		printf '%s\n' "$line"
-	fi
 
-	if [[ $switch -eq 1 && $line =~ $regex_stop ]]; then
-		switch=0
+		if [[ $line =~ $regex_stop ]]; then
+			switch=0
+		fi
 	fi
 done
 
