@@ -14,7 +14,7 @@ if [[ ! -f $if || -z $2 ]]; then
 	usage
 fi
 
-regex_start="^${2} *\(\) \{"
+regex_start="^ *${2} *\(\) \{"
 regex_stop='^\}'
 
 switch=0
