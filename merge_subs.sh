@@ -25,12 +25,12 @@ declare -A sub_tracks
 
 regex_start='^\|\+ Tracks$'
 regex_stop='^\|\+ '
-regex_line='^\| +\+ '
-regex_track="${regex_line}Track$"
-regex_num="${regex_line}Track number: [0-9]+ \(track ID for mkvmerge & mkvextract: ([0-9]+)\)$"
-regex_sub="${regex_line}Track type: subtitles$"
-regex_lang="${regex_line}Language( \(.*\)){0,1}: (.*)$"
-regex_name="${regex_line}Name: (.*)$"
+regex_strip='^\| +\+ (.*)$'
+regex_track="^Track$"
+regex_num="^Track number: [0-9]+ \(track ID for mkvmerge & mkvextract: ([0-9]+)\)$"
+regex_sub="^Track type: subtitles$"
+regex_lang="^Language( \(.*\)){0,1}: (.*)$"
+regex_name="^Name: (.*)$"
 
 regex_fn='^(.*)\.([^.]*)$'
 regex_lang_arg='^[[:alpha:]]{3}$'
@@ -123,6 +123,10 @@ get_tracks () {
 			if [[ $line =~ $regex_stop ]]; then
 				switch=0
 				break
+			fi
+
+			if [[ $line =~ $regex_strip ]]; then
+				line="${BASH_REMATCH[1]}"
 			fi
 
 			mkvinfo_tracks+=("$line")

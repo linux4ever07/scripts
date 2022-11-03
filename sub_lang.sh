@@ -13,11 +13,11 @@ declare -A tracks
 
 regex_start='^\|\+ Tracks$'
 regex_stop='^\|\+ '
-regex_line='^\| +\+ '
-regex_track="${regex_line}Track$"
-regex_sub="${regex_line}Track type: subtitles$"
-regex_lang="${regex_line}Language( \(.*\)){0,1}: (.*)$"
-regex_name="${regex_line}Name: (.*)$"
+regex_strip='^\| +\+ (.*)$'
+regex_track="^Track$"
+regex_sub="^Track type: subtitles$"
+regex_lang="^Language( \(.*\)){0,1}: (.*)$"
+regex_name="^Name: (.*)$"
 
 usage () {
 	printf '%s\n\n' "Usage: $(basename "$0") [mkv]"
@@ -53,6 +53,10 @@ for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
 		if [[ $line =~ $regex_stop ]]; then
 			switch=0
 			break
+		fi
+
+		if [[ $line =~ $regex_strip ]]; then
+			line="${BASH_REMATCH[1]}"
 		fi
 
 		mkvinfo_tracks+=("$line")
