@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script is meant to print functions in a Bash script given to it
-# as argument.
+# This script is meant to print a specific function in a Bash script
+# given to it as argument.
 
 if=$(readlink -f "$1")
 
@@ -15,7 +15,7 @@ if [[ ! -f $if || -z $2 ]]; then
 fi
 
 regex_start="^${2} *\(\) \{"
-regex_stop='^}'
+regex_stop='^\}'
 
 switch=0
 
