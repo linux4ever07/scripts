@@ -27,7 +27,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	if [[ $line =~ $regex_start ]]; then
-		regex_stop="^${BASH_REMATCH[1]}\{"
+		regex_stop="^${BASH_REMATCH[1]}\}"
 		switch=1
 	fi
 
