@@ -285,8 +285,13 @@ for (( i = 1; i < files_n; i++ )); do
 		name_tmp="${sub_tracks[${j},name]}"
 
 		if [[ $i -ne 1 ]]; then
-			args_tmp+=('--language' \""${num_tmp}:${lang_tmp}"\")
-			args_tmp+=('--track-name' \""${num_tmp}:${name_tmp}"\")
+			if [[ -n $lang_tmp ]]; then
+				args_tmp+=('--language' \""${num_tmp}:${lang_tmp}"\")
+			fi
+
+			if [[ -n $name_tmp ]]; then
+				args_tmp+=('--track-name' \""${num_tmp}:${name_tmp}"\")
+			fi
 		fi
 
 		if [[ $j -eq $default ]]; then
