@@ -36,8 +36,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 		if [[ $line =~ $regex_stop ]]; then
 			switch=0
+
+			printf '\n'
 		fi
 	fi
 done
-
-printf '\n'
