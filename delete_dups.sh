@@ -37,7 +37,7 @@ for (( i=0; i<${#files[@]}; i++ )); do
 
 	md5=$(md5sum -b "$f")
 	md5="${md5%% *}"
-	md5s[${md5}]="$f_bn"
+	md5s["${md5}"]="$f_bn"
 done
 
 for dn in "${dirs[@]}"; do

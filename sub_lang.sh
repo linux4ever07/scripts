@@ -72,19 +72,19 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 			n=$(( n + 1 ))
 		fi
 
-		tracks[${n},sub]=0
+		tracks["${n},sub"]=0
 	fi
 
 	if [[ $line =~ $regex_sub ]]; then
-		tracks[${n},sub]=1
+		tracks["${n},sub"]=1
 	fi
 
 	if [[ $line =~ $regex_lang ]]; then
-		tracks[${n},lang]="${BASH_REMATCH[2]}"
+		tracks["${n},lang"]="${BASH_REMATCH[2]}"
 	fi
 
 	if [[ $line =~ $regex_name ]]; then
-		tracks[${n},name]="${BASH_REMATCH[1]}"
+		tracks["${n},name"]="${BASH_REMATCH[1]}"
 	fi
 done
 

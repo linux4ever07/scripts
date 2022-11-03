@@ -9,7 +9,7 @@ gettags () {
 		unset -v alltags[${field}]
 	done
 
-	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if")
+	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
 
 	for (( z=0; z<${#lines[@]}; z++ )); do
 		line="${lines[${z}]}"

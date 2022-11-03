@@ -57,7 +57,7 @@ mapfile -t files < <(find "$dn" -maxdepth 1 -type f -iname "*" 2>&-)
 
 set_target () {
 	set_vars () {
-		titles[${title}]="$region_n"
+		titles["${title}"]="$region_n"
 	}
 
 	for (( j = 0; j < ${#priority[@]}; j++ )); do
@@ -106,7 +106,7 @@ get_games () {
 		title=$(sed -E "s/${regex1}//" <<<"$bn")
 
 		if [[ -n $title ]]; then
-			titles[${title}]='undef'
+			titles["${title}"]='undef'
 		fi
 	done
 }
@@ -151,7 +151,7 @@ for title in "${!titles[@]}"; do
 			fi
 		done
 
-		if [[ $region_n == ${titles[${title}]} ]]; then
+		if [[ $region_n == "${titles[${title}]}" ]]; then
 			printf '%s\n' "$bn"
 			mv -n "$bn" "$sorted_dn" || exit
 		fi

@@ -98,10 +98,10 @@ for key in "${!dir1_files_hash[@]}"; do
 	if [[ ${dir2_files_hash[${key}]} ]]; then
 		dir2_f="${dir2}/${dir2_files_hash[${key}]}"
 
-		dir1_md5s_hash[${key}]=$(md5sum -b "${dir1_f}")
-		dir1_md5s_hash[${key}]="${dir1_md5s_hash[${key}]%% *}"
-		dir2_md5s_hash[${key}]=$(md5sum -b "${dir2_f}")
-		dir2_md5s_hash[${key}]="${dir2_md5s_hash[${key}]%% *}"
+		dir1_md5s_hash["${key}"]=$(md5sum -b "${dir1_f}")
+		dir1_md5s_hash["${key}"]="${dir1_md5s_hash[${key}]%% *}"
+		dir2_md5s_hash["${key}"]=$(md5sum -b "${dir2_f}")
+		dir2_md5s_hash["${key}"]="${dir2_md5s_hash[${key}]%% *}"
 	fi
 done
 

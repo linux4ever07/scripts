@@ -49,10 +49,10 @@ regex5='/$'
 
 declare -a trackers
 
-mapfile -t lines < <( tr -d '\r' <"$if" | tr '[:upper:]' '[:lower:]' | sort --unique)
+mapfile -t lines < <( tr -d '\r' <"$if" | tr -d '[:blank:]' | tr '[:upper:]' '[:lower:]' | sort --unique)
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	line=$(tr -d '[:space:]' <<<"${lines[${i}]}")
+	line="${lines[${i}]}"
 	switch=0
 
 	if [[ -n $line ]]; then
@@ -80,7 +80,7 @@ done
 declare -A md5h
 
 for (( i = 0; i < ${#trackers[@]}; i++ )); do
-	tracker=$(tr -d '[:space:]' <<<"${trackers[${i}]}")
+	tracker="${trackers[${i}]}"
 	md5=$(md5sum -b <<<"$tracker")
 	md5="${md5%% *}"
 
