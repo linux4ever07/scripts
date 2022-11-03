@@ -20,7 +20,7 @@ regex_lang="^Language( \(.*\)){0,1}: (.*)$"
 regex_name="^Name: (.*)$"
 
 usage () {
-	printf '%s\n\n' "Usage: $(basename "$0") [mkv]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [mkv]"
 	exit
 }
 

@@ -15,7 +15,7 @@
 # centisecond.
 
 usage () {
-	printf '%s\n' "Usage: $(basename "$0") [srt]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [srt]"
 	exit
 }
 
