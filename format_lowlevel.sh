@@ -18,18 +18,18 @@ if [[ $(whoami) != 'root' ]]; then
 	exit
 fi
 
-pause_msg="
-You are about to do a low-level format of:
-${drive}
-
-Are you sure? [y/n]: "
-
 while [[ -n $@ ]]; do
 	drive=$(readlink -f "$1")
 
 	if [[ ! -b $drive ]]; then
 		usage
 	fi
+
+	pause_msg="
+You are about to do a low-level format of:
+${drive}
+
+Are you sure? [y/n]: "
 
 	read -p "$pause_msg"
 
@@ -44,14 +44,14 @@ while [[ -n $@ ]]; do
 		sleep 1
 	done
 
-	printf '\n\n%s\n' 'Formatting...'
+	printf '\n\n%s: %s\n' "$drive" 'formatting...'
 
 	dd if='/dev/zero' of="${drive}" bs=1M
 
-	if [[ $? -eq 0 ]]
-		printf '\n%s\n\n' 'Format succeeded!'
+	if [[ $? -eq 0 ]]; then
+		printf '\n%s: %s\n\n' "$drive" 'format succeeded!'
 	else
-		printf '\n%s\n\n' 'Format failed!'
+		printf '\n%s: %s\n\n' "$drive" 'format failed!'
 	fi
 
 	shift
