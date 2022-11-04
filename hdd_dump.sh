@@ -104,7 +104,7 @@ md5copy () {
 
 	md5s["${md5_if}"]=1
 
-	printf "copying: ${if_tmp}... "
+	printf '%s' "copying: ${if_tmp}... "
 
 	for n in {1..5}; do
 		cp -p "$if_tmp" "$of_tmp" 2>&-
