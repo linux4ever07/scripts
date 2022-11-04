@@ -99,7 +99,7 @@ md5copy () {
 				return
 			fi
 
-			sleep 10
+			sleep 1
 		fi
 	done
 
@@ -129,7 +129,7 @@ md5copy () {
 				return
 			fi
 
-			sleep 10
+			sleep 1
 		fi
 	done
 }
