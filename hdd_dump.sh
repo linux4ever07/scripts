@@ -64,6 +64,7 @@ Not enough free space in:
 ${out_dir}
 
 Difference is ${diff} bytes.
+
 USED
 
 	exit
