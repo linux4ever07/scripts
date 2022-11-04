@@ -74,7 +74,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	ln -s "$if" "$of" || exit
 done
 
-unset -v fn_parts dn_parts string
+unset -v fn_parts dn_parts start stop
 
 # Change the permissions of the output directory.
 

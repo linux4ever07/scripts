@@ -89,7 +89,7 @@ for dir in dir1 dir2; do
 	done
 done
 
-unset -v fn_parts dn_parts string bn_md5
+unset -v fn_parts dn_parts start bn_md5
 
 # Generates an MD5 hash of all the basenames that exist in both
 # directories. This is faster than checking the MD5 hash of *all* the

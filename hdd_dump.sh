@@ -162,4 +162,4 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-unset -v fn_parts dn_parts string
+unset -v fn_parts dn_parts start stop

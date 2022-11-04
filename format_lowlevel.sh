@@ -46,7 +46,7 @@ while [[ -n $@ ]]; do
 
 	printf '\n\nFormatting...\n'
 
-	dd if=/dev/zero of="${drive}" bs=1M
+	dd if='/dev/zero' of="${drive}" bs=1M
 
 	if [[ $? -eq 0 ]]
 		printf '\n%s\n\n' 'Format succeeded!'
