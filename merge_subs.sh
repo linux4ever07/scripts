@@ -104,6 +104,8 @@ get_tracks () {
 		if_tmp="$of_tmp"
 	fi
 
+# Adds file name to the 'files' array, so it can be used later to
+# construct the mkvmerge command.
 	files["${files_n}"]="$if_tmp"
 
 	mapfile -t mkvinfo_lines < <(mkvinfo "$if_tmp" 2>&-)
@@ -134,6 +136,8 @@ get_tracks () {
 		fi
 	done
 
+	unset -v mkvinfo_lines
+
 # Gets all tracks from Matroska file.
 	tracks_n=0
 
@@ -163,6 +167,8 @@ get_tracks () {
 	done
 
 	tracks_n=$(( tracks_n + 1 ))
+
+	unset -v mkvinfo_tracks
 
 # Gets all subtitle tracks specifically.
 	for (( i = 1; i < tracks_n; i++ )); do
