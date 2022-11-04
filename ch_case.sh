@@ -43,7 +43,7 @@ printf '\n'
 mapfile -d'/' -t path_parts <<<"${dir}"
 depth_orig=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$dir" -iname "*")
+mapfile -t files < <(find "$dir" -iname "*" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	f="${files[${i}]}"
