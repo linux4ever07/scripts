@@ -41,11 +41,10 @@ out_dir=$(readlink -f "$2")
 
 pause_msg="
 You're about to recursively symlink:
-\"${in_dir}\"
+  \"${in_dir}\"
 
-to
-
-\"${out_dir}\"
+To:
+  \"${out_dir}\"
 
 Are you sure? [y/n]: "
 
