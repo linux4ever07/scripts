@@ -85,8 +85,13 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 		tracks["${n},sub"]=1
 	fi
 
+# For some tracks, the language can be listed twice. First with a
+# three-letter code, and then with a two-letter code. The first code is
+# preferred by this script.
 	if [[ $line =~ $regex_lang ]]; then
-		tracks["${n},lang"]="${BASH_REMATCH[2]}"
+		if [[ -z ${tracks[${n},lang]} ]]; then
+			tracks["${n},lang"]="${BASH_REMATCH[2]}"
+		fi
 	fi
 
 	if [[ $line =~ $regex_name ]]; then
