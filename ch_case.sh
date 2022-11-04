@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script will recursively change the file / directory names under
 # the directory specified to either upper or lower case.
 

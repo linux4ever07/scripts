@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script creates a duplicate of the directory specified, by
 # recursively re-creating the sub-directories and then creating symbolic
 # links for all the files.
