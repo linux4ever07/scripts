@@ -18,11 +18,11 @@ if [[ $(whoami) != 'root' ]]; then
 	exit
 fi
 
-pause_msg='
+pause_msg="
 You are about to do a low-level format of:
 ${drive}
 
-Are you sure? [y/n]: '
+Are you sure? [y/n]: "
 
 while [[ -n $@ ]]; do
 	drive=$(readlink -f "$1")

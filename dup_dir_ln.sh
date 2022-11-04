@@ -39,16 +39,21 @@ fi
 in_dir=$(readlink -f "$1")
 out_dir=$(readlink -f "$2")
 
-pause_msg="You're about to recursively symlink:
+pause_msg="
+You're about to recursively symlink:
 \"${in_dir}\"
 
 to
 
 \"${out_dir}\"
 
-To continue, press Enter. To abort, press Ctrl+C."
+Are you sure? [y/n]: "
 
 read -p "$pause_msg"
+
+if [[ $REPLY != 'y' ]]; then
+	exit
+fi
 
 mapfile -t files < <(find "$in_dir" -type f -iname "*")
 

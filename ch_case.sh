@@ -17,7 +17,7 @@ usage () {
 
 if [[ ! -d $1 ]]; then
 	usage
-elif [[ ! $2 == 'upper' && ! $2 == 'lower' ]]; then
+elif [[ $2 != 'upper' && $2 != 'lower' ]]; then
 	usage
 fi
 
@@ -25,15 +25,22 @@ dir=$(readlink -f "$1")
 case="$2"
 depth='0'
 
-pause_msg="You're about to recursively change all the file / directory names
+pause_msg="
+You're about to recursively change all the file / directory names
 under \"${dir}\" to ${case} case.
 
-To continue, press Enter. To abort, press Ctrl+C."
+Are you sure? [y/n]: "
+
+read -p "$pause_msg"
+
+if [[ $REPLY != 'y' ]]; then
+	exit
+fi
+
+printf '\n'
 
 mapfile -d'/' -t path_parts <<<"${dir}"
 depth_orig=$(( ${#path_parts[@]} - 1 ))
-
-read -p "$pause_msg"
 
 mapfile -t files < <(find "$dir" -iname "*")
 
