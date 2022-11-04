@@ -182,7 +182,7 @@ check_cmd () {
 	name[lzh]='7zip'
 
 	for cmd_type in "${!cmd[@]}"; do
-		if [[ "$1" == "$cmd_type" ]]; then
+		if [[ $1 == "$cmd_type" ]]; then
 			if [[ -z ${cmd[${cmd_type}]} ]]; then
 				cat <<CMD
 

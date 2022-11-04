@@ -28,11 +28,11 @@ shift
 declare -A nicks nicks_tmp
 
 for nick in "$@"; do
-	nicks["${nick,,}"]='1'
+	nicks["${nick,,}"]=1
 done
 
 if_nick () {
-	if [[ "$line_tmp" =~ $regex1 ]]; then
+	if [[ $line_tmp =~ $regex1 ]]; then
 		nick="${line_tmp%% *}"
 		nick=$(sed -E "s/${regex2}/\1/" <<<"$nick")
 
@@ -49,9 +49,9 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 	if [[ $switch -eq 0 ]]; then
 		line_tmp="$line"
 
-		n='0'
+		n=0
 
-		until [[ "$line_tmp" =~ $regex1 || $n -eq ${#line_tmp} ]]; do
+		until [[ $line_tmp =~ $regex1 || $n -eq ${#line_tmp} ]]; do
 			line_tmp="${line:${n}}"
 			n=$(( n + 1 ))
 		done
@@ -77,7 +77,7 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	nicks_tmp["${nick}"]='1'
+	nicks_tmp["${nick}"]=1
 done
 
 # This loop finds all the nicks highlighted by the nicks given as
@@ -93,15 +93,15 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 	fi
 
 	for nick_tmp in "${!nicks[@]}"; do
-		if [[ "$nick" == "$nick_tmp" ]]; then
+		if [[ $nick == "$nick_tmp" ]]; then
 			mapfile -d' ' -t line_array < <(sed -E 's/[[:space:]]+/ /g' <<<"${line_tmp,,}")
 
 			for (( k=0; k<${#line_array[@]}; k++ )); do
 				word=$(sed -E "s/${regex3}//" <<<"${line_array[${k}]}")
 
 				for nick_tmp_2 in "${!nicks_tmp[@]}"; do
-					if [[ "$word" == "$nick_tmp_2" ]]; then
-						nicks["${nick_tmp_2}"]='1'
+					if [[ $word == "$nick_tmp_2" ]]; then
+						nicks["${nick_tmp_2}"]=1
 
 						break
 					fi
@@ -126,7 +126,7 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 	fi
 
 	for nick_tmp in "${!nicks[@]}"; do
-		if [[ "$nick" == "$nick_tmp" ]]; then
+		if [[ $nick == "$nick_tmp" ]]; then
 			printf '%s\n' "$line"
 		fi
 	done

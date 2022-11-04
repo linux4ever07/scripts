@@ -51,7 +51,7 @@ for dn in "${dirs[@]}"; do
 		md5="${md5%% *}"
 
 		if [[ -n ${md5s[${md5}]} ]]; then
-			if [[ "${md5s[${md5}]}" == "$f_bn" ]]; then
+			if [[ ${md5s[${md5}]} == "$f_bn" ]]; then
 				printf '%s\n' "$f"
 				rm -f "$f"
 			fi

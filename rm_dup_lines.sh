@@ -11,7 +11,7 @@ dn="/dev/shm/rm_dup_lines-${RANDOM}-${RANDOM}"
 
 mkdir "$dn"
 
-mapfile -t files < <(find . -type f -iname "*.log" -o -iname "*.txt")
+mapfile -t files < <(find . -type f -iname "*.log" -o -iname "*.txt" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
@@ -29,11 +29,11 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 		unset -v line_tmp
 
-		if [[ "${line}" =~ $konversation_regex ]]; then
+		if [[ $line =~ $konversation_regex ]]; then
 			line_tmp=$(sed -E "s/${konversation_regex}//" <<<"$line")
-		elif [[ "${line}" =~ $irssi_regex ]]; then
+		elif [[ $line =~ $irssi_regex ]]; then
 			line_tmp=$(sed -E "s/${irssi_regex}//" <<<"$line")
-		elif [[ "${line}" =~ $hexchat_regex ]]; then
+		elif [[ $line =~ $hexchat_regex ]]; then
 			line_tmp=$(sed -E "s/${hexchat_regex}//" <<<"$line")
 		fi
 
@@ -42,7 +42,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 		fi
 
 		if [[ $j -ge 1 ]]; then
-			if [[ "${line_tmp}" == "${previous}" ]]; then
+			if [[ $line_tmp == "$previous" ]]; then
 				continue
 			fi
 		fi

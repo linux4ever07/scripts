@@ -97,7 +97,7 @@ kill_firefox () {
 			if [[ ! ${pids[${i}]} =~ $regex ]]; then
 				pid="${pids[${i}]}"
 				p_name=$(ps -p "$pid" -o comm | tail -n +2)
-				if [[ $p_name == $name ]]; then
+				if [[ $p_name == "$name" ]]; then
 					unset -v pids[${i}]
 				fi
 			fi
