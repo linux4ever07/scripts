@@ -55,7 +55,7 @@ if [[ $REPLY != 'y' ]]; then
 	exit
 fi
 
-mapfile -t files < <(find "$in_dir" -type f -iname "*")
+mapfile -t files < <(find "$in_dir" -type f -iname "*" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
