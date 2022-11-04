@@ -63,6 +63,8 @@ for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
 	fi
 done
 
+unset -v mkvinfo_lines
+
 # Gets all tracks from Matroska file.
 declare n
 
@@ -93,6 +95,8 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 done
 
 n=$(( n + 1 ))
+
+unset -v mkvinfo_tracks
 
 sort_list () {
 	for (( i = 0; i < n; i++ )); do
