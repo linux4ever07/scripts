@@ -24,8 +24,8 @@ usage () {
 }
 
 # If the script isn't run with sudo / root privileges, then quit.
-if [[ $(whoami) != root ]]; then
-	printf '\n%s\n\n' "You need to be root to run this script!"
+if [[ $(whoami) != 'root' ]]; then
+	printf '\n%s\n\n' 'You need to be root to run this script!'
 	exit
 fi
 
@@ -37,7 +37,7 @@ elif [[ -d $2 || -f $2 ]]; then
 fi
 
 in_dir=$(readlink -f "$1")
-out_dir="$2"
+out_dir=$(readlink -f "$2")
 
 pause_msg="You're about to recursively symlink:
 \"${in_dir}\"
@@ -50,30 +50,7 @@ To continue, press Enter. To abort, press Ctrl+C."
 
 read -p "$pause_msg"
 
-mapfile -t dirs < <(find "$in_dir" -type d -iname "*" | tail -n +2)
 mapfile -t files < <(find "$in_dir" -type f -iname "*")
-
-# Directories.
-
-mkdir -p "$out_dir"
-
-for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	if="${dirs[${i}]}"
-
-# Removes the directory name from the beginning of the string. Creating
-# the basename this way because it's more safe than using regex:es, if
-# the string contains weird characters (that are interpreted as part of
-# the regex).
-	mapfile -d'/' -t path_parts <<<"${in_dir}"
-	start=$(( ${#path_parts[@]} + 1 ))
-	bn=$(cut -d'/' -f${start}- <<<"${if}")
-
-	of="${out_dir}/${bn}"
-
-	mkdir -p "$of"
-done
-
-# Files.
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
@@ -82,14 +59,22 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 # the basename this way because it's more safe than using regex:es, if
 # the string contains weird characters (that are interpreted as part of
 # the regex).
-	mapfile -d'/' -t path_parts <<<"${in_dir}"
-	start=$(( ${#path_parts[@]} + 1 ))
-	bn=$(cut -d'/' -f${start}- <<<"${if}")
+	mapfile -d'/' -t fn_parts <<<"$if"
+	mapfile -d'/' -t dn_parts <<<"$in_dir"
+	start="${#dn_parts[@]}"
+	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
+	dn=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
+	dn="${dn:1}"
+	bn="${fn_parts[-1]%$'\n'}"
 
-	of="${out_dir}/${bn}"
+	of_dn="${out_dir}/${dn}"
+	of="${of_dn}/${bn}"
 
-	ln -s "$if" "$of"
+	mkdir -p "$of_dn" || exit
+	ln -s "$if" "$of" || exit
 done
+
+unset -v fn_parts dn_parts string
 
 # Change the permissions of the output directory.
 

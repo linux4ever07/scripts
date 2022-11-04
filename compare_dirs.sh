@@ -64,16 +64,19 @@ for dir in dir1 dir2; do
 		elements_ref="${dir}_${type}_elements"
 
 		for (( i = 0; i < ${!elements_ref}; i++ )); do
-			tmp_ref="${dir}_${type}[${i}]"
-			dir_ref="${dir}"
+			fn_ref="${dir}_${type}[${i}]"
+			dn_ref="${dir}"
 
 # Removes the directory name from the beginning of the string. Creating
 # the basename this way because it's more safe than using regex:es, if
 # the string contains weird characters (that are interpreted as part of
 # the regex).
-			mapfile -d'/' -t path_parts <<<"${!dir_ref}"
-			start=$(( ${#path_parts[@]} + 1 ))
-			bn=$(cut -d'/' -f${start}- <<<"${!tmp_ref}")
+			mapfile -d'/' -t fn_parts <<<"${!fn_ref}"
+			mapfile -d'/' -t dn_parts <<<"${!dn_ref}"
+			start="${#dn_parts[@]}"
+			bn=$(printf '/%s' "${fn_parts[@]:${start}}")
+			bn="${bn%$'\n'}"
+			bn="${bn:1}"
 
 # Okay, we're done messing with the string now. Now to create the MD5
 # hash.
@@ -86,7 +89,7 @@ for dir in dir1 dir2; do
 	done
 done
 
-unset -v path_parts bn_md5
+unset -v fn_parts dn_parts string bn_md5
 
 # Generates an MD5 hash of all the basenames that exist in both
 # directories. This is faster than checking the MD5 hash of *all* the
@@ -150,8 +153,8 @@ identical='1'
 
 # Prints the result.
 print_list () {
-	tmp_ref="${type}[@]"
-	printf '%s\n' "${!tmp_ref}" | sort
+	fn_ref="${type}[@]"
+	printf '%s\n' "${!fn_ref}" | sort
 
 	unset -v "$type"
 
