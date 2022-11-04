@@ -272,12 +272,11 @@ for (( i = 1; i < files_n; i++ )); do
 	done
 done
 
-printf '\n%s' '>'
-read default
+printf '\n'
+read -p '>' default
 
 until [[ $default -lt $sub_tracks_n ]]; do
-	printf '\n%s' '>'
-	read default
+	read -p '>' default
 done
 
 printf '\nDefault subtitle track: %s\n' "$default"

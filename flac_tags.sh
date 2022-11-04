@@ -61,7 +61,7 @@ options () {
 
 	limit=$(( ${#files[@]} - 1 ))
 
-	read track
+	read -p '>' track
 
 	case "$track" in
 		'b')
@@ -87,8 +87,7 @@ options () {
 check_options () {
 	type="$1"
 
-	printf '\n%s\n%s\n' '*** BACK (b)' '*** QUIT (q)'
-	printf '\n%s' '>'
+	printf '\n%s\n%s\n\n' '*** BACK (b)' '*** QUIT (q)'
 
 	options "$type"
 
