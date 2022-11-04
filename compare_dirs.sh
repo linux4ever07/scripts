@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script is meant to compare two directories, check MD5 hashes of
 # all the files in both directories, to see which ones are identical and
 # which aren't. The script also checks the number of files and will list
