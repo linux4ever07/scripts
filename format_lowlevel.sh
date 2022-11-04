@@ -44,7 +44,7 @@ while [[ -n $@ ]]; do
 		sleep 1
 	done
 
-	printf '\n\nFormatting...\n'
+	printf '\n\n%s\n' 'Formatting...'
 
 	dd if='/dev/zero' of="${drive}" bs=1M
 
