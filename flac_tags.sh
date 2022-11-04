@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script will list tags of a FLAC album. It allows the user to
 # select individual tracks from a simple menu, and display the tags.
 

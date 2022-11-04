@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script looks for FLAC files in the current directory and creates
 # a tracklist from the tags.
 
