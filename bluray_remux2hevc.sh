@@ -433,10 +433,10 @@ imdb () {
 			json_regex1_ref="${json_type}_regex1"
 			json_regex2_ref="${json_type}_regex2"
 
-			if [[ "${tmp_array[${z}]}" =~ ${!json_regex1_ref} ]]; then
+			if [[ ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
 				n=$(( z + 1 ))
 
-				if [[ "${tmp_array[${n}]}" =~ ${!json_regex2_ref} ]]; then
+				if [[ ${tmp_array[${n}]} =~ ${!json_regex2_ref} ]]; then
 					eval ${json_type}=\""${BASH_REMATCH[1]}"\"
 				fi
 

@@ -191,7 +191,7 @@ read_cue () {
 	handle_command () {
 # If line is a file command...
 		if [[ $1 =~ ${format[3]} ]]; then
-			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
+			match=("${BASH_REMATCH[@]:1}")
 			track_n=$(( track_n + 1 ))
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex_path}//")
 
@@ -216,7 +216,7 @@ read_cue () {
 
 # If line is a track command...
 		if [[ $1 =~ ${format[4]} ]]; then
-			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
+			match=("${BASH_REMATCH[@]:1}")
 			track_n="${match[1]#0}"
 
 			string="$1"
@@ -226,7 +226,7 @@ read_cue () {
 
 # If line is a pregap command...
 		if [[ $1 =~ ${format[5]} ]]; then
-			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
+			match=("${BASH_REMATCH[@]:1}")
 
 			string="$1"
 
@@ -235,7 +235,7 @@ read_cue () {
 
 # If line is an index command...
 		if [[ $1 =~ ${format[6]} ]]; then
-			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}")
+			match=("${BASH_REMATCH[@]:1}")
 			index_n="${match[1]#0}"
 
 			string="$1"
@@ -245,7 +245,7 @@ read_cue () {
 
 # If line is a postgap command...
 		if [[ $1 =~ ${format[7]} ]]; then
-			match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
+			match=("${BASH_REMATCH[@]:1}")
 
 			string="$1"
 
@@ -344,7 +344,7 @@ bin_split () {
 
 # Print the output from 'bchunk' if it quits with a non-zero exit
 # status.
-	if [[ "${!exit_status_ref}" != "0" ]]; then
+	if [[ ${!exit_status_ref} != "0" ]]; then
 		for (( i=0; i<last; i++ )); do
 			bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
 

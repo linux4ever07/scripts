@@ -52,7 +52,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	md5="${md5s_fn[${md5_fn}]}"
 
 	if [[ -n ${md5s_og[${md5}]} ]]; then
-		if [[ "$fn" != "${md5s_og[${md5}]}" ]]; then
+		if [[ $fn != "${md5s_og[${md5}]}" ]]; then
 			printf '%s\n' "$fn"
 			rm -f "$fn"
 		fi

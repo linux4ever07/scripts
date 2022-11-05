@@ -80,7 +80,7 @@ get_tracks () {
 # Parses the input file name, and separates basename from extension.
 # If this fails, return from the function.
 	if [[ ${bn_tmp,,} =~ $regex_fn ]]; then
-		match=("${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")
+		match=("${BASH_REMATCH[@]:1}")
 		ext_tmp="${match[1]}"
 		session_tmp="${RANDOM}-${RANDOM}"
 		of_tmp="${dn_tmp}/${match[0]}-tmp-${session_tmp}.mkv"

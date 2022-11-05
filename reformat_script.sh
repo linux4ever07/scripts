@@ -50,11 +50,11 @@ fi
 reformat_comments () {
 	switch='0'
 
-	if [[ "$line" =~ $regex1 && ! "$line" =~ $regex6 ]]; then
+	if [[ $line =~ $regex1 && ! $line =~ $regex6 ]]; then
 		j="$i"
 		line_tmp="${lines[${j}]}"
 
-		while [[ "$line_tmp" =~ $regex1 ]]; do
+		while [[ $line_tmp =~ $regex1 ]]; do
 			mapfile -d' ' -t line_tmp_array < <(tr -d '\r\n' <<<"$line_tmp" | sed -E -e "s/${regex1}//" -e "s/${regex3}//" -e "s/${regex4}/ /g")
 			line_tmp_string="# ${line_tmp_array[@]}"
 			line_tmp_chars="${#line_tmp_string}"
@@ -105,18 +105,18 @@ reformat_comments () {
 reformat_lines () {
 	unset -v tmp
 
-	if [[ "$line" =~ $regex1 && ! "$line" =~ $regex6 ]]; then
+	if [[ $line =~ $regex1 && ! $line =~ $regex6 ]]; then
 		line=$(sed -E -e "s/${regex1}/# /" -e "s/${regex4}/ /g" <<<"$line")
 	fi
 
-	while [[ "$line" =~ $regex5 ]]; do
+	while [[ $line =~ $regex5 ]]; do
 		line=$(sed -E "s/${regex5}//" <<<"$line")
 		tmp+="$tab"
 	done
 
 	line="${tmp}${line}"
 
-	if [[ "$line" =~ $regex3 ]]; then
+	if [[ $line =~ $regex3 ]]; then
 		line=$(sed -E "s/${regex3}//" <<<"$line")
 	fi
 
