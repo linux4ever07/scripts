@@ -171,17 +171,11 @@ fi
 
 printf '\n%s\n\n' 'These packages will be kept:'
 
-for (( i = 0; i < ${#keep[@]}; i++ )); do
-	dnf_pkg="${keep[${i}]}"
-	printf '%s\n' "$dnf_pkg"
-done
+printf '%s\n' "${keep[@]}"
 
 printf '\n%s\n\n' 'These packages will be removed:'
 
-for (( i = 0; i < ${#remove[@]}; i++ )); do
-	dnf_pkg="${remove[${i}]}"
-	printf '%s\n' "$dnf_pkg"
-done
+printf '%s\n' "${remove[@]}"
 
 printf '\n'
 
