@@ -303,16 +303,16 @@ sub logger {
 # Either way, print number of files processed.
 		when ('end') {
 			if (! keys(%err)) {
-				say $LOG "\n" . 'Everything is OK!' . "\n";
+				say $LOG 'Everything is OK!' . "\n";
 			} else {
-				say "\n" . '**** Errors Occurred ****' . "\n";
+				say '**** Errors Occurred ****' . "\n";
 				foreach my $fn (sort(keys(%err))) {
 					say $SE $fn . "\n\t" . $err{$fn};
 				}
 			}
 
 			say $LOG $n . ' file(s) were tested.' . "\n" if (length($n));
-			say $LOG "\n" . '**** Logging ended on ' . $now . ' ****' .
+			say $LOG '**** Logging ended on ' . $now . ' ****' .
 			"\n";
 			close $LOG or die "Can't close '$LOG': $!";
 		}
