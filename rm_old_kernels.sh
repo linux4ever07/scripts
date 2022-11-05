@@ -46,6 +46,11 @@ version_compare () {
 				continue
 			fi
 
+# This loop goes through each number in and first checks if the number
+# is lower than the previous version that was checked. If it is, then
+# break the loop. Since it's checking the numbers from left to right, if
+# a version is older, one of the first numbers is going to be lower,
+# even if one of the later numbers may be higher.
 			for (( z = 0; z < ${#num[@]}; z++ )); do
 				if [[ ${num[${z}]} -lt ${newest_num[${z}]} ]]; then
 					break
