@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# This script is meant to remove old kernel versions from Fedora.
+# This script is meant to remove old kernel versions from Fedora. It
+# automatically figures out what the latest installed version is for
+# each kernel package, and removes all the older versions.
 
 # If the script isn't run with sudo / root privileges, quit.
 if [[ $(whoami) != 'root' ]]; then
