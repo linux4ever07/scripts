@@ -430,7 +430,7 @@ create_cue () {
 				string="${cue_lines[${track_n},pregap]}"
 
 				if [[ -n $string ]]; then
-					eval of_cue_${type}_list+=\(\""${offset[1]}${string}"\"\)
+					eval of_cue_"${type}"_list+=\(\""${offset[1]}${string}"\"\)
 				fi
 
 # If the original CUE specifies a pregap using the INDEX command,
@@ -449,7 +449,7 @@ create_cue () {
 						frames_diff=$(( index_01_frames - index_00_frames ))
 						time_diff=$(time_convert "$frames_diff")
 
-						eval of_cue_${type}_list+=\(\""${offset[1]}PREGAP ${time_diff}"\"\)
+						eval of_cue_"${type}"_list+=\(\""${offset[1]}PREGAP ${time_diff}"\"\)
 					fi
 				fi
 			;;
@@ -457,7 +457,7 @@ create_cue () {
 				string="${cue_lines[${track_n},postgap]}"
 
 				if [[ -n $string ]]; then
-					eval of_cue_${type}_list+=\(\""${offset[1]}${string}"\"\)
+					eval of_cue_"${type}"_list+=\(\""${offset[1]}${string}"\"\)
 				fi
 			;;
 		esac
@@ -469,10 +469,10 @@ create_cue () {
 		track_n=$(( i + 1 ))
 
 		if [[ ${!line_ref} =~ $regex_iso ]]; then
-			eval of_cue_${type}_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
-			eval of_cue_${type}_list+=\(\""${offset[0]}${cue_lines[${track_n},track]}"\"\)
+			eval of_cue_"${type}"_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
+			eval of_cue_"${type}"_list+=\(\""${offset[0]}${cue_lines[${track_n},track]}"\"\)
 			add_gap pre
-			eval of_cue_${type}_list+=\(\""${offset[1]}${index1}"\"\)
+			eval of_cue_"${type}"_list+=\(\""${offset[1]}${index1}"\"\)
 			add_gap post
 		else
 			case "$type" in
@@ -489,9 +489,9 @@ create_cue () {
 
 			string=$(printf 'TRACK %02d AUDIO' "$track_n")
 			
-			eval of_cue_${type}_list+=\(\""${offset[0]}${string}"\"\)
+			eval of_cue_"${type}"_list+=\(\""${offset[0]}${string}"\"\)
 			add_gap pre
-			eval of_cue_${type}_list+=\(\""${offset[1]}${index1}"\"\)
+			eval of_cue_"${type}"_list+=\(\""${offset[1]}${index1}"\"\)
 			add_gap post
 		fi
 	done

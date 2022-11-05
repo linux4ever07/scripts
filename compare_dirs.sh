@@ -83,7 +83,7 @@ for dir in dir1 dir2; do
 # hash.
 			bn_md5=$(md5sum -b <<<"${bn}")
 			bn_md5="${bn_md5%% *}"
-			eval ${dir}_${type}_hash[${bn_md5}]=\""${bn}"\"
+			eval "${dir}"_"${type}"_hash["${bn_md5}"]=\""${bn}"\"
 		done
 
 		unset -v "${dir}_type"
