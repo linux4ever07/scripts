@@ -262,7 +262,7 @@ sub logger {
 # Loop through all the arguments passed to this subroutine Perform
 # checks that decide which variable the arguments are to be assigned to.
 	while (@_) {
-		$arg = shift(@_);
+		$arg = shift;
 
 # If $arg is a number assign it to $n, if it's a file add it to @fn.
 		if ($sw eq 'end') { $n = $arg; }
