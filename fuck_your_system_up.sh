@@ -5,7 +5,7 @@
 # permanently delete all your files on every device. Do NOT run this!
 
 # If the script isn't run with sudo / root privileges, quit.
-if [[ $(whoami) != root ]]; then
+if [[ $(whoami) != 'root' ]]; then
 	printf '\n%s\n\n' "You need to be root to run this script!"
 	exit
 fi
