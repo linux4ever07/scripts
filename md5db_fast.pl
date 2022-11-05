@@ -111,8 +111,9 @@ open(my $LOG, '>>', $logf) or die "Can't open '$logf': $!";
 # Make the $LOG file handle unbuffered for instant logging.
 $LOG->autoflush(1);
 
-# Duplicate STDERR as a regular file handle.
-open(my $SE, ">&STDERR") or die "Can't duplicate STDERR: $!";
+# Duplicate STDOUT and STDERR as a regular file handles.
+open(my $STDOUT, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
+open(my $STDERR, ">&STDERR") or die "Can't duplicate STDERR: $!";
 
 # Subroutine for printing usage instructions.
 sub usage {
@@ -227,7 +228,7 @@ sub iquit {
 
 # Write the hash to the database file and write to the log.
 		hash2file();
-		logger('int', $n);
+		logger('end', $n);
 
 # Detaching the threads so Perl will clean up after us.
 		foreach my $t (threads->list()) { $t->detach(); }
@@ -237,8 +238,9 @@ sub iquit {
 	} elsif ($tid > 1) { while (! $stopping) { yield(); } }
 }
 
-# Subroutine for controlling the log file Applying a semaphore so
-# multiple threads won't try to access it at once, just in case ;-)
+# Subroutine for controlling the log file.
+# Applying a semaphore so multiple threads won't try to access it at
+# once, just in case ;-)
 # It takes 2 arguments:
 # (1) switch
 # (2) file name / number
@@ -248,11 +250,14 @@ sub logger {
 	my $sw = shift;
 	my($arg, @fn, $n);
 
+# Creating an array to hold the filehandles used to print messages.
+	my @OUTS = ($STDOUT, $LOG);
+
 # Creating a variable to hold the current time.
 	my $now = localtime(time);
 
 # Array of accepted switches to this subroutine
-	my @larg = qw{start int gone corr diff end};
+	my @larg = qw{start gone corr diff end};
 
 # Loop through all the arguments passed to this subroutine Perform
 # checks that decide which variable the arguments are to be assigned to.
@@ -260,60 +265,71 @@ sub logger {
 		$arg = shift(@_);
 
 # If $arg is a number assign it to $n, if it's a file add it to @fn.
-		if ($sw eq 'int' or $sw eq 'end') { $n = $arg; }
+		if ($sw eq 'end') { $n = $arg; }
 		else { push(@fn, $arg); }
 	}
 
 	given ($sw) {
 # Starts writing the log.
 		when ('start') {
-			say $LOG "\n" . '**** Logging started on ' . $now . ' ****'
-			. "\n\n" . 'Running script in \'' . $mode . '\' mode on:' .
-			"\n";
-			foreach my $dn (@lib) { say $LOG $dn; }
-			say $LOG '';
-		}
-# When the script is interrupted by user pressing ^C, say so in STDOUT,
-# close the log.
-		when ('int') {
-			say "\n" . 'Interrupted by user!' . "\n\n" . $n .
-			" file(s) were tested." . "\n" . '**** Logging ended on ' .
-			$now . ' ****' . "\n";
-			close $LOG or die "Can't close '$LOG': $!";
+			say $LOG "
+**** Logging started on $now ****
+
+Running script in \'$mode\' mode on:
+";
+			say $LOG join("\n", @lib) . "\n";
 		}
 # Called when file has been deleted or moved.
 		when ('gone') {
-			say $LOG $fn[0] . "\n\t" . 'has been (re)moved.' . "\n";
-			$err{$fn[0]} = 'has been (re)moved.' . "\n";
+			$err{$fn[0]} = 'has been (re)moved.';
 		}
 # Called when file has been corrupted.
 		when ('corr') {
-			say $LOG $fn[0] . "\n\t" . 'has been corrupted.' . "\n";
-			$err{$fn[0]} = 'has been corrupted.' . "\n";
+			$err{$fn[0]} = 'has been corrupted.';
 		}
+# Called when file has been changed.
 		when ('diff') {
-			say $LOG $fn[0] . "\n\t" .
-			'doesn\'t match the hash in database.' . "\n";
-			$err{$fn[0]} = 'doesn\'t match the hash in database.' .
-			"\n";
+			$err{$fn[0]} = 'doesn\'t match the hash in database.';
 		}
-# Called when done, and to close the log.
-# If no errors occurred write "Everything is OK!" to the log.
+# Called when done or interrupted, to close the log.
 # If errors occurred print the %err hash.
 # Either way, print number of files processed.
 		when ('end') {
-			if (! keys(%err)) {
-				say $LOG 'Everything is OK!' . "\n";
-			} else {
-				say '**** Errors Occurred ****' . "\n";
-				foreach my $fn (sort(keys(%err))) {
-					say $SE $fn . "\n\t" . $err{$fn};
+# When the script is interrupted by user pressing ^C, say so in both
+# STDERR and the log.
+			if ($saw_sigint) {
+				$OUTS[0] = $STDERR;
+
+				foreach my $OUT (@OUTS) {
+					say $OUT 'Interrupted by user!' . "\n";
 				}
 			}
 
-			say $LOG $n . ' file(s) were tested.' . "\n" if (length($n));
-			say $LOG '**** Logging ended on ' . $now . ' ****' .
-			"\n";
+			if (! keys(%err)) {
+				foreach my $OUT (@OUTS) {
+					say $OUT 'Everything is OK!' . "\n";
+				}
+			} else {
+				$OUTS[0] = $STDERR;
+
+				foreach my $OUT (@OUTS) {
+					say $OUT 'Errors occurred!' . "\n";
+				}
+
+				foreach my $fn (sort(keys(%err))) {
+					foreach my $OUT (@OUTS) {
+						say $OUT $fn . "\n\t" . $err{$fn} . "\n";
+					}
+				}
+			}
+
+			if (length($n)) {
+				foreach my $OUT (@OUTS) {
+					say $OUT $n . ' file(s) were tested.' . "\n";
+				}
+			}
+
+			say $LOG '**** Logging ended on ' . $now . ' ****' . "\n";
 			close $LOG or die "Can't close '$LOG': $!";
 		}
 	}
