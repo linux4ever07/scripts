@@ -66,7 +66,7 @@ for dir in dir1 dir2; do
 
 		for (( i = 0; i < ${!elements_ref}; i++ )); do
 			fn_ref="${dir}_${type}[${i}]"
-			dn_ref="${dir}"
+			dn_ref="$dir"
 
 # Removes the directory name from the beginning of the string. Creating
 # the basename this way because it's more safe than using regex:es, if
@@ -81,7 +81,7 @@ for dir in dir1 dir2; do
 
 # Okay, we're done messing with the string now. Now to create the MD5
 # hash.
-			bn_md5=$(md5sum -b <<<"${bn}")
+			bn_md5=$(md5sum -b <<<"$bn")
 			bn_md5="${bn_md5%% *}"
 			eval "${dir}"_"${type}"_hash["${bn_md5}"]=\""${bn}"\"
 		done
@@ -102,9 +102,9 @@ for key in "${!dir1_files_hash[@]}"; do
 	if [[ ${dir2_files_hash[${key}]} ]]; then
 		dir2_f="${dir2}/${dir2_files_hash[${key}]}"
 
-		dir1_md5s_hash["${key}"]=$(md5sum -b "${dir1_f}")
+		dir1_md5s_hash["${key}"]=$(md5sum -b "$dir1_f")
 		dir1_md5s_hash["${key}"]="${dir1_md5s_hash[${key}]%% *}"
-		dir2_md5s_hash["${key}"]=$(md5sum -b "${dir2_f}")
+		dir2_md5s_hash["${key}"]=$(md5sum -b "$dir2_f")
 		dir2_md5s_hash["${key}"]="${dir2_md5s_hash[${key}]%% *}"
 	fi
 done

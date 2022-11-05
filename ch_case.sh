@@ -40,7 +40,7 @@ fi
 
 printf '\n'
 
-mapfile -d'/' -t path_parts <<<"${dir}"
+mapfile -d'/' -t path_parts <<<"$dir"
 depth_orig=$(( ${#path_parts[@]} - 1 ))
 
 mapfile -t files < <(find "$dir" -iname "*" 2>&-)
@@ -48,7 +48,7 @@ mapfile -t files < <(find "$dir" -iname "*" 2>&-)
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	f="${files[${i}]}"
 
-	mapfile -d'/' -t path_parts <<<"${f}"
+	mapfile -d'/' -t path_parts <<<"$f"
 	depth_tmp=$(( ${#path_parts[@]} - 1 ))
 	depth_diff=$(( depth_tmp - depth_orig ))
 
