@@ -131,7 +131,7 @@ done
 # If there's no kernel packages older than the currently running
 # version, quit.
 if [[ ${#remove[@]} -eq 0 ]]; then
-	printf '\n%s\n\n' "Nothing to do!"
+	printf '\n%s\n\n' 'Nothing to do!'
 	exit
 fi
 
@@ -158,14 +158,14 @@ RUNNING
 	exit
 fi
 
-printf '\n%s\n\n' "These packages will be kept:"
+printf '\n%s\n\n' 'These packages will be kept:'
 
 for (( i = 0; i < ${#keep[@]}; i++ )); do
 	dnf_pkg="${keep[${i}]}"
 	printf '%s\n' "$dnf_pkg"
 done
 
-printf '\n%s\n\n' "These packages will be removed:"
+printf '\n%s\n\n' 'These packages will be removed:'
 
 for (( i = 0; i < ${#remove[@]}; i++ )); do
 	dnf_pkg="${remove[${i}]}"
