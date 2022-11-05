@@ -81,7 +81,6 @@ done
 
 unset -v fn_parts dn_parts start stop
 
-# Change the permissions of the output directory.
-
+# Changes the owner and permissions of the output directory.
 chown -R root:root "$out_dir"
 chmod -R +r "$out_dir"
