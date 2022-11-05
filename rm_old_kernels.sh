@@ -28,8 +28,8 @@ regex[kernel]="^kernel\.${arch}$"
 regex[modules]="^kernel\-modules\.${arch}$"
 regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
 
-# Creates the 'version_compare' function. It finds out which version
-# number passed to it is the most recent.
+# Creates a function called 'version_compare'. It finds out which
+# version number passed to it is the most recent.
 version_compare () {
 	version_array=("$@")
 
