@@ -104,6 +104,8 @@ for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
 						kernels["${match[0]}"]="$version"
 					fi
 				fi
+
+				break
 			fi
 		done
 	fi
@@ -128,6 +130,8 @@ for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
 				else
 					remove+=("$dnf_pkg")
 				fi
+
+				break
 			fi
 		done
 	fi
