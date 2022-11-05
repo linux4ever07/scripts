@@ -11,7 +11,7 @@ fi
 arch='x86_64'
 pause_msg='Does this look OK? [y/n]: '
 
-declare -A kernels regex
+declare -A latest regex
 declare -a types dnf_pkgs keep remove
 
 types=('core' 'devel' 'devel_matched' 'headers' 'kernel' 'modules' 'modules_extra')
@@ -95,13 +95,13 @@ for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
 		for type in "${types[@]}"; do
 			if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
 				if [[ ${match[1]} =~ ${regex[version]} ]]; then
-					hash_ref="kernels[${match[0]}]"
+					hash_ref="latest[${match[0]}]"
 
 					if [[ -z ${!hash_ref} ]]; then
-						kernels["${match[0]}"]="${match[1]}"
+						latest["${match[0]}"]="${match[1]}"
 					else
 						version=$(version_compare "${!hash_ref}" "${match[1]}")
-						kernels["${match[0]}"]="$version"
+						latest["${match[0]}"]="$version"
 					fi
 				fi
 
@@ -123,7 +123,7 @@ for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
 
 		for type in "${types[@]}"; do
 			if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
-				hash_ref="kernels[${match[0]}]"
+				hash_ref="latest[${match[0]}]"
 
 				if [[ ${match[1]} == "${!hash_ref}" ]]; then
 					keep+=("$dnf_pkg")
@@ -145,7 +145,7 @@ if [[ ${#remove[@]} -eq 0 ]]; then
 fi
 
 current=$(uname -r)
-latest="${kernels[kernel.${arch}]}.${arch}"
+latest="${latest[kernel.${arch}]}.${arch}"
 
 # If the user does not have the latest installed kernel loaded, ask them
 # to reboot before running the script.
