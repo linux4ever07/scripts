@@ -270,7 +270,7 @@ sub logger {
 	}
 
 	given ($sw) {
-# Starts writing the log.
+# When log is opened.
 		when ('start') {
 			say $LOG "
 **** Logging started on $now ****
@@ -279,19 +279,19 @@ Running script in \'$mode\' mode on:
 ";
 			say $LOG join("\n", @lib) . "\n";
 		}
-# Called when file has been deleted or moved.
+# When file has been deleted or moved.
 		when ('gone') {
 			$err{$fn[0]} = 'has been (re)moved.';
 		}
-# Called when file has been corrupted.
+# When file has been corrupted.
 		when ('corr') {
 			$err{$fn[0]} = 'has been corrupted.';
 		}
-# Called when file has been changed.
+# When file has been changed.
 		when ('diff') {
 			$err{$fn[0]} = 'doesn\'t match the hash in database.';
 		}
-# Called when done or interrupted, to close the log.
+# When done or interrupted, to close the log.
 # If errors occurred print the %err hash.
 # Either way, print number of files processed.
 		when ('end') {
