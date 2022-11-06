@@ -73,7 +73,7 @@ version_compare () {
 mapfile -t lines < <(dnf list --installed | grep -E '^kernel' | sed -E 's/[[:space:]]+/ /g')
 
 # This loop gets the package name and version from each line, and saves
-# that in the 'dnf_pkgs' array, for easier parsing later.
+# that in the 'dnf_pkgs' hash.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
