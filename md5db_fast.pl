@@ -69,16 +69,19 @@ my $clear = `clear && echo`;
 # Creating a few shared variables.
 # * %err will be used for errors.
 # * $n will store the number of files that have been processed.
+# * %files is the files hash.
+# * @md5dbs is the md5.db array.
 # * %md5h is the database hash.
 # * %file_contents will store the contents of files.
-# * $stopping will be used to stop the threads if the script is
-# interrupted.
+# * $stopping will be used to stop the threads.
 # * $file_stack will track the amount of file data currently in RAM.
 # * $busy will be used to pause other threads when a thread is busy.
 # * %gone will store the names and hashes of possibly deleted files.
 # * %large will store the names of files that are too big to fit in RAM.
 my %err :shared;
 my $n :shared = 0;
+my %files :shared;
+my @md5dbs :shared;
 my %md5h :shared;
 my %file_contents :shared;
 my $stopping :shared = 0;
@@ -95,15 +98,21 @@ my $disk_size = 1000000000;
 # This will be used to control access to the logger subroutine.
 my $semaphore = Thread::Semaphore->new();
 
-POSIX::sigaction(SIGINT, POSIX::SigAction->new(\&handler))
-or die "Error setting SIGINT handler: $!";
-
 # Creating a custom POSIX signal handler. First we create a shared
 # variable that will work as a SIGINT switch. Then we define the handler
 # subroutine. Each subroutine to be used for starting threads will have
 # to take notice of the state of the $saw_sigint variable.
+POSIX::sigaction(SIGINT, POSIX::SigAction->new(\&handler))
+or die "Error setting SIGINT handler: $!";
 my $saw_sigint :shared = 0;
-sub handler { $saw_sigint = 1; }
+
+sub handler {
+	{ lock($saw_sigint);
+	$saw_sigint = 1; }
+
+	{ lock($stopping);
+	$stopping = 1; }
+}
 
 # Open file handle for the log file
 open(my $LOG, '>>', $logf) or die "Can't open '$logf': $!";
@@ -186,56 +195,105 @@ foreach my $arg (@ARGV) {
 # If no switches were used, print usage instructions.
 if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 
-# Subroutine for loading files into RAM.
-# It takes 1 argument:
-# (1) file name
-sub file2ram {
-	my $fn = shift;
-	my $size = (stat($fn))[7];
+# Subroutine for putting files in the queue, and loading them into RAM.
+sub files2queue {
+	my($files_ref);
 
-	if (! length($size)) { return(); }
+	if ($mode eq 'index') {
+		$files_ref = \%files;
 
-	if ($size <= $disk_size) {
-		my $free = $disk_size - $file_stack;
-
-		while ($size > $free) {
-			yield();
-			$free = $disk_size - $file_stack;
+# If file name already exists in the database hash, skip it.
+		foreach my $fn (keys(%md5h)) {
+			if (length($files{$fn})) { delete($files{$fn}); }
 		}
 
-		open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
-		sysread($read_fn, $file_contents{$fn}, $size);
-		close($read_fn) or die "Can't close '$fn': $!";
+# If file is a FLAC file, then enqueue it directly instead of reading it
+# into RAM.
+		foreach my $fn (keys(%files)) {
+			if ($fn =~ /.flac$/i) {
+				delete($files{$fn});
+				$q->enqueue($fn);
+			}
+		}
+	}
 
-		{ lock($file_stack);
-		$file_stack += length($file_contents{$fn}); }
+	if ($mode eq 'test') {
+		$files_ref = \%md5h;
+	}
 
-		$q->enqueue($fn);
-	} else { $large{$fn} = 1; }
+	foreach my $fn (sort(keys(%{$files_ref}))) {
+		if ($stopping) { return; }
+
+		my $size = (stat($fn))[7];
+
+		if (! length($size)) { next; }
+
+		if ($size <= $disk_size) {
+			my $free = $disk_size - $file_stack;
+
+			while ($size > $free) {
+				yield();
+				$free = $disk_size - $file_stack;
+			}
+
+			open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
+			sysread($read_fn, $file_contents{$fn}, $size);
+			close($read_fn) or die "Can't close '$fn': $!";
+
+			{ lock($file_stack);
+			$file_stack += length($file_contents{$fn}); }
+
+			$q->enqueue($fn);
+		} else { $large{$fn} = 1; }
+	}
+
+# Put all the large files in the queue, after all the smaller files are
+# done being processed. This is to prevent multiple files from being
+# read from the hard drive at once, slowing things down.
+	if (keys(%large)) {
+		while ($file_stack > 0) {
+			if ($stopping) { return; }
+
+			say $file_stack . ' > ' . '0';
+			yield();
+		}
+
+		foreach my $fn (sort(keys(%large))) {
+			if ($stopping) { return; }
+
+			$q->enqueue($fn);
+		}
+	}
+
+# We're using this subroutine / thread to indicate to the other threads
+# when to quit, since this is where we create the file queue.
+	{ lock($stopping);
+	$stopping = 1; }
 }
 
-# This subroutine is called if something goes wrong and the script needs
-# to quit prematurely.
+# Subroutine for when the script needs to quit, either cause of being
+# finished, or SIGINT has been triggered.
 sub iquit {
 	my $tid = threads->tid();
-	if ($tid == 1) {
-# Set the $stopping variable to let the threads know it's time to stop,
-# and sleep for 1 second so they'll have time to quit.
-		{ lock($stopping);
-		$stopping = 1; }
 
-		sleep(1);
+	while (! $stopping) { yield(); }
 
-# Write the hash to the database file and write to the log.
-		hash2file();
-		logger('end', $n);
+	foreach my $thr (threads->list()) {
+		my $tid_tmp = $thr->tid();
+		if ($tid_tmp eq $tid) { next; }
 
-# Detaching the threads so Perl will clean up after us.
-		foreach my $t (threads->list()) { $t->detach(); }
-		exit;
-# If the thread calling this subroutine isn't thread 0/1, yield until
-# $stopping is set.
-	} elsif ($tid > 1) { while (! $stopping) { yield(); } }
+		if ($saw_sigint) { $thr->detach(); }
+		else { $thr->join(); }
+	}
+
+# Print missing files.
+	p_gone();
+
+# Print the hash to the database file and close the log.
+	hash2file();
+	logger('end', $n);
+
+	return;
 }
 
 # Subroutine for controlling the log file.
@@ -411,19 +469,17 @@ sub init_hash {
 	my $dn = shift;
 
 # Get all the file names in the path.
-	my($files, $md5dbs) = getfiles($dn);
+	getfiles($dn);
 
 # Import hashes from every database file found in the search path.
-	if (scalar(@{$md5dbs})) {
-		foreach my $db (@{$md5dbs}) {
+	if (scalar(@md5dbs)) {
+		foreach my $db (@md5dbs) {
 			file2hash($db);
 		}
 	}
 
 # Clears the screen, thereby scrolling past the database file print.
 	print $clear;
-
-	return($files, $md5dbs);
 }
 
 # Subroutine for when the database file is empty, or doesn't exist.
@@ -434,7 +490,8 @@ No database file. Run the script in 'index' mode first
 to index the files.
 ";
 
-		iquit();
+		{ lock($stopping);
+		$stopping = 1; }
 	}
 }
 
@@ -444,7 +501,7 @@ to index the files.
 # (1) directory name
 sub getfiles {
 	my $dn = shift;
-	my(@files, @md5dbs, @lines);
+	my(@lines);
 
 	open(my $find, '-|', 'find', $dn, '-type', 'f', '-name', '*', '-nowarn')
 	or die "Can't run 'find': $!";
@@ -465,12 +522,10 @@ sub getfiles {
 		if (-f $fn) {
 			my $bn = basename($fn);
 
-			if ($bn ne $db) { push(@files, $fn); }
+			if ($bn ne $db) { $files{$fn} = 1; }
 			elsif ($bn eq $db) { push(@md5dbs, $fn); }
 		}
 	}
-
-	return(\@files, \@md5dbs);
 }
 
 # Subroutine for clearing files from RAM, once they've been processed.
@@ -620,12 +675,6 @@ sub md5index {
 
 		{ lock($n);
 		$n++; }
-
-# If the $saw_sigint variable has been tripped, close the thread.
-		if ($saw_sigint) {
-			say 'Closing thread: ' . $tid;
-			iquit();
-		}
 	}
 }
 
@@ -657,12 +706,6 @@ sub md5test {
 
 		{ lock($n);
 		$n++; }
-
-# If the $saw_sigint variable has been tripped, close the thread.
-		if ($saw_sigint) {
-			say 'Closing thread: ' . $tid;
-			iquit();
-		}
 	}
 }
 
@@ -745,11 +788,15 @@ given ($mode) {
 # If script mode is either 'import' or 'double' we'll start only one
 # thread, else we'll start as many as the available number of CPUs.
 my @threads;
+my @threads_main;
+
 if ($mode ne 'import' and $mode ne 'double') {
 	foreach (1 .. $cores) {
 		push(@threads, threads->create(@run));
 	}
 }
+
+push(@threads_main, threads->create(\&iquit));
 
 # This loop is where the actual action takes place (i.e. where all the
 # subroutines get called from).
@@ -761,9 +808,11 @@ foreach my $dn (@lib) {
 # Start logging.
 		logger('start');
 
-# Initialize the database hash, and the files array.
-# The init_hash subroutine returns references.
-		my($files, $md5dbs) = init_hash($dn);
+# Initialize the database hash, and the files hash.
+# Starting the 'files2queue' thread after the database hash has been
+# initialized. Otherwise it will have nothing to work with.
+		init_hash($dn);
+		push(@threads_main, threads->create(\&files2queue));
 
 		if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
@@ -774,55 +823,18 @@ foreach my $dn (@lib) {
 			}
 			when ('import') {
 # For all the files in $dn, run md5import.
-				foreach my $fn (@{$files}) {
+				foreach my $fn (sort(keys(%files))) {
 					if ($fn =~ /.md5$/i) { md5import($fn); }
 				}
 			}
-			when ('index') {
-# Index all the files in $dn.
-				foreach my $fn (@{$files}) {
-					if ($saw_sigint) { iquit(); }
-
-# If file name already exists in the database hash, skip it.
-					if ($md5h{$fn}) { next; }
-
-					if ($fn =~ /.flac$/i) { $q->enqueue($fn); }
-					else { file2ram($fn); }
-				}
-			}
-			when ('test') {
-# Fetch all the keys for the database hash and put them in the queue.
-				foreach my $fn (sort(keys(%md5h))) {
-					if ($saw_sigint) { iquit(); }
-
-					file2ram($fn);
-				}
-			}
 		}
-
-# Put all the large files in the queue, after all the smaller files are
-# done being processed. This is to prevent multiple files from being
-# read from the hard drive at once, slowing things down.
-		if (keys(%large)) {
-			while ($file_stack > 0) {
-				say $file_stack . ' > ' . '0';
-				yield();
-			}
-
-			foreach my $fn (sort(keys(%large))) { $q->enqueue($fn); }
-		}
-
-		{ lock($stopping);
-		$stopping = 1; }
-
-# Join (aka close) all the threads.
-		foreach my $t (threads->list()) { $t->join(); }
-
-# Print missing files.
-		p_gone();
-
-# Print the hash to the database file and close the log.
-		hash2file();
-		logger('end', $n);
 	}
+
+# Since the 'iquit' subroutine / thread is in charge of joining threads,
+# and finishing things up, all we have to do here is to join the 'iquit'
+# thread.
+	my $thr_iquit = $threads_main[0];
+	$thr_iquit->join();
+
+	last;
 }
