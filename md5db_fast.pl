@@ -216,9 +216,7 @@ sub files2queue {
 		}
 	}
 
-	if ($mode eq 'test') {
-		$files_ref = \%md5h;
-	}
+	if ($mode eq 'test') { $files_ref = \%md5h; }
 
 	foreach my $fn (sort(keys(%{$files_ref}))) {
 		my $size = (stat($fn))[7];
@@ -253,9 +251,7 @@ sub files2queue {
 			yield();
 		}
 
-		foreach my $fn (sort(keys(%large))) {
-			$q->enqueue($fn);
-		}
+		foreach my $fn (sort(keys(%large))) { $q->enqueue($fn); }
 	}
 
 # If there's still files in the queue left to be processed, and SIGINT
@@ -454,6 +450,8 @@ sub file2hash {
 sub hash2file {
 	my($md5db_out);
 
+# If the database hash is empty, return from this function, to keep from
+# overwriting the database file with nothing.
 	if (! keys(%md5h)) { return; }
 
 	open($md5db_out, '>', $db) or die "Can't open '$db': $!";
@@ -478,9 +476,7 @@ sub init_hash {
 
 # Import hashes from every database file found in the search path.
 	if (scalar(@md5dbs)) {
-		foreach my $db (@md5dbs) {
-			file2hash($db);
-		}
+		foreach my $db (@md5dbs) { file2hash($db); }
 	}
 
 # Clears the screen, thereby scrolling past the database file print.
@@ -555,7 +551,6 @@ sub md5double {
 
 	foreach my $fn (keys(%md5h)) {
 		my $hash = $md5h{$fn};
-
 		push(@{$exists{${hash}}}, $fn);
 	}
 
@@ -768,9 +763,7 @@ sub p_gone {
 	foreach my $fn (keys(%md5h)) {
 		my $hash = ${md5h{${fn}}};
 
-		if ($gone_tmp{${hash}}) {
-			delete($gone_tmp{${hash}});
-		}
+		if ($gone_tmp{${hash}}) { delete($gone_tmp{${hash}}); }
 	}
 
 # Logs all missing files.
@@ -790,18 +783,7 @@ given ($mode) {
 # This loop is where the actual action takes place (i.e. where all the
 # subroutines get called from).
 foreach my $dn (@lib) {
-# Start the threads.
-# If script mode is either 'import' or 'double' we'll start only one
-# thread, else we'll start as many as the available number of CPUs.
 	my(@threads, @threads_main);
-
-	if ($mode ne 'import' and $mode ne 'double') {
-		foreach (1 .. $cores) {
-			push(@threads, threads->create(@run));
-		}
-	}
-
-	push(@threads_main, threads->create(\&iquit));
 
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
@@ -810,18 +792,29 @@ foreach my $dn (@lib) {
 	logger('start', $dn);
 
 # Initialize the database hash, and the files hash.
-# Starting the 'files2queue' thread after the database hash has been
-# initialized. Otherwise it will have nothing to work with.
 	init_hash($dn);
 
+# Starting threads.
+# If script mode is either 'index' or 'test', we'll start as many
+# threads as the available number of CPUs. Unless script mode is either
+# of those, don't start the 'files2queue' thread, as it's not needed.
+# Also, note that 'files2queue' needs to be started after the database
+# hash has been initialized. Otherwise it will have nothing to work
+# with.
+	push(@threads_main, threads->create(\&iquit));
+
 	if ($mode eq 'index' or $mode eq 'test') {
+		foreach (1 .. $cores) {
+			push(@threads, threads->create(@run));
+		}
+
 		push(@threads_main, threads->create(\&files2queue));
 	}
 
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 	given ($mode) {
-# Find identical files in database.
+# Find duplicate files in database.
 		when ('double') {
 			md5double();
 		}
@@ -833,6 +826,8 @@ foreach my $dn (@lib) {
 		}
 	}
 
+# If script mode is not 'index' or 'test', set the $stopping variable
+# here, so the script can quit.
 	if ($mode ne 'index' and $mode ne 'test') {
 		{ lock($stopping);
 		$stopping = 1; }
