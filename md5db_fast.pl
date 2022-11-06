@@ -22,7 +22,7 @@
 use 5.34.0;
 use strict;
 use warnings;
-use Cwd qw(abs_path cwd);
+use Cwd qw(abs_path);
 use Digest::MD5 qw(md5_hex);
 use IO::Handle qw(autoflush);
 use File::Basename qw(basename dirname);
