@@ -13,13 +13,13 @@ fi
 arch='x86_64'
 pause_msg='Does this look OK? [y/n]: '
 
-declare -A latest regex
-declare -a types dnf_pkgs keep remove
+declare dnf_pkgs_n=0
+declare -a types keep remove
+declare -A dnf_pkgs latest regex
 
 types=('core' 'devel' 'devel_matched' 'headers' 'kernel' 'modules' 'modules_extra')
 
 regex[column]="^(.*${arch}) (.*) (@.*) *$"
-regex[pkg]='^(.*) (.*)$'
 regex[version]='^([0-9]+)\.([0-9]+)\.([0-9]+)\-([0-9]+)\.fc[0-9]+'
 
 regex[core]="^kernel\-core\.${arch}$"
@@ -80,19 +80,20 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	if [[ $line =~ ${regex[column]} ]]; then
 		match=("${BASH_REMATCH[@]:1}")
 
-		dnf_pkgs+=("${match[0]} ${match[1]}")
+		dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
+		dnf_pkgs["${n},pkg"]="${match[0]}"
+		dnf_pkgs["${n},ver"]="${match[1]}"
 	fi
 done
+
+dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
 
 unset -v lines
 
 # This loop finds out what the latest version is for each kernel
 # package.
-for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
-	line="${dnf_pkgs[${i}]}"
-
-	if [[ $line =~ ${regex[pkg]} ]]; then
-		match=("${BASH_REMATCH[@]:1}")
+for (( i = 1; i < dnf_pkgs_n; i++ )); do
+		match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
 		for type in "${types[@]}"; do
 			if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
@@ -110,33 +111,28 @@ for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
 				break
 			fi
 		done
-	fi
 done
 
 # This loop decides which kernel packages will be kept, and which will
 # be removed.
-for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
-	line="${dnf_pkgs[${i}]}"
+for (( i = 1; i < dnf_pkgs_n; i++ )); do
+	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
-	if [[ $line =~ ${regex[pkg]} ]]; then
-		match=("${BASH_REMATCH[@]:1}")
+	dnf_pkg="${match[0]%.${arch}}-${match[1]}.${arch}"
 
-		dnf_pkg="${match[0]%.${arch}}-${match[1]}.${arch}"
+	for type in "${types[@]}"; do
+		if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
+			hash_ref="latest[${match[0]}]"
 
-		for type in "${types[@]}"; do
-			if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
-				hash_ref="latest[${match[0]}]"
-
-				if [[ ${match[1]} == "${!hash_ref}" ]]; then
-					keep+=("$dnf_pkg")
-				else
-					remove+=("$dnf_pkg")
-				fi
-
-				break
+			if [[ ${match[1]} == "${!hash_ref}" ]]; then
+				keep+=("$dnf_pkg")
+			else
+				remove+=("$dnf_pkg")
 			fi
-		done
-	fi
+
+			break
+		fi
+	done
 done
 
 # If there's no kernel packages older than the currently running
