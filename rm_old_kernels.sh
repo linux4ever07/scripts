@@ -48,7 +48,7 @@ version_compare () {
 				continue
 			fi
 
-# This loop goes through each number and first checks if the number is
+# This loop goes through each number, and first checks if the number is
 # lower than the previous version that was checked. If it is, then break
 # the loop. Since it's checking the numbers from left to right, if a
 # version is older, one of the first numbers is going to be lower, even
