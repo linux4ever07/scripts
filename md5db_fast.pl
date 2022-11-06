@@ -813,9 +813,7 @@ foreach my $dn (@lib) {
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 # Starting threads.
-	foreach (@run) {
-		push(@threads, threads->create($_));
-	}
+	foreach (@run) { push(@threads, threads->create($_)); }
 
 	given ($mode) {
 # Find duplicate files in database.
