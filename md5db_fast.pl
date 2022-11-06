@@ -259,6 +259,8 @@ sub files2queue {
 		}
 	}
 
+# If there's still files in the queue left to be processed, and SIGINT
+# has not been triggered, wait for the other threads to empty the queue.
 	while ($q->pending() > 0 and ! $stopping) { yield(); }
 
 # We're using this subroutine / thread to indicate to the other threads
