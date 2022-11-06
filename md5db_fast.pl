@@ -100,8 +100,7 @@ my $semaphore = Thread::Semaphore->new();
 
 # Creating a custom POSIX signal handler. First we create a shared
 # variable that will work as a SIGINT switch. Then we define the handler
-# subroutine. Each subroutine to be used for starting threads will have
-# to take notice of the state of the $saw_sigint variable.
+# subroutine.
 POSIX::sigaction(SIGINT, POSIX::SigAction->new(\&handler))
 or die "Error setting SIGINT handler: $!";
 my $saw_sigint :shared = 0;
@@ -453,7 +452,9 @@ sub file2hash {
 
 # Subroutine for printing the database hash to the database file.
 sub hash2file {
-	my $md5db_out;
+	my($md5db_out);
+
+	if (! keys(%md5h)) { return; }
 
 	open($md5db_out, '>', $db) or die "Can't open '$db': $!";
 # Loops through all the keys in the database hash and prints the entries
@@ -550,7 +551,7 @@ sub md5double {
 # Loop through the %md5h hash and save the checksums as keys in a new
 # hash called %exists. Each of those keys will hold an anonymous array
 # with the matching file names.
-	my %exists;
+	my(%exists);
 
 	foreach my $fn (keys(%md5h)) {
 		my $hash = $md5h{$fn};
@@ -628,7 +629,7 @@ sub md5import {
 # (1) file name
 sub md5sum {
 	my $fn = shift;
-	my $hash;
+	my($hash);
 
 	if (! -r $fn) { return; }
 
@@ -647,9 +648,7 @@ sub md5sum {
 		lock($busy);
 		$busy = 1;
 
-		my $read_fn;
-
-		open($read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
+		open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
 		$hash = Digest::MD5->new->addfile($read_fn)->hexdigest;
 		close($read_fn) or die "Can't close '$fn': $!";
 
@@ -667,7 +666,7 @@ sub md5sum {
 # in the database hash).
 sub md5index {
 	my $tid = threads->tid();
-	my $tmp_md5;
+	my($tmp_md5);
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
@@ -722,7 +721,7 @@ sub md5test {
 # (1) file name
 sub md5flac {
 	my $fn = shift;
-	my $hash;
+	my($hash);
 
 	if (! -r $fn) { return; }
 
@@ -782,7 +781,7 @@ sub p_gone {
 
 # Depending on which script mode is active, set the @run array to the
 # correct arguments. This will be used to start the threads later.
-my @run;
+my(@run);
 given ($mode) {
 	when ('index') { @run = (\&md5index); }
 	when ('test') { @run = (\&md5test); }
@@ -794,8 +793,7 @@ foreach my $dn (@lib) {
 # Start the threads.
 # If script mode is either 'import' or 'double' we'll start only one
 # thread, else we'll start as many as the available number of CPUs.
-	my @threads;
-	my @threads_main;
+	my(@threads, @threads_main);
 
 	if ($mode ne 'import' and $mode ne 'double') {
 		foreach (1 .. $cores) {
