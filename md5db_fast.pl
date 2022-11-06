@@ -826,7 +826,7 @@ foreach my $dn (@lib) {
 			md5double();
 		}
 		when ('import') {
-# For all the files in $dn, run md5import.
+# Import *.MD5 files to database.
 			foreach my $fn (sort(keys(%files))) {
 				if ($fn =~ /.md5$/i) { md5import($fn); }
 			}
