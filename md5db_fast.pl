@@ -813,7 +813,10 @@ foreach my $dn (@lib) {
 # Starting the 'files2queue' thread after the database hash has been
 # initialized. Otherwise it will have nothing to work with.
 	init_hash($dn);
-	push(@threads_main, threads->create(\&files2queue));
+
+	if ($mode eq 'index' or $mode eq 'test') {
+		push(@threads_main, threads->create(\&files2queue));
+	}
 
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
@@ -828,6 +831,11 @@ foreach my $dn (@lib) {
 				if ($fn =~ /.md5$/i) { md5import($fn); }
 			}
 		}
+	}
+
+	if ($mode ne 'index' and $mode ne 'test') {
+		{ lock($stopping);
+		$stopping = 1; }
 	}
 
 # Since the 'iquit' subroutine / thread is in charge of joining threads,
