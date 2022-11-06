@@ -838,6 +838,9 @@ foreach my $dn (@lib) {
 	my $thr_iquit = $threads_main[0];
 	$thr_iquit->join();
 
+# If SIGINT has been tripped, break this loop.
+	if ($saw_sigint) { last; }
+
 # Resets all the global / shared variables, making them ready for the
 # next iteration of this loop. In case the user specified more than one
 # directory as argument.
