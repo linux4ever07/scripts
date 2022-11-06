@@ -111,10 +111,6 @@ open(my $LOG, '>>', $logf) or die "Can't open '$logf': $!";
 # Make the $LOG file handle unbuffered for instant logging.
 $LOG->autoflush(1);
 
-# Duplicate STDOUT and STDERR as a regular file handles.
-open(my $STDOUT, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
-open(my $STDERR, ">&STDERR") or die "Can't duplicate STDERR: $!";
-
 # Subroutine for printing usage instructions.
 sub usage {
 	say "
@@ -251,7 +247,7 @@ sub logger {
 	my($arg, @fn, $n);
 
 # Creating an array to hold the filehandles used to print messages.
-	my @OUTS = ($STDOUT, $LOG);
+	my @OUTS = (STDOUT, $LOG);
 
 # Creating a variable to hold the current time.
 	my $now = localtime(time);
@@ -298,7 +294,7 @@ Running script in \'$mode\' mode on:
 # When the script is interrupted by user pressing ^C, say so in both
 # STDERR and the log.
 			if ($saw_sigint) {
-				$OUTS[0] = $STDERR;
+				$OUTS[0] = STDERR;
 
 				foreach my $OUT (@OUTS) {
 					say $OUT 'Interrupted by user!' . "\n";
@@ -310,7 +306,7 @@ Running script in \'$mode\' mode on:
 					say $OUT 'Everything is OK!' . "\n";
 				}
 			} else {
-				$OUTS[0] = $STDERR;
+				$OUTS[0] = STDERR;
 
 				foreach my $OUT (@OUTS) {
 					say $OUT 'Errors occurred!' . "\n";
