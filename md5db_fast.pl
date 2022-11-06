@@ -75,7 +75,7 @@ my $clear = `clear && echo`;
 # interrupted.
 # * $file_stack will track the amount of file data currently in RAM.
 # * $busy will be used to pause other threads when a thread is busy.
-# * %gone_tmp will store the names and hashes of possibly deleted files.
+# * %gone will store the names and hashes of possibly deleted files.
 # * %large will store the names of files that are too big to fit in RAM.
 my %err :shared;
 my $n :shared = 0;
@@ -84,7 +84,7 @@ my %file_contents :shared;
 my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
-my %gone_tmp :shared;
+my %gone :shared;
 my %large :shared;
 
 # Creating a variable which sets a limit on the total number of bytes
@@ -380,10 +380,10 @@ sub file2hash {
 # found in the search path given to the script.
 			} elsif (-f $fn and $md5h{$fn} ne $hash) {
 				logger('diff', $fn);
-# Saves the names of deleted or moved files in '%gone_tmp'.
+# Saves the names of deleted or moved files in '%gone'.
 			} elsif (! -f $fn) {
-				lock(%gone_tmp);
-				$gone_tmp{${fn}} = $hash;
+				lock(%gone);
+				$gone{${fn}} = $hash;
 			}
 		}
 	}
@@ -554,8 +554,8 @@ sub md5import {
 # is in database hash but the MD5 sum from the MD5 file doesn't match,
 # print to the log.
 			} elsif (! -f $fn) {
-				lock(%gone_tmp);
-				$gone_tmp{${fn}} = $hash;
+				lock(%gone);
+				$gone{${fn}} = $hash;
 			} elsif ($md5h{$fn} ne $hash) { logger('diff', $md5fn); }
 		}
 	}
@@ -698,45 +698,38 @@ sub md5flac {
 # from %gone. When done, loop through the %gone hash and echo each key
 # to the logger.
 sub p_gone {
-# If %gone_tmp is empty, return from this subroutine.
-	if (! keys(%gone_tmp)) { return; }
+# If %gone is empty, return from this subroutine.
+	if (! keys(%gone)) { return; }
 
-	my(%gone, @gone);
+	my(%gone_tmp);
 
-# Translates the %gone_tmp hash to the %gone hash / array. We need to do
+# Translates the %gone hash to the %gone_tmp hash / array. We need to do
 # it in this complicated way because 'threads::shared' has no support
 # for hashes within hashes and arrays within arrays. That's why the
 # global variables are only simple arrays, and we translate them to a
 # hash / array here (in this subroutine).
-	foreach my $fn (keys(%gone_tmp)) {
-		my $hash = $gone_tmp{${fn}};
-		push(@{$gone{${hash}}}, $fn);
-	}
-
-# Deletes the %gone_tmp hash as it's not needed anymore.
-	{ lock(%gone_tmp);
-	undef(%gone_tmp); }
-
-# Loops through the %md5h hash and deletes every matching MD5 hash from
-# the %gone hash / array.
-	foreach my $fn (keys(%md5h)) {
-		my $hash = ${md5h{${fn}}};
-		if ($gone{${hash}}) {
-			delete($gone{${hash}});
-		}
-	}
-
-# Translates the %gone hash to @gone array.
-# Because then we can sort by filename before printing to the logger.
-	foreach my $hash (keys(%gone)) {
-		foreach my $fn (@{$gone{${hash}}}) { push(@gone, $fn); }
+	foreach my $fn (keys(%gone)) {
+		my $hash = $gone{${fn}};
+		push(@{$gone_tmp{${hash}}}, $fn);
 	}
 
 # Deletes the %gone hash as it's not needed anymore.
 	undef(%gone);
 
+# Loops through the %md5h hash and deletes every matching MD5 hash from
+# the %gone_tmp hash / array.
+	foreach my $fn (keys(%md5h)) {
+		my $hash = ${md5h{${fn}}};
+
+		if ($gone_tmp{${hash}}) {
+			delete($gone_tmp{${hash}});
+		}
+	}
+
 # Logs all missing files.
-	foreach my $fn (sort(@gone)) { logger('gone', $fn); }
+	foreach my $hash (keys(%gone_tmp)) {
+		foreach my $fn (@{$gone_tmp{${hash}}}) { logger('gone', $fn); }
+	}
 }
 
 # Depending on which script mode is active, set the @run array to the
