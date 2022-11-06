@@ -334,8 +334,9 @@ sub logger {
 **** Logging started on $now ****
 
 Running script in \'$mode\' mode on:
+
+$fn[0]
 ";
-			say $LOG join("\n", @lib) . "\n";
 		}
 # When file has been deleted or moved.
 		when ('gone') {
@@ -427,18 +428,21 @@ sub file2hash {
 # Add the full path to the file name, unless it's the current directory.
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
-# If $fn is a real file and not already in the hash, continue.
-			if (-f $fn and ! length($md5h{$fn})) {
-				$md5h{$fn} = $hash;
-				say $fn . $delim . $hash;
-
-# If the file is in the database hash but the MD5 sum found in the
-# database doesn't match the one in the hash, print to the log. This
-# will most likely only be the case for any extra databases that are
-# found in the search path given to the script.
-			} elsif (-f $fn and $md5h{$fn} ne $hash) {
-				logger('diff', $fn);
-# Saves the names of deleted or moved files in '%gone'.
+# If $fn is a real file.
+			if (-f $fn) {
+# Unless file name already is in the database hash, print a message, add
+# it to the hash.
+				if (! length($md5h{$fn})) {
+					$md5h{$fn} = $hash;
+					say $fn . $delim . $hash;
+# If file name is in the database hash but the MD5 sum found in the
+# database doesn't match, print to the log. This will most likely only
+# be the case for any extra databases that are found in the search path
+# given to the script.
+				} elsif ($md5h{$fn} ne $hash) {
+					logger('diff', $fn);
+				}
+# If file name is not a real file, add $fn to %gone hash.
 			} elsif (! -f $fn) {
 				lock(%gone);
 				$gone{${fn}} = $hash;
@@ -598,20 +602,23 @@ sub md5import {
 # Add the full path to the file name, unless it's the current directory.
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
+# If $fn is a real file.
+			if (-f $fn) {
 # Unless file name already is in the database hash, print a message, add
 # it to the hash.
-			if (! length($md5h{$fn}) and -f $fn) {
-				$md5h{$fn} = $hash;
-
-				say $fn . ': done indexing';
-
-# If file name is not a real file, add $fn to %gone hash. If file name
-# is in database hash but the MD5 sum from the MD5 file doesn't match,
-# print to the log.
+				if (! length($md5h{$fn})) {
+					$md5h{$fn} = $hash;
+					say $fn . ': done indexing';
+# If file name is in database hash but the MD5 sum from the MD5 file
+# doesn't match, print to the log.
+				} elsif ($md5h{$fn} ne $hash) {
+					logger('diff', $fn);
+				}
+# If file name is not a real file, add $fn to %gone hash.
 			} elsif (! -f $fn) {
 				lock(%gone);
 				$gone{${fn}} = $hash;
-			} elsif ($md5h{$fn} ne $hash) { logger('diff', $md5fn); }
+			}
 		}
 	}
 }
@@ -757,9 +764,6 @@ sub p_gone {
 		push(@{$gone_tmp{${hash}}}, $fn);
 	}
 
-# Deletes the %gone hash as it's not needed anymore.
-	undef(%gone);
-
 # Loops through the %md5h hash and deletes every matching MD5 hash from
 # the %gone_tmp hash / array.
 	foreach my $fn (keys(%md5h)) {
@@ -784,48 +788,46 @@ given ($mode) {
 	when ('test') { @run = (\&md5test); }
 }
 
-# Start the threads.
-# If script mode is either 'import' or 'double' we'll start only one
-# thread, else we'll start as many as the available number of CPUs.
-my @threads;
-my @threads_main;
-
-if ($mode ne 'import' and $mode ne 'double') {
-	foreach (1 .. $cores) {
-		push(@threads, threads->create(@run));
-	}
-}
-
-push(@threads_main, threads->create(\&iquit));
-
 # This loop is where the actual action takes place (i.e. where all the
 # subroutines get called from).
 foreach my $dn (@lib) {
-	if (-d $dn) {
+# Start the threads.
+# If script mode is either 'import' or 'double' we'll start only one
+# thread, else we'll start as many as the available number of CPUs.
+	my @threads;
+	my @threads_main;
+
+	if ($mode ne 'import' and $mode ne 'double') {
+		foreach (1 .. $cores) {
+			push(@threads, threads->create(@run));
+		}
+	}
+
+	push(@threads_main, threads->create(\&iquit));
+
 # Change into $dn.
-		chdir($dn) or die "Can't change into '$dn': $!";
+	chdir($dn) or die "Can't change into '$dn': $!";
 
 # Start logging.
-		logger('start');
+	logger('start', $dn);
 
 # Initialize the database hash, and the files hash.
 # Starting the 'files2queue' thread after the database hash has been
 # initialized. Otherwise it will have nothing to work with.
-		init_hash($dn);
-		push(@threads_main, threads->create(\&files2queue));
+	init_hash($dn);
+	push(@threads_main, threads->create(\&files2queue));
 
-		if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
+	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
-		given ($mode) {
-			when ('double') {
+	given ($mode) {
+		when ('double') {
 # Find identical files in database.
-				md5double();
-			}
-			when ('import') {
+			md5double();
+		}
+		when ('import') {
 # For all the files in $dn, run md5import.
-				foreach my $fn (sort(keys(%files))) {
-					if ($fn =~ /.md5$/i) { md5import($fn); }
-				}
+			foreach my $fn (sort(keys(%files))) {
+				if ($fn =~ /.md5$/i) { md5import($fn); }
 			}
 		}
 	}
@@ -836,5 +838,18 @@ foreach my $dn (@lib) {
 	my $thr_iquit = $threads_main[0];
 	$thr_iquit->join();
 
-	last;
+# Resets all the global / shared variables, making them ready for the
+# next iteration of this loop. In case the user specified more than one
+# directory as argument.
+	%err = ();
+	$n = 0;
+	%files = ();
+	@md5dbs = ();
+	%md5h = ();
+	%file_contents = ();
+	$stopping = 0;
+	$file_stack = 0;
+	$busy = 0;
+	%gone = ();
+	%large = ();
 }
