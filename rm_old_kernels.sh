@@ -81,8 +81,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		match=("${BASH_REMATCH[@]:1}")
 
 		dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
-		dnf_pkgs["${n},pkg"]="${match[0]}"
-		dnf_pkgs["${n},ver"]="${match[1]}"
+		dnf_pkgs["${dnf_pkgs_n},pkg"]="${match[0]}"
+		dnf_pkgs["${dnf_pkgs_n},ver"]="${match[1]}"
 	fi
 done
 
