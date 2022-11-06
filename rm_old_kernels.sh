@@ -80,19 +80,17 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	if [[ $line =~ ${regex[column]} ]]; then
 		match=("${BASH_REMATCH[@]:1}")
 
-		dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
 		dnf_pkgs["${dnf_pkgs_n},pkg"]="${match[0]}"
 		dnf_pkgs["${dnf_pkgs_n},ver"]="${match[1]}"
+		dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
 	fi
 done
-
-dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
 
 unset -v lines
 
 # This loop finds out what the latest version is for each kernel
 # package.
-for (( i = 1; i < dnf_pkgs_n; i++ )); do
+for (( i = 0; i < dnf_pkgs_n; i++ )); do
 	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
 	for type in "${types[@]}"; do
@@ -115,7 +113,7 @@ done
 
 # This loop decides which kernel packages will be kept, and which will
 # be removed.
-for (( i = 1; i < dnf_pkgs_n; i++ )); do
+for (( i = 0; i < dnf_pkgs_n; i++ )); do
 	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
 	dnf_pkg="${match[0]%.${arch}}-${match[1]}.${arch}"
