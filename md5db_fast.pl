@@ -664,7 +664,6 @@ sub md5index {
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
-		if ($stopping) { return; }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -687,7 +686,6 @@ sub md5test {
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
-		if ($stopping) { return; }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
