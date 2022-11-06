@@ -693,10 +693,11 @@ sub md5flac {
 	}
 }
 
-# Subroutine for figuring out which files have gone missing. If
-# identical MD5 hashes can be found in %md5h, then delete those keys
-# from %gone. When done, loop through the %gone hash and echo each key
-# to the logger.
+# Subroutine for figuring out which files have gone missing. If still
+# existing files have identical MD5 hashes to those that are in %gone,
+# then those file names will not be printed. The idea is that certain
+# files may just have been renamed, or duplicates exist. Only print the
+# files that are actually gone.
 sub p_gone {
 # If %gone is empty, return from this subroutine.
 	if (! keys(%gone)) { return; }
