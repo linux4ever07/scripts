@@ -821,12 +821,12 @@ foreach my $dn (@lib) {
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 	given ($mode) {
-		when ('double') {
 # Find identical files in database.
+		when ('double') {
 			md5double();
 		}
-		when ('import') {
 # Import *.MD5 files to database.
+		when ('import') {
 			foreach my $fn (sort(keys(%files))) {
 				if ($fn =~ /.md5$/i) { md5import($fn); }
 			}
