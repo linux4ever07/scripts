@@ -32,7 +32,7 @@ use threads qw(yield);
 use threads::shared;
 use Thread::Queue;
 use Thread::Semaphore;
-use POSIX qw(SIGINT ceil);
+use POSIX qw(SIGINT);
 
 # Create the thread queue.
 my $q = Thread::Queue->new();
@@ -774,18 +774,32 @@ sub p_gone {
 	}
 }
 
-# Depending on which script mode is active, set the @run array to the
-# correct arguments. This will be used to start the threads later.
+# The 'iquit' thread needs to be started first, as the script relies on
+# it being the first element in the 'threads' array. If script mode is
+# either 'index' or 'test', we'll start as many threads as the
+# available number of CPUs. Unless script mode is either of those, don't
+# start the 'files2queue' thread, as it's not needed. Also, note that
+# 'files2queue' needs to be started after the database hash has been
+# initialized. Otherwise it will have nothing to work with.
 my(@run);
+
+push(@run, \&iquit);
+
 given ($mode) {
-	when ('index') { @run = (\&md5index); }
-	when ('test') { @run = (\&md5test); }
+	when ('index') {
+		push(@run, ((\&md5index) x $cores));
+		push(@run, \&files2queue);
+	}
+	when ('test') {
+		push(@run, ((\&md5test) x $cores));
+		push(@run, \&files2queue);
+	}
 }
 
 # This loop is where the actual action takes place (i.e. where all the
 # subroutines get called from).
 foreach my $dn (@lib) {
-	my(@threads, @threads_main);
+	my(@threads);
 
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
@@ -799,20 +813,8 @@ foreach my $dn (@lib) {
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 # Starting threads.
-# If script mode is either 'index' or 'test', we'll start as many
-# threads as the available number of CPUs. Unless script mode is either
-# of those, don't start the 'files2queue' thread, as it's not needed.
-# Also, note that 'files2queue' needs to be started after the database
-# hash has been initialized. Otherwise it will have nothing to work
-# with.
-	push(@threads_main, threads->create(\&iquit));
-
-	if ($mode eq 'index' or $mode eq 'test') {
-		foreach (1 .. $cores) {
-			push(@threads, threads->create(@run));
-		}
-
-		push(@threads_main, threads->create(\&files2queue));
+	foreach (@run) {
+		push(@threads, threads->create($_));
 	}
 
 	given ($mode) {
@@ -838,7 +840,7 @@ foreach my $dn (@lib) {
 # Since the 'iquit' subroutine / thread is in charge of joining threads,
 # and finishing things up, all we have to do here is to join the 'iquit'
 # thread.
-	my $thr_iquit = $threads_main[0];
+	my $thr_iquit = $threads[0];
 	$thr_iquit->join();
 
 # If SIGINT has been tripped, break this loop.
