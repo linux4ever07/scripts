@@ -493,6 +493,8 @@ to index the files.
 
 		{ lock($stopping);
 		$stopping = 1; }
+
+		yield();
 	}
 }
 
@@ -794,6 +796,8 @@ foreach my $dn (@lib) {
 # Initialize the database hash, and the files hash.
 	init_hash($dn);
 
+	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
+
 # Starting threads.
 # If script mode is either 'index' or 'test', we'll start as many
 # threads as the available number of CPUs. Unless script mode is either
@@ -810,8 +814,6 @@ foreach my $dn (@lib) {
 
 		push(@threads_main, threads->create(\&files2queue));
 	}
-
-	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 	given ($mode) {
 # Find duplicate files in database.
