@@ -93,24 +93,24 @@ unset -v lines
 # This loop finds out what the latest version is for each kernel
 # package.
 for (( i = 1; i < dnf_pkgs_n; i++ )); do
-		match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
+	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
-		for type in "${types[@]}"; do
-			if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
-				if [[ ${match[1]} =~ ${regex[version]} ]]; then
-					hash_ref="latest[${match[0]}]"
+	for type in "${types[@]}"; do
+		if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
+			if [[ ${match[1]} =~ ${regex[version]} ]]; then
+				hash_ref="latest[${match[0]}]"
 
-					if [[ -z ${!hash_ref} ]]; then
-						latest["${match[0]}"]="${match[1]}"
-					else
-						version=$(version_compare "${!hash_ref}" "${match[1]}")
-						latest["${match[0]}"]="$version"
-					fi
+				if [[ -z ${!hash_ref} ]]; then
+					latest["${match[0]}"]="${match[1]}"
+				else
+					version=$(version_compare "${!hash_ref}" "${match[1]}")
+					latest["${match[0]}"]="$version"
 				fi
-
-				break
 			fi
-		done
+
+			break
+		fi
+	done
 done
 
 # This loop decides which kernel packages will be kept, and which will
