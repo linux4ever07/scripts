@@ -222,8 +222,6 @@ sub files2queue {
 	}
 
 	foreach my $fn (sort(keys(%{$files_ref}))) {
-		if ($stopping) { return; }
-
 		my $size = (stat($fn))[7];
 
 		if (! length($size)) { next; }
@@ -252,18 +250,16 @@ sub files2queue {
 # read from the hard drive at once, slowing things down.
 	if (keys(%large)) {
 		while ($file_stack > 0) {
-			if ($stopping) { return; }
-
 			say $file_stack . ' > ' . '0';
 			yield();
 		}
 
 		foreach my $fn (sort(keys(%large))) {
-			if ($stopping) { return; }
-
 			$q->enqueue($fn);
 		}
 	}
+
+	while ($q->pending() > 0 and ! $stopping) { yield(); }
 
 # We're using this subroutine / thread to indicate to the other threads
 # when to quit, since this is where we create the file queue.
@@ -277,6 +273,8 @@ sub iquit {
 	my $tid = threads->tid();
 
 	while (! $stopping) { yield(); }
+
+	yield();
 
 	foreach my $thr (threads->list()) {
 		my $tid_tmp = $thr->tid();
@@ -664,6 +662,7 @@ sub md5index {
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
+		if ($stopping) { return; }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -686,6 +685,7 @@ sub md5test {
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
+		if ($stopping) { return; }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
