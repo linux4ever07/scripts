@@ -300,12 +300,12 @@ sub iquit {
 		}
 	}
 
-# Print missing files.
+# Print missing files, and close the log.
 	p_gone();
-
-# Print the hash to the database file and close the log.
-	hash2file();
 	logger('end', $files_n);
+
+# Print the database hash to the database file.
+	hash2file();
 }
 
 # Subroutine for controlling the log file.
