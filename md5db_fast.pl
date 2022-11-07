@@ -462,13 +462,17 @@ sub hash2file {
 # overwriting the database file with nothing.
 	if (! keys(%md5h)) { return; }
 
-	open(my $md5db_out, '>', $db) or die "Can't open '$db': $!";
+	my $of = 'md5' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.db';
+
+	open(my $md5db_out, '>', $of) or die "Can't open '$of': $!";
 # Loops through all the keys in the database hash and prints the entries
 # (divided by the $delim variable) to the database file.
 	foreach my $fn (sort(keys(%md5h))) {
 		say $md5db_out $fn . $delim . $md5h{$fn} . "\r";
 	}
-	close($md5db_out) or die "Can't close '$db': $!";
+	close($md5db_out) or die "Can't close '$of': $!";
+
+	rename($of, $db) or die "Can't rename file '$of': $!";
 }
 
 # Subroutine for initializing the database hash, and the @files array.
