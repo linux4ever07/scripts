@@ -655,10 +655,10 @@ sub md5sum {
 			print $flac_test $file_contents{$fn};
 			close($flac_test);
 
+			clear_stack($fn);
+
 			if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
 		}
-
-		if ($mode eq 'test') { clear_stack($fn); }
 
 		return $hash;
 	}
