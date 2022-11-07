@@ -782,7 +782,7 @@ foreach my $dn (@lib) {
 	chdir($dn) or die "Can't change into '$dn': $!";
 
 # Initialize the database hash, and the files hash.
-	init_hash($dn);
+	init_hash();
 
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
