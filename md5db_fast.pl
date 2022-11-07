@@ -736,8 +736,6 @@ sub md5test {
 	}
 }
 
-
-
 # Subroutine for figuring out which files have gone missing. If still
 # existing files have identical MD5 hashes to those that are in %gone,
 # then those file names will not be printed. The idea is that certain
