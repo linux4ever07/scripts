@@ -495,8 +495,7 @@ sub init_hash {
 sub if_empty {
 	if (! keys(%md5h)) {
 		say "
-No database file. Run the script in 'index' mode first
-to index the files.
+No database file. Run the script in 'index' mode first to index files.
 ";
 
 		exit;
