@@ -644,23 +644,23 @@ sub md5sum {
 # If the file name is a FLAC file, index it by getting the MD5 hash from
 # reading the metadata using 'metaflac', and test it with 'flac'.
 	if ($fn =~ /.flac$/i) {
-		if (scalar(@flac_req) == 2) {
-			chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+		if (scalar(@flac_req) != 2) { return; }
+
+		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+		if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
+
+		if ($mode eq 'test') {
+			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
+			or die "Can't open 'flac': $!";
+			print $flac_test $file_contents{$fn};
+			close($flac_test);
+
 			if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
-
-			if ($mode eq 'test') {
-				open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
-				or die "Can't open 'flac': $!";
-				print $flac_test $file_contents{$fn};
-				close($flac_test);
-
-				if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
-			}
-
-			if ($mode eq 'test') { clear_stack($fn); }
-
-			return $hash;
 		}
+
+		if ($mode eq 'test') { clear_stack($fn); }
+
+		return $hash;
 	}
 
 	if ($large{$fn}) {
