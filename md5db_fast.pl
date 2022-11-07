@@ -288,10 +288,12 @@ sub iquit {
 			my $thr = threads->object($tid);
 
 			if ($saw_sigint) {
-				if ($thr->is_running()) { sleep(1); }
+				if ($thr->is_running()) {
+					sleep(1);
 
-				$thr->detach();
-				next;
+					$thr->detach();
+					next;
+				}
 			}
 
 			$thr->join();
