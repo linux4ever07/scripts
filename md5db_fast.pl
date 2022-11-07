@@ -45,7 +45,7 @@ $cores++;
 # Check if the necessary commands are installed to test FLAC files.
 chomp(my @flac_req = ( `command -v flac metaflac 2>&-` ));
 
-my(@lib, $mode);
+my(@lib, @run, $mode);
 
 # Path to and name of log file to be used for logging.
 my $logf = $ENV{HOME} . '/' . 'md5db.log';
@@ -67,28 +67,24 @@ my $db = 'md5.db';
 my $clear = `clear && echo`;
 
 # Creating a few shared variables.
-# * %err will be used for errors.
-# * $n will store the number of files that have been processed.
-# * %files is the files hash.
+# * @threads will be used to store threads that are created.
 # * @md5dbs is the md5.db array.
+# * %err will be used for errors.
+# * %files is the files hash.
 # * %md5h is the database hash.
 # * %file_contents will store the contents of files.
+# * %large will store the names of files that are too big to fit in RAM.
+# * %gone will store the names and hashes of possibly deleted files.
+# * $n will store the number of files that have been processed.
 # * $stopping will be used to stop the threads.
 # * $file_stack will track the amount of file data currently in RAM.
 # * $busy will be used to pause other threads when a thread is busy.
-# * %gone will store the names and hashes of possibly deleted files.
-# * %large will store the names of files that are too big to fit in RAM.
-my %err :shared;
+my(@threads, @md5dbs) :shared;
+my(%err, %files, %md5h, %file_contents, %large, %gone) :shared;
 my $n :shared = 0;
-my %files :shared;
-my @md5dbs :shared;
-my %md5h :shared;
-my %file_contents :shared;
 my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
-my %gone :shared;
-my %large :shared;
 
 # Creating a variable which sets a limit on the total number of bytes
 # that can be read into RAM at once. If you have plenty of RAM, it's
@@ -218,7 +214,14 @@ sub files2queue {
 
 	if ($mode eq 'test') { $files_ref = \%md5h; }
 
+# This loop reads the files into RAM, if there's enough RAM available.
+# If the file is larger than the limit set in $disk_size, it will
+# instead be added to the %large hash. The files in that hash will be
+# processed one at a time, since they have to be read directly from the
+# hard drive.
 	foreach my $fn (sort(keys(%{$files_ref}))) {
+		if (! -r $fn) { next; }
+
 		my $size = (stat($fn))[7];
 
 		if (! length($size)) { next; }
@@ -267,18 +270,32 @@ sub files2queue {
 # Subroutine for when the script needs to quit, either cause of being
 # finished, or SIGINT has been triggered.
 sub iquit {
-	my $tid = threads->tid();
-
 	while (! $stopping) { yield(); }
 
-	yield();
+# Depending on whether the script is finished or SIGINT has been tripped
+# we handle the closing of threads differently. If SIGINT has been
+# tripped and a thread is still running / active, sleep for 1 second and
+# then detach the thread without waiting for it to finish. The @threads
+# array is locked, to make sure that the main thread has finished
+# starting all the threads, before we start closing them. We start
+# looping through the array at element 1, as element 0 is this thread
+# (iquit).
+	{
+		lock(@threads);
 
-	foreach my $thr (threads->list()) {
-		my $tid_tmp = $thr->tid();
-		if ($tid_tmp eq $tid) { next; }
+		for (my $i = 1; $i < scalar(@threads); $i++) {
+			my $tid = $threads[${i}];
+			my $thr = threads->object($tid);
 
-		if ($saw_sigint) { $thr->detach(); }
-		else { $thr->join(); }
+			if ($saw_sigint) {
+				if ($thr->is_running()) { sleep(1); }
+
+				$thr->detach();
+				next;
+			}
+
+			$thr->join();
+		}
 	}
 
 # Print missing files.
@@ -287,8 +304,6 @@ sub iquit {
 # Print the hash to the database file and close the log.
 	hash2file();
 	logger('end', $n);
-
-	return;
 }
 
 # Subroutine for controlling the log file.
@@ -448,13 +463,11 @@ sub file2hash {
 
 # Subroutine for printing the database hash to the database file.
 sub hash2file {
-	my($md5db_out);
-
 # If the database hash is empty, return from this function, to keep from
 # overwriting the database file with nothing.
 	if (! keys(%md5h)) { return; }
 
-	open($md5db_out, '>', $db) or die "Can't open '$db': $!";
+	open(my $md5db_out, '>', $db) or die "Can't open '$db': $!";
 # Loops through all the keys in the database hash and prints the entries
 # (divided by the $delim variable) to the database file.
 	foreach my $fn (sort(keys(%md5h))) {
@@ -493,8 +506,6 @@ to index the files.
 
 		{ lock($stopping);
 		$stopping = 1; }
-
-		yield();
 	}
 }
 
@@ -628,17 +639,28 @@ sub md5sum {
 	my $fn = shift;
 	my($hash);
 
-	if (! -r $fn) { return; }
-
 	while ($busy) { yield(); }
 
-# If the file name is a FLAC file, test it with 'flac'.
+# If the file name is a FLAC file, index it by getting the MD5 hash from
+# reading the metadata using 'metaflac', and test it with 'flac'.
 	if ($fn =~ /.flac$/i) {
-		$hash = md5flac($fn);
+		if (scalar(@flac_req) == 2) {
+			chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+			if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
 
-		if ($mode eq 'test') { clear_stack($fn); }
+			if ($mode eq 'test') {
+				open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
+				or die "Can't open 'flac': $!";
+				print $flac_test $file_contents{$fn};
+				close($flac_test);
 
-		return $hash;
+				if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
+			}
+
+			if ($mode eq 'test') { clear_stack($fn); }
+
+			return $hash;
+		}
 	}
 
 	if ($large{$fn}) {
@@ -667,6 +689,7 @@ sub md5index {
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
+		if ($saw_sigint) { yield(); }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -689,6 +712,7 @@ sub md5test {
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
+		if ($saw_sigint) { yield(); }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -712,32 +736,7 @@ sub md5test {
 	}
 }
 
-# Subroutine for getting the MD5 hash of FLAC files by reading their
-# metadata. If the mode is 'test', the FLAC files will also be tested.
-# It takes 1 argument:
-# (1) file name
-sub md5flac {
-	my $fn = shift;
-	my($hash);
 
-	if (! -r $fn) { return; }
-
-	if (scalar(@flac_req) == 2) {
-		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-		if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
-
-		if ($mode eq 'test') {
-			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
-			or die "Can't open 'flac': $!";
-			print $flac_test $file_contents{$fn};
-			close($flac_test);
-
-			if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
-		}
-
-		return $hash;
-	}
-}
 
 # Subroutine for figuring out which files have gone missing. If still
 # existing files have identical MD5 hashes to those that are in %gone,
@@ -781,26 +780,22 @@ sub p_gone {
 # start the 'files2queue' thread, as it's not needed. Also, note that
 # 'files2queue' needs to be started after the database hash has been
 # initialized. Otherwise it will have nothing to work with.
-my(@run);
-
 push(@run, \&iquit);
 
 given ($mode) {
 	when ('index') {
-		push(@run, ((\&md5index) x $cores));
 		push(@run, \&files2queue);
+		push(@run, ((\&md5index) x $cores));
 	}
 	when ('test') {
-		push(@run, ((\&md5test) x $cores));
 		push(@run, \&files2queue);
+		push(@run, ((\&md5test) x $cores));
 	}
 }
 
 # This loop is where the actual action takes place (i.e. where all the
 # subroutines get called from).
 foreach my $dn (@lib) {
-	my(@threads);
-
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
 
@@ -813,7 +808,14 @@ foreach my $dn (@lib) {
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 # Starting threads.
-	foreach (@run) { push(@threads, threads->create($_)); }
+	{
+		lock(@threads);
+
+		foreach (@run) {
+			my $thr = threads->create($_);
+			push(@threads, $thr->tid());
+		}
+	}
 
 	given ($mode) {
 # Find duplicate files in database.
@@ -829,16 +831,17 @@ foreach my $dn (@lib) {
 	}
 
 # If script mode is not 'index' or 'test', set the $stopping variable
-# here, so the script can quit.
+# here, so the script can quit. Otherwise, the 'files2queue' thread is
+# responsible for setting that variable.
 	if ($mode ne 'index' and $mode ne 'test') {
-		{ lock($stopping);
-		$stopping = 1; }
+		lock($stopping);
+		$stopping = 1;
 	}
 
 # Since the 'iquit' subroutine / thread is in charge of joining threads,
 # and finishing things up, all we have to do here is to join the 'iquit'
 # thread.
-	my $thr_iquit = $threads[0];
+	my $thr_iquit = threads->object($threads[0]);
 	$thr_iquit->join();
 
 # If SIGINT has been tripped, break this loop.
@@ -847,15 +850,16 @@ foreach my $dn (@lib) {
 # Resets all the global / shared variables, making them ready for the
 # next iteration of this loop. In case the user specified more than one
 # directory as argument.
-	%err = ();
-	$n = 0;
-	%files = ();
+	@threads = ();
 	@md5dbs = ();
+	%err = ();
+	%files = ();
 	%md5h = ();
 	%file_contents = ();
+	%large = ();
+	%gone = ();
+	$n = 0;
 	$stopping = 0;
 	$file_stack = 0;
 	$busy = 0;
-	%gone = ();
-	%large = ();
 }
