@@ -50,7 +50,7 @@ my(@lib, @run, $mode);
 # Path to and name of log file to be used for logging.
 my $logf = $ENV{HOME} . '/' . 'md5db.log';
 
-# Regex used for skipping dot files and directories in home directories.
+# Regex used for skipping dotfiles in home directories.
 my $dotskip = qr(^/home/[[:alnum:]]+/\.);
 
 # Delimiter used for database.
