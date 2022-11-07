@@ -474,13 +474,9 @@ sub hash2file {
 # Subroutine for initializing the database hash, and the @files array.
 # This is the first subroutine that will be executed, and all others
 # depend upon it.
-# It takes 1 argument:
-# (1) directory name
 sub init_hash {
-	my $dn = shift;
-
-# Get all the file names in the path.
-	getfiles($dn);
+# Get all the file names in the current directory.
+	getfiles();
 
 # Import hashes from every database file found in the search path.
 	if (scalar(@md5dbs)) {
@@ -503,15 +499,11 @@ to index the files.
 	}
 }
 
-# Subroutine for finding all files inside the directory name passed to
-# it.
-# It takes 1 argument:
-# (1) directory name
+# Subroutine for finding all files in the current directory.
 sub getfiles {
-	my $dn = shift;
 	my(@lines);
 
-	open(my $find, '-|', 'find', $dn, '-type', 'f', '-name', '*', '-nowarn')
+	open(my $find, '-|', 'find', '.', '-type', 'f', '-name', '*', '-nowarn')
 	or die "Can't run 'find': $!";
 	chomp(@lines = (<$find>));
 	close($find) or die "Can't close 'find': $!";
@@ -521,11 +513,9 @@ sub getfiles {
 # the home-dir of a user are usually configuration files for the desktop
 # and various applications. These files change often and will therefore
 # clog the log file created by this script, making it hard to read.
-		if ($fn =~ m($dotskip)) { next; }
+		if (abs_path($fn) =~ m($dotskip)) { next; }
 
-# Using quotemeta operators here (\Q & \E) because Perl interprets the
-# string as a regular expression when it's not.
-		$fn =~ s(^\Q$dn\E/)();
+		$fn =~ s(^\./)();
 
 		if (-f $fn) {
 			my $bn = basename($fn);
