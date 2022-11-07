@@ -75,13 +75,13 @@ my $clear = `clear && echo`;
 # * %file_contents will store the contents of files.
 # * %large will store the names of files that are too big to fit in RAM.
 # * %gone will store the names and hashes of possibly deleted files.
-# * $n will store the number of files that have been processed.
+# * $files_n will store the number of files that have been processed.
 # * $stopping will be used to stop the threads.
 # * $file_stack will track the amount of file data currently in RAM.
 # * $busy will be used to pause other threads when a thread is busy.
 my(@threads, @md5dbs) :shared;
 my(%err, %files, %md5h, %file_contents, %large, %gone) :shared;
-my $n :shared = 0;
+my $files_n :shared = 0;
 my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
@@ -305,20 +305,20 @@ sub iquit {
 
 # Print the hash to the database file and close the log.
 	hash2file();
-	logger('end', $n);
+	logger('end', $files_n);
 }
 
 # Subroutine for controlling the log file.
 # Applying a semaphore so multiple threads won't try to access it at
 # once, just in case ;-)
 # It takes 2 arguments:
-# (1) switch
-# (2) file name / number
+# (1) switch (start gone corr diff end)
+# (2) file name
 sub logger {
 	$semaphore->down();
 
 	my $sw = shift;
-	my($arg, @fn, $n);
+	my(@files);
 
 # Creating an array to hold the filehandles used to print messages.
 	my @OUTS = ($STDOUT, $LOG);
@@ -326,17 +326,10 @@ sub logger {
 # Creating a variable to hold the current time.
 	my $now = localtime(time);
 
-# Array of accepted switches to this subroutine
-	my @larg = qw{start gone corr diff end};
-
-# Loop through all the arguments passed to this subroutine Perform
-# checks that decide which variable the arguments are to be assigned to.
+# Loop through all the arguments passed to this subroutine and add them
+# to the @files array.
 	while (@_) {
-		$arg = shift;
-
-# If $arg is a number assign it to $n, if it's a file add it to @fn.
-		if ($sw eq 'end') { $n = $arg; }
-		else { push(@fn, $arg); }
+		push(@files, shift);
 	}
 
 	given ($sw) {
@@ -347,20 +340,20 @@ sub logger {
 
 Running script in \'$mode\' mode on:
 
-$fn[0]
+$files[0]
 ";
 		}
 # When file has been deleted or moved.
 		when ('gone') {
-			$err{$fn[0]} = 'has been (re)moved.';
+			$err{$files[0]} = 'has been (re)moved.';
 		}
 # When file has been corrupted.
 		when ('corr') {
-			$err{$fn[0]} = 'has been corrupted.';
+			$err{$files[0]} = 'has been corrupted.';
 		}
 # When file has been changed.
 		when ('diff') {
-			$err{$fn[0]} = 'doesn\'t match the hash in database.';
+			$err{$files[0]} = 'doesn\'t match the hash in database.';
 		}
 # When done or interrupted, to close the log.
 # If errors occurred print the %err hash.
@@ -394,9 +387,9 @@ $fn[0]
 				}
 			}
 
-			if (length($n)) {
+			if (length($files_n)) {
 				foreach my $OUT (@OUTS) {
-					say $OUT $n . ' file(s) were tested.' . "\n";
+					say $OUT $files_n . ' file(s) were tested.' . "\n";
 				}
 			}
 
@@ -478,9 +471,9 @@ sub hash2file {
 	close($md5db_out) or die "Can't close '$db': $!";
 }
 
-# Subroutine for initializing the database hash, and the files array.
-# This subroutine returns references. This is the first subroutine that
-# will be executed and all others depend upon it.
+# Subroutine for initializing the database hash, and the @files array.
+# This is the first subroutine that will be executed, and all others
+# depend upon it.
 # It takes 1 argument:
 # (1) directory name
 sub init_hash {
@@ -700,8 +693,8 @@ sub md5index {
 
 		say $tid . ' ' . $fn . ': done indexing (' . $file_stack . ')';
 
-		{ lock($n);
-		$n++; }
+		{ lock($files_n);
+		$files_n++; }
 	}
 }
 
@@ -724,16 +717,16 @@ sub md5test {
 
 		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
 
-# If the new MD5 sum doesn't match the one in the hash, and file doesn't
-# already exist in the %err hash, log it and replace the old MD5 sum in
-# the hash with the new one.
+# If the new MD5 sum doesn't match the one in the database hash, and
+# file doesn't already exist in the %err hash, log it and replace the
+# old MD5 sum in the hash with the new one.
 		if ($new_md5 ne $old_md5 and ! length($err{$fn})) {
 			logger('diff', $fn);
 			$md5h{$fn} = $new_md5;
 		}
 
-		{ lock($n);
-		$n++; }
+		{ lock($files_n);
+		$files_n++; }
 	}
 }
 
@@ -773,7 +766,7 @@ sub p_gone {
 }
 
 # The 'iquit' thread needs to be started first, as the script relies on
-# it being the first element in the 'threads' array. If script mode is
+# it being the first element in the @threads array. If script mode is
 # either 'index' or 'test', we'll start as many threads as the
 # available number of CPUs. Unless script mode is either of those, don't
 # start the 'files2queue' thread, as it's not needed. Also, note that
@@ -857,7 +850,7 @@ foreach my $dn (@lib) {
 	%file_contents = ();
 	%large = ();
 	%gone = ();
-	$n = 0;
+	$files_n = 0;
 	$stopping = 0;
 	$file_stack = 0;
 	$busy = 0;
