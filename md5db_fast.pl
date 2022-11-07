@@ -509,11 +509,10 @@ sub getfiles {
 	close($find) or die "Can't close 'find': $!";
 
 	foreach my $fn (@lines) {
-# If the file name matches "$HOME/.*", then ignore it. Dotfiles in
-# a user's home directory are usually configuration files for the
-# desktop and various applications. These files change often and will
-# therefore clog the log file created by this script, making it hard to
-# read.
+# If the file name matches "$HOME/.*", then skip it. Dotfiles in a
+# user's home directory are usually configuration files for the desktop
+# and various applications. These files change often and will therefore
+# clog the log file created by this script, making it hard to read.
 		if (abs_path($fn) =~ m($dotskip)) { next; }
 
 		$fn =~ s(^\./)();
