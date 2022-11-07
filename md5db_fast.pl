@@ -284,7 +284,7 @@ sub iquit {
 		lock(@threads);
 
 		for (my $i = 1; $i < scalar(@threads); $i++) {
-			my $tid = $threads[${i}];
+			my $tid = $threads[$i];
 			my $thr = threads->object($tid);
 
 			if ($saw_sigint) {
@@ -506,8 +506,7 @@ No database file. Run the script in 'index' mode first
 to index the files.
 ";
 
-		{ lock($stopping);
-		$stopping = 1; }
+		exit;
 	}
 }
 
@@ -691,7 +690,7 @@ sub md5index {
 
 # Loop through the thread que.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
-		while ($saw_sigint) { yield(); }
+		if ($saw_sigint) { last; }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -714,7 +713,7 @@ sub md5test {
 
 # Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
-		while ($saw_sigint) { yield(); }
+		if ($saw_sigint) { last; }
 		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
@@ -799,15 +798,15 @@ foreach my $dn (@lib) {
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
 
-# Start logging.
-	logger('start', $dn);
-
 # Initialize the database hash, and the files hash.
 	init_hash($dn);
 
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
-# Starting threads.
+# Start logging.
+	logger('start', $dn);
+
+# Start threads.
 	{
 		lock(@threads);
 
