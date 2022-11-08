@@ -375,35 +375,22 @@ sub rmtag {
 # and 'totaltracks'.
 sub discnum {
 	my $fn = shift;
-	my($disc_str);
 
 	my $dn = dirname($fn);
-	my $regex = qr/\s*[[:punct:]]?(cd|disc)\s*[0-9]+(\s*of\s*[0-9]+)?[[:punct:]]?\s*$/pi;
-	my $regex2 = qr/\s*of\s*[0-9]+[[:punct:]]?\s*$/pi;
-	my $regex3 = qr/[0-9]+/p;
-
-# Cleaning up DISCNUMBER, TOTALDISCS and DISCTOTAL tags, if they exist.
-	if (defined($t{discnumber})) {
-		$t{discnumber} =~ m/$regex3/;
-		$t{discnumber} = ${^MATCH};
-	}
-
-	if (defined($t{totaldiscs})) {
-		$t{totaldiscs} =~ m/$regex3/;
-		$t{totaldiscs} = ${^MATCH};
-	}
-
-	if (defined($t{disctotal})) {
-		$t{disctotal} =~ m/$regex3/;
-		$t{disctotal} = ${^MATCH};
-	}
+	my $regex = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
+	my $regex2= qr/0+([0-9]+)/;
 
 # Adding the DISCNUMBER tag.
 	if (! defined($t{discnumber})) {
 		if ($t{album} =~ m/$regex/) {
-			$disc_str = ${^MATCH};
-			${^MATCH} =~ m/$regex3/;
-			$t{discnumber} = ${^MATCH};
+			$t{discnumber} = $2;
+
+			if (! defined($t{totaldiscs}) and defined($4)) {
+				$t{totaldiscs} = $4;
+
+				say $fn . ': adding totaldiscs tag';
+			}
+
 			$t{album} =~ s/$regex//;
 
 			say $fn . ': adding discnumber tag';
@@ -412,9 +399,13 @@ sub discnum {
 
 	if (! defined($t{discnumber})) {
 		if ($dn =~ m/$regex/) {
-			$disc_str = ${^MATCH};
-			${^MATCH} =~ m/$regex3/;
-			$t{discnumber} = ${^MATCH};
+			$t{discnumber} = $2;
+
+			if (! defined($t{totaldiscs}) and defined($4)) {
+				$t{totaldiscs} = $4;
+
+				say $fn . ': adding totaldiscs tag';
+			}
 		} else { $t{discnumber} = 1; }
 
 		say $fn . ': adding discnumber tag';
@@ -429,13 +420,17 @@ sub discnum {
 		}
 	}
 
-	if (! defined($t{totaldiscs}) && defined($disc_str)) {
-		if ($disc_str =~ m/$regex2/) {
-			${^MATCH} =~ m/$regex3/;
-			$t{totaldiscs} = ${^MATCH};
+# Cleaning up DISCNUMBER, TOTALDISCS and DISCTOTAL tags, if they exist.
+	if (defined($t{discnumber})) {
+		$t{discnumber} =~ s/$regex2/$1/;
+	}
 
-			say $fn . ': adding totaldiscs tag';
-		}
+	if (defined($t{totaldiscs})) {
+		$t{totaldiscs} =~ s/$regex2/$1/;
+	}
+
+	if (defined($t{disctotal})) {
+		$t{disctotal} =~ s/$regex2/$1/;
 	}
 
 	if (defined($t{discnumber})) {
@@ -485,21 +480,13 @@ sub albumartist {
 sub tracknum {
 	my $fn = shift;
 
-	my $regex = qr/[0-9]+/p;
-	my $regex2 = qr/^0+$/;
-	my $regex3 = qr/^0+/;
+	my $regex= qr/0+([0-9]+)/;
 
 	if (defined($t{tracknumber})) {
 		my $old_tag = $t{tracknumber};
 
 		$t{tracknumber} =~ m/$regex/;
-		$t{tracknumber} = ${^MATCH};
-
-		if ($t{tracknumber} =~ m/$regex2/) {
-			$t{tracknumber} = 0;
-		} elsif ($t{tracknumber} =~ m/$regex3/) {
-			$t{tracknumber} =~ s/$regex3//;
-		}
+		$t{tracknumber} = $1;
 
 		if ($t{tracknumber} ne $old_tag) {
 			say $fn . ': fixing tracknumber tag';
