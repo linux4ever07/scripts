@@ -196,7 +196,7 @@ if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 # Subroutine for when the script needs to quit, either cause of being
 # finished, or SIGINT has been triggered.
 sub iquit {
-	while (! $stopping) { sleep(1); }
+	while (! $stopping) { sleep(0.5); }
 
 # Depending on whether the script is finished or SIGINT has been tripped
 # we handle the closing of threads differently. If SIGINT has been
@@ -301,7 +301,7 @@ sub files2queue {
 
 # If there's still files in the queue left to be processed, and SIGINT
 # has not been triggered, wait for the other threads to empty the queue.
-	while ($q->pending() > 0 and ! $stopping) { sleep(1); }
+	while ($q->pending() > 0 and ! $stopping) { sleep(0.5); }
 
 # We're using this subroutine / thread to indicate to the other threads
 # when to quit, since this is where we create the file queue.
