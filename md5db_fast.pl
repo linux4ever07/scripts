@@ -72,18 +72,18 @@ my $delim = "\t\*\t";
 my $disk_size = 1000000000;
 
 # Creating a few shared variables.
-# * @threads will be used to store threads that are created.
-# * @md5dbs is the md5.db array.
-# * %err will be used for errors.
+# * @threads stores threads that are created.
+# * @md5dbs stores 'md5.db' files.
+# * %err is used for errors.
 # * %files is the files hash.
 # * %md5h is the database hash.
-# * %file_contents will store the contents of files.
-# * %large will store the names of files that are too big to fit in RAM.
-# * %gone will store the names and hashes of possibly deleted files.
-# * $files_n will store the number of files that have been processed.
-# * $stopping will be used to stop the threads.
-# * $file_stack will track the amount of file data currently in RAM.
-# * $busy will be used to pause other threads when a thread is busy.
+# * %file_contents stores the contents of files.
+# * %large stores the names of files that are too big to fit in RAM.
+# * %gone stores the names and hashes of possibly deleted files.
+# * $files_n stores the number of files that have been processed.
+# * $stopping is used to stop threads, and quit the script.
+# * $file_stack tracks the amount of file data currently in RAM.
+# * $busy is used to pause other threads when a thread is busy.
 my(@threads, @md5dbs) :shared;
 my(%err, %files, %md5h, %file_contents, %large, %gone) :shared;
 my $files_n :shared = 0;
@@ -440,7 +440,7 @@ sub getfiles {
 	}
 }
 
-# Subroutine for reading a database file into database hash.
+# Subroutine for reading database files into database hash.
 # It takes 1 argument:
 # (1) file name
 sub file2hash {
