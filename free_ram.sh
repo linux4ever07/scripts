@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script creates an infinite while loop, which checks the available
 # RAM every 1 second, and kills Firefox, Chrome, Chromium and
 # Tor Browser if less than 1 GB is available. The script will only kill
@@ -37,7 +38,6 @@ kill_chromium () {
 	pid_switch=0
 
 	for comm in chrome chromium; do
-
 		mapfile -t parent < <(ps -C "$comm" -o ppid | tail -n +2 | tr -d '[:blank:]' | sort -u)
 		mapfile -t child < <(ps -C "$comm" -o pid | tail -n +2 | tr -d '[:blank:]')
 
