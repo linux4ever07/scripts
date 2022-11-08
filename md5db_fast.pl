@@ -127,15 +127,16 @@ sub usage {
 	say "
 Usage: $cmd[0] [options] [directory 1] .. [directory N]
 
+	Options:
+
 -double
-	Check database for files that have identical hashes.
+	Check database for duplicate files.
 
 -import
-	Import MD5 sums to the database from already existing \*.MD5 files
-	in each directory.
+	Import MD5 sums to the database from already existing \*.MD5 files.
 
 -index
-	Index new files in each directory.
+	Index new files.
 
 -test
 	Test the MD5 sums of the files in the database to see if they've
