@@ -175,7 +175,7 @@ while (my $arg = shift(@ARGV)) {
 	} else { usage(); }
 }
 
-# If no switches were used, print usage instructions.
+# Print usage instructions if needed.
 if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 
 # Subroutine for when the script needs to quit, either cause of being
