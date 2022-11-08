@@ -125,9 +125,9 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'time_calc', which will add the total time
-# of the previous 'time line' to the current 'time line', plus a
-# centisecond if centiseconds are identical with previous 'time line'.
+# Creates a function called 'time_calc', which will add centiseconds to
+# the current 'time line', until it's at least 1 centisecond more than
+# previous 'time line'.
 time_calc () {
 	start_time_tmp="$1"
 	stop_time_tmp="$2"

@@ -171,9 +171,9 @@ sub time_convert {
 	return($time);
 }
 
-# The 'time_calc' subroutine adds the total time of the previous
-# 'time line' to the current 'time line', plus a centisecond if
-# centiseconds are identical with previous 'time line'.
+# The 'time_calc' subroutine adds centiseconds to the current
+# 'time line', until it's at least 1 centisecond more than previous
+# 'time line'.
 sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
