@@ -20,7 +20,6 @@ now () { date '+%F %H:%M:%S'; }
 
 limit=1000000
 
-regex='^[[:space:]]*$'
 regex_rend='--type=renderer'
 regex_ext='--extension-process'
 
@@ -42,11 +41,11 @@ kill_chromium () {
 		mapfile -t child < <(ps -C "$comm" -o pid | tail -n +2 | tr -d '[:blank:]')
 
 		for (( i = 0; i < ${#child[@]}; i++ )); do
-			if [[ ! ${child[${i}]} =~ $regex ]]; then
+			if [[ -n ${child[${i}]} ]]; then
 				child_pid="${child[${i}]}"
 
 				for (( j = 0; j < ${#parent[@]}; j++ )); do
-					if [[ ! ${parent[${j}]} =~ $regex ]]; then
+					if [[ -n ${parent[${j}]} ]]; then
 						parent_pid="${parent[${j}]}"
 
 						if [[ $parent_pid == $child_pid ]]; then
@@ -67,7 +66,6 @@ kill_chromium () {
 				if [[ ! $chrome_type =~ $regex_rend ]]; then
 					pid_switch=1
 				elif [[ $chrome_type =~ $regex_ext ]]; then
-# if [[ $chrome_type =~ $regex_ext ]]; then
 					pid_switch=1
 				fi
 
@@ -94,7 +92,7 @@ kill_firefox () {
 
 	for name in firefox tor; do
 		for (( i = 0; i <= ${#pids[@]}; i++ )); do
-			if [[ ! ${pids[${i}]} =~ $regex ]]; then
+			if [[ -n ${pids[${i}]} ]]; then
 				pid="${pids[${i}]}"
 				p_name=$(ps -p "$pid" -o comm | tail -n +2)
 				if [[ $p_name == "$name" ]]; then
@@ -166,7 +164,7 @@ while true; do
 		fi
 
 # If Chromium is running, then...
-		if [[ ! ${is_chromium[0]} =~ $regex ]]; then
+		if [[ -n ${is_chromium[0]} ]]; then
 			time=$(now)
 
 			printf '%s\n\n' "${time}: Killing Chromium..." | tee --append "$log_killed"
