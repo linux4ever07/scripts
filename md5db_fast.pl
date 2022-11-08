@@ -512,8 +512,8 @@ sub file2hash {
 
 # Subroutine for printing the database hash to the database file.
 sub hash2file {
-# If the database hash is empty, return from this function, to keep from
-# overwriting the database file with nothing.
+# If the database hash is empty, return from this subroutine, to keep
+# from overwriting the database file with nothing.
 	if (! keys(%md5h)) { return; }
 
 	my $of = 'md5' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.db';
