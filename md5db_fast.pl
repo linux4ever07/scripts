@@ -144,50 +144,35 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 	exit;
 }
 
-# This loop goes through the argument list as passed to the script
-# by the user when ran.
-foreach my $arg (@ARGV) {
-# If argument starts with a dash '-', interpret it as an option.
-	if ($arg =~ /^-/) {
-		given ($arg) {
+# Go through the argument list as passed to the script by the user.
+my $arg = shift(@ARGV);
+
+given ($arg) {
 # When '-double', set script mode to 'double', and call the md5double
 # subroutine later.
-			when (/^-double$/) {
-				if (! length($mode)) { push(@cmd, $arg); $mode = 'double'; }
-			}
-
+	when ('-double') { push(@cmd, $arg); $mode = 'double'; }
 # When '-import', set script mode to 'import', and call the md5import
 # subroutine later.
-			when (/^-import$/) {
-				if (! length($mode)) { push(@cmd, $arg); $mode = 'import'; }
-			}
-
+	when ('-import') { push(@cmd, $arg); $mode = 'import'; }
 # When '-help', set script mode to 'help', and print usage instructions
 # later.
-			when (/^-help$/) {
-				if (! length($mode)) { push(@cmd, $arg); $mode = 'help'; }
-			}
-
+	when ('-help') { push(@cmd, $arg); $mode = 'help'; }
 # When '-index', set script mode to 'index', and call the md5index
 # subroutine later.
-			when (/^-index$/) {
-				if (! length($mode)) { push(@cmd, $arg); $mode = 'index'; }
-			}
-
+	when ('-index') { push(@cmd, $arg); $mode = 'index'; }
 # When '-test', set the script mode to 'test', and call the md5test
 # subroutine later.
-			when (/^-test$/) {
-				if (! length($mode)) { push(@cmd, $arg); $mode = 'test'; }
-			}
-		}
-# If argument is a directory, include it in the @lib array.
-	} else {
-		if (-d $arg) {
-			my $dn = abs_path($arg);
-			push(@lib, $dn);
-			push(@cmd, $dn);
-		}
-	}
+	when ('-test') { push(@cmd, $arg); $mode = 'test'; }
+}
+
+# If the remaining arguments are directories, store them in the @lib
+# array.
+while (my $arg = shift(@ARGV)) {
+	if (-d $arg) {
+		my $dn = abs_path($arg);
+		push(@lib, $dn);
+		push(@cmd, $dn);
+	} else { usage(); }
 }
 
 # If no switches were used, print usage instructions.
