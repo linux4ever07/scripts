@@ -190,6 +190,47 @@ foreach my $arg (@ARGV) {
 # If no switches were used, print usage instructions.
 if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 
+# Subroutine for when the script needs to quit, either cause of being
+# finished, or SIGINT has been triggered.
+sub iquit {
+	while (! $stopping) { yield(); }
+
+# Depending on whether the script is finished or SIGINT has been tripped
+# we handle the closing of threads differently. If SIGINT has been
+# tripped and a thread is still running / active, sleep for 1 second and
+# then detach the thread without waiting for it to finish. The @threads
+# array is locked, to make sure that the main thread has finished
+# starting all the threads, before we start closing them. We start
+# looping through the array at element 1, as element 0 is this thread
+# (iquit).
+	{
+		lock(@threads);
+
+		for (my $i = 1; $i < scalar(@threads); $i++) {
+			my $tid = $threads[$i];
+			my $thr = threads->object($tid);
+
+			if ($saw_sigint) {
+				if ($thr->is_running()) {
+					sleep(1);
+
+					$thr->detach();
+					next;
+				}
+			}
+
+			$thr->join();
+		}
+	}
+
+# Print missing files, and close the log.
+	p_gone();
+	logger('end', $files_n);
+
+# Print the database hash to the database file.
+	hash2file();
+}
+
 # Subroutine for putting files in the queue, and loading them into RAM.
 sub files2queue {
 	my($files_ref);
@@ -265,47 +306,6 @@ sub files2queue {
 # when to quit, since this is where we create the file queue.
 	{ lock($stopping);
 	$stopping = 1; }
-}
-
-# Subroutine for when the script needs to quit, either cause of being
-# finished, or SIGINT has been triggered.
-sub iquit {
-	while (! $stopping) { yield(); }
-
-# Depending on whether the script is finished or SIGINT has been tripped
-# we handle the closing of threads differently. If SIGINT has been
-# tripped and a thread is still running / active, sleep for 1 second and
-# then detach the thread without waiting for it to finish. The @threads
-# array is locked, to make sure that the main thread has finished
-# starting all the threads, before we start closing them. We start
-# looping through the array at element 1, as element 0 is this thread
-# (iquit).
-	{
-		lock(@threads);
-
-		for (my $i = 1; $i < scalar(@threads); $i++) {
-			my $tid = $threads[$i];
-			my $thr = threads->object($tid);
-
-			if ($saw_sigint) {
-				if ($thr->is_running()) {
-					sleep(1);
-
-					$thr->detach();
-					next;
-				}
-			}
-
-			$thr->join();
-		}
-	}
-
-# Print missing files, and close the log.
-	p_gone();
-	logger('end', $files_n);
-
-# Print the database hash to the database file.
-	hash2file();
 }
 
 # Subroutine for controlling the log file.
@@ -401,6 +401,60 @@ $files[0]
 	$semaphore->up();
 }
 
+# Subroutine for initializing the database hash, and the @files array.
+# This is the first subroutine that will be executed, and all others
+# depend upon it.
+sub init_hash {
+# Get all the file names in the current directory.
+	getfiles();
+
+# Import hashes from every database file found in the search path.
+	if (scalar(@md5dbs)) {
+		foreach my $db (@md5dbs) { file2hash($db); }
+	}
+
+# Clears the screen, thereby scrolling past the database file print.
+	print $clear;
+}
+
+# Subroutine for when the database file is empty, or doesn't exist.
+sub if_empty {
+	if (! keys(%md5h)) {
+		say "
+No database file. Run the script in 'index' mode first to index files.
+";
+
+		exit;
+	}
+}
+
+# Subroutine for finding all files in the current directory.
+sub getfiles {
+	my(@lines);
+
+	open(my $find, '-|', 'find', '.', '-type', 'f', '-name', '*', '-nowarn')
+	or die "Can't run 'find': $!";
+	chomp(@lines = (<$find>));
+	close($find) or die "Can't close 'find': $!";
+
+	foreach my $fn (@lines) {
+# If the file name matches "$HOME/.*", then skip it. Dotfiles in a
+# user's home directory are usually configuration files for the desktop
+# and various applications. These files change often and will therefore
+# clog the log file created by this script, making it hard to read.
+		if (abs_path($fn) =~ m($dotskip)) { next; }
+
+		$fn =~ s(^\./)();
+
+		if (-f $fn) {
+			my $bn = basename($fn);
+
+			if ($bn ne $db) { $files{$fn} = 1; }
+			elsif ($bn eq $db) { push(@md5dbs, $fn); }
+		}
+	}
+}
+
 # Subroutine for reading a database file into the database hash.
 # It takes 1 argument:
 # (1) file name
@@ -473,73 +527,6 @@ sub hash2file {
 	close($md5db_out) or die "Can't close '$of': $!";
 
 	rename($of, $db) or die "Can't rename file '$of': $!";
-}
-
-# Subroutine for initializing the database hash, and the @files array.
-# This is the first subroutine that will be executed, and all others
-# depend upon it.
-sub init_hash {
-# Get all the file names in the current directory.
-	getfiles();
-
-# Import hashes from every database file found in the search path.
-	if (scalar(@md5dbs)) {
-		foreach my $db (@md5dbs) { file2hash($db); }
-	}
-
-# Clears the screen, thereby scrolling past the database file print.
-	print $clear;
-}
-
-# Subroutine for when the database file is empty, or doesn't exist.
-sub if_empty {
-	if (! keys(%md5h)) {
-		say "
-No database file. Run the script in 'index' mode first to index files.
-";
-
-		exit;
-	}
-}
-
-# Subroutine for finding all files in the current directory.
-sub getfiles {
-	my(@lines);
-
-	open(my $find, '-|', 'find', '.', '-type', 'f', '-name', '*', '-nowarn')
-	or die "Can't run 'find': $!";
-	chomp(@lines = (<$find>));
-	close($find) or die "Can't close 'find': $!";
-
-	foreach my $fn (@lines) {
-# If the file name matches "$HOME/.*", then skip it. Dotfiles in a
-# user's home directory are usually configuration files for the desktop
-# and various applications. These files change often and will therefore
-# clog the log file created by this script, making it hard to read.
-		if (abs_path($fn) =~ m($dotskip)) { next; }
-
-		$fn =~ s(^\./)();
-
-		if (-f $fn) {
-			my $bn = basename($fn);
-
-			if ($bn ne $db) { $files{$fn} = 1; }
-			elsif ($bn eq $db) { push(@md5dbs, $fn); }
-		}
-	}
-}
-
-# Subroutine for clearing files from RAM, once they've been processed.
-# It takes 1 argument:
-# (1) file name
-sub clear_stack {
-	my $fn = shift;
-
-	{ lock($file_stack);
-	$file_stack -= length($file_contents{$fn}); }
-
-	{ lock(%file_contents);
-	delete($file_contents{$fn}); }
 }
 
 # Subroutine for finding duplicate files, by checking the database hash.
@@ -617,6 +604,19 @@ sub md5import {
 			}
 		}
 	}
+}
+
+# Subroutine for clearing files from RAM, once they've been processed.
+# It takes 1 argument:
+# (1) file name
+sub clear_stack {
+	my $fn = shift;
+
+	{ lock($file_stack);
+	$file_stack -= length($file_contents{$fn}); }
+
+	{ lock(%file_contents);
+	delete($file_contents{$fn}); }
 }
 
 # Subroutine for getting the MD5 hash of a file.
