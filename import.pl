@@ -12,7 +12,6 @@ use File::Path qw(make_path);
 use File::Copy qw(copy);
 use Encode qw(decode find_encoding);
 
-my $script = basename($0);
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
 my (@log, %t, %files, $library);
 
@@ -46,7 +45,7 @@ foreach my $dn (@ARGV) {
 }
 
 sub usage {
-	say 'Usage: ' . $script . ' [FLAC library directory] .. [directory N]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [FLAC library directory] .. [directory N]' . "\n";
 	exit;
 }
 

@@ -10,8 +10,6 @@ use File::Basename qw(basename);
 use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 
-my $script = basename($0);
-
 my(@lines, @format);
 
 my $regex_ext = qr/\.([^.]*)$/;
@@ -34,7 +32,7 @@ $format[2] = qr/^$format[1] --> $format[1]$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say 'Usage: ' . $script . ' [srt]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [srt]' . "\n";
 	exit;
 }
 

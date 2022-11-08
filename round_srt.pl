@@ -53,7 +53,7 @@ $format[3] = qr/^($format[2])$delim($format[2])$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say 'Usage: ' . $script . ' [srt...]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [srt...]' . "\n";
 	exit;
 }
 

@@ -37,7 +37,6 @@ use File::Basename qw(basename dirname);
 use File::Path qw(make_path);
 use Cwd qw(abs_path);
 
-my $script = basename($0);
 my(@flac_version, $library, %t, %files, @files, @dirs, %mflac_if, @mflac_of);
 
 # The 'version' subroutine checks the installed version of 'flac'.
@@ -134,7 +133,7 @@ foreach my $dn (@dirs) {
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say 'Usage: ' . $script . ' [FLAC library directory]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [FLAC library directory]' . "\n";
 	exit;
 }
 
