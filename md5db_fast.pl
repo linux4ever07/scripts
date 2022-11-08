@@ -301,7 +301,7 @@ sub files2queue {
 
 # If there's still files in the queue left to be processed, and SIGINT
 # has not been triggered, wait for the other threads to empty the queue.
-	while ($q->pending() > 0 and ! $stopping) { yield(); }
+	while ($q->pending() > 0 and ! $stopping) { sleep(1); }
 
 # We're using this subroutine / thread to indicate to the other threads
 # when to quit, since this is where we create the file queue.
