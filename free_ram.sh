@@ -23,6 +23,14 @@ limit=1000000
 regex_rend='--type=renderer'
 regex_ext='--extension-process'
 
+# Creates a file name for the log.
+log_killed="${HOME}/browser_killed.log"
+
+# If $log_killed is not a file, create it.
+if [[ ! -f $log_killed ]]; then
+	touch "$log_killed"
+fi
+
 # Creates a function called 'is_chromium', which checks if Chromium
 # or Chrome is running.
 is_chromium () {
@@ -105,14 +113,6 @@ kill_firefox () {
 
 	kill -9 "${pids[@]}"
 }
-
-# Creates a file name for the log.
-log_killed="${HOME}/browser_killed.log"
-
-# If $log_killed is not a file, create it.
-if [[ ! -f $log_killed ]]; then
-	touch "$log_killed"
-fi
 
 # Creates an infinite while loop.
 while true; do
