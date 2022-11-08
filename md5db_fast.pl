@@ -136,7 +136,7 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 	Import MD5 sums to the database from already existing \*.MD5 files.
 
 -index
-	Index new files.
+	Index files and add them to the database.
 
 -test
 	Test the MD5 sums of the files in the database to see if they've
