@@ -34,8 +34,14 @@ use Thread::Queue;
 use Thread::Semaphore;
 use POSIX qw(SIGINT);
 
-# Create the thread queue.
-my $q = Thread::Queue->new();
+my(@lib, @run, $mode);
+
+# Array for storing the actual arguments used by the script internally.
+# Might be useful for debugging.
+my @cmd = (basename($0));
+
+# Clear screen command.
+my $clear = `clear && echo`;
 
 # Get the number of available CPU cores. Add 1 to this number, which
 # will lead to an extra thread being created, maximizing performance.
@@ -45,7 +51,8 @@ $cores++;
 # Check if the necessary commands are installed to test FLAC files.
 chomp(my @flac_req = ( `command -v flac metaflac 2>&-` ));
 
-my(@lib, @run, $mode);
+# Name of database file.
+my $db = 'md5.db';
 
 # Path to and name of log file to be used for logging.
 my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
@@ -56,15 +63,10 @@ my $dotskip = qr(^/home/[[:alnum:]]+/\.);
 # Delimiter used for database.
 my $delim = "\t\*\t";
 
-# Array for storing the actual arguments used by the script internally.
-# Might be useful for debugging.
-my @cmd = (basename($0));
-
-# Name of database file.
-my $db = 'md5.db';
-
-# Clear screen command.
-my $clear = `clear && echo`;
+# Creating a variable which sets a limit on the total number of bytes
+# that can be read into RAM at once. If you have plenty of RAM, it's
+# safe to increase this number. It will improve performance.
+my $disk_size = 1000000000;
 
 # Creating a few shared variables.
 # * @threads will be used to store threads that are created.
@@ -86,10 +88,8 @@ my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
 
-# Creating a variable which sets a limit on the total number of bytes
-# that can be read into RAM at once. If you have plenty of RAM, it's
-# safe to increase this number. It will improve performance.
-my $disk_size = 1000000000;
+# Create the thread queue.
+my $q = Thread::Queue->new();
 
 # This will be used to control access to the logger subroutine.
 my $semaphore = Thread::Semaphore->new();
