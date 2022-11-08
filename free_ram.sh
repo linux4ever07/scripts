@@ -122,8 +122,8 @@ while true; do
 # Runs 'free', stores output in the $free_ram array, and sets a couple
 # of variables based on that output.
 	mapfile -t free_ram < <(free | sed -E 's/[[:space:]]+/ /g')
-	mapfile -d' ' -t ram < <(printf '%s' "${free_ram[1]}")
-	mapfile -d' ' -t swap < <(printf '%s' "${free_ram[2]}")
+	mapfile -d' ' -t ram <<<"${free_ram[1]%$'\n'}"
+	mapfile -d' ' -t swap <<<"${free_ram[2]%$'\n'}"
 
 # Prints the free and available RAM and SWAP.
 	printf '%s\n' 'FREE (kibibytes)'
