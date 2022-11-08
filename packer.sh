@@ -379,7 +379,7 @@ arch_test () {
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar tf "$f"
+			tar -tf "$f"
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
