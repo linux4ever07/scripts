@@ -284,9 +284,9 @@ printf '(Track ID: %s)\n\n' "${sub_tracks[${default},num]}"
 
 # Puts together the mkvmerge command. The loop below deals with
 # subtitles that are in the Matroska file, and the subtitle files given
-# as arguments to the script. The loop below makes sure a file name can
-# only be listed once. This is for when a subtitle file has multiple
-# subtitle tracks.
+# as arguments to the script. The loop makes sure a file name can only
+# be listed once. This is for when a subtitle file has multiple subtitle
+# tracks.
 for (( i = 1; i < files_n; i++ )); do
 	range1_tmp="${range1[${i}]}"
 	range2_tmp="${range2[${i}]}"

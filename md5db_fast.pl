@@ -144,7 +144,7 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 	exit;
 }
 
-# Go through the argument list passed to the script by the user.
+# Go through the arguments passed to the script by the user.
 given (my $arg = shift(@ARGV)) {
 # When '-double', set script mode to 'double', and call the md5double
 # subroutine later.
