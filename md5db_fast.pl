@@ -261,8 +261,6 @@ sub files2queue {
 # processed one at a time, since they have to be read directly from the
 # hard drive.
 	foreach my $fn (sort(keys(%{$files_ref}))) {
-		if (! -r $fn) { next; }
-
 		my $size = (stat($fn))[7];
 
 		if (! length($size)) { next; }
@@ -445,7 +443,7 @@ sub getfiles {
 
 		$fn =~ s(^\./)();
 
-		if (-f $fn) {
+		if (-f $fn and -r $fn) {
 			my $bn = basename($fn);
 
 			if ($bn ne $db) { $files{$fn} = 1; }
