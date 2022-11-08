@@ -388,7 +388,7 @@ $files[0]
 	$semaphore->up();
 }
 
-# Subroutine for initializing database hash, and the @files array.
+# Subroutine for initializing database hash, and the %files hash.
 # This is the first subroutine that will be executed, and all others
 # depend upon it.
 sub init_hash {
