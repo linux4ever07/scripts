@@ -161,6 +161,7 @@ given (my $arg = shift(@ARGV)) {
 # When '-test', set the script mode to 'test', and call the md5test
 # subroutine later.
 	when ('-test') { push(@cmd, $arg); $mode = 'test'; }
+	default { usage(); }
 }
 
 # If the remaining arguments are directories, store them in the @lib
@@ -174,7 +175,7 @@ while (my $arg = shift(@ARGV)) {
 }
 
 # Print usage instructions if needed.
-if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
+if (! scalar(@lib) or $mode eq 'help') { usage(); }
 
 # Subroutine for when the script needs to quit, either cause of being
 # finished, or SIGINT has been triggered.
