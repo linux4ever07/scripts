@@ -113,14 +113,14 @@ sub handler {
 }
 
 # Open file handle for the log file
-open(my $LOG, '>>', $log_fn) or die "Can't open '$log_fn': $!";
+open(my $log, '>>', $log_fn) or die "Can't open '$log_fn': $!";
 
-# Make the $LOG file handle unbuffered for instant logging.
-$LOG->autoflush(1);
+# Make the $log file handle unbuffered for instant logging.
+$log->autoflush(1);
 
 # Duplicate STDOUT and STDERR as a regular file handles.
-open(my $STDOUT, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
-open(my $STDERR, ">&STDERR") or die "Can't duplicate STDERR: $!";
+open(my $stdout, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
+open(my $stderr, ">&STDERR") or die "Can't duplicate STDERR: $!";
 
 # Subroutine for printing usage instructions.
 sub usage {
@@ -319,13 +319,7 @@ sub logger {
 	$semaphore->down();
 
 	my $sw = shift;
-	my(@files);
-
-# Creating an array to hold the filehandles used to print messages.
-	my @OUTS = ($STDOUT, $LOG);
-
-# Creating a variable to hold the current time.
-	my $now = localtime(time);
+	my(@files, @outs, $now);
 
 # Loop through all the arguments passed to this subroutine and add them
 # to the @files array.
@@ -336,7 +330,10 @@ sub logger {
 	given ($sw) {
 # When log is opened.
 		when ('start') {
-			say $LOG "
+# Storing the current time in $now.
+			$now = localtime(time);
+
+			say $log "
 **** Logging started on $now ****
 
 Running script in \'$mode\' mode on:
@@ -360,42 +357,48 @@ $files[0]
 # If errors occurred print the %err hash.
 # Either way, print number of files processed.
 		when ('end') {
+# Storing the current time in $now.
+			$now = localtime(time);
+
+# Storing the filehandles used to print messages in @outs array.
+			@outs = ($stdout, $log);
+
 # When the script is interrupted by user pressing ^C, say so in both
 # STDERR and the log.
 			if ($saw_sigint) {
-				$OUTS[0] = $STDERR;
+				$outs[0] = $stderr;
 
-				foreach my $OUT (@OUTS) {
-					say $OUT 'Interrupted by user!' . "\n";
+				foreach my $out (@outs) {
+					say $out 'Interrupted by user!' . "\n";
 				}
 			}
 
 			if (! keys(%err)) {
-				foreach my $OUT (@OUTS) {
-					say $OUT 'Everything is OK!' . "\n";
+				foreach my $out (@outs) {
+					say $out 'Everything is OK!' . "\n";
 				}
 			} else {
-				$OUTS[0] = $STDERR;
+				$outs[0] = $stderr;
 
-				foreach my $OUT (@OUTS) {
-					say $OUT 'Errors occurred!' . "\n";
+				foreach my $out (@outs) {
+					say $out 'Errors occurred!' . "\n";
 				}
 
 				foreach my $fn (sort(keys(%err))) {
-					foreach my $OUT (@OUTS) {
-						say $OUT $fn . "\n\t" . $err{$fn} . "\n";
+					foreach my $out (@outs) {
+						say $out $fn . "\n\t" . $err{$fn} . "\n";
 					}
 				}
 			}
 
 			if (length($files_n)) {
-				foreach my $OUT (@OUTS) {
-					say $OUT $files_n . ' file(s) were tested.' . "\n";
+				foreach my $out (@outs) {
+					say $out $files_n . ' file(s) were tested.' . "\n";
 				}
 			}
 
-			say $LOG '**** Logging ended on ' . $now . ' ****' . "\n";
-			close $LOG or die "Can't close '$LOG': $!";
+			say $log '**** Logging ended on ' . $now . ' ****' . "\n";
+			close $log or die "Can't close '$log': $!";
 		}
 	}
 
@@ -709,10 +712,9 @@ sub md5test {
 
 		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
 
-# If the new MD5 sum doesn't match the one in the database hash, and
-# file doesn't already exist in the %err hash, log it and replace the
-# old MD5 sum in the hash with the new one.
-		if ($new_md5 ne $old_md5 and ! length($err{$fn})) {
+# If the new MD5 sum doesn't match the one in the database hash, log it
+# and replace the old MD5 sum in the hash with the new one.
+		if ($new_md5 ne $old_md5) {
 			logger('diff', $fn);
 			$md5h{$fn} = $new_md5;
 		}
