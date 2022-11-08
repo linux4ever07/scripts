@@ -48,7 +48,7 @@ chomp(my @flac_req = ( `command -v flac metaflac 2>&-` ));
 my(@lib, @run, $mode);
 
 # Path to and name of log file to be used for logging.
-my $logf = $ENV{HOME} . '/' . 'md5db.log';
+my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
 # Regex used for skipping dotfiles in home directories.
 my $dotskip = qr(^/home/[[:alnum:]]+/\.);
@@ -110,7 +110,7 @@ sub handler {
 }
 
 # Open file handle for the log file
-open(my $LOG, '>>', $logf) or die "Can't open '$logf': $!";
+open(my $LOG, '>>', $log_fn) or die "Can't open '$log_fn': $!";
 
 # Make the $LOG file handle unbuffered for instant logging.
 $LOG->autoflush(1);
@@ -545,21 +545,21 @@ sub clear_stack {
 # Subroutine for finding duplicate files, by checking the database hash.
 sub md5double {
 # Loop through the %md5h hash and save the checksums as keys in a new
-# hash called %exists. Each of those keys will hold an anonymous array
+# hash called %dups. Each of those keys will hold an anonymous array
 # with the matching file names.
-	my(%exists);
+	my(%dups);
 
 	foreach my $fn (keys(%md5h)) {
 		my $hash = $md5h{$fn};
-		push(@{$exists{${hash}}}, $fn);
+		push(@{$dups{${hash}}}, $fn);
 	}
 
-# Loop through the %exists hash and print files that are identical, if
+# Loop through the %dups hash and print files that are identical, if
 # any.
-	foreach my $hash (keys(%exists)) {
-		if (scalar(@{$exists{${hash}}}) > 1) {
+	foreach my $hash (keys(%dups)) {
+		if (scalar(@{$dups{${hash}}}) > 1) {
 			say 'These files have the same hash (' . $hash . '):';
-			foreach my $fn (@{$exists{${hash}}}) { say $fn; }
+			foreach my $fn (@{$dups{${hash}}}) { say $fn; }
 			say '';
 		}
 	}
