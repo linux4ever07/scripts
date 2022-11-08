@@ -485,8 +485,7 @@ sub tracknum {
 	if (defined($t{tracknumber})) {
 		my $old_tag = $t{tracknumber};
 
-		$t{tracknumber} =~ m/$regex/;
-		$t{tracknumber} = $1;
+		$t{tracknumber} =~ s/$regex/$1/;
 
 		if ($t{tracknumber} ne $old_tag) {
 			say $fn . ': fixing tracknumber tag';
