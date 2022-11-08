@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This script takes at least two directories as arguments, checks the
 # MD5 hash of all the files in the first directory, and then uses that
 # list to delete duplicates from the other directories.
