@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+
 # This script is meant to manage my FLAC music library, specifically the
 # tags.
 
