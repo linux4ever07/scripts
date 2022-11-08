@@ -19,7 +19,7 @@ usage () {
 	exit
 }
 
-if=$(readlink -f "$1" 2>&-)
+if=$(readlink -f "$1")
 session="${RANDOM}-${RANDOM}"
 of="${if%.[^.]*}"
 of="${of}-${session}.srt"
