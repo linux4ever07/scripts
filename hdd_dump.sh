@@ -147,11 +147,13 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 # the regex).
 	mapfile -d'/' -t fn_parts <<<"$if"
 	mapfile -d'/' -t dn_parts <<<"$in_dir"
+	fn_parts[-1]="${fn_parts[-1]%$'\n'}"
+	dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 	start="${#dn_parts[@]}"
 	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
 	dn=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
 	dn="${dn:1}"
-	bn="${fn_parts[-1]%$'\n'}"
+	bn="${fn_parts[-1]}"
 
 	of_dn="${out_dir}/${dn}"
 	of="${of_dn}/${bn}"

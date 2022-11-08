@@ -74,9 +74,10 @@ for dir in dir1 dir2; do
 # the regex).
 			mapfile -d'/' -t fn_parts <<<"${!fn_ref}"
 			mapfile -d'/' -t dn_parts <<<"${!dn_ref}"
+			fn_parts[-1]="${fn_parts[-1]%$'\n'}"
+			dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 			start="${#dn_parts[@]}"
 			bn=$(printf '/%s' "${fn_parts[@]:${start}}")
-			bn="${bn%$'\n'}"
 			bn="${bn:1}"
 
 # Okay, we're done messing with the string now. Now to create the MD5
