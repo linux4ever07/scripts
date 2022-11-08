@@ -282,9 +282,7 @@ MERGE
 	if [[ -n ${not_found[@]} ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
 
-		for (( i=0; i<${#not_found[@]}; i++ )); do
-			printf '%s\n' "${not_found[${i}]}"
-		done
+		printf '%s\n' "${not_found[@]}"
 
 		printf '\n'
 	fi
