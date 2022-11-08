@@ -64,52 +64,6 @@
 
 # The script was first created in 2019.
 
-# Generates a random number, which can be used for these filenames:
-# output, output remux, input info txt, output info txt, output remux
-# info txt.
-session="${RANDOM}-${RANDOM}"
-
-# Creates a variable that will work as a switch. If this variable is set
-# to '1', it will skip running the 'dts_extract_remux' and 'remux_mkv'
-# functions. This is handy if that file has already been created in
-# a previous session of this script.
-exist=0
-
-# Creates a variable that will work as a switch. If this variable is set
-# to '1', it will pass the subtitles from the input file to HandBrake.
-# This is to prevent the subtitles from going out of sync with the audio
-# and video, when dealing with input files that have been merged from
-# multiple Blu-Ray discs.
-hb_subs=0
-
-# Sets the default language to English. This language code is what
-# the script till look for when extracting the core DTS track.
-lang='eng'
-
-# Creates a variable that will decide what kind of x265 tuning to use,
-# if any.
-declare tune
-
-# Creates some global regexes.
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_zero='^0+([0-9]+)$'
-
-# Gets full path of input file.
-if=$(readlink -f "$1")
-bname=$(basename "$if")
-
-# Setting some variables that will be used to create a full HandBrake
-# command, with args.
-format='av_mkv'
-v_encoder='x265_10bit'
-preset='slow'
-v_bitrate=5000
-a_encoder='copy:dts'
-
-# Creates a variable which contains the last part of the output
-# filename.
-rls_type='1080p.BluRay.x265.DTS'
-
 # Creates a function called 'usage', which prints the syntax,
 # some basic info, and quits.
 usage () {
@@ -166,9 +120,55 @@ USAGE
 
 # If first argument is empty, or is not a real file, then print
 # syntax and quit.
-if [[ -z $1 || ! -f $if ]]; then
+if [[ -z $1 || ! -f $1 ]]; then
 	usage
 fi
+
+# Gets full path of input file.
+if=$(readlink -f "$1")
+bname=$(basename "$if")
+
+# Generates a random number, which can be used for these filenames:
+# output, output remux, input info txt, output info txt, output remux
+# info txt.
+session="${RANDOM}-${RANDOM}"
+
+# Creates a variable that will work as a switch. If this variable is set
+# to '1', it will skip running the 'dts_extract_remux' and 'remux_mkv'
+# functions. This is handy if that file has already been created in
+# a previous session of this script.
+exist=0
+
+# Creates a variable that will work as a switch. If this variable is set
+# to '1', it will pass the subtitles from the input file to HandBrake.
+# This is to prevent the subtitles from going out of sync with the audio
+# and video, when dealing with input files that have been merged from
+# multiple Blu-Ray discs.
+hb_subs=0
+
+# Sets the default language to English. This language code is what
+# the script till look for when extracting the core DTS track.
+lang='eng'
+
+# Creates a variable that will decide what kind of x265 tuning to use,
+# if any.
+declare tune
+
+# Creates some global regexes.
+regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex_zero='^0+([0-9]+)$'
+
+# Setting some variables that will be used to create a full HandBrake
+# command, with args.
+format='av_mkv'
+v_encoder='x265_10bit'
+preset='slow'
+v_bitrate=5000
+a_encoder='copy:dts'
+
+# Creates a variable which contains the last part of the output
+# filename.
+rls_type='1080p.BluRay.x265.DTS'
 
 # The loop below handles the arguments to the script.
 shift
