@@ -144,7 +144,7 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 	exit;
 }
 
-# Go through the argument list as passed to the script by the user.
+# Go through the argument list passed to the script by the user.
 my $arg = shift(@ARGV);
 
 given ($arg) {
