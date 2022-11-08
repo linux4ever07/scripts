@@ -196,7 +196,7 @@ if (! scalar(@lib) or ! length($mode) or $mode eq 'help') { usage(); }
 # Subroutine for when the script needs to quit, either cause of being
 # finished, or SIGINT has been triggered.
 sub iquit {
-	while (! $stopping) { yield(); }
+	while (! $stopping) { sleep(1); }
 
 # Depending on whether the script is finished or SIGINT has been tripped
 # we handle the closing of threads differently. If SIGINT has been
