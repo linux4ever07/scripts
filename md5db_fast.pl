@@ -133,13 +133,13 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 	Check database for duplicate files.
 
 -import
-	Import MD5 sums to the database from already existing \*.MD5 files.
+	Import MD5 sums to database from already existing \*.MD5 files.
 
 -index
-	Index files and add them to the database.
+	Index files and add them to database.
 
 -test
-	Test the MD5 sums of the files in the database to see if they've
+	Test the MD5 sums of the files in database to see if they've
 	changed.
 ";
 
@@ -213,7 +213,7 @@ sub iquit {
 	p_gone();
 	logger('end');
 
-# Print the database hash to the database file.
+# Print database hash to database file.
 	hash2file();
 }
 
@@ -224,7 +224,7 @@ sub files2queue {
 	if ($mode eq 'index') {
 		$files_ref = \%files;
 
-# If file name already exists in the database hash, skip it.
+# If file name already exists in database hash, skip it.
 		foreach my $fn (keys(%md5h)) {
 			if (length($files{$fn})) { delete($files{$fn}); }
 		}
@@ -388,7 +388,7 @@ $files[0]
 	$semaphore->up();
 }
 
-# Subroutine for initializing the database hash, and the @files array.
+# Subroutine for initializing database hash, and the @files array.
 # This is the first subroutine that will be executed, and all others
 # depend upon it.
 sub init_hash {
@@ -398,11 +398,11 @@ sub init_hash {
 # Import hashes from every database file found in the search path.
 	foreach my $db (@md5dbs) { file2hash($db); }
 
-# Clears the screen, thereby scrolling past the database file print.
+# Clears the screen, thereby scrolling past database file print.
 	print $clear;
 }
 
-# Subroutine for when the database file is empty, or doesn't exist.
+# Subroutine for when database file is empty, or doesn't exist.
 sub if_empty {
 	if (! keys(%md5h)) {
 		say "
@@ -440,7 +440,7 @@ sub getfiles {
 	}
 }
 
-# Subroutine for reading a database file into the database hash.
+# Subroutine for reading a database file into database hash.
 # It takes 1 argument:
 # (1) file name
 sub file2hash {
@@ -448,10 +448,10 @@ sub file2hash {
 	my $dn = dirname($db);
 	my($fn, $hash, @lines);
 
-# The format string which is used for parsing the database file.
+# The format string which is used for parsing database file.
 	my $format = qr/^(.*)\Q$delim\E([[:alnum:]]{32})$/;
 
-# Open the database file and read it into the @lines array.
+# Open database file and read it into the @lines array.
 	open(my $md5db_in, '<', $db) or die "Can't open '$db': $!";
 	foreach my $line (<$md5db_in>) {
 		$line =~ s/(\r){0,}(\n){0,}$//g;
@@ -459,9 +459,9 @@ sub file2hash {
 	}
 	close($md5db_in) or die "Can't close '$db': $!";
 
-# Loop through all the lines in the database file and split them before
-# storing in the database hash. Also, print each line to STDOUT for
-# debug purposes.
+# Loop through all the lines in database file and split them before
+# storing in database hash. Also, print each line to STDOUT for debug
+# purposes.
 	foreach my $line (@lines) {
 # If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
@@ -474,15 +474,14 @@ sub file2hash {
 
 # If $fn is a real file.
 			if (-f $fn) {
-# Unless file name already is in the database hash, print a message, add
-# it to the hash.
+# Unless file name already is in database hash, add it and print a
+# message.
 				if (! length($md5h{$fn})) {
 					$md5h{$fn} = $hash;
 					say $fn . $delim . $hash;
-# If file name is in the database hash but the MD5 sum found in the
-# database doesn't match, print to the log. This will most likely only
-# be the case for any extra databases that are found in the search path
-# given to the script.
+# If file name is in database hash but the MD5 sum doesn't match, print
+# to the log. This will most likely only be the case for any extra
+# databases that are found in the search path given to the script.
 				} elsif ($md5h{$fn} ne $hash) {
 					logger('diff', $fn);
 				}
@@ -495,17 +494,17 @@ sub file2hash {
 	}
 }
 
-# Subroutine for printing the database hash to the database file.
+# Subroutine for printing database hash to database file.
 sub hash2file {
-# If the database hash is empty, return from this subroutine, to keep
-# from overwriting the database file with nothing.
+# If database hash is empty, return from this subroutine, to keep from
+# overwriting database file with nothing.
 	if (! keys(%md5h)) { return; }
 
 	my $of = 'md5' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.db';
 
 	open(my $md5db_out, '>', $of) or die "Can't open '$of': $!";
-# Loops through all the keys in the database hash and prints the entries
-# (divided by the $delim variable) to the database file.
+# Loops through all the keys in database hash and prints the entries
+# (divided by the $delim variable) to database file.
 	foreach my $fn (sort(keys(%md5h))) {
 		say $md5db_out $fn . $delim . $md5h{$fn} . "\r";
 	}
@@ -514,7 +513,7 @@ sub hash2file {
 	rename($of, $db) or die "Can't rename file '$of': $!";
 }
 
-# Subroutine for finding duplicate files, by checking the database hash.
+# Subroutine for finding duplicate files, by checking database hash.
 sub md5double {
 # Loop through the %md5h hash and save the checksums as keys in a new
 # hash called %dups. Each of those keys will hold an anonymous array
@@ -538,7 +537,7 @@ sub md5double {
 }
 
 # Subroutine for finding and parsing *.MD5 files, adding the hashes to
-# the database hash and thereby also to the file.
+# database hash and thereby also to the file.
 # It takes 1 argument:
 # (1) file name
 sub md5import {
@@ -572,8 +571,8 @@ sub md5import {
 
 # If $fn is a real file.
 			if (-f $fn) {
-# Unless file name already is in the database hash, print a message, add
-# it to the hash.
+# Unless file name already is in database hash, add it and print a
+# message.
 				if (! length($md5h{$fn})) {
 					$md5h{$fn} = $hash;
 					say $fn . ': done indexing';
@@ -654,7 +653,7 @@ sub md5sum {
 }
 
 # Subroutine to index the files (i.e. calculate and store the MD5 sums
-# in the database hash).
+# in database hash).
 sub md5index {
 	my $tid = threads->tid();
 	my($tmp_md5);
@@ -676,8 +675,8 @@ sub md5index {
 	}
 }
 
-# Subroutine for testing if the MD5 sums in the database file are
-# correct (i.e. have changed or not).
+# Subroutine for testing if the MD5 sums in database file are correct
+# (i.e. have changed or not).
 sub md5test {
 	my $tid = threads->tid();
 	my($tmp_md5, $old_md5, $new_md5);
@@ -695,8 +694,8 @@ sub md5test {
 
 		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
 
-# If the new MD5 sum doesn't match the one in the database hash, log it
-# and replace the old MD5 sum in the hash with the new one.
+# If the new MD5 sum doesn't match the one in database hash, log it and
+# replace the old MD5 sum in the hash with the new one.
 		if ($new_md5 ne $old_md5) {
 			logger('diff', $fn);
 			$md5h{$fn} = $new_md5;
@@ -747,7 +746,7 @@ sub p_gone {
 # either 'index' or 'test', we'll start as many threads as the
 # available number of CPUs. Unless script mode is either of those, don't
 # start the 'files2queue' thread, as it's not needed. Also, note that
-# 'files2queue' needs to be started after the database hash has been
+# 'files2queue' needs to be started after database hash has been
 # initialized. Otherwise it will have nothing to work with.
 push(@run, \&iquit);
 
@@ -768,7 +767,7 @@ foreach my $dn (@lib) {
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
 
-# Initialize the database hash, and the files hash.
+# Initialize database hash, and the files hash.
 	init_hash();
 
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
