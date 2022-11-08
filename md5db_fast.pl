@@ -225,7 +225,7 @@ sub iquit {
 
 # Print missing files, and close the log.
 	p_gone();
-	logger('end', $files_n);
+	logger('end');
 
 # Print the database hash to the database file.
 	hash2file();
