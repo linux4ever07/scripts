@@ -410,7 +410,6 @@ sub init_hash {
 	getfiles();
 
 # Import hashes from every database file found in the search path.
-
 	foreach my $db (@md5dbs) { file2hash($db); }
 
 # Clears the screen, thereby scrolling past the database file print.
