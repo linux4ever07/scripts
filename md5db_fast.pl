@@ -127,8 +127,6 @@ sub usage {
 	say "
 Usage: $cmd[0] [options] [directory 1] .. [directory N]
 
-	-help Print this help message.
-
 	-double Check database for files that have identical
 	hashes.
 
