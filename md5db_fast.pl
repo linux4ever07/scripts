@@ -39,7 +39,7 @@ my $q = Thread::Queue->new();
 
 # Get the number of available CPU cores. Add 1 to this number, which
 # will lead to an extra thread being created, maximizing performance.
-chomp(my $cores = `grep -c '^processor' /proc/cpuinfo`);
+chomp(my $cores = `grep -c '^processor' '/proc/cpuinfo'`);
 $cores++;
 
 # Check if the necessary commands are installed to test FLAC files.
