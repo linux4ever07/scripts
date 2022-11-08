@@ -95,6 +95,7 @@ kill_firefox () {
 			if [[ -n ${pids[${i}]} ]]; then
 				pid="${pids[${i}]}"
 				p_name=$(ps -p "$pid" -o comm | tail -n +2)
+
 				if [[ $p_name == "$name" ]]; then
 					unset -v pids[${i}]
 				fi
@@ -106,7 +107,7 @@ kill_firefox () {
 }
 
 # Creates a file name for the log.
-log_killed="${HOME}/firefox_chromium_killed.log"
+log_killed="${HOME}/browser_killed.log"
 
 # If $log_killed is not a file, create it.
 if [[ ! -f $log_killed ]]; then
@@ -141,13 +142,13 @@ while true; do
 # since the output probably spans across multiple lines, due to Chromium
 # being highly multithreaded and keeping separate threads / processes
 # for every window and tab.
-		is_firefox=$(pgrep -x firefox)
-		is_tor=$(pgrep -x tor)
+		is_firefox=$(pgrep -x firefox | tr -d '[:blank:]')
+		is_tor=$(pgrep -x tor | tr -d '[:blank:]')
 		mapfile -t is_chromium < <(is_chromium)
 
 # If Firefox is running, then kill it, print a message to the screen,
 # and append a message to the log.
-		if [[ $is_firefox ]]; then
+		if [[ -n $is_firefox ]]; then
 			time=$(now)
 
 			printf '%s\n\n' "${time}: Killing Firefox..." | tee --append "$log_killed"
@@ -156,7 +157,7 @@ while true; do
 
 # If Tor Browser is running, then kill it, print a message to the
 # screen, and append a message to the log.
-		if [[ $is_tor ]]; then
+		if [[ -n $is_tor ]]; then
 			time=$(now)
 
 			printf '%s\n\n' "${time}: Killing Tor Browser..." | tee --append "$log_killed"
