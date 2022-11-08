@@ -152,9 +152,6 @@ given (my $arg = shift(@ARGV)) {
 # When '-import', set script mode to 'import', and call the md5import
 # subroutine later.
 	when ('-import') { push(@cmd, $arg); $mode = 'import'; }
-# When '-help', set script mode to 'help', and print usage instructions
-# later.
-	when ('-help') { push(@cmd, $arg); $mode = 'help'; }
 # When '-index', set script mode to 'index', and call the md5index
 # subroutine later.
 	when ('-index') { push(@cmd, $arg); $mode = 'index'; }
@@ -174,8 +171,8 @@ while (my $arg = shift(@ARGV)) {
 	} else { usage(); }
 }
 
-# Print usage instructions if needed.
-if (! scalar(@lib) or $mode eq 'help') { usage(); }
+# Print usage instructions if @lib array is empty.
+if (! scalar(@lib)) { usage(); }
 
 # Subroutine for when the script needs to quit, either cause of being
 # finished, or SIGINT has been triggered.
