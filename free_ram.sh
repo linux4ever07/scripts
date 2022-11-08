@@ -119,10 +119,6 @@ while true; do
 # Sleeps for 1 second.
 	sleep 1
 
-# Unsets $free_ram, since this might not be the first time the loop is
-# run.
-	unset -v free_ram
-
 # Runs 'free', stores output in the $free_ram array, and sets a couple
 # of variables based on that output.
 	mapfile -t free_ram < <(free | sed -E 's/[[:space:]]+/ /g')
