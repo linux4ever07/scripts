@@ -664,7 +664,7 @@ sub rm_empty_dirs {
 
 	my @lines = (read_find());
 
-	while (scalar(@lines) > 0) {
+	while (scalar(@lines)) {
 		foreach my $fn (@lines) {
 			rmdir($fn) or die "Can't remove '$fn': $!";
 		}

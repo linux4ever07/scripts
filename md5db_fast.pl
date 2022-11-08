@@ -15,6 +15,9 @@
 # File systems like Btrfs or ZFS already have checksumming built in.
 # This script is meant for file systems that lack that capability.
 
+# There's also this:
+# https://en.wikipedia.org/wiki/Inotify
+
 # The script checks FLAC files using 'flac' and 'metaflac', so if you
 # don't have those commands installed, only non-FLAC files will be
 # checked.
