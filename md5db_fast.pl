@@ -22,11 +22,11 @@
 use 5.34.0;
 use strict;
 use warnings;
+use diagnostics;
 use Cwd qw(abs_path);
 use Digest::MD5 qw(md5_hex);
 use IO::Handle qw(autoflush);
 use File::Basename qw(basename dirname);
-use diagnostics;
 
 use threads qw(yield);
 use threads::shared;
