@@ -674,7 +674,7 @@ sub md5index {
 	my $tid = threads->tid();
 	my($tmp_md5);
 
-# Loop through the thread que.
+# Loop through the thread queue.
 	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
 		if ($saw_sigint) { last; }
 		if (! length($fn)) { yield(); next; }
