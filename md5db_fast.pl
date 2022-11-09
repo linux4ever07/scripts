@@ -105,11 +105,10 @@ or die "Error setting SIGINT handler: $!";
 my $saw_sigint :shared = 0;
 
 sub handler {
-	{ lock($saw_sigint);
-	$saw_sigint = 1; }
-
-	{ lock($stopping);
-	$stopping = 1; }
+	lock($saw_sigint);
+	lock($stopping);
+	$saw_sigint = 1;
+	$stopping = 1;
 }
 
 # Open file handle for the log file
@@ -596,11 +595,10 @@ sub md5import {
 sub clear_stack {
 	my $fn = shift;
 
-	{ lock($file_stack);
-	$file_stack -= length($file_contents{$fn}); }
-
-	{ lock(%file_contents);
-	delete($file_contents{$fn}); }
+	lock(%file_contents);
+	lock($file_stack);
+	delete($file_contents{$fn});
+	$file_stack -= length($file_contents{$fn});
 }
 
 # Subroutine for getting the MD5 hash of files.
