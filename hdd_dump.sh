@@ -172,5 +172,3 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 		md5copy "$if" "$of"
 	fi
 done
-
-unset -v fn_parts dn_parts start stop

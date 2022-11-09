@@ -82,8 +82,6 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	ln -s "$if" "$of" || exit
 done
 
-unset -v fn_parts dn_parts start stop
-
 # Changes the owner and permissions of the output directory.
 chown -R root:root "$out_dir"
 chmod -R +r "$out_dir"
