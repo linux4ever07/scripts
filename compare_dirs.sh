@@ -59,21 +59,23 @@ declare -A "${var_list1[@]}"
 # Converts the basename of all the files (in both directories) into MD5
 # hashes, to be more easily processed later in the script.
 for dir in dir1 dir2; do
+	dn_ref="$dir"
+
+	mapfile -d'/' -t dn_parts <<<"${!dn_ref}"
+	dn_parts[-1]="${dn_parts[-1]%$'\n'}"
+
 	for type in files dirs; do
 		elements_ref="${dir}_${type}_elements"
 
 		for (( i = 0; i < ${!elements_ref}; i++ )); do
 			fn_ref="${dir}_${type}[${i}]"
-			dn_ref="$dir"
 
 # Removes the directory name from the beginning of the string. Creating
 # the basename this way because it's more safe than using regex:es, if
 # the string contains weird characters (that are interpreted as part of
 # the regex).
 			mapfile -d'/' -t fn_parts <<<"${!fn_ref}"
-			mapfile -d'/' -t dn_parts <<<"${!dn_ref}"
 			fn_parts[-1]="${fn_parts[-1]%$'\n'}"
-			dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 			start="${#dn_parts[@]}"
 			bn=$(printf '/%s' "${fn_parts[@]:${start}}")
 			bn="${bn:1}"

@@ -55,6 +55,9 @@ if [[ $REPLY != 'y' ]]; then
 	exit
 fi
 
+mapfile -d'/' -t dn_parts <<<"$in_dir"
+dn_parts[-1]="${dn_parts[-1]%$'\n'}"
+
 mapfile -t files < <(find "$in_dir" -type f -iname "*" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
@@ -65,9 +68,8 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 # the string contains weird characters (that are interpreted as part of
 # the regex).
 	mapfile -d'/' -t fn_parts <<<"$if"
-	mapfile -d'/' -t dn_parts <<<"$in_dir"
+
 	fn_parts[-1]="${fn_parts[-1]%$'\n'}"
-	dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 	start="${#dn_parts[@]}"
 	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
 	dn=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
