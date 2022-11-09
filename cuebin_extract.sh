@@ -36,8 +36,8 @@
 # CUE file.
 
 if=$(readlink -f "$1")
-
-session="${RANDOM}-${RANDOM}"
+if_bn=$(basename "$if")
+if_bn_lc="${if_bn,,}"
 
 # Creates a function called 'usage', which will print usage and quit.
 usage () {
@@ -64,6 +64,12 @@ USAGE
 	exit
 }
 
+# If $if is not a real file, or it has the wrong extension, print usage
+# and quit.
+if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
+	usage
+fi
+
 declare -A audio_types
 
 audio_types=(['cdr']=0 ['ogg']=0 ['flac']=0)
@@ -73,7 +79,7 @@ byteswap=0
 # The loop below handles the arguments to the script.
 shift
 
-while [[ -n $@ ]]; do
+while [[ $# -gt 0 ]]; do
 	case "$1" in
 		'-cdr')
 			audio_types['cdr']=1
@@ -108,14 +114,7 @@ if [[ $exclusive -eq 0 ]]; then
 	audio_types=(['cdr']=1 ['ogg']=1 ['flac']=1)
 fi
 
-if_bn=$(basename "$if")
-if_bn_lc="${if_bn,,}"
-
-# If $if is not a real file, or it has the wrong extension, print usage
-# and quit.
-if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
-	usage
-fi
+session="${RANDOM}-${RANDOM}"
 
 if_name="${if_bn_lc%.[^.]*}"
 of_name=$(tr '[:blank:]' '_' <<<"$if_name")
@@ -279,7 +278,7 @@ MERGE
 		exit
 	fi
 
-	if [[ -n ${not_found[@]} ]]; then
+	if [[ ${#not_found[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
 
 		printf '%s\n' "${not_found[@]}"
@@ -327,7 +326,7 @@ bin_split () {
 		;;
 		'wav')
 # If WAV files have already been produced, skip this function.
-			if [[ -n ${bchunk_wav_stdout[@]} ]]; then
+			if [[ ${#bchunk_wav_stdout[@]} -gt 0 ]]; then
 				return
 			fi
 

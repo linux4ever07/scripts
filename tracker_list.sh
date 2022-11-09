@@ -27,7 +27,7 @@ usage () {
 	exit
 }
 
-if [[ -z $1 || ! -f $1 ]]; then
+if [[ ! -f $1 ]]; then
 	usage
 elif [[ -n $2 && $2 != '-nocheck' ]]; then
 	usage

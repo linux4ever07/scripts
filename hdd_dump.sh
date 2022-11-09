@@ -28,7 +28,10 @@
 
 set -o pipefail
 
-declare -A md5s
+usage () {
+	printf '\n%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
+	exit
+}
 
 # If the script isn't run with sudo / root privileges, then quit.
 if [[ $(whoami) != 'root' ]]; then
@@ -37,13 +40,17 @@ if [[ $(whoami) != 'root' ]]; then
 fi
 
 if [[ ! -d $1 || -z $2 ]]; then
-	printf '\n%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
+	usage
+elif [[ -f $2 ]]; then
+	printf '\n%s\n\n' "\"${2}\" is a file!"
 	exit
 fi
 
 session="${RANDOM}-${RANDOM}"
 in_dir=$(readlink -f "$1")
 out_dir=$(readlink -f "$2")
+
+declare -A md5s
 
 cp_log="${out_dir}/hdd_dump_copied-${session}.txt"
 error_log="${out_dir}/hdd_dump_errors-${session}.txt"

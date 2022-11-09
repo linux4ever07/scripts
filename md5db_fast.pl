@@ -362,7 +362,7 @@ $files[0]
 				$outs[0] = $stderr;
 
 				foreach my $out (@outs) {
-					say $out 'Errors occurred!' . "\n";
+					say $out 'Error(s) occurred!' . "\n";
 				}
 
 				foreach my $fn (sort(keys(%err))) {

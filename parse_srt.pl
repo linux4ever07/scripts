@@ -16,7 +16,7 @@ my $regex_ext = qr/\.([^.]*)$/;
 
 my($fn, $ext);
 
-if (scalar(@ARGV) == 0) { usage(); }
+if (! scalar(@ARGV)) { usage(); }
 
 if (length($ARGV[0])) {
 	$fn = abs_path($ARGV[0]);

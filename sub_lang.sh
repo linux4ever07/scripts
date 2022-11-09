@@ -28,7 +28,7 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'mkv' ]]; then
 	usage
 fi
 
-command -v mkvinfo 1>&- 2>&-
+command -v mkvinfo 1>&-
 
 if [[ $? -ne 0 ]]; then
 	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'

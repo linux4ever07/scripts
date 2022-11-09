@@ -20,8 +20,6 @@ use File::Basename qw(basename);
 use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
 
-my $script = basename($0);
-
 my($dn, $of, $delim, $offset, $n);
 my(@files, @lines, @format);
 
@@ -33,7 +31,7 @@ $n = 0;
 $dn = cwd();
 $of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
-if (scalar(@ARGV) == 0) { usage(); }
+if (! scalar(@ARGV)) { usage(); }
 
 foreach my $arg (@ARGV) {
 	my($fn, $ext);
@@ -58,7 +56,7 @@ $format[3] = qr/^($format[2])$delim($format[2])$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say 'Usage: ' . $script . ' [srt...]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [srt...]' . "\n";
 	exit;
 }
 

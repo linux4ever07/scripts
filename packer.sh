@@ -99,7 +99,7 @@ USAGE
 }
 
 # If there are no arguments to the script, print usage and then quit.
-if [[ -z $1 || -z $2 ]]; then
+if [[ $# -lt 2 ]]; then
 	usage 1>&2
 fi
 

@@ -21,14 +21,12 @@ use File::Basename qw(basename);
 use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
 
-my $script = basename($0);
-
 my($delim);
 my(@files, @format);
 
 my $regex_ext = qr/\.([^.]*)$/;
 
-if (scalar(@ARGV) == 0) { usage(); }
+if (! scalar(@ARGV)) { usage(); }
 
 foreach my $arg (@ARGV) {
 	my($fn, $ext);

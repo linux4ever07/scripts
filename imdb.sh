@@ -14,7 +14,7 @@ usage () {
 	exit
 }
 
-if [[ -z $@ ]]; then
+if [[ $# -eq 0 ]]; then
 	usage
 fi
 
@@ -60,7 +60,7 @@ time_calc () {
 # https://www.imdb.com/search/title/
 # https://www.imdb.com/interfaces/
 imdb () {
-	term="${@}"
+	term="$@"
 	t_y_regex='^(.*) \(([0-9]{4})\)$'
 	id_regex='\/title\/(tt[0-9]+)'
 	title_regex1='\,\"originalTitleText\":'
@@ -81,13 +81,13 @@ imdb () {
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
 
 	get_page () {
-		curl --location --user-agent "${agent}" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "${1}" 2>&-
+		curl --location --user-agent "$agent" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$1" 2>&-
 	}
 
 	if [[ -z $term ]]; then
 		return 1
 	else
-		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"${term}")")
+		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"$term")")
 
 		if [[ $term =~ $t_y_regex ]]; then
 			y="${BASH_REMATCH[2]}"
@@ -106,7 +106,7 @@ imdb () {
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	mapfile -t id_array < <(get_page "${url_tmp}" | grep -Eo "${id_regex}" | sed -E "s/${id_regex}/\1/")
+	mapfile -t id_array < <(get_page "$url_tmp" | grep -Eo "$id_regex" | sed -E "s/${id_regex}/\1/")
 	id="${id_array[0]}"
 
 	if [[ -z $id ]]; then
@@ -121,7 +121,7 @@ imdb () {
 # more regex:es to the for loop below, to get additional information.
 # Excluding lines that are longer than 500 characters, to make it
 # slightly faster.
-	mapfile -t tmp_array < <(get_page "${url}" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^$')
+	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^$')
 
 	n=0
 
@@ -130,6 +130,11 @@ imdb () {
 	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['genre']=1 ['director']=1 ['runtime']=1)
 
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
+
+		if [[ ${#json_types[@]} -eq 0 ]]; then
+			break
+		fi
+
 		for json_type in "${!json_types[@]}"; do
 			json_regex1_ref="${json_type}_regex1"
 			json_regex2_ref="${json_type}_regex2"
@@ -169,4 +174,4 @@ IMDB
 	unset -v title year plot rating genre director runtime
 }
 
-imdb "${@}"
+imdb "$@"

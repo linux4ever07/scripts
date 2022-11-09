@@ -35,9 +35,9 @@ regex_name="^Name: (.*)$"
 regex_fn='^(.*)\.([^.]*)$'
 regex_lang_arg='^[[:alpha:]]{3}$'
 
-command -v mkvinfo 1>&- 2>&-
+mapfile -t cmd < <(command -v mkvinfo mkvmerge)
 
-if [[ $? -ne 0 ]]; then
+if [[ ${#cmd[@]} -ne 2 ]]; then
 	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
 	exit
 fi
@@ -207,7 +207,7 @@ get_tracks () {
 }
 
 # The loop below handles the arguments to the script.
-while [[ -n $@ ]]; do
+while [[ $# -gt 0 ]]; do
 	case "$1" in
 		'-lang')
 			shift

@@ -27,9 +27,7 @@ usage () {
 }
 
 # Checks if arguments are directories, and quits if they aren't.
-if [[ -z $1 || -z $2 ]]; then
-	usage
-elif [[ ! -d $1 || ! -d $2  ]]; then
+if [[ ! -d $1 || ! -d $2  ]]; then
 	usage
 fi
 

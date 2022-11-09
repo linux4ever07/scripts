@@ -11,7 +11,7 @@ usage () {
 	exit
 }
 
-if [[ ${#@} -lt 2 ]]; then
+if [[ $# -lt 2 ]]; then
 	usage
 fi
 

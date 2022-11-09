@@ -12,14 +12,15 @@ usage () {
 	exit
 }
 
-cmd=$(command -v mkvmerge)
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 of_tmp="${if%.mkv}"
 of="${of_tmp}-${RANDOM}.mkv"
 
-if [[ -z $cmd ]]; then
+mapfile -t cmd < <(command -v mkvinfo mkvmerge)
+
+if [[ ${#cmd[@]} -ne 2 ]]; then
 	usage 0
 fi
 
@@ -27,12 +28,12 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'mkv' ]]; then
 	usage 1
 fi
 
-mapfile -t if_subs < <(mkvinfo "${if}" 2>&- | grep 'Track type: subtitles')
+mapfile -t if_subs < <(mkvinfo "$if" 2>&- | grep 'Track type: subtitles')
 
 if [[ -z ${if_subs[@]} ]]; then
 	usage 2
 fi
 
-mkvmerge --title "" -o "${of}" --no-video --no-audio --no-chapters "${if}"
+mkvmerge --title "" -o "$of" --no-video --no-audio --no-chapters "$if"
 
 exit "$?"

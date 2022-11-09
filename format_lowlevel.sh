@@ -18,7 +18,7 @@ if [[ $(whoami) != 'root' ]]; then
 	exit
 fi
 
-while [[ -n $@ ]]; do
+while [[ $# -gt 0 ]]; do
 	drive=$(readlink -f "$1")
 
 	if [[ ! -b $drive ]]; then
