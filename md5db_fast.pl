@@ -595,10 +595,10 @@ sub md5import {
 sub clear_stack {
 	my $fn = shift;
 
-	lock(%file_contents);
 	lock($file_stack);
-	delete($file_contents{$fn});
+	lock(%file_contents);
 	$file_stack -= length($file_contents{$fn});
+	delete($file_contents{$fn});
 }
 
 # Subroutine for getting the MD5 hash of files.
