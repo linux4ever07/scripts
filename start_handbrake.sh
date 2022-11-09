@@ -9,22 +9,22 @@ comm='HandBrakeCLI'
 pid_list_f='/dev/shm/handbrake_pid.txt'
 
 if [[ ! -f $pid_list_f ]]; then
-		exit
+	exit
 fi
 
 pid=$(head -n 1 "$pid_list_f")
 
 if [[ -n $pid ]]; then
-		name=$(ps -p "$pid" -o comm | tail -n +2)
+	name=$(ps -p "$pid" -o comm | tail -n +2)
 
-		if [[ $name == $comm ]]; then
-			printf '\n%s\n' 'STARTING!'
-			printf '%s\n' "NAME: ${name} : PID: ${pid}"
+	if [[ $name == $comm ]]; then
+		printf '\n%s\n' 'STARTING!'
+		printf '%s\n' "NAME: ${name} : PID: ${pid}"
 
-			kill -s 18 "$pid"
-		else
-			exit
-		fi
+		kill -s 18 "$pid"
+	else
+		exit
+	fi
 fi
 
 mapfile -t pid_list < <(tail -n +2 "$pid_list_f")
