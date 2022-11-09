@@ -32,7 +32,5 @@ mapfile -t pid_list < <(tail -n +2 "$pid_list_f")
 truncate -s 0 "$pid_list_f"
 
 if [[ ${#pid_list[@]} -gt 0 ]]; then
-		for (( i = 0; i < ${#pid_list[@]}; i++ )); do
-				printf '%s\n' "${#pid_list[${i}]}" >> "$pid_list_f"
-		done
+	printf '%s\n' "${pid_list[@]}" > "$pid_list_f"
 fi
