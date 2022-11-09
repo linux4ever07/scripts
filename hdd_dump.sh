@@ -157,7 +157,6 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 # the string contains weird characters (that are interpreted as part of
 # the regex).
 	mapfile -d'/' -t fn_parts <<<"$if"
-
 	fn_parts[-1]="${fn_parts[-1]%$'\n'}"
 	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
 	dn=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
