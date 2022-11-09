@@ -225,7 +225,7 @@ sub files2queue {
 
 # If file name already exists in database hash, skip it.
 		foreach my $fn (keys(%md5h)) {
-			if (length($files{$fn})) { delete($files{$fn}); }
+			if ($files{$fn}) { delete($files{$fn}); }
 		}
 
 # If file is a FLAC file, then enqueue it directly instead of reading it
