@@ -29,8 +29,6 @@ fi
 
 mapfile -t pid_list < <(tail -n +2 "$pid_list_f")
 
-truncate -s 0 "$pid_list_f"
-
 if [[ ${#pid_list[@]} -gt 0 ]]; then
 	printf '%s\n' "${pid_list[@]}" > "$pid_list_f"
 fi
