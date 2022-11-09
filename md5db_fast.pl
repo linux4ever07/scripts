@@ -106,8 +106,8 @@ my $saw_sigint :shared = 0;
 
 sub handler {
 	lock($saw_sigint);
-	lock($stopping);
 	$saw_sigint = 1;
+	lock($stopping);
 	$stopping = 1;
 }
 
@@ -596,8 +596,8 @@ sub clear_stack {
 	my $fn = shift;
 
 	lock($file_stack);
-	lock(%file_contents);
 	$file_stack -= length($file_contents{$fn});
+	lock(%file_contents);
 	delete($file_contents{$fn});
 }
 
