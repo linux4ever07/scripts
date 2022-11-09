@@ -79,7 +79,7 @@ my $disk_size = 1000000000;
 # * %md5h is the database hash.
 # * %file_contents stores the contents of files.
 # * %large stores the names of files that are too big to fit in RAM.
-# * %gone stores the names and hashes of possibly deleted files.
+# * %gone stores the names and MD5 hashes of possibly deleted files.
 # * $files_n stores the number of files that have been processed.
 # * $stopping is used to stop threads, and quit the script.
 # * $file_stack tracks the amount of file data currently in RAM.
@@ -133,13 +133,13 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 	Check database for duplicate files.
 
 -import
-	Import MD5 sums to database from already existing \*.MD5 files.
+	Import MD5 hashes to database from already existing \*.MD5 files.
 
 -index
 	Index files and add them to database.
 
 -test
-	Test the MD5 sums of the files in database to see if they've
+	Test the MD5 hashes of the files in database to see if they've
 	changed.
 ";
 
@@ -465,7 +465,7 @@ sub file2hash {
 	foreach my $line (@lines) {
 # If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
-# Split the line into relative file name and MD5 sum.
+# Split the line into relative file name and MD5 hash.
 			$fn = $1;
 			$hash = $2;
 
@@ -479,7 +479,7 @@ sub file2hash {
 				if (! length($md5h{$fn})) {
 					$md5h{$fn} = $hash;
 					say $fn . $delim . $hash;
-# If file name is in database hash but the MD5 sum doesn't match, print
+# If file name is in database hash but the MD5 hash doesn't match, print
 # to the log. This will most likely only be the case for any extra
 # databases that are found in the search path given to the script.
 				} elsif ($md5h{$fn} ne $hash) {
@@ -536,8 +536,8 @@ sub md5double {
 	}
 }
 
-# Subroutine for finding and parsing *.MD5 files, adding the hashes to
-# database hash.
+# Subroutine for parsing *.MD5 files, adding the file names and MD5
+# hashes to database hash.
 # It takes 1 argument:
 # (1) file name
 sub md5import {
@@ -562,7 +562,7 @@ sub md5import {
 	foreach my $line (@lines) {
 # If format string matches the line(s) in the *.MD5 file, continue.
 		if ($line =~ /$format/) {
-# Split the line into MD5 sum and relative file name.
+# Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
 			$fn = basename($2);
 
@@ -576,7 +576,7 @@ sub md5import {
 				if (! length($md5h{$fn})) {
 					$md5h{$fn} = $hash;
 					say $fn . ': done indexing';
-# If file name is in database hash but the MD5 sum from the MD5 file
+# If file name is in database hash but the MD5 hash from the MD5 file
 # doesn't match, print to the log.
 				} elsif ($md5h{$fn} ne $hash) {
 					logger('diff', $fn);
@@ -652,7 +652,7 @@ sub md5sum {
 	return $hash;
 }
 
-# Subroutine to index the files (i.e. calculate and store the MD5 sums
+# Subroutine to index the files (i.e. calculate and store the MD5 hashes
 # in database hash).
 sub md5index {
 	my $tid = threads->tid();
@@ -675,7 +675,7 @@ sub md5index {
 	}
 }
 
-# Subroutine for testing if the MD5 sums in database file are correct
+# Subroutine for testing if the MD5 hashes in database file are correct
 # (i.e. have changed or not).
 sub md5test {
 	my $tid = threads->tid();
@@ -694,8 +694,8 @@ sub md5test {
 
 		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
 
-# If the new MD5 sum doesn't match the one in database hash, log it and
-# replace the old MD5 sum in the hash with the new one.
+# If the new MD5 hash doesn't match the one in database hash, log it and
+# replace the old MD5 hash in the hash with the new one.
 		if ($new_md5 ne $old_md5) {
 			logger('diff', $fn);
 			$md5h{$fn} = $new_md5;
