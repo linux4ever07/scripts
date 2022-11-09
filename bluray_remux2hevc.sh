@@ -14,6 +14,7 @@
 
 # The input file should be a Blu-Ray remux, that has identical bitrate
 # to the original Blu-Ray disc, for the video and audio tracks.
+
 # As an example, this is the video bitrate of
 # the "The Imaginarium of Doctor Parnassus (2009)" Blu-Ray:
 # 29495915 b/s = 29495.915 kb/s = 29.495915 mb/s
@@ -75,6 +76,7 @@ This script encodes an input MKV or M2TS Blu-Ray remux to HEVC / x265.
 
 The input file should be a Blu-Ray remux, that has identical bitrate
 to the original Blu-Ray disc, for the video and audio tracks.
+
 As an example, this is the video bitrate of
 the "The Imaginarium of Doctor Parnassus (2009)" Blu-Ray:
 29495915 b/s = 29495.915 kb/s = 29.495915 mb/s
