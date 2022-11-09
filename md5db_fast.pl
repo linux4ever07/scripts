@@ -537,7 +537,7 @@ sub md5double {
 }
 
 # Subroutine for finding and parsing *.MD5 files, adding the hashes to
-# database hash and thereby also to the file.
+# database hash.
 # It takes 1 argument:
 # (1) file name
 sub md5import {
@@ -603,7 +603,7 @@ sub clear_stack {
 	delete($file_contents{$fn}); }
 }
 
-# Subroutine for getting the MD5 hash of a file.
+# Subroutine for getting the MD5 hash of files.
 # It takes 1 argument:
 # (1) file name
 sub md5sum {
