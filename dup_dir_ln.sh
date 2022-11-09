@@ -57,6 +57,7 @@ fi
 
 mapfile -d'/' -t dn_parts <<<"$in_dir"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
+start="${#dn_parts[@]}"
 
 mapfile -t files < <(find "$in_dir" -type f -iname "*" 2>&-)
 
@@ -70,7 +71,6 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	mapfile -d'/' -t fn_parts <<<"$if"
 
 	fn_parts[-1]="${fn_parts[-1]%$'\n'}"
-	start="${#dn_parts[@]}"
 	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
 	dn=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
 	dn="${dn:1}"
