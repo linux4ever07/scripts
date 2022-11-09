@@ -258,6 +258,8 @@ sub files2queue {
 				$free = $disk_size - $file_stack;
 			}
 
+			$file_contents{$fn} = 1;
+
 			open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
 			sysread($read_fn, $file_contents{$fn}, $size);
 			close($read_fn) or die "Can't close '$fn': $!";
