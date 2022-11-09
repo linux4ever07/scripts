@@ -341,9 +341,6 @@ $files[0]
 # If errors occurred print the %err hash.
 # Either way, print number of files processed.
 		when ('end') {
-# Storing the current time in $now.
-			$now = localtime(time);
-
 # Storing the filehandles used to print messages in @outs array.
 			@outs = ($stdout, $log);
 
@@ -380,6 +377,9 @@ $files[0]
 					say $out $files_n . ' file(s) were tested.' . "\n";
 				}
 			}
+
+# Storing the current time in $now.
+			$now = localtime(time);
 
 			say $log '**** Logging ended on ' . $now . ' ****' . "\n";
 			close $log or die "Can't close '$log': $!";
