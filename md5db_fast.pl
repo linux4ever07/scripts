@@ -106,10 +106,6 @@ sub handler {
 	$stopping = 1;
 }
 
-# Duplicate STDOUT and STDERR as a regular file handles.
-open(my $stdout, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
-open(my $stderr, ">&STDERR") or die "Can't duplicate STDERR: $!";
-
 # Subroutine for printing usage instructions.
 sub usage {
 	say "
@@ -309,6 +305,10 @@ sub logger {
 
 # Make the $log file handle unbuffered for instant logging.
 	$log->autoflush(1);
+
+# Duplicate STDOUT and STDERR as a regular file handles.
+	open(my $stdout, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
+	open(my $stderr, ">&STDERR") or die "Can't duplicate STDERR: $!";
 
 	while (my @args = ($log_q->dequeue(2))) {
 # When log is opened.
