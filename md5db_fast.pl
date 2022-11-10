@@ -757,13 +757,14 @@ sub p_gone {
 	}
 }
 
-# The 'iquit' thread needs to be started first, as the script relies on
-# it being the first element in the @threads array. If script mode is
-# either 'index' or 'test', we'll start as many threads as the
-# available number of CPUs. Unless script mode is either of those, don't
-# start the 'files2queue' thread, as it's not needed. Also, note that
-# 'files2queue' needs to be started after database hash has been
-# initialized. Otherwise it will have nothing to work with.
+# The 'iquit' and 'logger' threads need to be started first, as the
+# script relies on them being the 2 first elements in the @threads
+# array. If script mode is either 'index' or 'test', we'll start as
+# many threads as the available number of CPUs. Unless script mode is
+# either of those, don't start the 'files2queue' thread, as it's not
+# needed. Also, note that 'files2queue' needs to be started after
+# database hash has been initialized. Otherwise it will have nothing to
+# work with.
 push(@run, \&iquit);
 push(@run, \&logger);
 
