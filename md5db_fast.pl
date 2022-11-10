@@ -306,7 +306,7 @@ sub logger {
 # Make the $log file handle unbuffered for instant logging.
 	$log->autoflush(1);
 
-# Duplicate STDOUT and STDERR as a regular file handles.
+# Duplicate STDOUT and STDERR as regular file handles.
 	open(my $stdout, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
 	open(my $stderr, ">&STDERR") or die "Can't duplicate STDERR: $!";
 
