@@ -301,7 +301,7 @@ sub files2queue {
 # Subroutine for managing the log file.
 # It takes 2 arguments:
 # (1) switch (start gone corr diff end)
-# (2) file name
+# (2) file name / directory name
 sub logger {
 	my(%err, @outs, $now);
 
