@@ -611,7 +611,8 @@ sub clear_stack {
 
 	lock($file_stack);
 	$file_stack -= length($file_contents{$fn});
-	$file_contents{$fn} = 1;
+	lock(%file_contents);
+	delete($file_contents{$fn});
 }
 
 # Subroutine for getting the MD5 hash of files.
