@@ -642,6 +642,8 @@ sub md5sum {
 # Subroutine for getting the MD5 hash of FLAC files. Index by getting
 # the MD5 hash from reading the metadata using 'metaflac', and test with
 # 'flac'.
+# It takes 1 argument:
+# (1) file name
 sub md5flac {
 	my $fn = shift;
 	my($hash);
