@@ -34,7 +34,6 @@ use File::Basename qw(basename dirname);
 use threads qw(yield);
 use threads::shared;
 use Thread::Queue;
-use Thread::Semaphore;
 use POSIX qw(SIGINT);
 
 my(@lib, @run, $mode);
@@ -74,7 +73,6 @@ my $disk_size = 1000000000;
 # Creating a few shared variables.
 # * @threads stores threads that are created.
 # * @md5dbs stores 'md5.db' files.
-# * %err is used for errors.
 # * %md5h is the database hash.
 # * %file_contents stores the contents of files.
 # * %large stores the names of files that are too big to fit in RAM.
@@ -84,17 +82,15 @@ my $disk_size = 1000000000;
 # * $file_stack tracks the amount of file data currently in RAM.
 # * $busy is used to pause other threads when a thread is busy.
 my(@threads, @md5dbs) :shared;
-my(%err, %md5h, %file_contents, %large, %gone) :shared;
+my(%md5h, %file_contents, %large, %gone) :shared;
 my $files_n :shared = 0;
 my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
 
-# Create the thread queue.
-my $q = Thread::Queue->new();
-
-# This will be used to control access to the logger subroutine.
-my $semaphore = Thread::Semaphore->new();
+# Create the files queue, and log queue.
+my $files_q = Thread::Queue->new();
+my $log_q = Thread::Queue->new();
 
 # Creating a custom POSIX signal handler. First we create a shared
 # variable that will work as a SIGINT switch. Then we define the handler
@@ -185,12 +181,12 @@ sub iquit {
 # then detach the thread without waiting for it to finish. The @threads
 # array is locked, to make sure that the main thread has finished
 # starting all the threads, before we start closing them. We start
-# looping through the array at element 1, as element 0 is this thread
-# (iquit).
+# looping through the array at element 2, as element 0 is this thread
+# (iquit), and element 1 is the logger thread.
 	{
 		lock(@threads);
 
-		for (my $i = 1; $i < scalar(@threads); $i++) {
+		for (my $i = 2; $i < scalar(@threads); $i++) {
 			my $tid = $threads[$i];
 			my $thr = threads->object($tid);
 
@@ -216,7 +212,11 @@ sub iquit {
 
 # Print missing files, and close the log.
 	p_gone();
-	logger('end');
+	$log_q->enqueue('end', 'end');
+
+# Closing logger thread.
+	my $thr_logger = threads->object($threads[1]);
+	$thr_logger->join();
 
 # Print database hash to database file.
 	hash2file();
@@ -232,7 +232,7 @@ sub files2queue {
 # into RAM.
 		foreach my $fn (sort(keys(%md5h))) {
 			if ($md5h{$fn} eq '1') {
-				if ($fn =~ /.flac$/i) { $q->enqueue($fn); next; }
+				if ($fn =~ /.flac$/i) { $files_q->enqueue($fn); next; }
 
 				push(@files, $fn);
 			}
@@ -274,7 +274,7 @@ sub files2queue {
 			{ lock($file_stack);
 			$file_stack += length($file_contents{$fn}); }
 
-			$q->enqueue($fn);
+			$files_q->enqueue($fn);
 		} else { $large{$fn} = 1; }
 	}
 
@@ -287,12 +287,12 @@ sub files2queue {
 			yield();
 		}
 
-		foreach my $fn (sort(keys(%large))) { $q->enqueue($fn); }
+		foreach my $fn (sort(keys(%large))) { $files_q->enqueue($fn); }
 	}
 
 # If there's still files in the queue left to be processed, and SIGINT
 # has not been triggered, wait for the other threads to empty the queue.
-	while ($q->pending() > 0 and ! $stopping) { sleep(0.5); }
+	while ($files_q->pending() > 0 and ! $stopping) { sleep(0.5); }
 
 # We're using this subroutine / thread to indicate to the other threads
 # when to quit, since this is where we create the file queue.
@@ -300,27 +300,19 @@ sub files2queue {
 	$stopping = 1; }
 }
 
-# Subroutine for controlling the log file.
-# Applying a semaphore so multiple threads won't try to access it at
-# once.
+# Subroutine for managing the log file.
 # It takes 2 arguments:
 # (1) switch (start gone corr diff end)
 # (2) file name
 sub logger {
-	$semaphore->down();
+	my(%err, @outs, $now);
 
-	my $sw = shift;
-	my(@files, @outs, $now);
+	while (my @args = ($log_q->dequeue_nb(2)) or ! $saw_sigint) {
+		if ($saw_sigint) { $args[0] = 'end'; }
+		if (! scalar(@args)) { yield(); next; }
 
-# Loop through all the arguments passed to this subroutine and add them
-# to the @files array.
-	while (@_) {
-		push(@files, shift);
-	}
-
-	given ($sw) {
 # When log is opened.
-		when ('start') {
+		if ($args[0] eq 'start') {
 # Storing the current time in $now.
 			$now = localtime(time);
 
@@ -329,25 +321,33 @@ sub logger {
 
 Running script in \'$mode\' mode on:
 
-$files[0]
+$args[1]
 ";
+			next;
 		}
+
 # When file has been deleted or moved.
-		when ('gone') {
-			$err{$files[0]} = 'has been (re)moved.';
+		if ($args[0] eq 'gone') {
+			$err{$args[1]} = 'has been (re)moved.';
+			next;
 		}
+
 # When file has been corrupted.
-		when ('corr') {
-			$err{$files[0]} = 'has been corrupted.';
+		if ($args[0] eq 'corr') {
+			$err{$args[1]} = 'has been corrupted.';
+			next;
 		}
+
 # When file has been changed.
-		when ('diff') {
-			$err{$files[0]} = 'doesn\'t match the hash in database.';
+		if ($args[0] eq 'diff') {
+			$err{$args[1]} = 'doesn\'t match the hash in database.';
+			next;
 		}
+
 # When done or interrupted, to close the log.
 # If errors occurred print the %err hash.
 # Either way, print number of files processed.
-		when ('end') {
+		if ($args[0] eq 'end') {
 # Storing the filehandles used to print messages in @outs array.
 			@outs = ($stdout, $log);
 
@@ -390,10 +390,10 @@ $files[0]
 
 			say $log '**** Logging ended on ' . $now . ' ****' . "\n";
 			close $log or die "Can't close '$log': $!";
+
+			last;
 		}
 	}
-
-	$semaphore->up();
 }
 
 # Subroutine for initializing database hash.
@@ -498,7 +498,7 @@ sub file2hash {
 # to the log. This will most likely only be the case for any extra
 # databases that are found in the search path given to the script.
 				} elsif ($md5h{$fn} ne $hash) {
-					logger('diff', $fn);
+					$log_q->enqueue('diff', $fn);
 				}
 # If file name is not a real file, add $fn to %gone hash.
 			} elsif (! -f $fn) {
@@ -595,7 +595,7 @@ sub md5import {
 # If file name is in database hash but the MD5 hash from the MD5 file
 # doesn't match, print to the log.
 				} elsif ($md5h{$fn} ne $hash) {
-					logger('diff', $fn);
+					$log_q->enqueue('diff', $fn);
 				}
 # If file name is not a real file, add $fn to %gone hash.
 			} elsif (! -f $fn) {
@@ -631,7 +631,11 @@ sub md5sum {
 		if (scalar(@flac_req) != 2) { return; }
 
 		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-		if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
+
+		if ($? != 0 and $? != 2) {
+			$log_q->enqueue('corr', $fn);
+			return;
+		}
 
 		if ($mode eq 'test') {
 			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
@@ -641,7 +645,10 @@ sub md5sum {
 
 			clear_stack($fn);
 
-			if ($? != 0 and $? != 2) { logger('corr', $fn); return; }
+			if ($? != 0 and $? != 2) {
+				$log_q->enqueue('corr', $fn);
+				return;
+			}
 		}
 
 		return $hash;
@@ -672,7 +679,7 @@ sub md5index {
 	my($tmp_md5);
 
 # Loop through the thread queue.
-	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
+	while ((my $fn = $files_q->dequeue_nb()) or ! $stopping) {
 		if ($saw_sigint) { last; }
 		if (! length($fn)) { yield(); next; }
 
@@ -695,7 +702,7 @@ sub md5test {
 	my($tmp_md5, $old_md5, $new_md5);
 
 # Loop through the thread queue.
-	while ((my $fn = $q->dequeue_nb()) or ! $stopping) {
+	while ((my $fn = $files_q->dequeue_nb()) or ! $stopping) {
 		if ($saw_sigint) { last; }
 		if (! length($fn)) { yield(); next; }
 
@@ -710,7 +717,7 @@ sub md5test {
 # If the new MD5 hash doesn't match the one in database hash, log it and
 # replace the old MD5 hash in the hash with the new one.
 		if ($new_md5 ne $old_md5) {
-			logger('diff', $fn);
+			$log_q->enqueue('diff', $fn);
 			$md5h{$fn} = $new_md5;
 		}
 
@@ -749,7 +756,9 @@ sub p_gone {
 
 # Logs all missing files.
 	foreach my $hash (keys(%gone_tmp)) {
-		foreach my $fn (@{$gone_tmp{$hash}}) { logger('gone', $fn); }
+		foreach my $fn (@{$gone_tmp{$hash}}) {
+			$log_q->enqueue('gone', $fn);
+		}
 	}
 }
 
@@ -761,6 +770,7 @@ sub p_gone {
 # 'files2queue' needs to be started after database hash has been
 # initialized. Otherwise it will have nothing to work with.
 push(@run, \&iquit);
+push(@run, \&logger);
 
 given ($mode) {
 	when ('index') {
@@ -785,7 +795,7 @@ foreach my $dn (@lib) {
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 # Start logging.
-	logger('start', $dn);
+	$log_q->enqueue('start', $dn);
 
 # Start threads.
 	{
@@ -832,7 +842,6 @@ foreach my $dn (@lib) {
 # directory as argument.
 	@threads = ();
 	@md5dbs = ();
-	%err = ();
 	%md5h = ();
 	%file_contents = ();
 	%large = ();
