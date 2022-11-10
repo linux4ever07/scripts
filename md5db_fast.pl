@@ -34,7 +34,6 @@ use File::Basename qw(basename dirname);
 use threads qw(yield);
 use threads::shared;
 use Thread::Queue;
-use Thread::Semaphore;
 use POSIX qw(SIGINT);
 
 my(@lib, @run, $mode);
@@ -93,9 +92,6 @@ my $busy :shared = 0;
 
 # Create the thread queue.
 my $q = Thread::Queue->new();
-
-# This will be used to control access to the logger subroutine.
-my $semaphore = Thread::Semaphore->new();
 
 # Creating a custom POSIX signal handler. First we create a shared
 # variable that will work as a SIGINT switch. Then we define the handler
@@ -294,14 +290,10 @@ sub files2queue {
 }
 
 # Subroutine for controlling the log file.
-# Applying a semaphore so multiple threads won't try to access it at
-# once, just in case ;-)
 # It takes 2 arguments:
 # (1) switch (start gone corr diff end)
 # (2) file name
 sub logger {
-	$semaphore->down();
-
 	my $sw = shift;
 	my(@files, @outs, $now);
 
@@ -385,8 +377,6 @@ $files[0]
 			close $log or die "Can't close '$log': $!";
 		}
 	}
-
-	$semaphore->up();
 }
 
 # Subroutine for initializing database hash, and the %files hash.
