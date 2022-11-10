@@ -292,6 +292,10 @@ sub files2queue {
 
 	$files_q->end();
 
+# If there's still files in the queue left to be processed, and SIGINT
+# has not been triggered, wait for the other threads to empty the queue.
+	while ($files_q->pending() and ! $saw_sigint) { sleep(0.5); }
+
 # We're using this subroutine / thread to indicate to the other threads
 # when to quit, since this is where we create the file queue.
 	{ lock($stopping);
