@@ -715,7 +715,8 @@ sub md5test {
 	while (my $fn = $files_q->dequeue()) {
 		if ($saw_sigint) { last; }
 
-		$tmp_md5 = md5sum($fn);
+		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn); }
+		else { $tmp_md5 = md5sum($fn); }
 
 		if (! length($tmp_md5)) { next; }
 
