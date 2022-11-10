@@ -726,7 +726,7 @@ sub md5test {
 		say $tid . ' ' . $fn . ': done testing (' . $file_stack . ')';
 
 # If the new MD5 hash doesn't match the one in database hash, log it and
-# replace the old MD5 hash in the hash with the new one.
+# replace the old MD5 hash with the new one.
 		if ($new_md5 ne $old_md5) {
 			$log_q->enqueue('diff', $fn);
 			$md5h{$fn} = $new_md5;
