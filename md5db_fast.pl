@@ -621,8 +621,6 @@ sub md5sum {
 	my $fn = shift;
 	my($hash);
 
-	while ($busy) { yield(); }
-
 # If the file name is a FLAC file, index it by getting the MD5 hash from
 # reading the metadata using 'metaflac', and test it with 'flac'.
 	if ($fn =~ /.flac$/i) {
@@ -636,12 +634,21 @@ sub md5sum {
 		}
 
 		if ($mode eq 'test') {
-			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
-			or die "Can't open 'flac': $!";
-			print $flac_test $file_contents{$fn};
-			close($flac_test);
+			if ($large{$fn}) {
+				lock($busy);
+				$busy = 1;
 
-			clear_stack($fn);
+				system('flac', '--totally-silent', '--test', $fn);
+
+				$busy = 0;
+			} else {
+				open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
+				or die "Can't open 'flac': $!";
+				print $flac_test $file_contents{$fn};
+				close($flac_test);
+
+				clear_stack($fn);
+			}
 
 			if ($? != 0 and $? != 2) {
 				$log_q->enqueue('corr', $fn);
