@@ -88,7 +88,7 @@ my $stopping :shared = 0;
 my $file_stack :shared = 0;
 my $busy :shared = 0;
 
-# Create the files queue, and log queue.
+# Create files queue, and log queue.
 my $files_q = Thread::Queue->new();
 my $log_q = Thread::Queue->new();
 
@@ -837,6 +837,9 @@ foreach my $dn (@lib) {
 # Resets all the global / shared variables, making them ready for the
 # next iteration of this loop. In case the user specified more than one
 # directory as argument.
+	$files_q = Thread::Queue->new();
+	$log_q = Thread::Queue->new();
+
 	@threads = ();
 	@md5dbs = ();
 	%md5h = ();
