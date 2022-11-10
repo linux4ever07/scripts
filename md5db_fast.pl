@@ -340,7 +340,7 @@ $args[1]
 
 # When file has been changed.
 		if ($args[0] eq 'diff') {
-			$err{$args[1]} = 'doesn\'t match the hash in database.';
+			$err{$args[1]} = 'has been changed.';
 			next;
 		}
 
