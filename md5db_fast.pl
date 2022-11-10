@@ -290,9 +290,7 @@ sub files2queue {
 		foreach my $fn (sort(keys(%large))) { $files_q->enqueue($fn); }
 	}
 
-# If there's still files in the queue left to be processed, and SIGINT
-# has not been triggered, wait for the other threads to empty the queue.
-	while ($files_q->pending() > 0 and ! $stopping) { sleep(0.5); }
+	$files_q->end();
 
 # We're using this subroutine / thread to indicate to the other threads
 # when to quit, since this is where we create the file queue.
@@ -678,9 +676,8 @@ sub md5index {
 	my($tmp_md5);
 
 # Loop through the thread queue.
-	while ((my $fn = $files_q->dequeue_nb()) or ! $stopping) {
+	while (my $fn = $files_q->dequeue()) {
 		if ($saw_sigint) { last; }
-		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
 		if (! length($tmp_md5)) { next; }
@@ -701,9 +698,8 @@ sub md5test {
 	my($tmp_md5, $old_md5, $new_md5);
 
 # Loop through the thread queue.
-	while ((my $fn = $files_q->dequeue_nb()) or ! $stopping) {
+	while (my $fn = $files_q->dequeue()) {
 		if ($saw_sigint) { last; }
-		if (! length($fn)) { yield(); next; }
 
 		$tmp_md5 = md5sum($fn);
 		if (! length($tmp_md5)) { next; }
