@@ -106,12 +106,6 @@ sub handler {
 	$stopping = 1;
 }
 
-# Open file handle for the log file
-open(my $log, '>>', $log_fn) or die "Can't open '$log_fn': $!";
-
-# Make the $log file handle unbuffered for instant logging.
-$log->autoflush(1);
-
 # Duplicate STDOUT and STDERR as a regular file handles.
 open(my $stdout, ">&STDOUT") or die "Can't duplicate STDOUT: $!";
 open(my $stderr, ">&STDERR") or die "Can't duplicate STDERR: $!";
@@ -309,6 +303,12 @@ sub files2queue {
 # (2) file name / directory name
 sub logger {
 	my(%err, @outs, $now);
+
+# Open file handle for the log file
+	open(my $log, '>>', $log_fn) or die "Can't open '$log_fn': $!";
+
+# Make the $log file handle unbuffered for instant logging.
+	$log->autoflush(1);
 
 	while (my @args = ($log_q->dequeue(2))) {
 # When log is opened.
