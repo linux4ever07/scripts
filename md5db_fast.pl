@@ -442,7 +442,7 @@ sub getfiles {
 		if (-f $fn and -r $fn) {
 			my $bn = basename($fn);
 
-# If file name isn't a database file, add it to databes hash.
+# If file name isn't a database file, add it to database hash.
 # Precreating elements in database hash, to prevent threads from
 # stepping over each other later.
 			if ($bn ne $db) {
