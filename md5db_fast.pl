@@ -307,9 +307,8 @@ sub files2queue {
 sub logger {
 	my(%err, @outs, $now);
 
-	while (my @args = ($log_q->dequeue_nb(2)) or ! $saw_sigint) {
+	while (my @args = ($log_q->dequeue(2))) {
 		if ($saw_sigint) { $args[0] = 'end'; }
-		if (! scalar(@args)) { yield(); next; }
 
 # When log is opened.
 		if ($args[0] eq 'start') {
