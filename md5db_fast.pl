@@ -310,8 +310,6 @@ sub logger {
 	my(%err, @outs, $now);
 
 	while (my @args = ($log_q->dequeue(2))) {
-		if ($saw_sigint) { $args[0] = 'end'; }
-
 # When log is opened.
 		if ($args[0] eq 'start') {
 # Storing the current time in $now.
