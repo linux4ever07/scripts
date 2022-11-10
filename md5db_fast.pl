@@ -621,44 +621,6 @@ sub md5sum {
 	my $fn = shift;
 	my($hash);
 
-# If the file name is a FLAC file, index it by getting the MD5 hash from
-# reading the metadata using 'metaflac', and test it with 'flac'.
-	if ($fn =~ /.flac$/i) {
-		if (scalar(@flac_req) != 2) { return; }
-
-		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-
-		if ($? != 0 and $? != 2) {
-			$log_q->enqueue('corr', $fn);
-			return;
-		}
-
-		if ($mode eq 'test') {
-			if ($large{$fn}) {
-				lock($busy);
-				$busy = 1;
-
-				system('flac', '--totally-silent', '--test', $fn);
-
-				$busy = 0;
-			} else {
-				open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
-				or die "Can't open 'flac': $!";
-				print $flac_test $file_contents{$fn};
-				close($flac_test);
-
-				clear_stack($fn);
-			}
-
-			if ($? != 0 and $? != 2) {
-				$log_q->enqueue('corr', $fn);
-				return;
-			}
-		}
-
-		return $hash;
-	}
-
 	if ($large{$fn}) {
 		lock($busy);
 		$busy = 1;
@@ -677,6 +639,48 @@ sub md5sum {
 	return $hash;
 }
 
+# Subroutine for getting the MD5 hash of FLAC files. Index by getting
+# the MD5 hash from reading the metadata using 'metaflac', and test with
+# 'flac'.
+sub md5flac {
+	my $fn = shift;
+	my($hash);
+
+	if (scalar(@flac_req) != 2) { return; }
+
+	chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+
+	if ($? != 0 and $? != 2) {
+		$log_q->enqueue('corr', $fn);
+		return;
+	}
+
+	if ($mode eq 'test') {
+		if ($large{$fn}) {
+			lock($busy);
+			$busy = 1;
+
+			system('flac', '--totally-silent', '--test', $fn);
+
+			$busy = 0;
+		} else {
+			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
+			or die "Can't open 'flac': $!";
+			print $flac_test $file_contents{$fn};
+			close($flac_test);
+
+			clear_stack($fn);
+		}
+
+		if ($? != 0 and $? != 2) {
+			$log_q->enqueue('corr', $fn);
+			return;
+		}
+	}
+
+	return $hash;
+}
+
 # Subroutine to index the files (i.e. calculate and store the MD5 hashes
 # in database hash).
 sub md5index {
@@ -687,7 +691,9 @@ sub md5index {
 	while (my $fn = $files_q->dequeue()) {
 		if ($saw_sigint) { last; }
 
-		$tmp_md5 = md5sum($fn);
+		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn); }
+		else { $tmp_md5 = md5sum($fn); }
+
 		if (! length($tmp_md5)) { next; }
 
 		$md5h{$fn} = $tmp_md5;
@@ -710,6 +716,7 @@ sub md5test {
 		if ($saw_sigint) { last; }
 
 		$tmp_md5 = md5sum($fn);
+
 		if (! length($tmp_md5)) { next; }
 
 		$new_md5 = $tmp_md5;
