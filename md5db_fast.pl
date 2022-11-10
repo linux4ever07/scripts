@@ -204,12 +204,12 @@ sub iquit {
 		}
 	}
 
-# Print missing files, and close the log.
+# Print missing files, and close the log file.
 	p_gone();
 	$log_q->enqueue('end', 'end');
 	$log_q->end();
 
-# Closing logger thread.
+# Close logger thread.
 	my $thr_logger = threads->object($threads[1]);
 	$thr_logger->join();
 
