@@ -478,7 +478,6 @@ sub file2hash {
 				}
 # If file name is not a real file, add $fn to %gone hash.
 			} elsif (! -f $fn) {
-				lock(%gone);
 				$gone{${fn}} = $hash;
 			}
 		}
@@ -574,7 +573,6 @@ sub md5import {
 				}
 # If file name is not a real file, add $fn to %gone hash.
 			} elsif (! -f $fn) {
-				lock(%gone);
 				$gone{${fn}} = $hash;
 			}
 		}
