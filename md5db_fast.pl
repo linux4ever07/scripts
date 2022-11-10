@@ -34,6 +34,7 @@ use File::Basename qw(basename dirname);
 use threads qw(yield);
 use threads::shared;
 use Thread::Queue;
+use Thread::Semaphore;
 use POSIX qw(SIGINT);
 
 my(@lib, @run, $mode);
@@ -74,7 +75,6 @@ my $disk_size = 1000000000;
 # * @threads stores threads that are created.
 # * @md5dbs stores 'md5.db' files.
 # * %err is used for errors.
-# * %files is the files hash.
 # * %md5h is the database hash.
 # * %file_contents stores the contents of files.
 # * %large stores the names of files that are too big to fit in RAM.
@@ -84,7 +84,7 @@ my $disk_size = 1000000000;
 # * $file_stack tracks the amount of file data currently in RAM.
 # * $busy is used to pause other threads when a thread is busy.
 my(@threads, @md5dbs) :shared;
-my(%err, %files, %md5h, %file_contents, %large, %gone) :shared;
+my(%err, %md5h, %file_contents, %large, %gone) :shared;
 my $files_n :shared = 0;
 my $stopping :shared = 0;
 my $file_stack :shared = 0;
@@ -92,6 +92,9 @@ my $busy :shared = 0;
 
 # Create the thread queue.
 my $q = Thread::Queue->new();
+
+# This will be used to control access to the logger subroutine.
+my $semaphore = Thread::Semaphore->new();
 
 # Creating a custom POSIX signal handler. First we create a shared
 # variable that will work as a SIGINT switch. Then we define the handler
@@ -204,6 +207,13 @@ sub iquit {
 		}
 	}
 
+# Delete empty elements from database hash.
+	foreach my $fn (keys(%md5h)) {
+		if ($md5h{$fn} eq '1') {
+			delete($md5h{$fn});
+		}
+	}
+
 # Print missing files, and close the log.
 	p_gone();
 	logger('end');
@@ -214,34 +224,35 @@ sub iquit {
 
 # Subroutine for putting files in the queue, and loading them into RAM.
 sub files2queue {
-	my($files_ref);
+	my(@files);
 
 	if ($mode eq 'index') {
-		$files_ref = \%files;
-
-# If file name already exists in database hash, skip it.
-		foreach my $fn (keys(%md5h)) {
-			if ($files{$fn}) { delete($files{$fn}); }
-		}
-
+# If MD5 hash of file name is already in database, skip it.
 # If file is a FLAC file, then enqueue it directly instead of reading it
 # into RAM.
-		foreach my $fn (keys(%files)) {
-			if ($fn =~ /.flac$/i) {
-				delete($files{$fn});
-				$q->enqueue($fn);
+		foreach my $fn (sort(keys(%md5h))) {
+			if ($md5h{$fn} eq '1') {
+				if ($fn =~ /.flac$/i) { $q->enqueue($fn); next; }
+
+				push(@files, $fn);
 			}
 		}
 	}
 
-	if ($mode eq 'test') { $files_ref = \%md5h; }
+	if ($mode eq 'test') {
+		foreach my $fn (sort(keys(%md5h))) {
+			if ($md5h{$fn} ne '1') {
+				push(@files, $fn);
+			}
+		}
+	}
 
 # This loop reads the files into RAM, if there's enough RAM available.
 # If the file is larger than the limit set in $disk_size, it will
 # instead be added to the %large hash. The files in that hash will be
 # processed one at a time, since they have to be read directly from the
 # hard drive.
-	foreach my $fn (sort(keys(%{$files_ref}))) {
+	foreach my $fn (@files) {
 		my $size = (stat($fn))[7];
 
 		if (! length($size)) { next; }
@@ -290,10 +301,14 @@ sub files2queue {
 }
 
 # Subroutine for controlling the log file.
+# Applying a semaphore so multiple threads won't try to access it at
+# once.
 # It takes 2 arguments:
 # (1) switch (start gone corr diff end)
 # (2) file name
 sub logger {
+	$semaphore->down();
+
 	my $sw = shift;
 	my(@files, @outs, $now);
 
@@ -377,9 +392,11 @@ $files[0]
 			close $log or die "Can't close '$log': $!";
 		}
 	}
+
+	$semaphore->up();
 }
 
-# Subroutine for initializing database hash, and the %files hash.
+# Subroutine for initializing database hash.
 # This is the first subroutine that will be executed, and all others
 # depend upon it.
 sub init_hash {
@@ -395,13 +412,15 @@ sub init_hash {
 
 # Subroutine for when database file is empty, or doesn't exist.
 sub if_empty {
-	if (! keys(%md5h)) {
-		say "
+	foreach my $fn (keys(%md5h)) {
+		if ($md5h{$fn} ne '1') { return; }
+	}
+
+	say "
 No database file. Run the script in 'index' mode first to index files.
 ";
 
-		exit;
-	}
+	exit;
 }
 
 # Subroutine for finding all files in the current directory.
@@ -425,8 +444,13 @@ sub getfiles {
 		if (-f $fn and -r $fn) {
 			my $bn = basename($fn);
 
-			if ($bn ne $db) { $files{$fn} = 1; }
-			elsif ($bn eq $db) { push(@md5dbs, $fn); }
+# If file name isn't a database file, add it to databes hash.
+# Precreating elements in database hash, to prevent threads from
+# stepping over each other later.
+			if ($bn ne $db) {
+				$md5h{$fn} = 1;
+# If file name is a database file, add it to @md5dbs.
+			} elsif ($bn eq $db) { push(@md5dbs, $fn); }
 		}
 	}
 }
@@ -465,9 +489,9 @@ sub file2hash {
 
 # If $fn is a real file.
 			if (-f $fn) {
-# Unless file name already is in database hash, add it and print a
-# message.
-				if (! length($md5h{$fn})) {
+# If MD5 hash of file name is not already in database, add it and print
+# a message.
+				if ($md5h{$fn} eq '1') {
 					$md5h{$fn} = $hash;
 					say $fn . $delim . $hash;
 # If file name is in database hash but the MD5 hash doesn't match, print
@@ -511,16 +535,18 @@ sub md5double {
 	my(%dups);
 
 	foreach my $fn (keys(%md5h)) {
-		my $hash = $md5h{$fn};
-		push(@{$dups{${hash}}}, $fn);
+		if ($md5h{$fn} ne '1') {
+			my $hash = $md5h{$fn};
+			push(@{$dups{$hash}}, $fn);
+		}
 	}
 
 # Loop through the %dups hash and print files that are identical, if
 # any.
 	foreach my $hash (keys(%dups)) {
-		if (scalar(@{$dups{${hash}}}) > 1) {
+		if (scalar(@{$dups{$hash}}) > 1) {
 			say 'These files have the same hash (' . $hash . '):';
-			foreach my $fn (@{$dups{${hash}}}) { say $fn; }
+			foreach my $fn (@{$dups{$hash}}) { say $fn; }
 			say '';
 		}
 	}
@@ -561,9 +587,9 @@ sub md5import {
 
 # If $fn is a real file.
 			if (-f $fn) {
-# Unless file name already is in database hash, add it and print a
-# message.
-				if (! length($md5h{$fn})) {
+# If MD5 hash of file name is not already in database, add it and print
+# a message.
+				if ($md5h{$fn} eq '1') {
 					$md5h{$fn} = $hash;
 					say $fn . ': done indexing';
 # If file name is in database hash but the MD5 hash from the MD5 file
@@ -711,20 +737,19 @@ sub p_gone {
 # hash / array here (in this subroutine).
 	foreach my $fn (keys(%gone)) {
 		my $hash = $gone{${fn}};
-		push(@{$gone_tmp{${hash}}}, $fn);
+		push(@{$gone_tmp{$hash}}, $fn);
 	}
 
 # Loops through the %md5h hash and deletes every matching MD5 hash from
 # the %gone_tmp hash / array.
 	foreach my $fn (keys(%md5h)) {
-		my $hash = ${md5h{${fn}}};
-
+		my $hash = ${md5h{$fn}};
 		if ($gone_tmp{${hash}}) { delete($gone_tmp{${hash}}); }
 	}
 
 # Logs all missing files.
 	foreach my $hash (keys(%gone_tmp)) {
-		foreach my $fn (@{$gone_tmp{${hash}}}) { logger('gone', $fn); }
+		foreach my $fn (@{$gone_tmp{$hash}}) { logger('gone', $fn); }
 	}
 }
 
@@ -754,7 +779,7 @@ foreach my $dn (@lib) {
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
 
-# Initialize database hash, and the files hash.
+# Initialize database hash.
 	init_hash();
 
 	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
@@ -779,7 +804,7 @@ foreach my $dn (@lib) {
 		}
 # Import *.MD5 files to database.
 		when ('import') {
-			foreach my $fn (sort(keys(%files))) {
+			foreach my $fn (sort(keys(%md5h))) {
 				if ($fn =~ /.md5$/i) { md5import($fn); }
 			}
 		}
@@ -808,7 +833,6 @@ foreach my $dn (@lib) {
 	@threads = ();
 	@md5dbs = ();
 	%err = ();
-	%files = ();
 	%md5h = ();
 	%file_contents = ();
 	%large = ();
