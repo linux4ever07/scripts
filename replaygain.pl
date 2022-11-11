@@ -160,7 +160,7 @@ sub getdirs {
 	close($find) or die "Can't close 'find': $!";
 }
 
-# The 'getfiles' subroutine gets the list of FLAC files in the directory
+# The 'getfiles' subroutine gets a list of FLAC files in the directory
 # passed to it.
 sub getfiles {
 	my $dn = shift;
@@ -183,7 +183,7 @@ sub getfiles {
 	}
 }
 
-# The 'gettags' subroutine reads the tags from the FLAC file.
+# The 'gettags' subroutine reads the tags from a FLAC file.
 sub gettags {
 	my $fn = shift;
 	my(%alltags, @lines);
@@ -235,11 +235,9 @@ sub existstag {
 	foreach my $tag (@_) {
 		if (! defined($t{$tag})) {
 			say $fn . ': doesn\'t have ' . $tag . ' tag';
-			$switch = 1;
+			exit;
 		}
 	}
-
-	if ($switch == 1) { exit; }
 }
 
 # The 'vendor' subroutine re-encodes the FLAC file, if it was encoded

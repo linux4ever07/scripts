@@ -26,27 +26,13 @@ while (my $arg = shift(@ARGV)) {
 
 $library = shift(@dirs);
 
-while (my $dn = shift(@dirs)) {
-	find({ wanted => \&action, no_chdir => 1 }, $dn);
-
-	sub action {
-		if (-d) {
-			my $dn = $File::Find::name;
-			getfiles($dn);
-			my $fc = keys(%files);
-			if ($fc > 0) {
-				say $dn . ': importing...' . "\n";
-				import($fc);
-			} else { say $dn . ': contains no FLAC files'; }
-		}
-	}
-}
-
+# The 'usage' subroutine prints syntax, and then quits.
 sub usage {
 	say "\n" . 'Usage: ' . basename($0) . ' [FLAC library directory] .. [directory N]' . "\n";
 	exit;
 }
 
+# The 'gettags' subroutine reads the tags from a FLAC file.
 sub gettags {
 	my $fn = shift;
 	my(%alltags, @lines);
@@ -83,7 +69,9 @@ sub gettags {
 	return(%alltags);
 }
 
-sub checktags {
+# The 'existstag' subroutine checks for the existence of the chosen tags
+# passed to it. If it doesn't find the tag, it quits.
+sub existstag {
 	my $fn = shift;
 
 	my @tags = ('artist', 'album', 'tracknumber');
@@ -96,6 +84,8 @@ sub checktags {
 	}
 }
 
+# The 'getfiles' subroutine gets a list of FLAC files in the directory
+# passed to it.
 sub getfiles {
 	my $dn = shift;
 
@@ -140,10 +130,10 @@ sub albumartist {
 	}
 }
 
-# This subroutine checks the log file to see if it contains any of the
-# words in @lacc. Most of the code here is to deal with correctly
-# decoding the character encoding in the log file. We do this to be able
-# to properly match the words.
+# The 'check_log' subroutine checks the log file to see if it contains
+# any of the words in @lacc. Most of the code here is to deal with
+# correctly decoding the character encoding in the log file. We do this
+# to be able to properly match the words.
 sub check_log {
 	my $fn = shift;
 	my($enc, $line1);
@@ -170,6 +160,7 @@ sub check_log {
 	}
 }
 
+# The 'import' subroutine imports a FLAC album to the FLAC library.
 sub import {
 	my $fc = shift;
 	my $cp = 0;
@@ -183,7 +174,7 @@ sub import {
 			$t{$tag} = $files{$sf}{$tag}->[0];
 		}
 
-		checktags($sf);
+		existstag($sf);
 		albumartist($sf, $fc);
 
 		$path = $library . '/' . $t{albumartist} . '/' . $t{album};
@@ -221,5 +212,21 @@ sub import {
 		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...' . "\n";
 		copy($sf, $tf) or die "Copy failed: $!";
 		$cplog++
+	}
+}
+
+while (my $dn = shift(@dirs)) {
+	find({ wanted => \&action, no_chdir => 1 }, $dn);
+
+	sub action {
+		if (-d) {
+			my $dn = $File::Find::name;
+			getfiles($dn);
+			my $fc = keys(%files);
+			if ($fc > 0) {
+				say $dn . ': importing...' . "\n";
+				import($fc);
+			} else { say $dn . ': contains no FLAC files'; }
+		}
 	}
 }
