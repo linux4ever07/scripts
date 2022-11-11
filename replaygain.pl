@@ -54,10 +54,9 @@ sub version {
 
 version();
 
-if (defined($ARGV[0])) {
-	if (scalar(@ARGV) != 1 or ! -d $ARGV[0]) { usage(); }
-	else { $library = abs_path($ARGV[0]); }
-} else { usage(); }
+if (scalar(@ARGV) != 1 or ! -d $ARGV[0]) { usage(); }
+
+$library = abs_path($ARGV[0]); }
 
 # Find all the sub-directories under the FLAC library directory.
 getdirs($library);
