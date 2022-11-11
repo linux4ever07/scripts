@@ -59,10 +59,10 @@ sub usage {
 # output to UTF-8.
 sub read_decode_fn {
 	my $fn = shift;
-	my($file_enc, $enc, $enc_tmp, @lines);
+	my($file_output, $file_enc, $enc, $enc_tmp, @lines);
 
 	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
-	chomp(my $file_output = <$info>);
+	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
 	$file_output =~ /charset=(.*)[[:space:]]*$/;
