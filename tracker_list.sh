@@ -29,7 +29,7 @@ usage () {
 
 if [[ ! -f $1 ]]; then
 	usage
-elif [[ $2 != '-nocheck' ]]; then
+elif [[ -n $2 && $2 != '-nocheck' ]]; then
 	usage
 fi
 
