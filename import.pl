@@ -53,10 +53,10 @@ sub gettags {
 
 	my $regex = qr/^(\")|(\")$/;
 
-	open(OUTPUT, '-|', 'metaflac', '--no-utf8-convert', '--export-tags-to=-', $fn)
+	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--export-tags-to=-', $fn)
 	or die "Can't open metaflac: $!";
-	chomp(@lines = (<OUTPUT>));
-	close(OUTPUT) or die "Can't close metaflac: $!";
+	chomp(@lines = (<$output>));
+	close($output) or die "Can't close metaflac: $!";
 
 	foreach my $line (@lines) {
 		my (@tag, $tagname);

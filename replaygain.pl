@@ -42,14 +42,14 @@ my(@flac_version, $library, %t, %files, @files, @dirs, %mflac_if, @mflac_of);
 
 # The 'version' subroutine checks the installed version of 'flac'.
 sub version {
-	my(@lines);
+	my($line1);
 
 	open(my $flac_v, '-|', 'flac', '--version')
 	or die "Can't open 'flac': $!";
-	chomp(@lines = (<$flac_v>));
+	chomp($line1 = <$flac_v>);
 	close($flac_v) or die "Can't close 'flac': $!";
 
-	@flac_version = split(' ', $lines[0]);
+	@flac_version = split(' ', $line1);
 }
 
 version();
