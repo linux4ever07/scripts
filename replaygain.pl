@@ -378,7 +378,7 @@ sub discnum {
 
 	my $dn = dirname($fn);
 	my $regex = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
-	my $regex2= qr/0+([0-9]+)/;
+	my $regex2= qr/^0+([0-9]+)$/;
 
 # Adding the DISCNUMBER tag.
 	if (! defined($t{discnumber})) {
@@ -480,7 +480,7 @@ sub albumartist {
 sub tracknum {
 	my $fn = shift;
 
-	my $regex= qr/0+([0-9]+)/;
+	my $regex= qr/^0+([0-9]+)$/;
 
 	if (defined($t{tracknumber})) {
 		my $old_tag = $t{tracknumber};
