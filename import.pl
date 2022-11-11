@@ -26,7 +26,7 @@ while (my $arg = shift(@ARGV)) {
 
 $library = shift(@dirs);
 
-foreach my $dn (shift(@dirs)) {
+foreach (my $dn = shift(@dirs)) {
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
 
 	sub action {
@@ -103,7 +103,7 @@ sub getfiles {
 	undef(@log);
 
 	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
-	foreach my $bn (readdir $dh) {
+	foreach my $bn (readdir($dh)) {
 		my $fn = $dn . '/' . $bn;
 
 		if (! -f $fn) { next; }
@@ -113,9 +113,7 @@ sub getfiles {
 		}
 
 		if ($bn =~ /.log$/i) {
-			my $log_tmp = check_log($fn);
-
-			if (defined($log_tmp)) { push(@log, $fn); }
+			check_log($fn);
 		}
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
@@ -168,7 +166,7 @@ sub check_log {
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@lacc) {
-	    if ($line1 =~ /$req/) { return($fn); }
+	    if ($line1 =~ /$req/) { push(@log, $fn); last; }
 	}
 }
 
