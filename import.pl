@@ -26,7 +26,7 @@ while (my $arg = shift(@ARGV)) {
 
 $library = shift(@dirs);
 
-foreach (my $dn = shift(@dirs)) {
+while (my $dn = shift(@dirs)) {
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
 
 	sub action {
