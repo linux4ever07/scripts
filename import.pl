@@ -131,10 +131,10 @@ sub albumartist {
 # to be able to properly match the words.
 sub check_log {
 	my $fn = shift;
-	my($file_enc, $enc, $enc_tmp, $line1);
+	my($file_output, $file_enc, $enc, $enc_tmp, $line1);
 
 	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
-	chomp(my $file_output = <$info>);
+	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
 	$file_output =~ /charset=(.*)[[:space:]]*$/;
