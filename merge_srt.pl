@@ -64,17 +64,16 @@ sub usage {
 # output to UTF-8.
 sub read_decode_fn {
 	my $fn = shift;
-	my($enc);
-	my(@lines);
+	my($file_enc, $enc, $enc_tmp, @lines);
 
 	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
 	chomp(my $file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
 	$file_output =~ /charset=(.*)[[:space:]]*$/;
-	my $file_enc = $1;
+	$file_enc = $1;
 
-	my $enc_tmp = find_encoding($file_enc);
+	$enc_tmp = find_encoding($file_enc);
 
 	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
 
