@@ -16,13 +16,13 @@ use Encode qw(decode find_encoding);
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
 my (@dirs, @log, %t, %files, $library);
 
-if (scalar(@ARGV) < 2) { usage(); }
-
 while (my $arg = shift(@ARGV)) {
 	if (-d $arg) {
 		push(@dirs, abs_path($arg));
 	} else { usage(); }
 }
+
+if (scalar(@dirs) < 2) { usage(); }
 
 $library = shift(@dirs);
 
