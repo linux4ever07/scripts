@@ -196,25 +196,25 @@ sub gettags {
 	chomp(@lines = (<$output>));
 	close($output) or die "Can't close 'metaflac': $!";
 
-	foreach (@lines) {
+	foreach my $line (@lines) {
 		my(@tag, $tagname);
 
-		if (/^reference/) {
-			@tag = split(' ');
+		if ($line =~ /^reference/) {
+			@tag = split(' ', $line);
 			$tagname = 'vendor_ref';
 
 			if (defined($tag[2])) { $tag[1] = $tag[2]; }
 			else {
 				undef(@tag);
-				$tag[1] = $_;
+				$tag[1] = $line;
 			}
 		} else {
-			$_ =~ s/$regex//g;
+			$line =~ s/$regex//g;
 
-			push(@{$mflac_if{$fn}}, $_);
-			@tag = split('=');
+			push(@{$mflac_if{$fn}}, $line);
+			@tag = split('=', $line);
 
-			if (! defined($tag[0] or ! defined($tag[1])) { next; }
+			if (! defined($tag[0]) or ! defined($tag[1])) { next; }
 
 			$tagname = lc($tag[0]);
 			$tagname =~ s/[[:space:]]//g;

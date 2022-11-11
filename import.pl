@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+
 # This script is meant to import FLAC albums to my FLAC library
 # directory.
 
@@ -13,33 +14,30 @@ use File::Copy qw(copy);
 use Encode qw(decode find_encoding);
 
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my (@log, %t, %files, $library);
+my (@dirs, @log, %t, %files, $library);
 
-if (defined($ARGV[0])) {
-	if (scalar(@ARGV) < 2 or ! -d $ARGV[0]) { usage(); }
-	else { $library = abs_path(shift); }
-} else { usage(); }
+if (scalar(@ARGV) < 2) { usage(); }
 
-foreach my $dn (@ARGV) {
-	if (! -d $dn) {
-		say $dn . ': not a directory';
-		exit;
-	}
+while (my $arg = shift(@ARGV)) {
+	if (-d $arg) {
+		push(@dirs, abs_path($arg));
+	} else { usage(); }
+}
 
+$library = shift(@dirs);
+
+foreach my $dn (shift(@dirs)) {
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
 
 	sub action {
 		if (-d) {
-			my $dn = abs_path($File::Find::name);
-			@log = getfiles($dn);
+			my $dn = $File::Find::name;
+			getfiles($dn);
 			my $fc = keys(%files);
 			if ($fc > 0) {
 				say $dn . ': importing...' . "\n";
 				import($fc);
-			}
-			else {
-				say $dn . ': contains no FLAC files';
-			}
+			} else { say $dn . ': contains no FLAC files'; }
 		}
 	}
 }
@@ -51,7 +49,7 @@ sub usage {
 
 sub gettags {
 	my $fn = shift;
-	my (%alltags, @lines);
+	my(%alltags, @lines);
 
 	my $regex = qr/^(\")|(\")$/;
 
@@ -60,14 +58,14 @@ sub gettags {
 	chomp(@lines = (<OUTPUT>));
 	close(OUTPUT) or die "Can't close metaflac: $!";
 
-	foreach (@lines) {
+	foreach my $line (@lines) {
 		my (@tag, $tagname);
 
-		$_ =~ s/$regex//g;
+		$line =~ s/$regex//g;
 
-		@tag = split('=');
+		@tag = split('=', $line);
 
-		if (! defined($tag[0] or ! defined($tag[1])) { next; }
+		if (! defined($tag[0]) or ! defined($tag[1])) { next; }
 
 		$tagname = lc($tag[0]);
 		$tagname =~ s/[[:space:]]//g;
@@ -100,28 +98,27 @@ sub checktags {
 
 sub getfiles {
 	my $dn = shift;
-	my @log;
 
-	undef %files;
+	undef(%files);
+	undef(@log);
 
 	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
-	foreach (readdir $dh) {
-		my $fn = "$dn/$_";
-		my $fn_bn_lc = lc($_);
+	foreach my $bn (readdir $dh) {
+		my $fn = $dn . '/' . $bn;
 
-		if ($fn_bn_lc =~ /.flac$/ and -f $fn) {
+		if (! -f $fn) { next; }
+
+		if ($bn =~ /.flac$/i) {
 			$files{$fn} = { gettags($fn) };
 		}
 
-		if ($fn_bn_lc =~ /.log$/ and -f $fn) {
+		if ($bn =~ /.log$/i) {
 			my $log_tmp = check_log($fn);
 
 			if (defined($log_tmp)) { push(@log, $fn); }
 		}
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
-
-	return(@log);
 }
 
 # The 'albumartist' subroutine creates the ALBUMARTIST tag, if it
@@ -179,23 +176,19 @@ sub import {
 	my $fc = shift;
 	my $cp = 0;
 	my $cplog = 1;
-	my $total = $fc;
 	my ($newfn, $path);
 
 	foreach my $sf (sort(keys %files)) {
 		undef(%t);
 
-		foreach my $tag (keys( %{ $files{$sf} } )) {
+		foreach my $tag (keys(%{$files{$sf}})) {
 			$t{$tag} = $files{$sf}{$tag}->[0];
 		}
+
 		checktags($sf);
 		albumartist($sf, $fc);
 
-		my %ct = ( albumartist => $t{albumartist}, album => $t{album},
-		discnumber => $t{discnumber}, tracknumber => $t{tracknumber},
-		title => $t{title} );
-
-		$path = $library . '/' . $ct{albumartist} . '/' . $ct{album};
+		$path = $library . '/' . $t{albumartist} . '/' . $t{album};
 
 		if ($cp == 0 and -d $path) {
 			say $path . ': already exists';
@@ -204,9 +197,9 @@ sub import {
 		} else { make_path($path); }
 
 		if (defined($t{discnumber})) {
-		  $newfn = sprintf('%s-%02s. %s.flac', $ct{discnumber}, $ct{tracknumber}, $ct{title});
+		  $newfn = sprintf('%s-%02s. %s.flac', $t{discnumber}, $t{tracknumber}, $t{title});
 		} else {
-		  $newfn = sprintf('%02s. %s.flac', $ct{tracknumber}, $ct{title});
+		  $newfn = sprintf('%02s. %s.flac', $t{tracknumber}, $t{title});
 		}
 
 		my $tf = $path . '/' . $newfn;
@@ -216,7 +209,7 @@ sub import {
 		$cp++
 	}
 
-	say 'Copied ' . $cp . ' / ' . $total . ' files from \'' . $t{album} . '\'.' . "\n";
+	say 'Copied ' . $cp . ' / ' . $fc . ' files from \'' . $t{album} . '\'.' . "\n";
 
 	foreach my $sf (@log) {
 		my $tf;
