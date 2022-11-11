@@ -98,13 +98,8 @@ sub getfiles {
 
 		if (! -f $fn) { next; }
 
-		if ($bn =~ /.flac$/i) {
-			$files{$fn} = { gettags($fn) };
-		}
-
-		if ($bn =~ /.log$/i) {
-			check_log($fn);
-		}
+		if ($bn =~ /.flac$/i) { $files{$fn} = { gettags($fn) }; }
+		if ($bn =~ /.log$/i) { check_log($fn); }
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
 }
