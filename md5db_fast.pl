@@ -165,7 +165,7 @@ while (my $arg = shift(@ARGV)) {
 if (! scalar(@lib)) { usage(); }
 
 # Subroutine for when the script needs to quit, either cause of being
-# finished, or SIGINT has been triggered.
+# finished, or SIGINT has been tripped.
 sub iquit {
 	while (! $stopping) { sleep(0.5); }
 
@@ -323,7 +323,7 @@ sub files2queue {
 	$files_q->end();
 
 # If there's still files in the queue left to be processed, and SIGINT
-# has not been triggered, wait for the other threads to empty the queue.
+# has not been tripped, wait for the other threads to empty the queue.
 	while ($files_q->pending() and ! $saw_sigint) { sleep(0.5); }
 
 # We're using this subroutine / thread to indicate to the other threads
@@ -436,7 +436,7 @@ $args[1]
 # Subroutine for initializing database hash. This is the first
 # subroutine that will be executed, and all others depend upon it.
 sub init_hash {
-# Get all the file names in the current directory.
+# Get all file names in the current directory.
 	getfiles();
 
 # If no databases were found, say so and quit.
@@ -449,7 +449,7 @@ No database file. Run the script in 'index' mode first to index files.
 		}
 	}
 
-# Import hashes from every database file found in the search path.
+# Import hashes from every database file found in search path.
 	while (my $db = shift(@md5dbs)) { file2hash($db); }
 
 # Clears the screen, thereby scrolling past database file print.
@@ -508,17 +508,15 @@ sub file2hash {
 	}
 	close($md5db_in) or die "Can't close '$db': $!";
 
-# Loop through all the lines in database file and split them before
-# storing in database hash. Also, print each line to STDOUT for debug
-# purposes.
+# Loop to check that the format of the database file really is correct
+# before proceeding.
 	foreach my $line (@lines) {
-# If current line matches the proper database file format, continue.
 		if ($line =~ /$format/) {
 # Split the line into relative file name and MD5 hash.
 			$fn = $1;
 			$hash = $2;
 
-# Add the full path to the file name, unless it's the current directory.
+# Add full path to file name, unless it's the current directory.
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # If $fn is a real file.
@@ -549,7 +547,7 @@ sub hash2file {
 	my $of = 'md5' . '-' . $session . '.db';
 
 	open(my $md5db_out, '>', $of) or die "Can't open '$of': $!";
-# Loops through all the keys in database hash and prints the entries
+# Loop through all the keys in database hash and prints the entries
 # (divided by the $delim variable) to database file.
 	foreach my $fn (sort(keys(%md5h))) {
 		say $md5db_out $fn . $delim . $md5h{$fn} . "\r";
@@ -606,7 +604,7 @@ sub md5import {
 # The format string for parsing the *.MD5 files.
 	my $format = qr/^([[:alnum:]]{32})\s\*(.*)$/;
 
-# Open the *.MD5 file and read its contents to the @lines array.
+# Open *.MD5 file and read its contents to the @lines array.
 	open(my $md5_in, '<', $md5fn) or die "Can't open '$md5fn': $!";
 	foreach my $line (<$md5_in>) {
 		$line =~ s/(\r){0,}(\n){0,}$//g;
@@ -617,7 +615,6 @@ sub md5import {
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 	foreach my $line (@lines) {
-# If format string matches the line(s) in the *.MD5 file, continue.
 		if ($line =~ /$format/) {
 # Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
@@ -633,8 +630,8 @@ sub md5import {
 				if ($md5h{$fn} eq '1') {
 					$md5h{$fn} = $hash;
 					say $fn . ': done indexing';
-# If file name is in database hash but the MD5 hash from the MD5 file
-# doesn't match, print to the log.
+# If file name is in database hash but the MD5 hash doesn't match, print
+# to the log.
 				} elsif ($md5h{$fn} ne $hash) {
 					$log_q->enqueue('diff', $fn);
 				}
@@ -820,9 +817,8 @@ sub p_gone {
 
 # Translates the %gone hash to the %gone_tmp hash / array. We need to do
 # it in this complicated way because 'threads::shared' has no support
-# for hashes within hashes and arrays within arrays. That's why the
-# global variables are only simple arrays, and we translate them to a
-# hash / array here (in this subroutine).
+# for hashes within hashes or arrays within arrays. We translate them
+# to a hash with nested array here (in this subroutine).
 	foreach my $fn (keys(%gone)) {
 		my $hash = $gone{${fn}};
 		push(@{$gone_tmp{$hash}}, $fn);
@@ -920,7 +916,7 @@ while (my $dn = shift(@lib)) {
 # If SIGINT has been tripped, break this loop.
 	if ($saw_sigint) { last; }
 
-# Resets all the global / shared variables, making them ready for the
+# Reset all the global / shared variables, making them ready for the
 # next iteration of this loop. In case the user specified more than one
 # directory as argument.
 	$files_q = Thread::Queue->new();
