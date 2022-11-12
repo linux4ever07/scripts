@@ -724,7 +724,9 @@ sub md5flac {
 			return;
 		}
 
-		system('flac', '--totally-silent', '--test', $fn);
+		if ($mode eq 'test') {
+			system('flac', '--totally-silent', '--test', $fn);
+		}
 
 		$busy = 0;
 	} else {
@@ -735,9 +737,10 @@ sub md5flac {
 			return;
 		}
 
-		system('flac', '--totally-silent', '--test', $fn_shm);
-
-		clear_stack_shm($fn_shm, $size);
+		if ($mode eq 'test') {
+			system('flac', '--totally-silent', '--test', $fn_shm);
+			clear_stack_shm($fn_shm, $size);
+		}
 	}
 
 	if ($? != 0 and $? != 2) {
