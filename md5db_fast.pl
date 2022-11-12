@@ -30,13 +30,15 @@ use Cwd qw(abs_path);
 use Digest::MD5 qw(md5_hex);
 use IO::Handle qw(autoflush);
 use File::Basename qw(basename dirname);
+use File::Path qw(make_path remove_tree);
+use File::Copy qw(copy);
 
 use threads qw(yield);
 use threads::shared;
 use Thread::Queue;
 use POSIX qw(SIGINT);
 
-my(%regex, @lib, @md5dbs, @run, $mode);
+my(%regex, @lib, @md5dbs, @run, $mode, $session, $shm_dn);
 
 # Array for storing the actual arguments used by the script internally.
 # Might be useful for debugging.
@@ -61,6 +63,9 @@ my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
 # Regex used for skipping dotfiles in home directories.
 $regex{dotfile} = qr(^/home/[[:alnum:]]+/\.);
+
+# Regex for separating basename from extension.
+$regex{fn} = qr/^(.*)\.([^.]*)$/;
 
 # Delimiter used for database.
 my $delim = "\t\*\t";
@@ -192,6 +197,9 @@ sub iquit {
 		}
 	}
 
+# Delete temporary directory from /dev/shm.
+	remove_tree($shm_dn) or die "Can't remove '$shm_dn': $!";
+
 # Delete empty elements from database hash.
 	foreach my $fn (keys(%md5h)) {
 		if ($md5h{$fn} eq '1') {
@@ -214,20 +222,27 @@ sub iquit {
 
 # Subroutine for putting files in the queue, and loading them into RAM.
 sub files2queue {
-	my(@files, %size);
+	my(@files, %shm_dn, %size);
+
+# Create temporary directory in /dev/shm.
+	make_path($shm_dn);
 
 # If MD5 hash of file name is already in database, skip it.
 # If file is a FLAC file (and the required commands are installed), then
-# enqueue it directly instead of reading it into RAM.
+# create a path for it in /dev/shm.
 	if ($mode eq 'index') {
 		foreach my $fn (sort(keys(%md5h))) {
 			if ($md5h{$fn} eq '1') {
 				if ($fn =~ /.flac$/i) {
 					if (scalar(@flac_req) == 2) {
-						$files_q->enqueue($fn);
-					}
+						my $dn = dirname($fn);
 
-					next;
+						if ($dn ne '.') {
+							$dn = $shm_dn . '/' . $dn;
+							$shm_dn{$fn} = $dn;
+							make_path($dn);
+						} else { $shm_dn{$fn} = $shm_dn; }
+					} else { next; }
 				}
 
 				push(@files, $fn);
@@ -236,13 +251,21 @@ sub files2queue {
 	}
 
 # If MD5 hash of file name is not in database, skip it.
-# If file is a FLAC file, and the required commands are not installed,
-# skip it.
+# If file is a FLAC file (and the required commands are installed), then
+# create a path for it in /dev/shm.
 	if ($mode eq 'test') {
 		foreach my $fn (sort(keys(%md5h))) {
 			if ($md5h{$fn} ne '1') {
 				if ($fn =~ /.flac$/i) {
-					if (scalar(@flac_req) != 2) { next; }
+					if (scalar(@flac_req) == 2) {
+						my $dn = dirname($fn);
+
+						if ($dn ne '.') {
+							$dn = $shm_dn . '/' . $dn;
+							$shm_dn{$fn} = $dn;
+							make_path($dn);
+						} else { $shm_dn{$fn} = $shm_dn; }
+					} else { next; }
 				}
 
 				push(@files, $fn);
@@ -268,11 +291,15 @@ sub files2queue {
 				$free = $disk_size - $file_stack;
 			}
 
-			$file_contents{$fn} = 1;
+			if ($fn =~ /.flac$/i) {
+				copy($fn, $shm_dn{$fn}) or die "Can't copy '$fn': $!";
+			} else {
+				$file_contents{$fn} = 1;
 
-			open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
-			sysread($read_fn, $file_contents{$fn}, $size{$fn});
-			close($read_fn) or die "Can't close '$fn': $!";
+				open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
+				sysread($read_fn, $file_contents{$fn}, $size{$fn});
+				close($read_fn) or die "Can't close '$fn': $!";
+			}
 
 			{ lock($file_stack);
 			$file_stack += $size{$fn}; }
@@ -519,7 +546,7 @@ sub hash2file {
 # overwriting database file with nothing.
 	if (! keys(%md5h)) { return; }
 
-	my $of = 'md5' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.db';
+	my $of = 'md5' . '-' . $session . '.db';
 
 	open(my $md5db_out, '>', $of) or die "Can't open '$of': $!";
 # Loops through all the keys in database hash and prints the entries
@@ -530,6 +557,15 @@ sub hash2file {
 	close($md5db_out) or die "Can't close '$of': $!";
 
 	rename($of, $db) or die "Can't rename file '$of': $!";
+}
+
+# Subroutine for creating temporary variables. A session number, and
+# /dev/shm directory name, for the current session.
+sub gen_tmp_vars {
+	$session = int(rand(10000)) . '-' . int(rand(10000));
+
+	$cmd[0] =~ m/$regex{fn}/;
+	$shm_dn = '/dev/shm/' . $1 . '-' . $session;
 }
 
 # Subroutine for finding duplicate files, by checking database hash.
@@ -603,9 +639,7 @@ sub md5import {
 					$log_q->enqueue('diff', $fn);
 				}
 # If file name is not a real file, add $fn to %gone hash.
-			} elsif (! -f $fn) {
-				$gone{${fn}} = $hash;
-			}
+			} elsif (! -f $fn) { $gone{${fn}} = $hash; }
 		}
 	}
 }
@@ -621,6 +655,20 @@ sub clear_stack {
 	$file_stack -= $size;
 	lock(%file_contents);
 	delete($file_contents{$fn});
+}
+
+# Subroutine for clearing files from /dev/shm, once they've been
+# processed. Right now, this is only used for FLAC files, since
+# 'metaflac' can't read from STDIN.
+# It takes 1 argument:
+# (1) file name
+sub clear_stack_shm {
+	my $fn = shift;
+	my $size = shift;
+
+	lock($file_stack);
+	$file_stack -= $size;
+	unlink($fn) or die "Can't remove '$fn': $!";;
 }
 
 # Subroutine for getting the MD5 hash of files.
@@ -658,15 +706,9 @@ sub md5sum {
 # (1) file name
 sub md5flac {
 	my $fn = shift;
+	my $fn_shm = $shm_dn . '/' . $fn;
 	my $size = shift;
 	my($hash);
-
-	chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-
-	if ($? != 0 and $? != 2) {
-		$log_q->enqueue('corr', $fn);
-		return;
-	}
 
 	if ($mode eq 'test') {
 		if ($large{$fn}) {
@@ -675,16 +717,27 @@ sub md5flac {
 
 			if ($saw_sigint) { return; }
 
+			chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+
+			if ($? != 0 and $? != 2) {
+				$log_q->enqueue('corr', $fn);
+				return;
+			}
+
 			system('flac', '--totally-silent', '--test', $fn);
 
 			$busy = 0;
 		} else {
-			open(my $flac_test, '|-', 'flac', '--totally-silent', '--test', '-')
-			or die "Can't open 'flac': $!";
-			print $flac_test $file_contents{$fn};
-			close($flac_test);
+			chomp($hash = `metaflac --show-md5sum "$fn_shm" 2>&-`);
 
-			clear_stack($fn, $size);
+			if ($? != 0 and $? != 2) {
+				$log_q->enqueue('corr', $fn);
+				return;
+			}
+
+			system('flac', '--totally-silent', '--test', $fn_shm);
+
+			clear_stack_shm($fn_shm, $size);
 		}
 
 		if ($? != 0 and $? != 2) {
@@ -706,8 +759,8 @@ sub md5index {
 	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
-		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn); }
-		else { $tmp_md5 = md5sum($fn); }
+		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn, $size); }
+		else { $tmp_md5 = md5sum($fn, $size); }
 
 		if (! length($tmp_md5)) { next; }
 
@@ -730,8 +783,8 @@ sub md5test {
 	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
-		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn); }
-		else { $tmp_md5 = md5sum($fn); }
+		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn, $size); }
+		else { $tmp_md5 = md5sum($fn, $size); }
 
 		if (! length($tmp_md5)) { next; }
 
@@ -815,6 +868,9 @@ given ($mode) {
 while (my $dn = shift(@lib)) {
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
+
+# Generate temporary variables.
+	gen_tmp_vars();
 
 # Initialize database hash.
 	init_hash();
