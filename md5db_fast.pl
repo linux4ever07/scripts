@@ -36,7 +36,7 @@ use threads::shared;
 use Thread::Queue;
 use POSIX qw(SIGINT);
 
-my(@lib, @md5dbs, @run, $mode);
+my(%regex, @lib, @md5dbs, @run, $mode);
 
 # Array for storing the actual arguments used by the script internally.
 # Might be useful for debugging.
@@ -60,7 +60,7 @@ my $db = 'md5.db';
 my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
 # Regex used for skipping dotfiles in home directories.
-my $dotskip = qr(^/home/[[:alnum:]]+/\.);
+$regex{dotfile} = qr(^/home/[[:alnum:]]+/\.);
 
 # Delimiter used for database.
 my $delim = "\t\*\t";
@@ -443,7 +443,7 @@ sub getfiles {
 # user's home directory are usually configuration files for the desktop
 # and various applications. These files change often and will therefore
 # clog the log file created by this script, making it hard to read.
-		if (abs_path($fn) =~ m($dotskip)) { next; }
+		if (abs_path($fn) =~ m($regex{dotfile})) { next; }
 
 		$fn =~ s(^\./)();
 
@@ -453,10 +453,9 @@ sub getfiles {
 # If file name isn't a database file, add it to database hash.
 # Precreating elements in database hash, to prevent threads from
 # stepping over each other later.
-			if ($bn ne $db) {
-				$md5h{$fn} = 1;
 # If file name is a database file, add it to @md5dbs.
-			} elsif ($bn eq $db) { push(@md5dbs, $fn); }
+			if ($bn ne $db) { $md5h{$fn} = 1; }
+			elsif ($bn eq $db) { push(@md5dbs, $fn); }
 		}
 	}
 }
@@ -507,9 +506,7 @@ sub file2hash {
 					$log_q->enqueue('diff', $fn);
 				}
 # If file name is not a real file, add $fn to %gone hash.
-			} elsif (! -f $fn) {
-				$gone{${fn}} = $hash;
-			}
+			} elsif (! -f $fn) { $gone{${fn}} = $hash; }
 		}
 	}
 }
