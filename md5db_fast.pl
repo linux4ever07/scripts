@@ -739,8 +739,9 @@ sub md5flac {
 
 		if ($mode eq 'test') {
 			system('flac', '--totally-silent', '--test', $fn_shm);
-			clear_stack_shm($fn_shm, $size);
 		}
+
+		clear_stack_shm($fn_shm, $size);
 	}
 
 	if ($? != 0 and $? != 2) {
