@@ -622,6 +622,8 @@ sub md5sum {
 		lock($busy);
 		$busy = 1;
 
+		if ($saw_sigint) { return; }
+
 		open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
 		$hash = Digest::MD5->new->addfile($read_fn)->hexdigest;
 		close($read_fn) or die "Can't close '$fn': $!";
@@ -658,6 +660,8 @@ sub md5flac {
 		if ($large{$fn}) {
 			lock($busy);
 			$busy = 1;
+
+			if ($saw_sigint) { return; }
 
 			system('flac', '--totally-silent', '--test', $fn);
 
