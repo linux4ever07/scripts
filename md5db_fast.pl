@@ -604,7 +604,7 @@ sub md5import {
 # The format string for parsing the *.MD5 files.
 	my $format = qr/^([[:alnum:]]{32})\s\*(.*)$/;
 
-# Open *.MD5 file and read its contents to the @lines array.
+# Open *.MD5 file and read it into the @lines array.
 	open(my $md5_in, '<', $md5fn) or die "Can't open '$md5fn': $!";
 	foreach my $line (<$md5_in>) {
 		$line =~ s/(\r){0,}(\n){0,}$//g;
