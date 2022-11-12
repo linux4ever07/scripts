@@ -294,8 +294,6 @@ sub files2queue {
 			if ($fn =~ /.flac$/i) {
 				copy($fn, $shm_dn{$fn}) or die "Can't copy '$fn': $!";
 			} else {
-				$file_contents{$fn} = 1;
-
 				open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
 				sysread($read_fn, $file_contents{$fn}, $size{$fn});
 				close($read_fn) or die "Can't close '$fn': $!";
@@ -480,11 +478,13 @@ sub getfiles {
 			my $bn = basename($fn);
 
 # If file name isn't a database file, add it to database hash.
-# Precreating elements in database hash, to prevent threads from
-# stepping over each other later.
+# Precreating elements in %md5h and %file_contents, to prevent threads
+# from stepping over each other later.
 # If file name is a database file, add it to @md5dbs.
-			if ($bn ne $db) { $md5h{$fn} = 1; }
-			elsif ($bn eq $db) { push(@md5dbs, $fn); }
+			if ($bn ne $db) {
+				$md5h{$fn} = 1;
+				$file_contents{$fn} = 1;
+			} elsif ($bn eq $db) { push(@md5dbs, $fn); }
 		}
 	}
 }
