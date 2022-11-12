@@ -714,40 +714,38 @@ sub md5flac {
 	my $size = shift;
 	my($hash);
 
-	if ($mode eq 'test') {
-		if ($large{$fn}) {
-			lock($busy);
-			$busy = 1;
+	if ($large{$fn}) {
+		lock($busy);
+		$busy = 1;
 
-			if ($saw_sigint) { return; }
+		if ($saw_sigint) { return; }
 
-			chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-
-			if ($? != 0 and $? != 2) {
-				$log_q->enqueue('corr', $fn);
-				return;
-			}
-
-			system('flac', '--totally-silent', '--test', $fn);
-
-			$busy = 0;
-		} else {
-			chomp($hash = `metaflac --show-md5sum "$fn_shm" 2>&-`);
-
-			if ($? != 0 and $? != 2) {
-				$log_q->enqueue('corr', $fn);
-				return;
-			}
-
-			system('flac', '--totally-silent', '--test', $fn_shm);
-
-			clear_stack_shm($fn_shm, $size);
-		}
+		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
 
 		if ($? != 0 and $? != 2) {
 			$log_q->enqueue('corr', $fn);
 			return;
 		}
+
+		system('flac', '--totally-silent', '--test', $fn);
+
+		$busy = 0;
+	} else {
+		chomp($hash = `metaflac --show-md5sum "$fn_shm" 2>&-`);
+
+		if ($? != 0 and $? != 2) {
+			$log_q->enqueue('corr', $fn);
+			return;
+		}
+
+		system('flac', '--totally-silent', '--test', $fn_shm);
+
+		clear_stack_shm($fn_shm, $size);
+	}
+
+	if ($? != 0 and $? != 2) {
+		$log_q->enqueue('corr', $fn);
+		return;
 	}
 
 	return $hash;
