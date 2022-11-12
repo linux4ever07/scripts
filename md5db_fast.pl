@@ -36,7 +36,7 @@ use threads::shared;
 use Thread::Queue;
 use POSIX qw(SIGINT);
 
-my(@lib, @run, $mode);
+my(@lib, @md5dbs, @run, $mode);
 
 # Array for storing the actual arguments used by the script internally.
 # Might be useful for debugging.
@@ -396,8 +396,6 @@ $args[1]
 # Subroutine for initializing database hash. This is the first
 # subroutine that will be executed, and all others depend upon it.
 sub init_hash {
-	my(@md5dbs);
-
 # Get all the file names in the current directory.
 	getfiles();
 
