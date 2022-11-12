@@ -645,8 +645,9 @@ sub md5import {
 }
 
 # Subroutine for clearing files from RAM, once they've been processed.
-# It takes 1 argument:
+# It takes 2 arguments:
 # (1) file name
+# (2) file size
 sub clear_stack {
 	my $fn = shift;
 	my $size = shift;
@@ -660,8 +661,9 @@ sub clear_stack {
 # Subroutine for clearing files from /dev/shm, once they've been
 # processed. Right now, this is only used for FLAC files, since
 # 'metaflac' can't read from STDIN.
-# It takes 1 argument:
+# It takes 2 arguments:
 # (1) file name
+# (2) file size
 sub clear_stack_shm {
 	my $fn = shift;
 	my $size = shift;
@@ -672,8 +674,9 @@ sub clear_stack_shm {
 }
 
 # Subroutine for getting the MD5 hash of files.
-# It takes 1 argument:
+# It takes 2 arguments:
 # (1) file name
+# (2) file size
 sub md5sum {
 	my $fn = shift;
 	my $size = shift;
@@ -702,8 +705,9 @@ sub md5sum {
 # Subroutine for getting the MD5 hash of FLAC files. Index by getting
 # the MD5 hash from reading the metadata using 'metaflac', and test with
 # 'flac'.
-# It takes 1 argument:
+# It takes 2 arguments:
 # (1) file name
+# (2) file size
 sub md5flac {
 	my $fn = shift;
 	my $fn_shm = $shm_dn . '/' . $fn;
