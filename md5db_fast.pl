@@ -620,7 +620,7 @@ sub md5import {
 			$hash = lc($1);
 			$fn = basename($2);
 
-# Add the full path to the file name, unless it's the current directory.
+# Add full path to file name, unless it's the current directory.
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # If $fn is a real file.
