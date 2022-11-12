@@ -32,8 +32,8 @@ use IO::Handle qw(autoflush);
 use File::Basename qw(basename dirname);
 
 use threads qw(yield);
-use threads::shared;
-use Thread::Queue;
+use threads::shared qw(share);
+use Thread::Queue qw(new);
 use POSIX qw(SIGINT);
 
 my(@lib, @md5dbs, @run, $mode);
