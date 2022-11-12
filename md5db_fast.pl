@@ -855,6 +855,7 @@ foreach my $dn (@lib) {
 	$files_q = Thread::Queue->new();
 	$log_q = Thread::Queue->new();
 
+	@md5dbs = ();
 	@threads = ();
 	%md5h = ();
 	%file_contents = ();
