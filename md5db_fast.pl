@@ -58,16 +58,16 @@ chomp(my @flac_req = (`command -v flac metaflac 2>&-`));
 # Name of database file.
 my $db = 'md5.db';
 
-# Path to and name of log file to be used for logging.
+# Path to and name of log file.
 my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
-# Regex used for skipping dotfiles in home directories.
+# Regex for skipping dotfiles in home directories.
 $regex{dotfile} = qr(^/home/[[:alnum:]]+/\.);
 
 # Regex for separating basename from extension.
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 
-# Delimiter used for database.
+# Delimiter for database.
 my $delim = "\t\*\t";
 
 # Creating a variable which sets a limit on the total number of bytes
@@ -497,7 +497,7 @@ sub file2hash {
 	my $dn = dirname($db);
 	my($fn, $hash, @lines);
 
-# The format string which is used for parsing database file.
+# The format string for parsing database file.
 	my $format = qr/^(.*)\Q$delim\E([[:alnum:]]{32})$/;
 
 # Open database file and read it into the @lines array.
@@ -603,7 +603,7 @@ sub md5import {
 
 	my($fn, $hash, @lines);
 
-# The format string which is used for parsing the *.MD5 files.
+# The format string for parsing the *.MD5 files.
 	my $format = qr/^([[:alnum:]]{32})\s\*(.*)$/;
 
 # Open the *.MD5 file and read its contents to the @lines array.
