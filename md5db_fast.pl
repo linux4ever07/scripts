@@ -72,7 +72,6 @@ my $disk_size = 1000000000;
 
 # Creating a few shared variables.
 # * @threads stores threads that are created.
-# * @md5dbs stores 'md5.db' files.
 # * %md5h is the database hash.
 # * %file_contents stores the contents of files.
 # * %large stores the names of files that are too big to fit in RAM.
@@ -81,7 +80,7 @@ my $disk_size = 1000000000;
 # * $stopping is used to stop threads, and quit the script.
 # * $file_stack tracks the amount of file data currently in RAM.
 # * $busy is used to pause other threads when a thread is busy.
-my(@threads, @md5dbs) :shared;
+my(@threads) :shared;
 my(%md5h, %file_contents, %large, %gone) :shared;
 my $files_n :shared = 0;
 my $stopping :shared = 0;
@@ -397,6 +396,8 @@ $args[1]
 # Subroutine for initializing database hash. This is the first
 # subroutine that will be executed, and all others depend upon it.
 sub init_hash {
+	my(@md5dbs);
+
 # Get all the file names in the current directory.
 	getfiles();
 
@@ -411,7 +412,7 @@ No database file. Run the script in 'index' mode first to index files.
 	}
 
 # Import hashes from every database file found in the search path.
-	foreach my $db (@md5dbs) { file2hash($db); }
+	while (my $db = shift(@md5dbs)) { file2hash($db); }
 
 # Clears the screen, thereby scrolling past database file print.
 	print $clear;
@@ -857,7 +858,6 @@ foreach my $dn (@lib) {
 	$log_q = Thread::Queue->new();
 
 	@threads = ();
-	@md5dbs = ();
 	%md5h = ();
 	%file_contents = ();
 	%large = ();
