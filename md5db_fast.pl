@@ -216,22 +216,35 @@ sub iquit {
 sub files2queue {
 	my(@files);
 
-	if ($mode eq 'index') {
 # If MD5 hash of file name is already in database, skip it.
-# If file is a FLAC file, then enqueue it directly instead of reading it
-# into RAM.
+# If file is a FLAC file (and the required commands are installed), then
+# enqueue it directly instead of reading it into RAM.
+	if ($mode eq 'index') {
 		foreach my $fn (sort(keys(%md5h))) {
 			if ($md5h{$fn} eq '1') {
-				if ($fn =~ /.flac$/i) { $files_q->enqueue($fn); next; }
+				if ($fn =~ /.flac$/i) {
+					if (scalar(@flac_req) == 2) {
+						$files_q->enqueue($fn);
+					}
+
+					next;
+				}
 
 				push(@files, $fn);
 			}
 		}
 	}
 
+# If MD5 hash of file name is not in database, skip it.
+# If file is a FLAC file, and the required commands are not installed,
+# skip it.
 	if ($mode eq 'test') {
 		foreach my $fn (sort(keys(%md5h))) {
 			if ($md5h{$fn} ne '1') {
+				if ($fn =~ /.flac$/i) {
+					if (scalar(@flac_req) != 2) { next; }
+				}
+
 				push(@files, $fn);
 			}
 		}
@@ -645,8 +658,6 @@ sub md5sum {
 sub md5flac {
 	my $fn = shift;
 	my($hash);
-
-	if (scalar(@flac_req) != 2) { return; }
 
 	chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
 
