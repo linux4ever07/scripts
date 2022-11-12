@@ -670,7 +670,7 @@ sub clear_stack_shm {
 
 	lock($file_stack);
 	$file_stack -= $size;
-	unlink($fn) or die "Can't remove '$fn': $!";;
+	unlink($fn) or die "Can't remove '$fn': $!";
 }
 
 # Subroutine for getting the MD5 hash of files.
