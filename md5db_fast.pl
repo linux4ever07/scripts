@@ -214,7 +214,7 @@ sub iquit {
 
 # Subroutine for putting files in the queue, and loading them into RAM.
 sub files2queue {
-	my(@files);
+	my(@files, %size);
 
 # If MD5 hash of file name is already in database, skip it.
 # If file is a FLAC file (and the required commands are installed), then
@@ -256,14 +256,14 @@ sub files2queue {
 # processed one at a time, since they have to be read directly from the
 # hard drive.
 	while (my $fn = shift(@files)) {
-		my $size = (stat($fn))[7];
+		$size{$fn} = (stat($fn))[7];
 
-		if (! length($size)) { next; }
+		if (! length($size{$fn})) { next; }
 
-		if ($size <= $disk_size) {
+		if ($size{$fn} <= $disk_size) {
 			my $free = $disk_size - $file_stack;
 
-			while ($size > $free) {
+			while ($size{$fn} > $free) {
 				yield();
 				$free = $disk_size - $file_stack;
 			}
@@ -271,13 +271,13 @@ sub files2queue {
 			$file_contents{$fn} = 1;
 
 			open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
-			sysread($read_fn, $file_contents{$fn}, $size);
+			sysread($read_fn, $file_contents{$fn}, $size{$fn});
 			close($read_fn) or die "Can't close '$fn': $!";
 
 			{ lock($file_stack);
-			$file_stack += length($file_contents{$fn}); }
+			$file_stack += $size{$fn}; }
 
-			$files_q->enqueue($fn);
+			$files_q->enqueue($fn, $size{$fn});
 		} else { $large{$fn} = 1; }
 	}
 
@@ -290,7 +290,9 @@ sub files2queue {
 			yield();
 		}
 
-		foreach my $fn (sort(keys(%large))) { $files_q->enqueue($fn); }
+		foreach my $fn (sort(keys(%large))) {
+			$files_q->enqueue($fn, $size{$fn});
+		}
 	}
 
 	$files_q->end();
@@ -613,9 +615,10 @@ sub md5import {
 # (1) file name
 sub clear_stack {
 	my $fn = shift;
+	my $size = shift;
 
 	lock($file_stack);
-	$file_stack -= length($file_contents{$fn});
+	$file_stack -= $size;
 	lock(%file_contents);
 	delete($file_contents{$fn});
 }
@@ -625,6 +628,7 @@ sub clear_stack {
 # (1) file name
 sub md5sum {
 	my $fn = shift;
+	my $size = shift;
 	my($hash);
 
 	if ($large{$fn}) {
@@ -641,7 +645,7 @@ sub md5sum {
 	} else {
 		$hash = md5_hex($file_contents{$fn});
 
-		clear_stack($fn);
+		clear_stack($fn, $size);
 	}
 
 	return $hash;
@@ -654,6 +658,7 @@ sub md5sum {
 # (1) file name
 sub md5flac {
 	my $fn = shift;
+	my $size = shift;
 	my($hash);
 
 	chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
@@ -679,7 +684,7 @@ sub md5flac {
 			print $flac_test $file_contents{$fn};
 			close($flac_test);
 
-			clear_stack($fn);
+			clear_stack($fn, $size);
 		}
 
 		if ($? != 0 and $? != 2) {
@@ -698,7 +703,7 @@ sub md5index {
 	my($tmp_md5);
 
 # Loop through the thread queue.
-	while (my $fn = $files_q->dequeue()) {
+	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
 		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn); }
@@ -722,7 +727,7 @@ sub md5test {
 	my($tmp_md5, $old_md5, $new_md5);
 
 # Loop through the thread queue.
-	while (my $fn = $files_q->dequeue()) {
+	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
 		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn); }
