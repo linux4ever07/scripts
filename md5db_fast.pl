@@ -799,7 +799,7 @@ given ($mode) {
 
 # This loop is where the actual action takes place (i.e. where all the
 # subroutines get called from).
-foreach my $dn (@lib) {
+while (my $dn = shift(@lib)) {
 # Change into $dn.
 	chdir($dn) or die "Can't change into '$dn': $!";
 
