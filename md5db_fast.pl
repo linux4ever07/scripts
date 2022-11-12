@@ -243,7 +243,7 @@ sub files2queue {
 # instead be added to the %large hash. The files in that hash will be
 # processed one at a time, since they have to be read directly from the
 # hard drive.
-	foreach my $fn (@files) {
+	while (my $fn = shift(@files)) {
 		my $size = (stat($fn))[7];
 
 		if (! length($size)) { next; }
