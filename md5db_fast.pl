@@ -394,31 +394,27 @@ $args[1]
 	}
 }
 
-# Subroutine for initializing database hash.
-# This is the first subroutine that will be executed, and all others
-# depend upon it.
+# Subroutine for initializing database hash. This is the first
+# subroutine that will be executed, and all others depend upon it.
 sub init_hash {
 # Get all the file names in the current directory.
 	getfiles();
+
+# If no databases were found, say so and quit.
+	if (! scalar(@md5dbs)) {
+		if ($mode ne 'import' and $mode ne 'index') {
+			say "
+No database file. Run the script in 'index' mode first to index files.
+";
+			exit;
+		}
+	}
 
 # Import hashes from every database file found in the search path.
 	foreach my $db (@md5dbs) { file2hash($db); }
 
 # Clears the screen, thereby scrolling past database file print.
 	print $clear;
-}
-
-# Subroutine for when database file is empty, or doesn't exist.
-sub if_empty {
-	foreach my $fn (keys(%md5h)) {
-		if ($md5h{$fn} ne '1') { return; }
-	}
-
-	say "
-No database file. Run the script in 'index' mode first to index files.
-";
-
-	exit;
 }
 
 # Subroutine for finding all files in the current directory.
@@ -806,8 +802,6 @@ foreach my $dn (@lib) {
 
 # Initialize database hash.
 	init_hash();
-
-	if ($mode ne 'import' and $mode ne 'index') { if_empty(); }
 
 # Start logging.
 	$log_q->enqueue('start', $dn);
