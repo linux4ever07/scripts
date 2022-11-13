@@ -757,7 +757,10 @@ sub md5flac {
 		$busy = 0;
 	} else {
 		$hash = flac_cmds($$fn_ref);
-		if ($hash eq '1') { return; }
+		if ($hash eq '1') {
+			clear_stack($$fn_ref, $size, 'shm');
+			return;
+		}
 
 		clear_stack($$fn_ref, $size, 'shm');
 	}
