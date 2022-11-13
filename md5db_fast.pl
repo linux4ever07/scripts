@@ -222,7 +222,7 @@ sub iquit {
 
 # Subroutine for putting files in the queue, and loading them into RAM.
 sub files2queue {
-	my(%files);
+	my(%files, $dn, $free);
 
 # Create temporary directory in /dev/shm.
 	make_path($shm_dn);
@@ -250,7 +250,7 @@ sub files2queue {
 			if ($md5h{$fn} ne '1') {
 				if ($fn =~ /.flac$/i) {
 					if (scalar(@flac_req) == 2) {
-						my $dn = dirname($fn);
+						$dn = dirname($fn);
 
 						if ($dn ne '.') {
 							$dn = $shm_dn . '/' . $dn;
@@ -276,7 +276,7 @@ sub files2queue {
 			next;
 		}
 
-		my $free = $disk_size - $file_stack;
+		$free = $disk_size - $file_stack;
 
 # If file size is bigger than the amount of free RAM, wait.
 		while ($files{$fn}{size} > $free) {
