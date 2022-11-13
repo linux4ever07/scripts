@@ -169,29 +169,17 @@ if (! scalar(@lib)) { usage(); }
 sub iquit {
 	while (! $stopping) { sleep(0.5); }
 
-# Depending on whether the script is finished or SIGINT has been tripped
-# we handle the closing of threads differently. If SIGINT has been
-# tripped and a thread is still running / active, sleep for 1 second and
-# then detach the thread without waiting for it to finish. The @threads
-# array is locked, to make sure that the main thread has finished
-# starting all the threads, before we start closing them. We start
-# looping through the array at element 2, as element 0 is this thread
-# (iquit), and element 1 is the logger thread.
+# Joining threads.
+# The @threads array is locked, to make sure that the main thread has
+# finished starting all the threads, before we start closing them. We
+# start looping through the array at element 2, as element 0 is this
+# thread (iquit), and element 1 is the logger thread.
 	{
 		lock(@threads);
 
 		for (my $i = 2; $i < scalar(@threads); $i++) {
 			my $tid = $threads[$i];
 			my $thr = threads->object($tid);
-
-			if ($saw_sigint) {
-				if ($thr->is_running()) {
-					sleep(1);
-
-					$thr->detach();
-					next;
-				}
-			}
 
 			$thr->join();
 		}
