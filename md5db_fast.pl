@@ -454,7 +454,7 @@ No database file. Run the script in 'index' mode first to index files.
 	while (my $db = shift(@md5dbs)) { file2hash($db); }
 
 # Clears the screen, thereby scrolling past database file print.
-#	print $clear;
+	print $clear;
 }
 
 # Subroutine for finding all files in the current directory.
