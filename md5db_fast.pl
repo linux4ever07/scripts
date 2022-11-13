@@ -306,9 +306,9 @@ sub files2queue {
 		$files_q->enqueue($fn, $files{$fn}{size});
 	}
 
-# Put all the large files in the queue, after all the smaller files are
-# done being processed. This is to prevent multiple files from being
-# read from the hard drive at once, slowing things down.
+# Put large files in the queue, after all the smaller files are done
+# being processed. This is to prevent multiple files from being read
+# from the hard drive at once, slowing things down.
 	if (keys(%large)) {
 		while ($file_stack > 0) {
 			say $file_stack . ' > ' . '0';
@@ -548,8 +548,8 @@ sub hash2file {
 	my $of = 'md5' . '-' . $session . '.db';
 
 	open(my $md5db_out, '>', $of) or die "Can't open '$of': $!";
-# Loop through all the keys in database hash and prints the entries
-# (divided by the $delim variable) to database file.
+# Loop through keys in database hash and print the entries (divided by
+# the $delim variable) to database file.
 	foreach my $fn (sort(keys(%md5h))) {
 		say $md5db_out $fn . $delim . $md5h{$fn} . "\r";
 	}
@@ -712,6 +712,8 @@ sub md5flac {
 	my $size = shift;
 	my($fn_ref, $hash);
 
+# Putting the checking of error conditions in its own subroutine here,
+# to make the code more readable.
 	sub exit_status {
 		if ($? != 0 and $? != 2) {
 			$log_q->enqueue('corr', $fn);
@@ -755,7 +757,7 @@ sub md5flac {
 	return $hash;
 }
 
-# Subroutine to index the files (i.e. calculate and store the MD5 hashes
+# Subroutine for indexing files (i.e. calculate and store the MD5 hashes
 # in database hash).
 sub md5index {
 	my $tid = threads->tid();
