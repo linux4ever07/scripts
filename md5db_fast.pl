@@ -222,30 +222,22 @@ sub iquit {
 
 # Subroutine for putting files in the queue, and loading them into RAM.
 sub files2queue {
-	my(@files, %shm_dn, %size);
+	my(%files);
 
 # Create temporary directory in /dev/shm.
 	make_path($shm_dn);
 
 # If MD5 hash of file name is already in database, skip it.
-# If file is a FLAC file (and the required commands are installed), then
-# create a path for it in /dev/shm.
+# If file is a FLAC file (and the required commands are not installed),
+# then skip it.
 	if ($mode eq 'index') {
-		foreach my $fn (sort(keys(%md5h))) {
+		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} eq '1') {
 				if ($fn =~ /.flac$/i) {
-					if (scalar(@flac_req) == 2) {
-						my $dn = dirname($fn);
-
-						if ($dn ne '.') {
-							$dn = $shm_dn . '/' . $dn;
-							$shm_dn{$fn} = $dn;
-							make_path($dn);
-						} else { $shm_dn{$fn} = $shm_dn; }
-					} else { next; }
+					if (scalar(@flac_req) != 2) { next; }
 				}
 
-				push(@files, $fn);
+				$files{$fn} = ();
 			}
 		}
 	}
@@ -254,7 +246,7 @@ sub files2queue {
 # If file is a FLAC file (and the required commands are installed), then
 # create a path for it in /dev/shm.
 	if ($mode eq 'test') {
-		foreach my $fn (sort(keys(%md5h))) {
+		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} ne '1') {
 				if ($fn =~ /.flac$/i) {
 					if (scalar(@flac_req) == 2) {
@@ -262,13 +254,11 @@ sub files2queue {
 
 						if ($dn ne '.') {
 							$dn = $shm_dn . '/' . $dn;
-							$shm_dn{$fn} = $dn;
+							$files{$fn}{dn} = $dn;
 							make_path($dn);
-						} else { $shm_dn{$fn} = $shm_dn; }
+						} else { $files{$fn}{dn} = $shm_dn; }
 					} else { next; }
-				}
-
-				push(@files, $fn);
+				} else { $files{$fn} = (); }
 			}
 		}
 	}
@@ -278,31 +268,40 @@ sub files2queue {
 # instead be added to the %large hash. The files in that hash will be
 # processed one at a time, since they have to be read directly from the
 # hard drive.
-	while (my $fn = shift(@files)) {
-		$size{$fn} = (stat($fn))[7];
+	foreach my $fn (sort(keys(%files))) {
+		$files{$fn}{size} = (stat($fn))[7];
 
-		if (! length($size{$fn})) { next; }
+		if (! length($files{$fn}{size})) { next; }
 
-		if ($size{$fn} <= $disk_size) {
+		if ($files{$fn}{size} <= $disk_size) {
 			my $free = $disk_size - $file_stack;
 
-			while ($size{$fn} > $free) {
+# If file size is bigger than the amount of free RAM, wait.
+			while ($files{$fn}{size} > $free) {
 				yield();
 				$free = $disk_size - $file_stack;
 			}
 
+# If script mode is 'test', copy the FLAC file to /dev/shm, otherwise
+# just enqueue it directly. If it's not a FLAC file, use the normal
+# sysread method of reading the file into RAM.
 			if ($fn =~ /.flac$/i) {
-				copy($fn, $shm_dn{$fn}) or die "Can't copy '$fn': $!";
+				if ($mode eq 'test') {
+					copy($fn, $files{$fn}{dn}) or die "Can't copy '$fn': $!";
+
+					{ lock($file_stack);
+					$file_stack += $files{$fn}{size}; }
+				}
 			} else {
 				open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
-				sysread($read_fn, $file_contents{$fn}, $size{$fn});
+				sysread($read_fn, $file_contents{$fn}, $files{$fn}{size});
 				close($read_fn) or die "Can't close '$fn': $!";
+
+				{ lock($file_stack);
+				$file_stack += $files{$fn}{size}; }
 			}
 
-			{ lock($file_stack);
-			$file_stack += $size{$fn}; }
-
-			$files_q->enqueue($fn, $size{$fn});
+			$files_q->enqueue($fn, $files{$fn}{size});
 		} else { $large{$fn} = 1; }
 	}
 
@@ -316,10 +315,11 @@ sub files2queue {
 		}
 
 		foreach my $fn (sort(keys(%large))) {
-			$files_q->enqueue($fn, $size{$fn});
+			$files_q->enqueue($fn, $files{$fn}{size});
 		}
 	}
 
+# Close the files queue.
 	$files_q->end();
 
 # If there's still files in the queue left to be processed, and SIGINT
@@ -642,32 +642,28 @@ sub md5import {
 }
 
 # Subroutine for clearing files from RAM, once they've been processed.
-# It takes 2 arguments:
+# Right now, /dev/shm is only used for FLAC files, since 'metaflac'
+# can't read from STDIN.
+# It takes 3 arguments:
 # (1) file name
 # (2) file size
+# (3) type (ram shm)
 sub clear_stack {
 	my $fn = shift;
 	my $size = shift;
+	my $type = shift;
 
-	lock($file_stack);
-	$file_stack -= $size;
-	lock(%file_contents);
-	delete($file_contents{$fn});
-}
+	{ lock($file_stack);
+	$file_stack -= $size; }
 
-# Subroutine for clearing files from /dev/shm, once they've been
-# processed. Right now, this is only used for FLAC files, since
-# 'metaflac' can't read from STDIN.
-# It takes 2 arguments:
-# (1) file name
-# (2) file size
-sub clear_stack_shm {
-	my $fn = shift;
-	my $size = shift;
+	if ($type eq 'ram') {
+		lock(%file_contents);
+		delete($file_contents{$fn});
+	}
 
-	lock($file_stack);
-	$file_stack -= $size;
-	unlink($fn) or die "Can't remove '$fn': $!";
+	if ($type eq 'shm') {
+		unlink($fn) or die "Can't remove '$fn': $!";
+	}
 }
 
 # Subroutine for getting the MD5 hash of files.
@@ -693,7 +689,7 @@ sub md5sum {
 	} else {
 		$hash = md5_hex($file_contents{$fn});
 
-		clear_stack($fn, $size);
+		clear_stack($fn, $size, 'ram');
 	}
 
 	return $hash;
@@ -701,7 +697,11 @@ sub md5sum {
 
 # Subroutine for getting the MD5 hash of FLAC files. Index by getting
 # the MD5 hash from reading the metadata using 'metaflac', and test with
-# 'flac'.
+# 'flac'. If script mode is 'test', FLAC file is read from /dev/shm, as
+# both 'metaflac' and 'flac' need to read the file. If script mode is
+# 'index', FLAC file is read directly from the hard drive, as just
+# running 'metaflac' to get the metadata is very fast. In that case,
+# reading the file into RAM would actually be slower.
 # It takes 2 arguments:
 # (1) file name
 # (2) file size
@@ -709,7 +709,12 @@ sub md5flac {
 	my $fn = shift;
 	my $fn_shm = $shm_dn . '/' . $fn;
 	my $size = shift;
-	my($hash);
+	my($fn_ref, $hash);
+
+# Creating a reference which points to a different file name, depending
+# on script mode.
+	if ($mode eq 'index') { $fn_ref = \$fn; }
+	if ($mode eq 'test') { $fn_ref = \$fn_shm; }
 
 	if ($large{$fn}) {
 		lock($busy);
@@ -730,7 +735,7 @@ sub md5flac {
 
 		$busy = 0;
 	} else {
-		chomp($hash = `metaflac --show-md5sum "$fn_shm" 2>&-`);
+		chomp($hash = `metaflac --show-md5sum "$$fn_ref" 2>&-`);
 
 		if ($? != 0 and $? != 2) {
 			$log_q->enqueue('corr', $fn);
@@ -738,10 +743,9 @@ sub md5flac {
 		}
 
 		if ($mode eq 'test') {
-			system('flac', '--totally-silent', '--test', $fn_shm);
+			system('flac', '--totally-silent', '--test', $$fn_ref);
+			clear_stack($$fn_ref, $size, 'shm');
 		}
-
-		clear_stack_shm($fn_shm, $size);
 	}
 
 	if ($? != 0 and $? != 2) {
