@@ -284,7 +284,7 @@ sub files2queue {
 
 # If script mode is 'test', copy the FLAC file to /dev/shm, otherwise
 # just enqueue it directly. If it's not a FLAC file, use the normal
-# sysread method of reading the file into RAM.
+# sysread method of reading files into RAM.
 			if ($fn =~ /.flac$/i) {
 				if ($mode eq 'test') {
 					copy($fn, $files{$fn}{dn}) or die "Can't copy '$fn': $!";
