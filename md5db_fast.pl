@@ -319,8 +319,10 @@ sub files2queue {
 			yield();
 		}
 
-		foreach my $fn (sort(keys(%large))) {
-			$files_q->enqueue($fn, $files{$fn}{size});
+		if (! $saw_sigint) {
+			foreach my $fn (sort(keys(%large))) {
+				$files_q->enqueue($fn, $files{$fn}{size});
+			}
 		}
 	}
 
