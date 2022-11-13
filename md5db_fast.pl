@@ -722,7 +722,7 @@ sub md5flac {
 
 		if ($? != 0 and $? != 2) {
 			$log_q->enqueue('corr', $fn);
-			return(1);
+			return;
 		}
 
 		if ($mode eq 'test') {
@@ -730,7 +730,7 @@ sub md5flac {
 
 			if ($? != 0 and $? != 2) {
 				$log_q->enqueue('corr', $fn);
-				return(1);
+				return;
 			}
 		}
 
@@ -753,13 +753,13 @@ sub md5flac {
 
 		$hash = flac_cmds($$fn_ref);
 
-		if ($hash eq '1') { return; }
+		if (! length($hash)) { return; }
 
 		$busy = 0;
 	} else {
 		$hash = flac_cmds($$fn_ref);
 
-		if ($hash eq '1') {
+		if (! length($hash)) {
 			if ($mode eq 'test') {
 				clear_stack($$fn_ref, $size, 'shm');
 			}
