@@ -760,11 +760,16 @@ sub md5flac {
 		$hash = flac_cmds($$fn_ref);
 
 		if ($hash eq '1') {
-			clear_stack($$fn_ref, $size, 'shm');
+			if ($mode eq 'test') {
+				clear_stack($$fn_ref, $size, 'shm');
+			}
+
 			return;
 		}
 
-		clear_stack($$fn_ref, $size, 'shm');
+		if ($mode eq 'test') {
+			clear_stack($$fn_ref, $size, 'shm');
+		}
 	}
 
 	return $hash;
