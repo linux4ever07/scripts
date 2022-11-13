@@ -711,6 +711,13 @@ sub md5flac {
 	my $size = shift;
 	my($fn_ref, $hash);
 
+	sub exit_status {
+		if ($? != 0 and $? != 2) {
+			$log_q->enqueue('corr', $fn);
+			return(1);
+		} else { return(0); }
+	}
+
 # Creating a reference which points to a different file name, depending
 # on script mode.
 	if ($mode eq 'index') { $fn_ref = \$fn; }
@@ -724,10 +731,7 @@ sub md5flac {
 
 		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
 
-		if ($? != 0 and $? != 2) {
-			$log_q->enqueue('corr', $fn);
-			return;
-		}
+		if (exit_status() == 1) { return; }
 
 		if ($mode eq 'test') {
 			system('flac', '--totally-silent', '--test', $fn);
@@ -737,10 +741,7 @@ sub md5flac {
 	} else {
 		chomp($hash = `metaflac --show-md5sum "$$fn_ref" 2>&-`);
 
-		if ($? != 0 and $? != 2) {
-			$log_q->enqueue('corr', $fn);
-			return;
-		}
+		if (exit_status() == 1) { return; }
 
 		if ($mode eq 'test') {
 			system('flac', '--totally-silent', '--test', $$fn_ref);
@@ -748,10 +749,7 @@ sub md5flac {
 		}
 	}
 
-	if ($? != 0 and $? != 2) {
-		$log_q->enqueue('corr', $fn);
-		return;
-	}
+	if (exit_status() == 1) { return; }
 
 	return $hash;
 }
