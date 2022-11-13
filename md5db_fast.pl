@@ -181,6 +181,10 @@ sub iquit {
 			my $tid = $threads[$i];
 			my $thr = threads->object($tid);
 
+			if ($thr->is_running()) {
+				sleep(1);
+			}
+
 			$thr->join();
 		}
 	}
