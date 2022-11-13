@@ -271,7 +271,7 @@ sub files2queue {
 	foreach my $fn (sort(keys(%files))) {
 		$files{$fn}{size} = (stat($fn))[7];
 
-		if ($files{$fn}{size} >= $disk_size) {
+		if ($files{$fn}{size} > $disk_size) {
 			$large{$fn} = 1;
 			next;
 		}
