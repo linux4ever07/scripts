@@ -271,38 +271,39 @@ sub files2queue {
 	foreach my $fn (sort(keys(%files))) {
 		$files{$fn}{size} = (stat($fn))[7];
 
-		if (! length($files{$fn}{size})) { next; }
+		if ($files{$fn}{size} >= $disk_size) {
+			$large{$fn} = 1;
+			next;
+		}
 
-		if ($files{$fn}{size} <= $disk_size) {
-			my $free = $disk_size - $file_stack;
+		my $free = $disk_size - $file_stack;
 
 # If file size is bigger than the amount of free RAM, wait.
-			while ($files{$fn}{size} > $free) {
-				yield();
-				$free = $disk_size - $file_stack;
-			}
+		while ($files{$fn}{size} > $free) {
+			yield();
+			$free = $disk_size - $file_stack;
+		}
 
 # If script mode is 'test', copy the FLAC file to /dev/shm, otherwise
 # just enqueue it directly. If it's not a FLAC file, use the normal
 # sysread method of reading files into RAM.
-			if ($fn =~ /.flac$/i) {
-				if ($mode eq 'test') {
-					copy($fn, $files{$fn}{dn}) or die "Can't copy '$fn': $!";
-
-					{ lock($file_stack);
-					$file_stack += $files{$fn}{size}; }
-				}
-			} else {
-				open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
-				sysread($read_fn, $file_contents{$fn}, $files{$fn}{size});
-				close($read_fn) or die "Can't close '$fn': $!";
+		if ($fn =~ /.flac$/i) {
+			if ($mode eq 'test') {
+				copy($fn, $files{$fn}{dn}) or die "Can't copy '$fn': $!";
 
 				{ lock($file_stack);
 				$file_stack += $files{$fn}{size}; }
 			}
+		} else {
+			open(my $read_fn, '< :raw', $fn) or die "Can't open '$fn': $!";
+			sysread($read_fn, $file_contents{$fn}, $files{$fn}{size});
+			close($read_fn) or die "Can't close '$fn': $!";
 
-			$files_q->enqueue($fn, $files{$fn}{size});
-		} else { $large{$fn} = 1; }
+			{ lock($file_stack);
+			$file_stack += $files{$fn}{size}; }
+		}
+
+		$files_q->enqueue($fn, $files{$fn}{size});
 	}
 
 # Put all the large files in the queue, after all the smaller files are
