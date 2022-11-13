@@ -177,12 +177,23 @@ sub iquit {
 	{
 		lock(@threads);
 
+# If SIGINT has been tripped, sleep for 1 second, giving the threads
+# time to wrap up.
+		if ($saw_sigint) {
+			sleep(1);
+		}
+
 		for (my $i = 2; $i < scalar(@threads); $i++) {
 			my $tid = $threads[$i];
 			my $thr = threads->object($tid);
 
-			if ($thr->is_running()) {
-				sleep(1);
+# If SIGINT has been tripped and a thread is still running, detach it
+# without waiting for it to finish.
+			if ($saw_sigint) {
+				if ($thr->is_running()) {
+					$thr->detach();
+					next;
+				}
 			}
 
 			$thr->join();
