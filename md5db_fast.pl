@@ -269,6 +269,8 @@ sub files2queue {
 # processed one at a time, since they have to be read directly from the
 # hard drive.
 	foreach my $fn (sort(keys(%files))) {
+		if ($saw_sigint) { last; }
+
 		$files{$fn}{size} = (stat($fn))[7];
 
 		if ($files{$fn}{size} > $disk_size) {
@@ -311,6 +313,8 @@ sub files2queue {
 # from the hard drive at once, slowing things down.
 	if (keys(%large)) {
 		while ($file_stack > 0) {
+			if ($saw_sigint) { last; }
+
 			say $file_stack . ' > ' . '0';
 			yield();
 		}
