@@ -454,7 +454,7 @@ No database file. Run the script in 'index' mode first to index files.
 	while (my $db = shift(@md5dbs)) { file2hash($db); }
 
 # Clears the screen, thereby scrolling past database file print.
-	print $clear;
+#	print $clear;
 }
 
 # Subroutine for finding all files in the current directory.
@@ -712,19 +712,38 @@ sub md5flac {
 	my $size = shift;
 	my($fn_ref, $hash);
 
-# Putting the checking of error conditions in its own subroutine here,
+# Putting the 'metaflac' and 'flac' commands in their own subroutine
 # to make the code more readable.
-	sub exit_status {
+	sub flac_cmds {
+		my $fn = shift;
+		my($hash);
+
+		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
+
 		if ($? != 0 and $? != 2) {
 			$log_q->enqueue('corr', $fn);
 			return(1);
-		} else { return(0); }
+		}
+
+		if ($mode eq 'test') {
+			system('flac', '--totally-silent', '--test', $fn);
+
+			if ($? != 0 and $? != 2) {
+				$log_q->enqueue('corr', $fn);
+				return(1);
+			}
+		}
+
+		return($hash);
 	}
 
 # Creating a reference which points to a different file name, depending
 # on script mode.
-	if ($mode eq 'index') { $fn_ref = \$fn; }
-	if ($mode eq 'test') { $fn_ref = \$fn_shm; }
+	if ($large{$fn}) { $fn_ref = \$fn; }
+	else {
+		if ($mode eq 'index') { $fn_ref = \$fn; }
+		if ($mode eq 'test') { $fn_ref = \$fn_shm; }
+	}
 
 	if ($large{$fn}) {
 		lock($busy);
@@ -732,27 +751,16 @@ sub md5flac {
 
 		if ($saw_sigint) { return; }
 
-		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
-
-		if (exit_status() == 1) { return; }
-
-		if ($mode eq 'test') {
-			system('flac', '--totally-silent', '--test', $fn);
-		}
+		$hash = flac_cmds($$fn_ref);
+		if ($hash eq '1') { return; }
 
 		$busy = 0;
 	} else {
-		chomp($hash = `metaflac --show-md5sum "$$fn_ref" 2>&-`);
+		$hash = flac_cmds($$fn_ref);
+		if ($hash eq '1') { return; }
 
-		if (exit_status() == 1) { return; }
-
-		if ($mode eq 'test') {
-			system('flac', '--totally-silent', '--test', $$fn_ref);
-			clear_stack($$fn_ref, $size, 'shm');
-		}
+		clear_stack($$fn_ref, $size, 'shm');
 	}
-
-	if (exit_status() == 1) { return; }
 
 	return $hash;
 }
