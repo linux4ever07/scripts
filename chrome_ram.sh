@@ -79,19 +79,19 @@ kill_chrome () {
 restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
+	rm "$og_cfg" "$og_cache"
+
 	if [[ $mode == 'clean' ]]; then
-		rm -rf "$shm_dn"
-		rm "$og_cfg" "$og_cache"
 		mv "$bak_cfg" "$og_cfg"
 		mv "$bak_cache" "$og_cache"
 	elif [[ $mode == 'normal' ]]; then
 		cd "${HOME}/.config"
-		rm "$og_cfg" "$og_cache"
 		mkdir -p "$og_cfg" "$og_cache"
 		cp -rp "$shm_cfg"/* "$og_cfg"
 		cp -rp "$shm_cache"/* "$og_cache"
-		rm -rf "$shm_dn"
 	fi
+
+	rm -rf "$shm_dn"
 
 	sync
 	cd "$cwd"
