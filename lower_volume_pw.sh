@@ -62,7 +62,7 @@ get_id () {
 
 	declare n
 
-	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
+	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]+/ /g')
 
 # Parse the output from 'pw-cli'...
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
@@ -147,7 +147,7 @@ get_id () {
 
 # Creates a function called 'get_volume', which gets the current volume.
 get_volume () {
-	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:space:]]+/ /g')
+	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]+/ /g')
 
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
 		line="${pw_dump[${i}]}"

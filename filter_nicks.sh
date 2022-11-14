@@ -94,7 +94,7 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 
 	for nick_tmp in "${!nicks[@]}"; do
 		if [[ $nick == "$nick_tmp" ]]; then
-			mapfile -d' ' -t line_array < <(sed -E 's/[[:space:]]+/ /g' <<<"${line_tmp,,}")
+			mapfile -d' ' -t line_array < <(sed -E 's/[[:blank:]]+/ /g' <<<"${line_tmp,,}")
 
 			for (( k=0; k<${#line_array[@]}; k++ )); do
 				word=$(sed -E "s/${regex3}//" <<<"${line_array[${k}]}")
