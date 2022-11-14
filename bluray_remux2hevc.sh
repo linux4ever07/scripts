@@ -276,7 +276,7 @@ fsencode () {
 # the special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
-	curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" <<<"${@}" | sed -E 's/..(.*).../\1/'
+	curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" <<<"$@" | sed -E 's/..(.*).../\1/'
 }
 
 # This creates a function called 'break_name', which will break up
@@ -374,6 +374,8 @@ imdb () {
 	rating_regex2='\"aggregateRating\":(.*)\,\"voteCount\":.*\,\"__typename\":\"RatingsSummary\"'
 	genre_regex1='\"genres\":\['
 	genre_regex2='\"text\":\"(.*)\"\,\"id\":\".*\"\,\"__typename\":\"Genre\"'
+	actor_regex1='\,\"actor\":\['
+	actor_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
 	director_regex1='\]\,\"director\":\['
 	director_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
 	runtime_regex1='\,\"runtime\":'
@@ -381,8 +383,52 @@ imdb () {
 
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
 
+# This function gets a URL using cURL.
 	get_page () {
 		curl --location --user-agent "$agent" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$1" 2>&-
+	}
+
+# This function runs the JSON regexes and decides which JSON type is a
+# list and which isn't.
+	get_list () {
+		declare string
+		declare -a list
+		declare -A lists
+
+		lists=(['genre']=1 ['actor']=1 ['director']=1)
+
+		regex_list='^,$'
+
+		z=$(( z + 1 ))
+
+# If current JSON type is not a list, match the regex and return from
+# this function.
+		if [[ -z ${lists["${json_type}"]} ]]; then
+			if [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; then
+				eval "${json_type}"=\""${BASH_REMATCH[1]}"\"
+			fi
+
+			return
+		fi
+
+# This loop parses JSON lists.
+		while [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; do
+			list+=("${BASH_REMATCH[1]}")
+
+			z=$(( z + 1 ))
+
+			if [[ ${tmp_array[${z}]} =~ $regex_list ]]; then
+				z=$(( z + 1 ))
+			else
+				z=$(( z - 1 ))
+				break
+			fi
+		done
+
+		string=$(printf '%s, ' "${list[@]}")
+		string="${string%, }"
+
+		eval "${json_type}"=\""${string}"\"
 	}
 
 	if [[ -z $term ]]; then
@@ -396,6 +442,11 @@ imdb () {
 	fi
 
 # Sets the type of IMDb search results to include.
+
+# All currently available types:
+# feature,tv_movie,tv_series,tv_episode,tv_special,tv_miniseries,
+# documentary,video_game,short,video,tv_short,podcast_series,
+# podcast_episode,music_video
 	type='feature,tv_movie,tv_special,documentary,video'
 
 # If the $y variable is empty, that means the year is unknown, hence we
@@ -422,16 +473,13 @@ imdb () {
 # more regex:es to the for loop below, to get additional information.
 # Excluding lines that are longer than 500 characters, to make it
 # slightly faster.
-	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^$')
-
-	n=0
+	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^[[:blank:]]*$')
 
 	declare -A json_types
 
-	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['genre']=1 ['director']=1 ['runtime']=1)
+	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['genre']=1 ['actor']=1 ['director']=1 ['runtime']=1)
 
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
-
 		if [[ ${#json_types[@]} -eq 0 ]]; then
 			break
 		fi
@@ -441,11 +489,7 @@ imdb () {
 			json_regex2_ref="${json_type}_regex2"
 
 			if [[ ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
-				n=$(( z + 1 ))
-
-				if [[ ${tmp_array[${n}]} =~ ${!json_regex2_ref} ]]; then
-					eval "${json_type}"=\""${BASH_REMATCH[1]}"\"
-				fi
+				get_list
 
 				unset -v json_types["${json_type}"]
 				break
@@ -455,8 +499,6 @@ imdb () {
 
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
-
-	unset -v title year plot rating genre director runtime
 }
 
 # Creates a function called 'dts_extract_remux', which will find a
