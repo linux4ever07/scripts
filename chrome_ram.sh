@@ -21,10 +21,11 @@
 # cache are restored.
 
 # The script also checks the amount of free RAM every 10 seconds, to
-# make sure it's not less than 1GB ($limit). If it's less, then Chrome
-# will be killed and the config / cache directories restored to the hard
-# drive. This is to make sure those directories don't get corrupted
-# when there's not enough free space in /dev/shm to write files.
+# make sure it's not less than 1GB ($ram_limit). If it's less, then
+# Chrome will be killed and the config / cache directories restored to
+# the hard drive. This is to make sure those directories don't get
+# corrupted when there's not enough free space in /dev/shm to write
+# files.
 
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [normal|clean]"
@@ -57,7 +58,8 @@ if [[ ${#is_chrome[@]} -gt 0 ]]; then
 fi
 
 session="${RANDOM}-${RANDOM}"
-limit=1000000
+ram_limit=1000000
+time_limit=360
 
 og_cfg="${HOME}/.config/google-chrome"
 og_cache="${HOME}/.cache/google-chrome"
@@ -143,11 +145,11 @@ while kill -0 "$pid" 1>&- 2>&-; do
 	mapfile -d' ' -t ram <<<"${free_ram[1]}"
 	ram[-1]="${ram[-1]%$'\n'}"
 
-	if [[ ${ram[6]} -lt $limit ]]; then
+	if [[ ${ram[6]} -lt $ram_limit ]]; then
 		kill_chrome
 	fi
 
-	if [[ $n -eq 180 ]]; then
+	if [[ $n -eq $time_limit ]]; then
 		n=0
 
 		if [[ $mode == 'normal' ]]; then

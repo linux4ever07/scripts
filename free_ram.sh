@@ -18,7 +18,7 @@
 # Creates a function called 'now', which will print the date and time.
 now () { date '+%F %H:%M:%S'; }
 
-limit=1000000
+ram_limit=1000000
 
 regex_rend='--type=renderer'
 regex_ext='--extension-process'
@@ -135,7 +135,7 @@ while true; do
 	printf 'RAM: %s\n\n' "${ram[6]}"
 
 # If available RAM is less than 1GB...
-	if [[ ${ram[6]} -lt $limit ]]; then
+	if [[ ${ram[6]} -lt $ram_limit ]]; then
 # Checks if Firefox and Chromium are running. $is_chromium is an array,
 # since the output probably spans across multiple lines, due to Chromium
 # being highly multithreaded and keeping separate threads / processes
