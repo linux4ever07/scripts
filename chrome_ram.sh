@@ -10,7 +10,7 @@
 # In 'normal' mode, the script copies over config and cache from $HOME
 # to /dev/shm, and later restores it after the Chrome process quits.
 # Also, the script makes a backup TAR file of the /dev/shm config
-# directory every 30 minutes, in case of a power outage or OS crash.
+# directory every 60 minutes, in case of a power outage or OS crash.
 # That backup is saved to $HOME. It's not automatically removed when
 # the script quits, so you have to remove it manually between each
 # session.
