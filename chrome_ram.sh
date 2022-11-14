@@ -97,7 +97,7 @@ if [[ ${#is_chrome[@]} -gt 0 ]]; then
 	exit
 fi
 
-mkdir -p "$og_cfg" "$og_cache"
+mkdir -p "$og_cfg" "$og_cache" || exit
 
 mv "$og_cfg" "$bak_cfg" || exit
 mv "$og_cache" "$bak_cache" || exit
