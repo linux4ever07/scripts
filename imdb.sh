@@ -203,6 +203,7 @@ imdb () {
 	runtime=$(time_calc "$runtime")
 
 	cat <<IMDB
+
 ${title} (${year})
 ${url}
 

@@ -35,7 +35,7 @@ fi
 # or Chrome is running.
 is_chromium () {
 	for comm in chrome chromium; do
-		pgrep "$comm" | tr -d '[:blank:]'
+		pgrep -x "$comm" | tr -d '[:blank:]'
 	done
 }
 
