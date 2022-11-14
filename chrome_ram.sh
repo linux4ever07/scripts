@@ -85,7 +85,6 @@ restore_chrome () {
 		mv "$bak_cfg" "$og_cfg"
 		mv "$bak_cache" "$og_cache"
 	elif [[ $mode == 'normal' ]]; then
-		cd "${HOME}/.config"
 		mkdir -p "$og_cfg" "$og_cache"
 		cp -rp "$shm_cfg"/* "$og_cfg"
 		cp -rp "$shm_cache"/* "$og_cache"
