@@ -64,7 +64,7 @@ imdb () {
 		return 1
 	fi
 
-	mapfile -t term < <(sed -E 's/[[:blank:]]\+/ /g' "$@")
+	mapfile -d' ' -t term < <(sed -E 's/[[:blank:]]\+/ /g' "$@")
 	term[-1]="${term[-1]%$'\n'}"
 	y_regex='^\(([0-9]{4})\)$'
 
