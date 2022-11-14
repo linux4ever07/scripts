@@ -47,6 +47,13 @@ case "$1" in
 	;;
 esac
 
+mapfile -t is_chrome < <(ps -C chrome -o pid | tail -n +2 | tr -d '[:blank:]')
+
+if [[ ${#is_chrome[@]} -gt 0 ]]; then
+	printf '\n%s\n\n' 'Chrome is already running!'
+	exit
+fi
+
 session="${RANDOM}-${RANDOM}"
 limit=1000000
 
@@ -89,13 +96,6 @@ restore_chrome () {
 	sync
 	cd "$cwd"
 }
-
-mapfile -t is_chrome < <(ps -C chrome -o pid | tail -n +2 | tr -d '[:blank:]')
-
-if [[ ${#is_chrome[@]} -gt 0 ]]; then
-	printf '\n%s\n\n' 'Chrome is already running!'
-	exit
-fi
 
 mkdir -p "$og_cfg" "$og_cache" || exit
 
