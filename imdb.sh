@@ -64,7 +64,8 @@ imdb () {
 		return 1
 	fi
 
-	term=("$@")
+	mapfile -t term < <(sed -E 's/[[:blank:]]\+/ /g' "$@")
+	term[-1]="${term[-1]%$'\n'}"
 	y_regex='^\(([0-9]{4})\)$'
 
 	id_regex='\/title\/(tt[0-9]+)'
