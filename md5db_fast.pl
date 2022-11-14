@@ -717,7 +717,6 @@ sub md5flac {
 		chomp($hash = `metaflac --show-md5sum "$fn" 2>&-`);
 
 		if ($? != 0 and $? != 2) {
-			$log_q->enqueue('corr', $fn);
 			return;
 		}
 
@@ -725,7 +724,6 @@ sub md5flac {
 			system('flac', '--totally-silent', '--test', $fn);
 
 			if ($? != 0 and $? != 2) {
-				$log_q->enqueue('corr', $fn);
 				return;
 			}
 		}
@@ -749,7 +747,10 @@ sub md5flac {
 
 		$hash = flac_cmds($$fn_ref);
 
-		if (! length($hash)) { return; }
+		if (! length($hash)) {
+			$log_q->enqueue('corr', $fn);
+			return;
+		}
 
 		$busy = 0;
 	} else {
@@ -760,6 +761,7 @@ sub md5flac {
 				clear_stack($$fn_ref, $size, 'shm');
 			}
 
+			$log_q->enqueue('corr', $fn);
 			return;
 		}
 
