@@ -5,10 +5,7 @@
 # it more responsive. However, it's not a good idea to do this unless
 # you have lots of RAM.
 
-# The script has 2 modes, 'clean' and 'normal'. In 'clean' mode, it runs
-# a clean instance of Chrome with a fresh config and cache. Whatever
-# changes are made to that config will be discarded, and when the Chrome
-# process quits, the original config and cache are restored.
+# The script has 2 modes, 'normal' and 'clean'.
 
 # In 'normal' mode, the script copies over config and cache from $HOME
 # to /dev/shm, and later restores it after the Chrome process quits.
@@ -17,6 +14,11 @@
 # That backup is saved to $HOME. It's not automatically removed when
 # the script quits, so you have to remove it manually between each
 # session.
+
+# In 'clean' mode, it runs a clean instance of Chrome with a fresh
+# config and cache. Whatever changes are made to that config will be
+# discarded, and when the Chrome process quits, the original config and
+# cache are restored.
 
 # The script also checks the amount of free RAM every 10 seconds, to
 # make sure it's not less than 1GB ($limit). If it's less, then Chrome
@@ -81,13 +83,15 @@ restore_chrome () {
 
 	rm "$og_cfg" "$og_cache"
 
-	if [[ $mode == 'clean' ]]; then
-		mv "$bak_cfg" "$og_cfg"
-		mv "$bak_cache" "$og_cache"
-	elif [[ $mode == 'normal' ]]; then
+	if [[ $mode == 'normal' ]]; then
 		mkdir -p "$og_cfg" "$og_cache"
 		cp -rp "$shm_cfg"/* "$og_cfg"
 		cp -rp "$shm_cache"/* "$og_cache"
+	fi
+
+	if [[ $mode == 'clean' ]]; then
+		mv "$bak_cfg" "$og_cfg"
+		mv "$bak_cache" "$og_cache"
 	fi
 
 	rm -rf "$shm_dn"
