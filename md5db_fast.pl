@@ -261,6 +261,8 @@ sub files2queue {
 	foreach my $fn (sort(keys(%files))) {
 		if ($saw_sigint) { last; }
 
+		if (! -f $fn or ! -r $fn) { next; }
+
 		$files{$fn}{size} = (stat($fn))[7];
 
 		if ($files{$fn}{size} > $disk_size) {
