@@ -60,8 +60,13 @@ time_calc () {
 # https://www.imdb.com/search/title/
 # https://www.imdb.com/interfaces/
 imdb () {
-	term="$@"
-	t_y_regex='^(.*) \(([0-9]{4})\)$'
+	if [[ $# -eq 0 ]]; then
+		return 1
+	fi
+
+	term=("$@")
+	y_regex='^\(([0-9]{4})\)$'
+
 	id_regex='\/title\/(tt[0-9]+)'
 	title_regex1='\,\"originalTitleText\":'
 	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
@@ -130,15 +135,12 @@ imdb () {
 		eval "${json_type}"=\""${string}"\"
 	}
 
-	if [[ -z $term ]]; then
-		return 1
-	else
-		t=$(uriencode "$(sed -E "s/${t_y_regex}/\1/" <<<"$term")")
-
-		if [[ $term =~ $t_y_regex ]]; then
-			y="${BASH_REMATCH[2]}"
-		fi
+	if [[ ${term[-1]} =~ $y_regex ]]; then
+		y="${BASH_REMATCH[1]}"
+		unset -v term[-1]
 	fi
+
+	t=$(uriencode "${term[@]}")
 
 # Sets the type of IMDb search results to include.
 
