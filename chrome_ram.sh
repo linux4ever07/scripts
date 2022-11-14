@@ -76,7 +76,7 @@ cwd="$PWD"
 restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
-	rm "$og_cfg" "$og_cache"
+	rm "$og_cfg" "$og_cache" || exit
 
 	if [[ $mode == 'normal' ]]; then
 		mkdir -p "$og_cfg" "$og_cache" || exit
@@ -114,10 +114,14 @@ ln -s "$shm_cfg" "$og_cfg" || exit
 ln -s "$shm_cache" "$og_cache" || exit
 
 if [[ $mode == 'normal' ]]; then
+	printf '\n%s\n\n' 'Copying Chrome config / cache to /dev/shm...'
+
 	cp -rp "$bak_cfg"/* "$shm_cfg" || exit
 	cp -rp "$bak_cache"/* "$shm_cache" || exit
 	rm -rf "$bak_cache" || exit
 fi
+
+printf '\n%s\n\n' 'Starting Chrome...'
 
 google-chrome 1>&- 2>&- &
 pid="$!"
