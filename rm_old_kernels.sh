@@ -70,7 +70,7 @@ version_compare () {
 	printf '%s' "$newest"
 }
 
-mapfile -t lines < <(dnf list --installed | grep -E '^kernel' | sed -E 's/[[:space:]]+/ /g')
+mapfile -t lines < <(dnf list --installed | grep -E '^kernel' | sed -E 's/[[:blank:]]+/ /g')
 
 # This loop gets the package name and version from each line, and saves
 # that in the 'dnf_pkgs' hash.
