@@ -73,31 +73,34 @@ tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
 
-kill_chrome () {
-	kill -9 "$pid"
-	exit
-}
-
 restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
 	rm "$og_cfg" "$og_cache"
 
 	if [[ $mode == 'normal' ]]; then
-		mkdir -p "$og_cfg" "$og_cache"
-		cp -rp "$shm_cfg"/* "$og_cfg"
-		cp -rp "$shm_cache"/* "$og_cache"
+		mkdir -p "$og_cfg" "$og_cache" || exit
+		cp -rp "$shm_cfg"/* "$og_cfg" || exit
+		cp -rp "$shm_cache"/* "$og_cache" || exit
 	fi
 
 	if [[ $mode == 'clean' ]]; then
-		mv "$bak_cfg" "$og_cfg"
-		mv "$bak_cache" "$og_cache"
+		mv "$bak_cfg" "$og_cfg" || exit
+		mv "$bak_cache" "$og_cache" || exit
 	fi
 
 	rm -rf "$shm_dn"
 
 	sync
 	cd "$cwd"
+}
+
+kill_chrome () {
+	kill -9 "$pid"
+
+	restore_chrome
+
+	exit
 }
 
 mkdir -p "$og_cfg" "$og_cache" || exit
@@ -137,11 +140,7 @@ while kill -0 "$pid" 1>&- 2>&-; do
 	ram[-1]="${ram[-1]%$'\n'}"
 
 	if [[ ${ram[6]} -lt $limit ]]; then
-		kill -9 "$pid"
-
-		restore_chrome
-
-		exit
+		kill_chrome
 	fi
 
 	if [[ $n -eq 180 ]]; then
@@ -149,11 +148,7 @@ while kill -0 "$pid" 1>&- 2>&-; do
 
 		if [[ $mode == 'normal' ]]; then
 			if [[ ! -f $tar_fn ]]; then
-				kill -9 "$pid"
-
-				restore_chrome
-
-				exit
+				kill_chrome
 			fi
 
 			cat <<BACKUP
