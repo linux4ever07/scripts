@@ -8,7 +8,7 @@ usage () {
 	exit
 }
 
-if [[ -z $1 ]]; then
+if [[ $# -eq 0 ]]; then
 	usage
 fi
 
