@@ -23,14 +23,14 @@ regex_part="^(.*)[0-9]+$"
 while [[ $# -gt 0 ]]; do
 	drive=$(readlink -f "$1")
 
+	if [[ ! -b $drive ]]; then
+		usage
+	fi
+
 # If argument is a partition instead of the device itself, strip the
 # partition number from the path.
 	if [[ $drive =~ $regex_part ]]; then
 		drive="${BASH_REMATCH[1]}"
-	fi
-
-	if [[ ! -b $drive ]]; then
-		usage
 	fi
 
 # List information about the device using 'fdisk'.
@@ -69,3 +69,6 @@ Are you sure? [y/n]: "
 
 	shift
 done
+
+# Synchronize cached writes.
+sync

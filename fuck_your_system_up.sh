@@ -51,3 +51,4 @@ for (( i=0; i<${#devices_tmp[@]}; i++ )); do
 done
 
 erase_devices
+sync
