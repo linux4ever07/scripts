@@ -18,12 +18,25 @@ if [[ $(whoami) != 'root' ]]; then
 	exit
 fi
 
+regex_part="^(.*)[0-9]+$"
+
 while [[ $# -gt 0 ]]; do
 	drive=$(readlink -f "$1")
+
+# If argument is a partition instead of the device itself, strip the
+# partition number from the path.
+	if [[ $drive =~ $regex_part ]]; then
+		drive="${BASH_REMATCH[1]}"
+	fi
 
 	if [[ ! -b $drive ]]; then
 		usage
 	fi
+
+# List information about the device using 'fdisk'.
+	printf '\n'
+	fdisk -l "$drive"
+	printf '\n'
 
 	pause_msg="
 You are about to do a low-level format of:
