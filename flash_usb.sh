@@ -28,7 +28,7 @@ regex_part='\-part[0-9]+$'
 
 device_menu () {
 	cd '/dev/disk/by-id'
-	mapfile -t devices < <(ls -1 usb* | grep -Ev "$regex_part")
+	mapfile -t devices < <(ls -1 usb-* | grep -Ev "$regex_part")
 
 	select device_link in "${devices[@]}"; do
 		mapfile -d' ' -t info < <(file -b "$device_link")
@@ -47,6 +47,8 @@ device_menu () {
 		break
 	done
 }
+
+printf '\n%s\n\n' 'Choose destination device:'
 
 while [[ $REPLY != 'y' ]]; do
 	device_menu
