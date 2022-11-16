@@ -57,7 +57,7 @@ Are you sure? [y/n]: "
 		sleep 1
 	done
 
-	printf '\n\n%s: %s\n' "$drive" 'formatting...'
+	printf '\n\n%s: %s\n\n' "$drive" 'formatting...'
 
 	dd if='/dev/zero' of="$drive" bs=1M
 

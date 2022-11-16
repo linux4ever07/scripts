@@ -2,14 +2,15 @@
 
 # This script is meant to flash USB thumbdrives with Linux ISOs.
 # Although, any filetype can be given as argument. The script will not
-# check if it's an ISO file.
+# check if it's an ISO file. The script asks the user to select the
+# correct USB device from a menu.
 
 usage () {
-	printf '\n%s\n\n' "Usage: $(basename "$0") [device] [image]"
+	printf '\n%s\n\n' "Usage: $(basename "$0") [image]"
 	exit
 }
 
-if [[ ! -b $1 || ! -f $2 ]]; then
+if [[ ! -f $1 ]]; then
 	usage
 fi
 
@@ -19,21 +20,38 @@ if [[ $(whoami) != 'root' ]]; then
 	exit
 fi
 
-regex_part="^(.*)[0-9]+$"
+image=$(readlink -f "$1")
 
-drive=$(readlink -f "$1")
-image=$(readlink -f "$2")
+declare drive
 
-# If argument is a partition instead of the device itself, strip the
-# partition number from the path.
-if [[ $drive =~ $regex_part ]]; then
-	drive="${BASH_REMATCH[1]}"
-fi
+drive_menu () {
+	cd '/dev/disk/by-id'
+	mapfile -t devices < <(ls -1 usb* | grep -Ev 'part[0-9]+$')
 
-# List information about the device using 'fdisk'.
-printf '\n'
-fdisk -l "$drive"
-printf '\n'
+	select drive_link in "${devices[@]}"; do
+		mapfile -d' ' -t info < <(file -b "$drive_link")
+		info[-1]="${info[-1]%$'\n'}"
+
+		if [[ -b ${info[-1]} ]]; then
+			drive=$(basename "${info[-1]}")
+			drive="/dev/${drive}"
+
+			printf '\n%s\n\n' "$drive"
+
+			fdisk -l "$drive"
+			printf '\n'
+		fi
+
+		break
+	done
+}
+
+while [[ $REPLY != 'y' ]]; do
+	drive_menu
+
+	read -p 'Is this the correct device? [y/n]: '
+	printf '\n'
+done
 
 pause_msg="
 You are about to flash:
@@ -57,7 +75,7 @@ for n in {1..10}; do
 	sleep 1
 done
 
-printf '\n\n%s: %s\n' "$drive" 'flashing...'
+printf '\n\n%s: %s\n\n' "$drive" 'flashing...'
 
 dd if="$image" of="$drive" bs=1M
 
