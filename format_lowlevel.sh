@@ -59,7 +59,7 @@ Are you sure? [y/n]: "
 
 	printf '\n\n%s: %s\n' "$drive" 'formatting...'
 
-	dd if='/dev/zero' of="${drive}" bs=1M
+	dd if='/dev/zero' of="$drive" bs=1M
 
 	if [[ $? -eq 0 ]]; then
 		printf '\n%s: %s\n\n' "$drive" 'format succeeded!'

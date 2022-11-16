@@ -59,7 +59,7 @@ done
 
 printf '\n\n%s: %s\n' "$drive" 'flashing...'
 
-dd if="${image}" of="${drive}" bs=1M
+dd if="$image" of="$drive" bs=1M
 
 if [[ $? -eq 0 ]]; then
 	printf '\n%s: %s\n\n' "$drive" 'flash succeeded!'
