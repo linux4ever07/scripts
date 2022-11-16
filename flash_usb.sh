@@ -30,6 +30,13 @@ device_menu () {
 	cd '/dev/disk/by-id'
 	mapfile -t devices < <(ls -1 usb-* | grep -Ev "$regex_part")
 
+	if [[ ${#devices[@]} -eq 0 ]]; then
+		printf '\n%s\n\n' 'No USB storage devices found!'
+		exit
+	fi
+
+	printf '\n%s\n\n' 'Choose destination device:'
+
 	select device_link in "${devices[@]}"; do
 		mapfile -d' ' -t info < <(file -b "$device_link")
 		info[-1]="${info[-1]%$'\n'}"
@@ -47,8 +54,6 @@ device_menu () {
 		break
 	done
 }
-
-printf '\n%s\n\n' 'Choose destination device:'
 
 while [[ $REPLY != 'y' ]]; do
 	device_menu
