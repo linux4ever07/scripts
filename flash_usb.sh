@@ -22,23 +22,23 @@ fi
 
 image=$(readlink -f "$1")
 
-declare drive
+declare device
 
-drive_menu () {
+device_menu () {
 	cd '/dev/disk/by-id'
 	mapfile -t devices < <(ls -1 usb* | grep -Ev 'part[0-9]+$')
 
-	select drive_link in "${devices[@]}"; do
-		mapfile -d' ' -t info < <(file -b "$drive_link")
+	select device_link in "${devices[@]}"; do
+		mapfile -d' ' -t info < <(file -b "$device_link")
 		info[-1]="${info[-1]%$'\n'}"
 
 		if [[ -b ${info[-1]} ]]; then
-			drive=$(basename "${info[-1]}")
-			drive="/dev/${drive}"
+			device=$(basename "${info[-1]}")
+			device="/dev/${device}"
 
-			printf '\n%s\n\n' "$drive"
+			printf '\n%s\n\n' "$device"
 
-			fdisk -l "$drive"
+			fdisk -l "$device"
 			printf '\n'
 		fi
 
@@ -47,7 +47,7 @@ drive_menu () {
 }
 
 while [[ $REPLY != 'y' ]]; do
-	drive_menu
+	device_menu
 
 	read -p 'Is this the correct device? [y/n]: '
 	printf '\n'
@@ -55,7 +55,7 @@ done
 
 pause_msg="
 You are about to flash:
-${drive}
+${device}
 
 With:
 ${image}
@@ -75,14 +75,14 @@ for n in {1..10}; do
 	sleep 1
 done
 
-printf '\n\n%s: %s\n\n' "$drive" 'flashing...'
+printf '\n\n%s: %s\n\n' "$device" 'flashing...'
 
-dd if="$image" of="$drive" bs=1M
+dd if="$image" of="$device" bs=1M
 
 if [[ $? -eq 0 ]]; then
-	printf '\n%s: %s\n\n' "$drive" 'flash succeeded!'
+	printf '\n%s: %s\n\n' "$device" 'flash succeeded!'
 else
-	printf '\n%s: %s\n\n' "$drive" 'flash failed!'
+	printf '\n%s: %s\n\n' "$device" 'flash failed!'
 fi
 
 # Synchronize cached writes.
