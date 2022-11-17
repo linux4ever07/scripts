@@ -410,7 +410,7 @@ imdb () {
 
 # If current JSON type is not a list, match the regex and return from
 # this function.
-		if [[ -z ${lists["${json_type}"]} ]]; then
+		if [[ -z ${lists[${json_type}]} ]]; then
 			if [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; then
 				eval "${json_type}"=\""${BASH_REMATCH[1]}"\"
 			fi
@@ -833,7 +833,7 @@ hb_encode () {
 sub_mux () {
 	mapfile -t if_subs < <(mkvinfo "${of_remux}" 2>&- | grep 'Track type: subtitles')
 
-	if [[ -z ${if_subs[@]} ]]; then
+	if [[ ${#if_subs[@]} -eq 0 ]]; then
 		return
 	fi
 

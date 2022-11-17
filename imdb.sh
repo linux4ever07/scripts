@@ -109,7 +109,7 @@ imdb () {
 
 # If current JSON type is not a list, match the regex and return from
 # this function.
-		if [[ -z ${lists["${json_type}"]} ]]; then
+		if [[ -z ${lists[${json_type}]} ]]; then
 			if [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; then
 				eval "${json_type}"=\""${BASH_REMATCH[1]}"\"
 			fi
