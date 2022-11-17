@@ -58,7 +58,7 @@ year="${alltags[date]}"
 time_seconds () {
 	samples=$(metaflac --show-total-samples "$1")
 	rate=$(metaflac --show-sample-rate "$1")
-	printf '%d' $(( samples / rate ))
+	printf '%d' "$(( samples / rate ))"
 }
 
 # Function to make the time a little more readable. Usage: time_readable
