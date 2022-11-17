@@ -38,13 +38,9 @@ device_menu () {
 	printf '\n%s\n\n' 'Choose destination device:'
 
 	select device_link in "${devices[@]}"; do
-		mapfile -d' ' -t info < <(file -b "$device_link")
-		info[-1]="${info[-1]%$'\n'}"
+		device=$(readlink -f "$device_link")
 
-		if [[ -b ${info[-1]} ]]; then
-			device=$(basename "${info[-1]}")
-			device="/dev/${device}"
-
+		if [[ -b $device ]]; then
 			printf '\n%s\n\n' "$device"
 
 			fdisk -l "$device"
