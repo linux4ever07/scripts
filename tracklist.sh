@@ -8,7 +8,7 @@ declare -A alltags
 
 gettags () {
 	for field in "${!alltags[@]}"; do
-		unset -v alltags[${field}]
+		unset -v alltags["${field}"]
 	done
 
 	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
@@ -42,7 +42,7 @@ command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'
 mapfile -t files < <(find "$PWD" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)
 
 # If there are no FLAC files in the dir, quit.
-if [[ -z ${files[@]} ]]; then
+if [[ ${#files[@]} -eq 0 ]]; then
 	printf '\n%s\n\n' 'There are no FLAC files in this directory.'
 	exit
 fi
