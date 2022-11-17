@@ -15,7 +15,7 @@ use 5.34.0;
 use strict;
 use warnings;
 use Cwd qw(abs_path);
-use File::Basename qw(basename);
+use File::Basename qw(basename dirname);
 use File::Find qw(find);
 use File::Path qw(make_path);
 use File::Copy qw(copy);
@@ -27,6 +27,10 @@ if (-f $ARGV[0] or -d $ARGV[0]) { $in = abs_path($ARGV[0]); }
 if (-d $ARGV[1]) { $out = abs_path($ARGV[1]); }
 
 if (! length($in) or ! length($out)) { usage(); }
+if (dirname($in) eq $out) {
+	say "\n" . 'Source and destination are identical!' . "\n";
+	exit;
+}
 
 my(%files, $start);
 
@@ -76,11 +80,6 @@ sub copy_split {
 	my($read_fn, $write_fn, $buffer);
 	my $read_write_n = 0;
 	my $part_n = 1;
-
-	if ($if eq $of) {
-		say "\n" . 'Can\'t copy file to itself!' . "\n";
-		exit;
-	}
 
 	if ($size > $size_limit) {
 		$of = $of_part . $part_n;
