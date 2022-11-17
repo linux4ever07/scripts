@@ -119,7 +119,7 @@ declare -a "${var_list2[@]}"
 for key in "${!dir1_files_hash[@]}"; do
 	if [[ -z ${dir2_files_hash[${key}]} ]]; then
 		dir2_files_missing+=("${dir1_files_hash[${key}]}")
-	elif [[ ${dir1_md5s_hash[${key}]} != ${dir2_md5s_hash[${key}]} ]]; then
+	elif [[ ${dir1_md5s_hash[${key}]} != "${dir2_md5s_hash[${key}]}" ]]; then
 		md5s_mismatch+=("${dir1_files_hash[${key}]}")
 	fi
 done
