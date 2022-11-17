@@ -170,7 +170,7 @@ ctrl_c () {
 # necessary commands are installed.
 check_cmd () {
 	for cmd in "$@"; do
-		command -v "$cmd" 1>&- 2>&-
+		command -v "$cmd" 1>&-
 
 		if [[ $? -ne 0 ]]; then
 			printf '\n%s\n\n' "You need to install '${cmd}' through your package manager!"
