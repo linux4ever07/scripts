@@ -203,10 +203,10 @@ while kill -0 "$pid" 1>&- 2>&-; do
 
 	sleep 10
 
+	check_ram || kill_chrome
+
 	if [[ $n -eq $time_limit ]]; then
 		n=0
-
-		check_ram || kill_chrome
 
 		if [[ $mode == 'normal' ]]; then
 			check_hdd && backup_chrome
