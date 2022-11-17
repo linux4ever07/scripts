@@ -984,7 +984,7 @@ is_handbrake () {
 
 # Prints the PID and arguments of the HandBrake commands that are
 # running, if any.
-	if [[ -n ${hb_pids[@]} ]]; then
+	if [[ ${#hb_pids[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
