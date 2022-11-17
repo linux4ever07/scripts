@@ -7,7 +7,7 @@
 usage () {
 	msg[0]="You need mkvtoolnix installed to run this script."
 	msg[1]="Usage: $(basename "$0") [mkv]"
-	msg[2]="There are no subtitles in: ${bn}"
+	msg[2]="There are no subtitles in: ${if_bn}"
 	printf '\n%s\n\n' "${msg[${1}]}"
 	exit
 }
@@ -30,7 +30,7 @@ fi
 
 mapfile -t if_subs < <(mkvinfo "$if" 2>&- | grep 'Track type: subtitles')
 
-if [[ -z ${if_subs[@]} ]]; then
+if [[ ${#if_subs[@]} -eq 0 ]]; then
 	usage 2
 fi
 
