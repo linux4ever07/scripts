@@ -56,7 +56,7 @@ kill_chromium () {
 					if [[ -n ${parent[${j}]} ]]; then
 						parent_pid="${parent[${j}]}"
 
-						if [[ $parent_pid == $child_pid ]]; then
+						if [[ $parent_pid == "$child_pid" ]]; then
 							pid_switch=1
 						fi
 					fi
@@ -105,7 +105,7 @@ kill_firefox () {
 				p_name=$(ps -p "$pid" -o comm | tail -n +2)
 
 				if [[ $p_name == "$name" ]]; then
-					unset -v pids[${i}]
+					unset -v pids["${i}"]
 				fi
 			fi
 		done
