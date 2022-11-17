@@ -54,17 +54,18 @@ artist="${alltags[albumartist]}"
 album="${alltags[album]}"
 year="${alltags[date]}"
 
-# Function to calculate seconds for a track. Usage: time_seconds <file>
+# Function to calculate seconds for a track.
+# Usage: time_seconds <file>
 time_seconds () {
 	samples=$(metaflac --show-total-samples "$1")
 	rate=$(metaflac --show-sample-rate "$1")
 	printf '%d' "$(( samples / rate ))"
 }
 
-# Function to make the time a little more readable. Usage: time_readable
-# <integer value> Since the positional parameter is an integer we have
-# to put a $ in front of it so it doesn't get interpreted as a regular
-# integer.
+# Function to make the time a little more readable.
+# Usage: time_readable <integer value>
+# Since the positional parameter is an integer we have to put a $ in
+# front of it so it doesn't get interpreted as a regular integer.
 time_readable () {
 	minutes=$(( $1 / 60 ))
 	seconds=$(( $1 % 60 ))
