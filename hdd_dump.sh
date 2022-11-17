@@ -60,7 +60,7 @@ regex_du='^([[:digit:]]+)([[:blank:]]+)(.*)$'
 mkdir -p "$out_dir" || exit
 
 used=$(du --summarize --block-size=1 "$in_dir" | grep -Eo '^[0-9]+')
-free=$(df --output=avail --block-size=1 "$out_dir" | tail -n +2 | tr -d '[:space:]')
+free=$(df --output=avail --block-size=1 "$out_dir" | tail -n +2 | tr -d '[:blank:]')
 
 if [[ $used -gt $free ]]; then
 	diff=$(( used - free ))
