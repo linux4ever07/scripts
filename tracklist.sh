@@ -3,6 +3,7 @@
 # This script looks for FLAC files in the current directory and creates
 # a tracklist from the tags.
 
+declare length total_time
 declare -A alltags
 
 gettags () {
@@ -57,7 +58,7 @@ year="${alltags[date]}"
 time_seconds () {
 	samples=$(metaflac --show-total-samples "$1")
 	rate=$(metaflac --show-sample-rate "$1")
-	printf $(( samples / rate ))
+	printf '%d' $(( samples / rate ))
 }
 
 # Function to make the time a little more readable. Usage: time_readable
@@ -67,6 +68,7 @@ time_seconds () {
 time_readable () {
 	minutes=$(( $1 / 60 ))
 	seconds=$(( $1 % 60 ))
+	printf '%d:%02d' "$minutes" "$seconds"
 }
 
 # Calculates the time of all tracks combined in seconds and stores the
@@ -76,15 +78,20 @@ for (( i=0; i<${#files[@]}; i++ )); do
 done
 
 # Makes the time readable.
-time_readable "$length"
+total_time=$(time_readable "$length")
 
-# Uses "printf" to print album information.
-printf '\nArtist: %s
-Album: %s
-Year: %s
-Tracks: %s
-Total time: %d:%02d\n
-Tracklist\n\n' "$artist" "$album" "$year" "${#files[@]}" "$minutes" "$seconds"
+# Prints album information.
+cat <<INFO
+
+Artist: ${artist}
+Album: ${album}
+Year: ${year}
+Tracks: ${#files[@]}
+Total time: ${total_time}
+
+Tracklist
+
+INFO
 
 # Prints the track names and their duration.
 for (( i=0; i<${#files[@]}; i++ )); do
@@ -95,9 +102,9 @@ for (( i=0; i<${#files[@]}; i++ )); do
 	title="${alltags[title]}"
 
 	length=$(time_seconds "$if")
-	time_readable "$length"
+	time=$(time_readable "$length")
 
-	printf '%02d. %s - %s (%d:%02d)\n' "$track" "$artist" "$title" "$minutes" "$seconds"
+	printf '%02d. %s - %s (%s)\n' "$track" "$artist" "$title" "$time"
 done
 
 printf '\n'
