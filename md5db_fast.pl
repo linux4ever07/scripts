@@ -549,7 +549,7 @@ sub hash2file {
 # Loop through keys in database hash and print the entries (divided by
 # the $delim variable) to database file.
 	foreach my $fn (sort(keys(%md5h))) {
-		say $md5db_out $fn . $delim . $md5h{$fn} . "\r";
+		print $md5db_out $fn . $delim . $md5h{$fn} . "\r\n";
 	}
 	close($md5db_out) or die "Can't close '$of': $!";
 
