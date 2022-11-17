@@ -24,7 +24,7 @@ fi
 
 dir=$(readlink -f "$1")
 case="$2"
-depth='0'
+depth=0
 
 pause_msg="
 You're about to recursively change all the file / directory names
