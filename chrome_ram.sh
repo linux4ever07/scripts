@@ -75,6 +75,68 @@ tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
 
+check_ram () {
+	mapfile -t free_ram < <(free | sed -E 's/[[:blank:]]+/ /g')
+	mapfile -d' ' -t ram <<<"${free_ram[1]}"
+	ram[-1]="${ram[-1]%$'\n'}"
+
+	if [[ ${ram[6]} -lt $ram_limit ]]; then
+		printf '\n%s\n\n' 'Running out of RAM...'
+
+		return 1
+	fi
+
+	return 0
+}
+
+check_hdd () {
+	cfg_size=$(du --summarize --block-size=1 "$shm_cfg" | grep -Eo '^[0-9]+')
+	cfg_size=$(( cfg_size * 2 ))
+	hdd_free=$(df --output=avail --block-size=1 "$HOME" | tail -n +2 | tr -d '[:blank:]')
+
+	if [[ $cfg_size -gt $hdd_free ]]; then
+		cat <<NOT_ENOUGH
+
+Not enough free space in:
+${HOME}
+
+You need to free up space right now. There's not enough space to backup
+the Chrome config, or to restore config / cache when Chrome quits.
+
+NOT_ENOUGH
+
+		return 1
+	fi
+
+	return 0
+}
+
+backup_chrome () {
+	tar_fn_old="${tar_fn}.bak"
+
+	cat <<BACKUP
+
+$(date)
+
+Backing up:
+${shm_cfg}
+
+To:
+${tar_fn} 
+
+BACKUP
+
+	if [[ -f $tar_fn ]]; then
+		mv "$tar_fn" "$tar_fn_old"
+	fi
+
+	tar -cf "$tar_fn" *
+
+	if [[ -f $tar_fn_old ]]; then
+		rm "$tar_fn_old"
+	fi
+}
+
 restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
@@ -141,37 +203,13 @@ while kill -0 "$pid" 1>&- 2>&-; do
 
 	sleep 10
 
-	mapfile -t free_ram < <(free | sed -E 's/[[:blank:]]+/ /g')
-	mapfile -d' ' -t ram <<<"${free_ram[1]}"
-	ram[-1]="${ram[-1]%$'\n'}"
-
-	if [[ ${ram[6]} -lt $ram_limit ]]; then
-		kill_chrome
-	fi
-
 	if [[ $n -eq $time_limit ]]; then
 		n=0
 
+		check_ram || kill_chrome
+
 		if [[ $mode == 'normal' ]]; then
-			if [[ ! -f $tar_fn ]]; then
-				kill_chrome
-			fi
-
-			cat <<BACKUP
-
-$(date)
-
-Backing up:
-${shm_cfg}
-
-To:
-${tar_fn} 
-
-BACKUP
-
-			mv "$tar_fn" "${tar_fn}.bak" || kill_chrome
-			tar -cf "$tar_fn" *
-			rm "${tar_fn}.bak" || kill_chrome
+			check_hdd && backup_chrome
 		fi
 	fi
 done
