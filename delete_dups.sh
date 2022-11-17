@@ -2,7 +2,9 @@
 
 # This script takes at least two directories as arguments, checks the
 # MD5 hash of all the files in the first directory, and then uses that
-# list to delete duplicates from the other directories.
+# list to delete duplicates from the other directories. Only files that
+# both have the same name and the same MD5 hash will be considered
+# duplicates.
 
 set -eo pipefail
 

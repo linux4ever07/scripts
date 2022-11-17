@@ -20,7 +20,7 @@ use File::Find qw(find);
 use File::Path qw(make_path);
 use File::Copy qw(copy);
 
-my($in, $out, $start);
+my($in, $out);
 
 if (scalar(@ARGV) != 2) { usage(); }
 if (-f $ARGV[0] or -d $ARGV[0]) { $in = abs_path($ARGV[0]); }
@@ -28,7 +28,7 @@ if (-d $ARGV[1]) { $out = abs_path($ARGV[1]); }
 
 if (! length($in) or ! length($out)) { usage(); }
 
-my(%files);
+my(%files, $start);
 
 my $size_limit = 2 ** 32;
 my $buffer_size = 64 * (2 ** 10);
@@ -76,6 +76,11 @@ sub copy_split {
 	my($read_fn, $write_fn, $buffer);
 	my $read_write_n = 0;
 	my $part_n = 1;
+
+	if ($if eq $of) {
+		say "\n" . 'Can\'t copy file to itself!' . "\n";
+		exit;
+	}
 
 	if ($size > $size_limit) {
 		$of = $of_part . $part_n;
