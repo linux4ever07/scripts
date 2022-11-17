@@ -896,7 +896,7 @@ info_txt () {
 		if [[ -f ${!txt_ref} ]]; then
 			txt_tmp="${!txt_ref%.txt}"
 
-			eval ${txt_f}_f="${txt_tmp}-${session}.txt"
+			eval "${txt_f}"_f="${txt_tmp}-${session}.txt"
 		fi
 	done
 
@@ -999,7 +999,7 @@ is_handbrake () {
 	fi
 
 # Starts the loop that will wait for HandBrake to finish.
-	while [[ -n ${hb_pids[@]} ]]; do
+	while [[ ${#hb_pids[@]} -gt 0 ]]; do
 # Sleeps for 5 seconds.
 		sleep 5
 

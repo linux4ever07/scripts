@@ -231,9 +231,9 @@ while [[ $# -gt 0 ]]; do
 			if [[ -f $1 ]]; then
 				files_n=$(( files_n + 1 ))
 
-				range1["${files_n}"]=$(( $sub_tracks_n + 1 ))
+				range1["${files_n}"]=$(( sub_tracks_n + 1 ))
 				get_tracks "$1"
-				range2["${files_n}"]=$(( $sub_tracks_n + 1 ))
+				range2["${files_n}"]=$(( sub_tracks_n + 1 ))
 
 				shift
 			else
