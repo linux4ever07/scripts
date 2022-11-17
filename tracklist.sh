@@ -35,14 +35,14 @@ gettags () {
 }
 
 # If metaflac isn't installed, quit running the script.
-command -v metaflac 1>&- 2>&- || { printf '%s\n' 'This script requires metaflac.'; exit; }
+command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
 # Find FLAC files in the current directory.
 mapfile -t files < <(find "$PWD" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)
 
 # If there are no FLAC files in the dir, quit.
 if [[ -z ${files[@]} ]]; then
-	printf '%s\n' 'There are no FLAC files in this directory.'
+	printf '\n%s\n\n' 'There are no FLAC files in this directory.'
 	exit
 fi
 
@@ -79,7 +79,7 @@ done
 time_readable "$length"
 
 # Uses "printf" to print album information.
-printf 'Artist: %s
+printf '\nArtist: %s
 Album: %s
 Year: %s
 Tracks: %s
@@ -99,3 +99,5 @@ for (( i=0; i<${#files[@]}; i++ )); do
 
 	printf '%02d. %s - %s (%d:%02d)\n' "$track" "$artist" "$title" "$minutes" "$seconds"
 done
+
+printf '\n'
