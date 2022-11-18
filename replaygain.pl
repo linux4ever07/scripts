@@ -287,7 +287,7 @@ sub vendor {
 # Close the STDERR file ($newfn_stderr).
 # Restore STDERR from $stderr_dup.
 # Close the $stderr_dup filehandle.
-	close(STDERR) or die;
+	close(STDERR) or die "Can't close STDERR: $!";
 	open(STDERR, ">&", $stderr_dup) or die "Can't dup STDERR: $!";
 	close($stderr_dup) or die "Can't close STDERR: $!";
 
