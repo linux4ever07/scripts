@@ -277,7 +277,7 @@ sub vendor {
 
 # Duplicate STDERR (for restoration later).
 # Redirect STDERR to a file ($newfn_stderr).
-	open(my $stderr_backup, ">&STDERR") or die "Can't dup STDERR: $!";
+	open(my $stderr_dup, ">&STDERR") or die "Can't dup STDERR: $!";
 	close(STDERR) or die "Can't close STDERR: $!";
 	open(STDERR, '>', $newfn_stderr) or die "Can't open '$newfn_stderr': $!";
 
@@ -285,11 +285,11 @@ sub vendor {
 	or_warn("Can't encode file");
 
 # Close the STDERR file ($newfn_stderr).
-# Restore STDERR from $stderr_backup.
-# Close the $stderr_backup filehandle.
+# Restore STDERR from $stderr_dup.
+# Close the $stderr_dup filehandle.
 	close(STDERR) or die;
-	open(STDERR, ">&", $stderr_backup) or die "Can't dup STDERR: $!";
-	close($stderr_backup) or die "Can't close STDERR: $!";
+	open(STDERR, ">&", $stderr_dup) or die "Can't dup STDERR: $!";
+	close($stderr_dup) or die "Can't close STDERR: $!";
 
 	given ($?) {
 		when (0) {
