@@ -277,7 +277,7 @@ sub vendor {
 
 # Duplicate STDERR (for restoration later).
 # Redirect STDERR to a file ($newfn_stderr).
-	open(my $olderr, ">&STDERR") or die "Can't dup STDERR: $!";
+	open(my $stderr_backup, ">&STDERR") or die "Can't dup STDERR: $!";
 	close(STDERR) or die "Can't close STDERR: $!";
 	open(STDERR, '>', $newfn_stderr) or die "Can't open '$newfn_stderr': $!";
 
@@ -285,11 +285,11 @@ sub vendor {
 	or_warn("Can't encode file");
 
 # Close the STDERR file ($newfn_stderr).
-# Restore STDERR from $olderr.
-# Close the $olderr filehandle.
+# Restore STDERR from $stderr_backup.
+# Close the $stderr_backup filehandle.
 	close(STDERR) or die;
-	open(STDERR, ">&", $olderr) or die "Can't dup STDERR: $!";
-	close($olderr) or die "Can't close STDERR: $!";
+	open(STDERR, ">&", $stderr_backup) or die "Can't dup STDERR: $!";
+	close($stderr_backup) or die "Can't close STDERR: $!";
 
 	given ($?) {
 		when (0) {
@@ -302,15 +302,15 @@ sub vendor {
 		default {
 # Open a filehandle that reads from the STDERR file ($newfn_stderr).
 # Checks if FLAC file has ID3v2 tags.
-			open(my $fh_stderrf, '<', $newfn_stderr)
+			open(my $stderr_fh, '<', $newfn_stderr)
 			or die "Can't open '$newfn_stderr': $!";
-			while (chomp(<$fh_stderrf>)) {
+			while (chomp(<$stderr_fh>)) {
 				if (/has an ID3v2 tag/) {
 					$has_id3v2 = 1;
 					last;
 				}
 			}
-			close($fh_stderrf) or die "Can't close '$newfn_stderr': $!";
+			close($stderr_fh) or die "Can't close '$newfn_stderr': $!";
 
 			if ($has_id3v2) {
 				print "\n" . $fn . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
