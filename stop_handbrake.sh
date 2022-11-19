@@ -6,27 +6,28 @@
 # The script uses the SIGSTP (20) signal to suspend the process.
 # To get a list of available signals: kill -l
 
-pid_list_f='/dev/shm/handbrake_pid.txt'
-touch "$pid_list_f"
-
 comm='HandBrakeCLI'
 
-mapfile -t pids < <(ps -C "$comm" -o comm,pid | tail -n +2 | sed -E 's/[[:blank:]]+/ /g')
+regex_pid_comm='^[[:space:]]*([[:digit:]]+)[[:space:]]*(.*)$'
 
-for (( i = 0; i < ${#pids[@]}; i++ )); do
-	mapfile -d' ' -t pid_info <<<"${pids[${i}]}"
-	pid_info[-1]="${pid_info[-1]%$'\n'}"
-	name="${pid_info[0]}"
-	pid="${pid_info[1]}"
+mapfile -t hb_pids < <(ps -C "$comm" -o pid,args | tail -n +2)
 
-	if [[ $name == "$comm" ]]; then
-		printf '\n%s\n' 'STOPPING!'
-		printf '%s\n' "NAME: ${name} : PID: ${pid}"
-		kill -s 20 "${pid}"
+for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
+	if [[ ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+		pid="${BASH_REMATCH[1]}"
+		args="${BASH_REMATCH[2]}"
 
-		printf '%s\n' "$pid" >> "$pid_list_f"
+		cat <<INFO
 
-		printf '\n%s\n' 'Run this command later to resume:'
-		printf '%s\n\n' 'start_handbrake.sh'
+STOPPING!
+PID: ${pid}
+COMMAND: ${args}
+
+Run this command later to resume:
+start_handbrake.sh
+
+INFO
+
+		kill -s 20 "$pid"
 	fi
 done

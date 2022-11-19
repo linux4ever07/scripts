@@ -6,29 +6,24 @@
 # To get a list of available signals: kill -l
 
 comm='HandBrakeCLI'
-pid_list_f='/dev/shm/handbrake_pid.txt'
 
-if [[ ! -f $pid_list_f ]]; then
-	exit
-fi
+regex_pid_comm='^[[:space:]]*([[:digit:]]+)[[:space:]]*(.*)$'
 
-pid=$(head -n 1 "$pid_list_f")
+mapfile -t hb_pids < <(ps -C "$comm" -o pid,args | tail -n +2)
 
-if [[ -n $pid ]]; then
-	name=$(ps -p "$pid" -o comm | tail -n +2 | tr -d '[:blank:]')
+for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
+	if [[ ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+		pid="${BASH_REMATCH[1]}"
+		args="${BASH_REMATCH[2]}"
 
-	if [[ $name == "$comm" ]]; then
-		printf '\n%s\n' 'STARTING!'
-		printf '%s\n' "NAME: ${name} : PID: ${pid}"
+		cat <<INFO
+
+STARTING!
+PID: ${pid}
+COMMAND: ${args}
+
+INFO
 
 		kill -s 18 "$pid"
-	else
-		exit
 	fi
-fi
-
-mapfile -t pid_list < <(tail -n +2 "$pid_list_f")
-
-if [[ ${#pid_list[@]} -gt 0 ]]; then
-	printf '%s\n' "${pid_list[@]}" > "$pid_list_f"
-fi
+done
