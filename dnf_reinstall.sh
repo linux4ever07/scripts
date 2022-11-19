@@ -4,7 +4,7 @@
 # verifies all RPMs to see which ones are broken, and reinstalls those.
 # Run with either 'full' or 'verify' as an argument.
 
-date=$(date "+%F")
+date=$(date '+%F')
 txt="${HOME}/dnf_reinstall_${date}.txt"
 
 declare mode

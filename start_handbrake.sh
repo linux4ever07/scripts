@@ -15,7 +15,7 @@ fi
 pid=$(head -n 1 "$pid_list_f")
 
 if [[ -n $pid ]]; then
-	name=$(ps -p "$pid" -o comm | tail -n +2)
+	name=$(ps -p "$pid" -o comm | tail -n +2 | tr -d '[:blank:]')
 
 	if [[ $name == "$comm" ]]; then
 		printf '\n%s\n' 'STARTING!'

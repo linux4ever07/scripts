@@ -11,12 +11,13 @@ touch "$pid_list_f"
 
 comm='HandBrakeCLI'
 
-mapfile -t pids < <(ps -C "$comm" -o comm,pid | tail -n +2)
+mapfile -t pids < <(ps -C "$comm" -o comm,pid | tail -n +2 | sed -E 's/[[:blank:]]+/ /g')
 
 for (( i = 0; i < ${#pids[@]}; i++ )); do
-	mapfile -d' ' -t pid_info < <(sed -E 's/ +/ /' <<<"${pids[${i}]}")
-	name=$(tr -d '[:blank:]' <<<"${pid_info[0]}")
-	pid=$(tr -d '[:blank:]' <<<"${pid_info[1]}")
+	mapfile -d' ' -t pid_info <<<"${pids[${i}]}"
+	pid_info[-1]="${pid_info[-1]%$'\n'}"
+	name="${pid_info[0]}"
+	pid="${pid_info[1]}"
 
 	if [[ $name == $comm ]]; then
 		printf '\n%s\n' 'STOPPING!'
