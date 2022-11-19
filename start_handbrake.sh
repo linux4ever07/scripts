@@ -17,6 +17,12 @@ for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 		pid="${BASH_REMATCH[1]}"
 		args="${BASH_REMATCH[2]}"
 
+		state=$(ps -p "$pid" -o state | tail -n +2)
+
+		if [[ $state == 'R' ]]; then
+			continue
+		fi
+
 		cat <<INFO
 
 STARTING!
