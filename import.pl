@@ -14,7 +14,7 @@ use File::Copy qw(copy);
 use Encode qw(decode find_encoding);
 
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my (@dirs, @log, %t, %files, $library);
+my(@dirs, @log, %t, %files, $library);
 
 while (my $arg = shift(@ARGV)) {
 	if (-d $arg) {
@@ -45,7 +45,7 @@ sub gettags {
 	close($output) or die "Can't close metaflac: $!";
 
 	foreach my $line (@lines) {
-		my (@tag, $tagname);
+		my(@tag, $tagname);
 
 		$line =~ s/$regex//g;
 
@@ -160,7 +160,7 @@ sub import {
 	my $fc = shift;
 	my $cp = 0;
 	my $cplog = 1;
-	my ($newfn, $path);
+	my($newfn, $path);
 
 	foreach my $sf (sort(keys %files)) {
 		undef(%t);
