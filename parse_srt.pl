@@ -140,5 +140,5 @@ sub parse_srt {
 parse_srt($fn);
 
 foreach my $line (@lines) {
-	say $line
+	say $line;
 }
