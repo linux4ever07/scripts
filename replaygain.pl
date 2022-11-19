@@ -232,7 +232,7 @@ sub existstag {
 	my $fn = shift;
 	my $switch = 0;
 
-	foreach my $tag (@_) {
+	while (my $tag = shift(@_)) {
 		if (! defined($t{$tag})) {
 			say $fn . ': doesn\'t have ' . $tag . ' tag';
 			exit;
@@ -252,7 +252,7 @@ sub vendor {
 	sub sigint {
 		say "Interrupted by user!";
 
-		foreach my $fn (@_) {
+		while (my $fn = shift(@_)) {
 			if (-f $fn) {
 				unlink($fn) or die "Can't remove '$fn': $!";
 			}
@@ -363,7 +363,7 @@ sub vendor {
 sub rmtag {
 	my $fn = shift;
 
-	foreach my $tag (@_) {
+	while (my $tag = shift(@_)) {
 		if (defined($t{$tag})) {
 			say $fn . ': removing ' . $tag . ' tag';
 			delete($t{$tag});
