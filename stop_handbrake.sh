@@ -19,7 +19,7 @@ for (( i = 0; i < ${#pids[@]}; i++ )); do
 	name="${pid_info[0]}"
 	pid="${pid_info[1]}"
 
-	if [[ $name == $comm ]]; then
+	if [[ $name == "$comm" ]]; then
 		printf '\n%s\n' 'STOPPING!'
 		printf '%s\n' "NAME: ${name} : PID: ${pid}"
 		kill -s 20 "${pid}"
