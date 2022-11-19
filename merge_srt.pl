@@ -33,7 +33,7 @@ $of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000))
 
 if (! scalar(@ARGV)) { usage(); }
 
-foreach my $arg (@ARGV) {
+while (my $arg = shift(@ARGV)) {
 	my($fn, $ext);
 
 	if (length($arg)) {

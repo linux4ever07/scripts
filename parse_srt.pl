@@ -10,11 +10,9 @@ use File::Basename qw(basename);
 use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 
-my(@lines, @format);
+my(@lines, @format, $fn, $ext);
 
 my $regex_ext = qr/\.([^.]*)$/;
-
-my($fn, $ext);
 
 if (! scalar(@ARGV)) { usage(); }
 
