@@ -16,7 +16,7 @@ mapfile -t files < <(find . -type f -iname "*.log" -o -iname "*.txt" 2>&-)
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
 	bn=$(basename "$fn")
-	fn_out="${dn}/${bn%.log}-${RANDOM}-${RANDOM}.log"
+	fn_out="${dn}/${bn%.[^.]*}-${RANDOM}-${RANDOM}.log"
 
 	touch "$fn_out"
 
