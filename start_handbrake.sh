@@ -1,6 +1,7 @@
 #!/bin/bash
-# This script starts / resumes HandBrake again, after it has been paused
-# by 'stop_handbrake.sh'.
+
+# This script starts / resumes HandBrakeCLI again, after it has been
+# paused by 'stop_handbrake.sh'.
 
 # The script uses the SIGCONT (18) signal to resume the process.
 # To get a list of available signals: kill -l

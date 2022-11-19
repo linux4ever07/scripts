@@ -1,6 +1,7 @@
 #!/bin/bash
-# This script finds a running HandBrake process, if it exists, and
-# pauses it. The user can resume the process later with the
+
+# This script finds running HandBrakeCLI processes, if they exist, and
+# pauses them. The user can resume them later with the
 # 'start_handbrake.sh' script.
 
 # The script uses the SIGSTP (20) signal to suspend the process.
