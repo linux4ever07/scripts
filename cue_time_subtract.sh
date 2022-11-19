@@ -17,7 +17,7 @@ declare -a format
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
 
-if [[ ! $1 =~ $regex_time || ! $2 =~ $regex_frames ]]; then
+if [[ ! $1 =~ ${format[1]} || ! $2 =~ ${format[0]} ]]; then
 	usage
 fi
 
