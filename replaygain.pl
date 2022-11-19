@@ -304,8 +304,8 @@ sub vendor {
 # Checks if FLAC file has ID3v2 tags.
 			open(my $stderr_fh, '<', $newfn_stderr)
 			or die "Can't open '$newfn_stderr': $!";
-			while (chomp(<$stderr_fh>)) {
-				if (/has an ID3v2 tag/) {
+			while (chomp(my $line = <$stderr_fh>)) {
+				if ($line =~ /has an ID3v2 tag/) {
 					$has_id3v2 = 1;
 					last;
 				}
