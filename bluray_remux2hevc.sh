@@ -289,7 +289,7 @@ break_name () {
 
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
-	regex='^(.*)([[:punct:]]|[[:space:]]){1,}([0-9]{4})([[:punct:]]|[[:space:]]){1,}(.*)$'
+	regex='^(.*)([[:punct:]]|[[:blank:]]){1,}([0-9]{4})([[:punct:]]|[[:blank:]]){1,}(.*)$'
 
 # If $temp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
@@ -977,7 +977,7 @@ check_res () {
 is_handbrake () {
 	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
 
-	regex_pid_comm='^[[:space:]]*([[:digit:]]+)[[:space:]]*(.*)$'
+	regex_pid_comm='^[[:blank:]]*([[:digit:]]+)[[:blank:]]*(.*)$'
 
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")

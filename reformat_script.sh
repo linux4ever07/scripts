@@ -24,9 +24,9 @@ of="${tmp_dn}/${bn}"
 of_tmp="${tmp_dn}/tmp"
 
 limit='72'
-regex1='^([[:space:]]*)(#+)([[:space:]]*)'
-regex2='^[[:space:]]+'
-regex3='[[:space:]]+$'
+regex1='^([[:blank:]]*)(#+)([[:blank:]]*)'
+regex2='^[[:blank:]]+'
+regex3='[[:blank:]]+$'
 regex4='( +)'
 regex5='^( {4})'
 regex6='^#!'

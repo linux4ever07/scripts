@@ -10,7 +10,7 @@ if [[ ! -f $if ]]; then
 	exit
 fi
 
-regex='^([[:space:]]*)(#+)'
+regex='^([[:blank:]]*)(#+)'
 
 mapfile -t lines < <(grep -Ev "$regex" "$if")
 

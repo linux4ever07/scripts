@@ -19,7 +19,7 @@
 
 if=$(readlink -f "$1")
 
-regex1='^([[:space:]]*)#'
+regex1='^([[:blank:]]*)#'
 regex2='echo( \-[[:alpha:]]+){0,} *'
 regex3='printf '\''%s\\n'\'' '
 
