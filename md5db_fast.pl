@@ -239,15 +239,15 @@ sub files2queue {
 		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} ne '1') {
 				if ($fn =~ /.flac$/i) {
-					if (scalar(@flac_req) == 2) {
-						$dn = dirname($fn);
+					if (scalar(@flac_req) != 2) { next; }
 
-						if ($dn ne '.') {
-							$dn = $shm_dn . '/' . $dn;
-							$files{$fn}{dn} = $dn;
-							make_path($dn);
-						} else { $files{$fn}{dn} = $shm_dn; }
-					} else { next; }
+					$dn = dirname($fn);
+
+					if ($dn ne '.') {
+						$dn = $shm_dn . '/' . $dn;
+						$files{$fn}{dn} = $dn;
+						make_path($dn);
+					} else { $files{$fn}{dn} = $shm_dn; }
 				} else { $files{$fn} = (); }
 			}
 		}
