@@ -3,7 +3,7 @@
 # This script looks for FLAC files in the current directory and creates
 # a tracklist from the tags.
 
-declare length total_time
+declare total_length total_time
 declare -A alltags
 
 gettags () {
@@ -73,13 +73,13 @@ time_readable () {
 }
 
 # Calculates the time of all tracks combined in seconds and stores the
-# value in the "length" variable.
+# value in the $total_length variable.
 for (( i=0; i<${#files[@]}; i++ )); do
-	(( length += $(time_seconds "${files[${i}]}") ))
+	(( total_length += $(time_seconds "${files[${i}]}") ))
 done
 
 # Makes the time readable.
-total_time=$(time_readable "$length")
+total_time=$(time_readable "$total_length")
 
 # Prints album information.
 cat <<INFO
