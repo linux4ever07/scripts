@@ -23,6 +23,10 @@ for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 			continue
 		fi
 
+		if [[ $state == 'S' ]]; then
+			continue
+		fi
+
 		cat <<INFO
 
 STARTING!
