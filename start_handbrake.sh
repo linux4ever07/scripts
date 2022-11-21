@@ -19,11 +19,7 @@ for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 
 		state=$(ps -p "$pid" -o state | tail -n +2)
 
-		if [[ $state == 'R' ]]; then
-			continue
-		fi
-
-		if [[ $state == 'S' ]]; then
+		if [[ $state != 'T' ]]; then
 			continue
 		fi
 
