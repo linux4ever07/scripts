@@ -132,9 +132,9 @@ fi
 
 # Creates a function called 'print_stdout', which will print STDOUT.
 print_stdout () {
-	while read line; do
-		printf '%s\n' "$line"
-	done <"$stdout_f"
+	mapfile -t lines <"$stdout_f"
+
+	printf '%s\n' "${lines[@]}"
 
 	truncate -s 0 "$stdout_f"
 }
