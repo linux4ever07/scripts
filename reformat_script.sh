@@ -128,7 +128,7 @@ touch "$of"
 
 mapfile -t lines <"$if"
 
-for (( i=0; i<${#lines[@]}; i++ )); do
+for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 	j=$(( i - 1 ))
 	previous="${lines[${j}]}"

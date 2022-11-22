@@ -43,7 +43,7 @@ if_nick () {
 mapfile -t lines <"$if"
 
 # This loop finds all the nicks in the log and adds them to a hash.
-for (( i=0; i<${#lines[@]}; i++ )); do
+for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	if [[ $switch -eq 0 ]]; then
@@ -82,7 +82,7 @@ done
 
 # This loop finds all the nicks highlighted by the nicks given as
 # arguments to the script, and adds them to the nick hash.
-for (( i=0; i<${#lines[@]}; i++ )); do
+for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 	line_tmp="${line:${n}}"
 
@@ -96,7 +96,7 @@ for (( i=0; i<${#lines[@]}; i++ )); do
 		if [[ $nick == "$nick_tmp" ]]; then
 			mapfile -d' ' -t line_array < <(sed -E 's/[[:blank:]]+/ /g' <<<"${line_tmp,,}")
 
-			for (( k=0; k<${#line_array[@]}; k++ )); do
+			for (( k = 0; k < ${#line_array[@]}; k++ )); do
 				word=$(sed -E "s/${regex3}//" <<<"${line_array[${k}]}")
 
 				for nick_tmp_2 in "${!nicks_tmp[@]}"; do
@@ -115,7 +115,7 @@ done
 
 # This loop prints all the lines that match the nicks collected by
 # the previous loop.
-for (( i=0; i<${#lines[@]}; i++ )); do
+for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 	line_tmp="${line:${n}}"
 

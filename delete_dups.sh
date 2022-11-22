@@ -34,7 +34,7 @@ unset -v dirs[0]
 
 mapfile -t files < <(find "$dn_if" -type f -iname "*" -exec printf '%q\n' {} \; 2>&-)
 
-for (( i=0; i<${#files[@]}; i++ )); do
+for (( i = 0; i < ${#files[@]}; i++ )); do
 	eval f="${files[${i}]}"
 	f_bn=$(basename "$f")
 
@@ -46,7 +46,7 @@ done
 for dn in "${dirs[@]}"; do
 	mapfile -t files < <(find "$dn" -type f -iname "*" -exec printf '%q\n' {} \; 2>&-)
 
-	for (( i=0; i<${#files[@]}; i++ )); do
+	for (( i = 0; i < ${#files[@]}; i++ )); do
 		eval f="${files[${i}]}"
 		f_bn=$(basename "$f")
 

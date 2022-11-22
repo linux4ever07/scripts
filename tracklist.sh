@@ -13,7 +13,7 @@ gettags () {
 
 	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
 
-	for (( z=0; z<${#lines[@]}; z++ )); do
+	for (( z = 0; z < ${#lines[@]}; z++ )); do
 		line="${lines[${z}]}"
 
 		unset -v mflac
@@ -74,7 +74,7 @@ time_readable () {
 
 # Calculates the time of all tracks combined in seconds and stores the
 # value in the $total_length variable.
-for (( i=0; i<${#files[@]}; i++ )); do
+for (( i = 0; i < ${#files[@]}; i++ )); do
 	(( total_length += $(time_seconds "${files[${i}]}") ))
 done
 
@@ -95,7 +95,7 @@ Tracklist
 INFO
 
 # Prints the track names and their duration.
-for (( i=0; i<${#files[@]}; i++ )); do
+for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
 	gettags
 	artist="${alltags[artist]}"

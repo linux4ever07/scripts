@@ -20,7 +20,7 @@ sources=('/dev/zero' '/dev/urandom')
 declare -a devices
 
 erase_devices () {
-	for (( i=0; i<${#devices[@]}; i++ )); do
+	for (( i = 0; i < ${#devices[@]}; i++ )); do
 		device="${devices[${i}]}"
 
 		printf '%s ' "$device"
@@ -39,7 +39,7 @@ erase_devices () {
 
 mapfile -t devices_tmp < <(find /dev -maxdepth 1 -type b \( -iname "hd*" -o -iname "sd*" -o -iname "nvme*" \) 2>&- | sort -r)
 
-for (( i=0; i<${#devices_tmp[@]}; i++ )); do
+for (( i = 0; i < ${#devices_tmp[@]}; i++ )); do
 	device="${devices_tmp[${i}]}"
 
 	for regex in "${regexes[@]}"; do

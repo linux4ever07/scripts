@@ -30,7 +30,7 @@ fi
 
 mapfile -t lines <"$if"
 
-for (( i=0; i<${#lines[@]}; i++ )); do
+for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	if [[ $line =~ $regex1 ]]; then

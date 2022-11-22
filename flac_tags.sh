@@ -29,7 +29,7 @@ gettags () {
 
 	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
 
-	for (( z=0; z<${#lines[@]}; z++ )); do
+	for (( z = 0; z < ${#lines[@]}; z++ )); do
 		line="${lines[${z}]}"
 
 		unset -v mflac

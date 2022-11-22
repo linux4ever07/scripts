@@ -259,7 +259,7 @@ read_cue () {
 
 	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
 
-	for (( i=0; i<${#cue_lines_if[@]}; i++ )); do
+	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
 		line="${cue_lines_if[${i}]}"
 
 		handle_command "$line"
@@ -342,7 +342,7 @@ bin_split () {
 # Print the output from 'bchunk' if it quits with a non-zero exit
 # status.
 	if [[ ${!exit_status_ref} != '0' ]]; then
-		for (( i=0; i<last; i++ )); do
+		for (( i = 0; i < last; i++ )); do
 			bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
 
 			printf '%s\n' "${!bchunk_stdout_ref}"
@@ -351,7 +351,7 @@ bin_split () {
 		exit
 	fi
 
-	for (( i=0; i<last; i++ )); do
+	for (( i = 0; i < last; i++ )); do
 		line_ref="bchunk_${type_tmp}_stdout[${i}]"
 
 		if [[ ${!line_ref} == 'Writing tracks:' ]]; then
@@ -360,7 +360,7 @@ bin_split () {
 		fi
 	done
 
-	for (( i=n; i<last; i++ )); do
+	for (( i = n; i < last; i++ )); do
 		bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
 		line=$(sed -E "s/${regex_bchunk}/\1/" <<<"${!bchunk_stdout_ref}")
 
@@ -460,7 +460,7 @@ create_cue () {
 		esac
 	}
 
-	for (( i=0; i<elements; i++ )); do
+	for (( i = 0; i < elements; i++ )); do
 		line_ref="bchunk_${type_tmp}_list[${i}]"
 
 		track_n=$(( i + 1 ))
@@ -572,7 +572,7 @@ data_track () {
 clean_up () {
 	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.wav" 2>&-)
 
-	for (( i=0; i<${#files[@]}; i++ )); do
+	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
 		rm -f "$fn" || exit
 	done
