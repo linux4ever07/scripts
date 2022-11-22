@@ -46,9 +46,9 @@ depth_orig=$(( ${#path_parts[@]} - 1 ))
 mapfile -t files < <(find "$dir" -iname "*" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	f="${files[${i}]}"
+	fn="${files[${i}]}"
 
-	mapfile -d'/' -t path_parts <<<"$f"
+	mapfile -d'/' -t path_parts <<<"$fn"
 	depth_tmp=$(( ${#path_parts[@]} - 1 ))
 	depth_diff=$(( depth_tmp - depth_orig ))
 
@@ -60,9 +60,12 @@ done
 unset -v files path_parts
 
 for (( i = depth; i > 0; i-- )); do
-	find "$dir" -mindepth "$i" -maxdepth "$i" -iname "*" | while read f; do
-		dn=$(dirname "$f")
-		bn=$(basename "$f")
+	mapfile -t files < <(find "$dir" -mindepth "$i" -maxdepth "$i" -iname "*" 2>&-)
+
+	for (( j = 0; j < ${#files[@]}; j++ )); do
+		fn="${files[${j}]}"
+		dn=$(dirname "$fn")
+		bn=$(basename "$fn")
 
 		if [[ $case == 'upper' ]]; then
 			new_bn="${bn^^}"
@@ -70,11 +73,11 @@ for (( i = depth; i > 0; i-- )); do
 			new_bn="${bn,,}"
 		fi
 
-		new_f="${dn}/${new_bn}"
+		new_fn="${dn}/${new_bn}"
 
 		if [[ $new_bn != $bn ]]; then
-			printf '%s\n' "$new_f"
-			mv -n "$f" "$new_f"
+			printf '%s\n' "$new_fn"
+			mv -n "$fn" "$new_fn"
 		fi
 	done
 done
