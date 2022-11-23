@@ -188,7 +188,9 @@ sub iquit {
 	}
 
 # Delete temporary directory from /dev/shm.
-	remove_tree($shm_dn) or die "Can't remove '$shm_dn': $!";
+	if (-d $shm_dn) {
+		remove_tree($shm_dn) or die "Can't remove '$shm_dn': $!";
+	}
 
 # Delete empty elements from database hash.
 	foreach my $fn (keys(%md5h)) {
