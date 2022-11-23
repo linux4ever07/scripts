@@ -261,6 +261,8 @@ sub files2queue {
 	foreach my $fn (sort(keys(%files))) {
 		if ($saw_sigint) { last; }
 
+# Checking again if file exists and is readable. Things may have changed
+# since the script was started and the directory was searched.
 		if (! -f $fn or ! -r $fn) { next; }
 
 		$files{$fn}{size} = (stat($fn))[7];
@@ -553,7 +555,7 @@ sub hash2file {
 	}
 	close($md5db_out) or die "Can't close '$of': $!";
 
-	rename($of, $db) or die "Can't rename file '$of': $!";
+	rename($of, $db) or die "Can't rename '$of': $!";
 }
 
 # Subroutine for creating temporary variables. A session number, and
