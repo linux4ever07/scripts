@@ -513,7 +513,7 @@ sub file2hash {
 
 # Loop to check that the format of the database file really is correct
 # before proceeding.
-	foreach my $line (@lines) {
+	while (my $line = shift(@lines)) {
 		if ($line =~ /$format/) {
 # Split the line into relative file name and MD5 hash.
 			$fn = $1;
@@ -601,7 +601,6 @@ sub md5double {
 sub md5import {
 	my $md5fn = shift;
 	my $dn = dirname($md5fn);
-
 	my($fn, $hash, @lines);
 
 # The format string for parsing the *.MD5 files.
@@ -617,7 +616,7 @@ sub md5import {
 
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
-	foreach my $line (@lines) {
+	while (my $line = shift(@lines)) {
 		if ($line =~ /$format/) {
 # Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
