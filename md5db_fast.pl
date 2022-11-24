@@ -468,7 +468,7 @@ sub getfiles {
 	chomp(@lines = (<$find>));
 	close($find) or die "Can't close 'find': $!";
 
-	foreach my $fn (@lines) {
+	while (my $fn = shift(@lines)) {
 # If the file name matches "$HOME/.*", then skip it. Dotfiles in a
 # user's home directory are usually configuration files for the desktop
 # and various applications. These files change often and will therefore
