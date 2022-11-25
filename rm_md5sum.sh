@@ -18,7 +18,7 @@ fi
 
 dn=$(readlink -f "$1")
 
-mapfile -t files < <(find "$dn" -type f -iname "*" 2>&-)
+mapfile -t files < <(find "$dn" -type f 2>&-)
 
 declare -A md5s_date md5s_fn md5s_og
 

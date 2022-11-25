@@ -43,7 +43,7 @@ printf '\n'
 mapfile -d'/' -t path_parts <<<"$dir"
 depth_orig=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$dir" -iname "*" 2>&-)
+mapfile -t files < <(find "$dir" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
@@ -60,7 +60,7 @@ done
 unset -v files path_parts
 
 for (( i = depth; i > 0; i-- )); do
-	mapfile -t files < <(find "$dir" -mindepth "$i" -maxdepth "$i" -iname "*" 2>&-)
+	mapfile -t files < <(find "$dir" -mindepth "$i" -maxdepth "$i" 2>&-)
 
 	for (( j = 0; j < ${#files[@]}; j++ )); do
 		fn="${files[${j}]}"

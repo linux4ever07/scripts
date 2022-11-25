@@ -59,7 +59,7 @@ mapfile -d'/' -t dn_parts <<<"$in_dir"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 start="${#dn_parts[@]}"
 
-mapfile -t files < <(find "$in_dir" -type f -iname "*" 2>&-)
+mapfile -t files < <(find "$in_dir" -type f 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"

@@ -42,9 +42,9 @@ dir2_size=$(du -b -s "$dir2" | grep -Eo '^[[:digit:]]+')
 regex='([^ a-zA-Z0-9\.\-_ ])'
 
 # Lists all the files and directories in both directories.
-mapfile -t dir1_files < <(find "$dir1" -type f -iname "*" 2>&- | sed -E "s/${regex}/\\1/g")
+mapfile -t dir1_files < <(find "$dir1" -type f 2>&- | sed -E "s/${regex}/\\1/g")
 mapfile -t dir1_dirs < <(find "$dir1" -mindepth 1 -type d -empty 2>&- | sed -E "s/${regex}/\\1/g")
-mapfile -t dir2_files < <(find "$dir2" -type f -iname "*" 2>&- | sed -E "s/${regex}/\\1/g")
+mapfile -t dir2_files < <(find "$dir2" -type f 2>&- | sed -E "s/${regex}/\\1/g")
 mapfile -t dir2_dirs < <(find "$dir2" -mindepth 1 -type d -empty 2>&- | sed -E "s/${regex}/\\1/g")
 
 dir1_files_elements="${#dir1_files[@]}"
