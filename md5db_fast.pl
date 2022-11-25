@@ -463,7 +463,7 @@ No database file. Run the script in 'index' mode first to index files.
 sub getfiles {
 	my(@lines);
 
-	open(my $find, '-|', 'find', '.', '-type', 'f', '-name', '*', '-nowarn')
+	open(my $find, '-|', 'find', '.', '-type', 'f', '-nowarn')
 	or die "Can't run 'find': $!";
 	chomp(@lines = (<$find>));
 	close($find) or die "Can't close 'find': $!";

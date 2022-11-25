@@ -170,7 +170,7 @@ sub getfiles {
 	undef(@files);
 	undef(%mflac_if);
 
-	open(my $find, '-|', 'find', $dn, '-mindepth', '1', '-maxdepth', '1', '-type', 'f', '-iname', '*')
+	open(my $find, '-|', 'find', $dn, '-mindepth', '1', '-maxdepth', '1', '-type', 'f', '-nowarn')
 	or die "Can't open 'find': $!";
 	chomp(@lines = (<$find>));
 	close($find) or die "Can't close 'find': $!";
