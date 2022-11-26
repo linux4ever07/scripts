@@ -81,9 +81,9 @@ sub parse_srt {
 
 	push(@lines, $fn, '');
 
-	$end = $#lines_tmp - 1;
+	$end = $#lines_tmp;
 
-	until ($i >= $end) {
+	until ($i > $end) {
 		$j = $i + 1;
 
 		$this = $lines_tmp[$i];
