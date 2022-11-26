@@ -87,6 +87,8 @@ get_id () {
 		fi
 	done
 
+	n=$(( n + 1 ))
+
 # Save the ids and node names of every node that's an audio sink.
 	for (( i = 0; i < n; i++ )); do
 		if [[ ${pw_parsed[${i},class]} =~ $regex_sink ]]; then
