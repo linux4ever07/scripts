@@ -78,8 +78,8 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	of_dn="${out_dir}/${dn}"
 	of="${of_dn}/${bn}"
 
-	mkdir -p "$of_dn" || exit
-	ln -s "$if" "$of" || exit
+	mkdir -p "$of_dn"
+	ln -s "$if" "$of"
 done
 
 # Changes the owner and permissions of the output directory.
