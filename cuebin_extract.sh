@@ -322,7 +322,7 @@ get_frames () {
 }
 
 # Creates a function called 'set_frames', which will get the length of
-# all tracks in the BIN file.
+# all tracks in the BIN file (except the last one).
 set_frames () {
 	i=0
 	declare frames_this frames_next
