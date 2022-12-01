@@ -3,9 +3,9 @@
 # This script removes duplicate lines from IRC logs in the current
 # directory.
 
-konversation_regex='^\[[[:alpha:]]+, [[:alpha:]]+ [[:digit:]]+, [[:digit:]]+\] \[[[:digit:]]+:[[:digit:]]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\]'
-irssi_regex='^[[:digit:]]+:[0-9]+'
-hexchat_regex='^[[:alpha:]]+ [[:digit:]]+ [[:digit:]]+:[[:digit:]]+:[0-9]+'
+konversation_regex='^\[[[:alpha:]]+, [[:alpha:]]+ [[:digit:]]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\]'
+irssi_regex='^[0-9]+:[0-9]+'
+hexchat_regex='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+'
 
 dn="/dev/shm/rm_dup_lines-${RANDOM}-${RANDOM}"
 
