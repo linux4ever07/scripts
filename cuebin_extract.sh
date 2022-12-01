@@ -355,7 +355,8 @@ copy_track () {
 # bytes is the size of audio sectors.
 	sector=('2048' '2352')
 
-	args=(dd if=\""$bin"\" of=\""$of_bin"\" bs=\""${sector[1]}"\")
+# Creates the first part of the 'dd' command.
+	args=(dd if=\""${bin}"\" of=\""${of_bin}"\" bs=\""${sector[1]}"\")
 
 # Gets the length of the track, unless it's the last track, in which
 # case the length will be absent from the 'frames' array.
@@ -366,13 +367,14 @@ copy_track () {
 # If the track number is higher than '1', figure out how many frames to
 # skip when reading the BIN file.
 	if [[ $track_n -gt 1 ]]; then
-		for (( i = 1; i < $track_n; i++ )); do
+		for (( i = 1; i < track_n; i++ )); do
 			skip=$(( skip + ${frames[${i}]} ))
 		done
 
-		args+=(skip=\""$skip"\")
+		args+=(skip=\""${skip}"\")
 	fi
 
+# Runs 'dd'.
 	eval "${args[@]}"
 }
 
