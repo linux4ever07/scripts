@@ -347,7 +347,7 @@ copy_track () {
 	track_n="$1"
 	of_bin=$(printf '%s/%s%02d.bin' "$of_dn" "$of_name" "$track_n")
 	skip=0
-	declare frames_ref gaps_ref
+	declare frames_ref gaps_ref count
 	declare -a sector args
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
@@ -360,9 +360,16 @@ copy_track () {
 # Gets the length of the track, unless it's the last track, in which
 # case the length will be absent from the 'frames' array.
 	frames_ref="frames[${track_n}]"
+	gaps_ref="gaps[${track_n},index]"
 
 	if [[ -n ${!frames_ref} ]]; then
-		args+=(count=\""${!frames_ref}"\")
+		count="${!frames_ref}"
+
+		if [[ -n ${!gaps_ref} ]]; then
+			count=$(( count - ${!gaps_ref} ))
+		fi
+
+		args+=(count=\""${count}"\")
 	fi
 
 # If the track number is higher than '1', figure out how many frames to
@@ -375,8 +382,6 @@ copy_track () {
 # If there's a pregap in the CUE sheet specified by an INDEX command,
 # that means the gap is present in the BIN file itself, so we skip that
 # part.
-		gaps_ref="gaps[${track_n},index]"
-
 		if [[ -n ${!gaps_ref} ]]; then
 			skip=$(( skip + ${!gaps_ref} ))
 		fi
