@@ -347,7 +347,7 @@ copy_track () {
 	track_n="$1"
 	of_bin=$(printf '%s/%s%02d.bin' "$of_dn" "$of_name" "$track_n")
 	skip=0
-	declare frames_ref
+	declare frames_ref gaps_ref
 	declare -a sector args
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
