@@ -372,6 +372,15 @@ copy_track () {
 			skip=$(( skip + ${frames[${i}]} ))
 		done
 
+# If there's a pregap in the CUE sheet specified by an INDEX command,
+# that means the gap is present in the BIN file itself, so we skip that
+# part.
+		gaps_ref="gaps[${track_n},index]"
+
+		if [[ -n ${!gaps_ref} ]]; then
+			skip=$(( skip + ${!gaps_ref} ))
+		fi
+
 		args+=(skip=\""${skip}"\")
 	fi
 
@@ -403,7 +412,9 @@ get_gaps () {
 		index_1=$(time_convert "$index_1")
 
 		if [[ $index_1 -gt $index_0 ]]; then
-			pregap=$(( pregap + (index_1 - index_0) ))
+			frames_tmp=$(( index_1 - index_0 ))
+			pregap=$(( pregap + frames_tmp ))
+			gaps["${track_n},index"]="$frames_tmp"
 		fi
 	fi
 
