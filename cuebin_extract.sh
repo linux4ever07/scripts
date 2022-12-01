@@ -139,7 +139,6 @@ of_cdr_cue="${of_dn}/${of_name}01_cdr.cue"
 of_ogg_cue="${of_dn}/${of_name}01_ogg.cue"
 of_flac_cue="${of_dn}/${of_name}01_flac.cue"
 
-of_bin="${of_dn}/${of_name}01.bin"
 of_iso="${of_dn}/${of_name}01.iso"
 
 cue="$if"
