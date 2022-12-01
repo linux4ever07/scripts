@@ -348,7 +348,7 @@ copy_track () {
 	track_n="$1"
 	of_bin=$(printf '%s/%s%02d.bin' "$of_dn" "$of_name" "$track_n")
 	skip=0
-
+	declare frames_ref
 	declare -a sector args
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
@@ -360,8 +360,10 @@ copy_track () {
 
 # Gets the length of the track, unless it's the last track, in which
 # case the length will be absent from the 'frames' array.
-	if [[ -n ${frames[${track_n}]} ]]; then
-		args+=(count=\""${frames[${track_n}]}"\")
+	frames_ref="frames[${track_n}]"
+
+	if [[ -n ${!frames_ref} ]]; then
+		args+=(count=\""${!frames_ref}"\")
 	fi
 
 # If the track number is higher than '1', figure out how many frames to
