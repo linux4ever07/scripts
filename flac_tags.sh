@@ -58,7 +58,7 @@ gettags () {
 options () {
 	type="$1"
 
-	regex='^[[:digit:]]+$'
+	regex='^[0-9]+$'
 
 	limit=$(( ${#files[@]} - 1 ))
 

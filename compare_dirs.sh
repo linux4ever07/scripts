@@ -36,8 +36,8 @@ dir1=$(readlink -f "$1")
 dir2=$(readlink -f "$2")
 
 # Gets the total size of both directories.
-dir1_size=$(du -b -s "$dir1" | grep -Eo '^[[:digit:]]+')
-dir2_size=$(du -b -s "$dir2" | grep -Eo '^[[:digit:]]+')
+dir1_size=$(du -b -s "$dir1" | grep -Eo '^[0-9]+')
+dir2_size=$(du -b -s "$dir2" | grep -Eo '^[0-9]+')
 
 regex='([^ a-zA-Z0-9\.\-_ ])'
 

@@ -977,7 +977,7 @@ check_res () {
 is_handbrake () {
 	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
 
-	regex_pid_comm='^[[:blank:]]*([[:digit:]]+)[[:blank:]]*(.*)$'
+	regex_pid_comm='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")
@@ -1012,10 +1012,10 @@ is_handbrake () {
 # input file is an M2TS, in the directory structure '/BDMV/STREAM/'.
 # The function outputs a name, which can be used with the 'break_name'
 # function, to get the movie information from IMDb. If the input
-# filename doesn't match regex '/BDMV/STREAM/[[:digit:]]{5}.m2ts$',
+# filename doesn't match regex '/BDMV/STREAM/[0-9]{5}.m2ts$',
 # return from this function, hence leaving the $if_m2ts variable empty.
 if_m2ts () {
-	regex_m2ts='/BDMV/STREAM/[[:digit:]]{5}.m2ts$'
+	regex_m2ts='/BDMV/STREAM/[0-9]{5}.m2ts$'
 
 	if [[ ! $if =~ $regex_m2ts ]]; then
 		return

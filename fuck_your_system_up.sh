@@ -12,7 +12,7 @@ fi
 
 regex_hd='^/dev/hd[[:alpha:]]+$'
 regex_sd='^/dev/sd[[:alpha:]]+$'
-regex_nvme='^/dev/nvme[[:digit:]]+n[[:digit:]]+$'
+regex_nvme='^/dev/nvme[[:digit:]]+n[0-9]+$'
 
 regexes=("$regex_hd" "$regex_sd" "$regex_nvme")
 sources=('/dev/zero' '/dev/urandom')

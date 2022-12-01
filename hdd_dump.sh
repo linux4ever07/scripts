@@ -55,7 +55,7 @@ declare -A md5s
 cp_log="${out_dir}/hdd_dump_copied-${session}.txt"
 error_log="${out_dir}/hdd_dump_errors-${session}.txt"
 
-regex_du='^([[:digit:]]+)([[:blank:]]+)(.*)$'
+regex_du='^([0-9]+)([[:blank:]]+)(.*)$'
 
 mkdir -p "$out_dir" || exit
 
