@@ -269,7 +269,7 @@ done
 # on the "POSIX fully portable filenames" entry:
 # https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
 fsencode () {
-	sed 's/[^ A-Za-z0-9._-]//g' <<<"$1"
+	sed -E 's/[^ A-Za-z0-9._-]//g' <<<"$1"
 }
 
 # This creates a function called 'uriencode', which will translate
