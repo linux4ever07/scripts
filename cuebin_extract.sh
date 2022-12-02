@@ -43,8 +43,8 @@
 # script not depend on 'bchunk' anymore.
 
 # 'sox' is able to convert the resulting BIN files to WAV without using
-# 'bchunk' (if the BIN files have the '.cdr' extension, and the byteswap
-# can be done with 'dd':
+# 'bchunk' (if the BIN files have the '.cdr' extension), and the
+# byteswap can be done with 'dd':
 
 # sox in.cdr out.wav
 # dd conv=swab if=in.bin of=out.bin
