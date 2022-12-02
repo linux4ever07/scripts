@@ -42,10 +42,11 @@
 # track from the original BIN file, it may be possible to make this
 # script not depend on 'bchunk' anymore.
 
-# I've not yet figured out how to convert the resulting BIN files to WAV
-# without using 'bchunk', but at least the byteswap can be done with
-# 'dd':
+# 'sox' is able to convert the resulting BIN files to WAV without using
+# 'bchunk' (if the BIN files have the '.cdr' extension, and the byteswap
+# can be done with 'dd':
 
+# sox in.cdr out.wav
 # dd conv=swab if=in.bin of=out.bin
 
 if=$(readlink -f "$1")
@@ -372,20 +373,22 @@ copy_track () {
 		args+=(count=\""${count}"\")
 	fi
 
+# If there's a pregap in the CUE sheet specified by an INDEX command,
+# that means the gap is present in the BIN file itself, so we skip that
+# part.
+	if [[ -n ${!gaps_ref} ]]; then
+		skip=$(( skip + ${!gaps_ref} ))
+	fi
+
 # If the track number is higher than '1', figure out how many frames to
 # skip when reading the BIN file.
 	if [[ $track_n -gt 1 ]]; then
 		for (( i = 1; i < track_n; i++ )); do
 			skip=$(( skip + ${frames[${i}]} ))
 		done
+	fi
 
-# If there's a pregap in the CUE sheet specified by an INDEX command,
-# that means the gap is present in the BIN file itself, so we skip that
-# part.
-		if [[ -n ${!gaps_ref} ]]; then
-			skip=$(( skip + ${!gaps_ref} ))
-		fi
-
+	if [[ $skip -gt 0 ]]; then
 		args+=(skip=\""${skip}"\")
 	fi
 
