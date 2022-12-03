@@ -162,7 +162,6 @@ sub time_convert {
 # The 'time_calc' subroutine adds the total time of the previous SRT
 # subtitle file to the current 'time line'.
 sub time_calc {
-	my $offset = shift;
 	my $start_time = shift;
 	my $stop_time = shift;
 
@@ -218,7 +217,7 @@ sub parse_srt {
 				my(@times, @tmp);
 
 				if ($offset > 0) {
-					push(@times, time_calc($offset, $start_time, $stop_time));
+					push(@times, time_calc($start_time, $stop_time));
 					$time_line = $times[0] . $delim . $times[1];
 				} else { $time_line = $next; }
 
