@@ -57,7 +57,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-unset -v files path_parts
+unset -v files path_parts depth_orig depth_tmp depth_diff
 
 for (( i = depth; i > 0; i-- )); do
 	mapfile -t files < <(find "$dir" -mindepth "$i" -maxdepth "$i" 2>&-)
