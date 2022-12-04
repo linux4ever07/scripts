@@ -1012,8 +1012,8 @@ is_handbrake () {
 # input file is an M2TS, in the directory structure '/BDMV/STREAM/'.
 # The function outputs a name, which can be used with the 'break_name'
 # function, to get the movie information from IMDb. If the input
-# filename doesn't match regex '/BDMV/STREAM/[0-9]{5}.m2ts$',
-# return from this function, hence leaving the $if_m2ts variable empty.
+# filename doesn't match the regex in $regex_m2ts, return from this
+# function, hence leaving the $if_m2ts variable empty.
 if_m2ts () {
 	regex_m2ts='/BDMV/STREAM/[0-9]+.m2ts$'
 
