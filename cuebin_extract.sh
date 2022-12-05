@@ -198,12 +198,13 @@ check_cmd () {
 read_cue () {
 	declare -a files not_found cue_tmp
 
-	track_n=1
+	track_n=0
 
 	handle_command () {
 # If line is a file command...
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
+			track_n=$(( track_n + 1 ))
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex_path}//")
 			fn="${if_dn}/${fn}"
 
