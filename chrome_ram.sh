@@ -27,8 +27,8 @@
 # corrupted when there's not enough free space in /dev/shm to write
 # files.
 
-# If Chrome were to become unresponsive, killing the 'chrome' process
-# will allow the script to quit normally and restore everything.
+# If Chrome were to become unresponsive, 'killall -9 chrome' will allow
+# the script to quit normally and restore everything.
 
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [normal|clean]"
