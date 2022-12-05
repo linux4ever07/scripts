@@ -164,7 +164,7 @@ regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 regex_iso='\.iso$'
 regex_wav='\.wav$'
 
-index1='INDEX 01 00:00:00'
+index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
 
 declare -A cue_lines gaps
@@ -605,7 +605,7 @@ create_cue () {
 			eval of_cue_"${type}"_list+=\(\""${offset[1]}PREGAP ${time_tmp}"\"\)
 		fi
 
-		eval of_cue_"${type}"_list+=\(\""${offset[1]}${index1}"\"\)
+		eval of_cue_"${type}"_list+=\(\""${offset[1]}${index_default}"\"\)
 
 		if [[ ${!postgap_ref} -gt 0 ]]; then
 			time_tmp=$(time_convert "${!postgap_ref}")
