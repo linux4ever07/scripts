@@ -405,7 +405,7 @@ get_gaps () {
 	track_n="$1"
 	pregap=0
 	postgap=0
-	declare index_0 index_0_ref index_1 index_1_ref pregap_tmp postgap_tmp frames_tmp
+	declare index_0 index_0_ref index_1 index_1_ref time_tmp frames_tmp
 
 # If the CUE sheet specifies a pregap using the INDEX command, convert
 # that to a PREGAP command.
@@ -430,14 +430,14 @@ get_gaps () {
 	postgap_ref="cue_lines[${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
-		pregap_tmp=$(sed -E "s/${format[5]}/\2/" <<<"${!pregap_ref}")
-		frames_tmp=$(time_convert "${pregap_tmp}")
+		time_tmp=$(sed -E "s/${format[5]}/\2/" <<<"${!pregap_ref}")
+		frames_tmp=$(time_convert "$time_tmp")
 		pregap=$(( pregap + frames_tmp ))
 	fi
 
 	if [[ -n ${!postgap_ref} ]]; then
-		postgap_tmp=$(sed -E "s/${format[7]}/\2/" <<<"${!postgap_ref}")
-		frames_tmp=$(time_convert "${postgap_tmp}")
+		time_tmp=$(sed -E "s/${format[7]}/\2/" <<<"${!postgap_ref}")
+		frames_tmp=$(time_convert "$time_tmp")
 		postgap=$(( postgap + frames_tmp ))
 	fi
 
