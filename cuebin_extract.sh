@@ -222,7 +222,8 @@ read_cue () {
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			cue_lines["${track_n},file"]="$string"
+			cue_lines["${track_n},filename"]="$fn"
+			cue_lines["${track_n},file_format"]="${match[2]}"
 		fi
 
 # If line is a track command...
@@ -232,7 +233,8 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},track"]="$string"
+			cue_lines["${track_n},track_number"]="${match[1]}"
+			cue_lines["${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a pregap command...
@@ -241,7 +243,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},pregap"]="$string"
+			cue_lines["${track_n},pregap"]="${match[1]}"
 		fi
 
 # If line is an index command...
@@ -251,7 +253,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},index,${index_n}"]="$string"
+			cue_lines["${track_n},index,${index_n}"]="${match[2]}"
 		fi
 
 # If line is a postgap command...
@@ -260,7 +262,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},postgap"]="$string"
+			cue_lines["${track_n},postgap"]="${match[1]}"
 		fi
 
 # If a string has been created, add it to the 'cue_tmp' array.
@@ -305,7 +307,7 @@ MERGE
 # a track in the BIN file.
 get_frames () {
 	track_n="$1"
-	declare index_ref time_tmp frames_tmp
+	declare index_ref frames_tmp
 
 	if [[ -n ${cue_lines[${track_n},index,0]} ]]; then
 		index_ref="cue_lines[${track_n},index,0]"
@@ -314,8 +316,7 @@ get_frames () {
 	fi
 
 	if [[ -n ${!index_ref} ]]; then
-		time_tmp=$(sed -E "s/${format[6]}/\3/" <<<"${!index_ref}")
-		frames_tmp=$(time_convert "$time_tmp")
+		frames_tmp=$(time_convert "${!index_ref}")
 
 		printf '%s' "$frames_tmp"
 	fi
@@ -404,7 +405,7 @@ get_gaps () {
 	track_n="$1"
 	pregap=0
 	postgap=0
-	declare index_0 index_0_ref index_1 index_1_ref time_tmp frames_tmp
+	declare index_0 index_0_ref index_1 index_1_ref frames_tmp
 
 # If the CUE sheet specifies a pregap using the INDEX command, convert
 # that to a PREGAP command.
@@ -412,11 +413,8 @@ get_gaps () {
 	index_1_ref="cue_lines[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
-		index_0=$(sed -E "s/${format[6]}/\3/" <<<"${!index_0_ref}")
-		index_1=$(sed -E "s/${format[6]}/\3/" <<<"${!index_1_ref}")
-
-		index_0=$(time_convert "$index_0")
-		index_1=$(time_convert "$index_1")
+		index_0=$(time_convert "${!index_0_ref}")
+		index_1=$(time_convert "${!index_1_ref}")
 
 		if [[ $index_1 -gt $index_0 ]]; then
 			frames_tmp=$(( index_1 - index_0 ))
@@ -429,14 +427,12 @@ get_gaps () {
 	postgap_ref="cue_lines[${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
-		time_tmp=$(sed -E "s/${format[5]}/\2/" <<<"${!pregap_ref}")
-		frames_tmp=$(time_convert "$time_tmp")
+		frames_tmp=$(time_convert "${!pregap_ref}")
 		pregap=$(( pregap + frames_tmp ))
 	fi
 
 	if [[ -n ${!postgap_ref} ]]; then
-		time_tmp=$(sed -E "s/${format[7]}/\2/" <<<"${!postgap_ref}")
-		frames_tmp=$(time_convert "$time_tmp")
+		frames_tmp=$(time_convert "${!postgap_ref}")
 		postgap=$(( postgap + frames_tmp ))
 	fi
 
@@ -452,7 +448,7 @@ set_gaps () {
 
 	while true; do
 		i=$(( i + 1 ))
-		track_ref="cue_lines[${i},track]"
+		track_ref="cue_lines[${i},track_number]"
 
 		if [[ -n ${!track_ref} ]]; then
 			get_gaps "$i"
@@ -618,10 +614,12 @@ create_cue () {
 		line_ref="bchunk_${type_tmp}_list[${i}]"
 
 		track_n=$(( i + 1 ))
+		track_mode_ref="cue_lines[${track_n},track_mode]"
+		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 
 		if [[ ${!line_ref} =~ $regex_iso ]]; then
 			eval of_cue_"${type}"_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
-			eval of_cue_"${type}"_list+=\(\""${offset[0]}${cue_lines[${track_n},track]}"\"\)
+			eval of_cue_"${type}"_list+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
 		else
 			case "$type" in
@@ -635,10 +633,8 @@ create_cue () {
 					of_cue_flac_list+=("FILE \"${!line_ref%.wav}.flac\" FLAC")
 				;;
 			esac
-
-			string=$(printf 'TRACK %02d AUDIO' "$track_n")
 			
-			eval of_cue_"${type}"_list+=\(\""${offset[0]}${string}"\"\)
+			eval of_cue_"${type}"_list+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
 		fi
 	done

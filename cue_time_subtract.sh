@@ -69,7 +69,8 @@ read_cue () {
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			cue_lines["${track_n},file"]="$string"
+			cue_lines["${track_n},filename"]="$fn"
+			cue_lines["${track_n},file_format"]="${match[2]}"
 		fi
 
 # If line is a track command...
@@ -79,7 +80,8 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},track"]="$string"
+			cue_lines["${track_n},track_number"]="${match[1]}"
+			cue_lines["${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a pregap command...
@@ -88,7 +90,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},pregap"]="$string"
+			cue_lines["${track_n},pregap"]="${match[1]}"
 		fi
 
 # If line is an index command...
@@ -98,7 +100,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},index,${index_n}"]="$string"
+			cue_lines["${track_n},index,${index_n}"]="${match[2]}"
 		fi
 
 # If line is a postgap command...
@@ -107,7 +109,12 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},postgap"]="$string"
+			cue_lines["${track_n},postgap"]="${match[1]}"
+		fi
+
+# If a string has been created, add it to the 'cue_tmp' array.
+		if [[ -n $string ]]; then
+			cue_tmp+=("$string")
 		fi
 	}
 
@@ -142,7 +149,7 @@ MERGE
 # a track in the BIN file.
 get_frames () {
 	track_n="$1"
-	declare index_ref time_tmp frames_tmp
+	declare index_ref frames_tmp
 
 	if [[ -n ${cue_lines[${track_n},index,0]} ]]; then
 		index_ref="cue_lines[${track_n},index,0]"
@@ -151,8 +158,7 @@ get_frames () {
 	fi
 
 	if [[ -n ${!index_ref} ]]; then
-		time_tmp=$(sed -E "s/${format[6]}/\3/" <<<"${!index_ref}")
-		frames_tmp=$(time_convert "$time_tmp")
+		frames_tmp=$(time_convert "${!index_ref}")
 
 		printf '%s' "$frames_tmp"
 	fi
