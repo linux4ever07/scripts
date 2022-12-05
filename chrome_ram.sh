@@ -27,6 +27,9 @@
 # corrupted when there's not enough free space in /dev/shm to write
 # files.
 
+# If Chrome were to become unresponsive, killing the 'chrome' process
+# will allow the script to quit normally and restore everything.
+
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [normal|clean]"
 	exit
@@ -90,8 +93,7 @@ check_ram () {
 }
 
 check_hdd () {
-	cfg_size=$(du --summarize --block-size=1 "$shm_cfg" | grep -Eo '^[0-9]+')
-	cfg_size=$(( cfg_size * 2 ))
+	cfg_size=$(du --summarize --total --block-size=1 "$@" | tail -n 1 | grep -Eo '^[0-9]+')
 	hdd_free=$(df --output=avail --block-size=1 "$HOME" | tail -n +2 | tr -d '[:blank:]')
 
 	if [[ $cfg_size -gt $hdd_free ]]; then
@@ -100,8 +102,8 @@ check_hdd () {
 Not enough free space in:
 ${HOME}
 
-You need to free up space right now. There's not enough space to backup
-the Chrome config, or to restore config / cache when Chrome quits.
+You need to free up space to be able to backup the Chrome config, and to
+restore config / cache when Chrome quits.
 
 NOT_ENOUGH
 
@@ -112,7 +114,7 @@ NOT_ENOUGH
 }
 
 backup_chrome () {
-	tar_fn_old="${tar_fn}.bak"
+	tar_fn_old="${tar_fn}.old"
 
 	cat <<BACKUP
 
@@ -169,6 +171,10 @@ kill_chrome () {
 
 mkdir -p "$og_cfg" "$og_cache" || exit
 
+if [[ $mode == 'normal' ]]; then
+	check_hdd "$og_cfg" "$og_cache" || exit
+fi
+
 mv "$og_cfg" "$bak_cfg" || exit
 mv "$og_cache" "$bak_cache" || exit
 
@@ -209,7 +215,7 @@ while kill -0 "$pid" 1>&- 2>&-; do
 		n=0
 
 		if [[ $mode == 'normal' ]]; then
-			check_hdd && backup_chrome
+			check_hdd "$shm_dn" && backup_chrome
 		fi
 	fi
 done
