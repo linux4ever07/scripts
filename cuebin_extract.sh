@@ -597,19 +597,21 @@ create_cue () {
 # command, and add pregap or postgap, if they exist in the source CUE
 # sheet.
 	set_index () {
+		declare time_tmp
+
 		pregap_ref="gaps[${track_n},pre]"
 		postgap_ref="gaps[${track_n},post]"
 
 		if [[ ${!pregap_ref} -gt 0 ]]; then
-			pregap_tmp=$(time_convert "${!pregap_ref}")
-			eval of_cue_"${type}"_list+=\(\""${offset[1]}PREGAP ${pregap_tmp}"\"\)
+			time_tmp=$(time_convert "${!pregap_ref}")
+			eval of_cue_"${type}"_list+=\(\""${offset[1]}PREGAP ${time_tmp}"\"\)
 		fi
 
 		eval of_cue_"${type}"_list+=\(\""${offset[1]}${index1}"\"\)
 
 		if [[ ${!postgap_ref} -gt 0 ]]; then
-			postgap_tmp=$(time_convert "${!postgap_ref}")
-			eval of_cue_"${type}"_list+=\(\""${offset[1]}POSTGAP ${postgap_tmp}"\"\)
+			time_tmp=$(time_convert "${!postgap_ref}")
+			eval of_cue_"${type}"_list+=\(\""${offset[1]}POSTGAP ${time_tmp}"\"\)
 		fi
 	}
 
