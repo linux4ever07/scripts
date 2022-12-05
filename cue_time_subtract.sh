@@ -59,7 +59,7 @@ read_cue () {
 			fi
 
 			if [[ $track_n -eq 1 ]]; then
-				if [[ ! -f $bin && -f $fn ]]; then
+				if [[ -z $bin && -f $fn ]]; then
 					bin="$fn"
 				fi
 			fi
@@ -126,6 +126,14 @@ This CUE sheet contains multiple FILE commands!
 MERGE
 
 		exit
+	fi
+
+	if [[ ${#not_found[@]} -gt 0 ]]; then
+		printf '\n%s\n\n' 'The files below were not found:'
+
+		printf '%s\n' "${not_found[@]}"
+
+		printf '\n'
 	fi
 }
 

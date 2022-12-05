@@ -212,7 +212,7 @@ read_cue () {
 			fi
 
 			if [[ $track_n -eq 1 ]]; then
-				if [[ ! -f $bin && -f $fn ]]; then
+				if [[ -z $bin && -f $fn ]]; then
 					bin="$fn"
 				fi
 			fi
