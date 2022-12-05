@@ -172,7 +172,7 @@ kill_chrome () {
 mkdir -p "$og_cfg" "$og_cache" || exit
 
 if [[ $mode == 'normal' ]]; then
-	check_hdd "$og_cfg" "$og_cache" || exit
+	check_hdd "$og_cfg" || exit
 fi
 
 mv "$og_cfg" "$bak_cfg" || exit
