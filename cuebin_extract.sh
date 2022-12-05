@@ -317,7 +317,6 @@ get_frames () {
 
 	if [[ -n ${!index_ref} ]]; then
 		frames_tmp=$(time_convert "${!index_ref}")
-
 		printf '%s' "$frames_tmp"
 	fi
 }
@@ -592,7 +591,7 @@ create_cue () {
 # command, and add pregap or postgap, if they exist in the source CUE
 # sheet.
 	set_index () {
-		declare time_tmp
+		declare pregap_ref postgap_ref time_tmp
 
 		pregap_ref="gaps[${track_n},pre]"
 		postgap_ref="gaps[${track_n},post]"

@@ -159,7 +159,6 @@ get_frames () {
 
 	if [[ -n ${!index_ref} ]]; then
 		frames_tmp=$(time_convert "${!index_ref}")
-
 		printf '%s' "$frames_tmp"
 	fi
 }
