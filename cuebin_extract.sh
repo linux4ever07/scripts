@@ -275,7 +275,6 @@ read_cue () {
 
 	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
 		line="${cue_lines_if[${i}]}"
-
 		handle_command "$line"
 	done
 

@@ -45,6 +45,8 @@ declare -a frames
 # sheet, add full path to filenames listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
+	declare -a files not_found
+
 	track_n=0
 
 	handle_command () {
@@ -111,18 +113,12 @@ read_cue () {
 
 			cue_lines["${track_n},postgap"]="${match[1]}"
 		fi
-
-# If a string has been created, add it to the 'cue_tmp' array.
-		if [[ -n $string ]]; then
-			cue_tmp+=("$string")
-		fi
 	}
 
 	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
 
 	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
 		line="${cue_lines_if[${i}]}"
-
 		handle_command "$line"
 	done
 
@@ -178,9 +174,14 @@ set_frames () {
 		if [[ -n $frames_next ]]; then
 			frames["${i}"]=$(( frames_next - frames_this ))
 		else
-			size=$(stat -c '%s' "$bin")
-			frames_total=$(( size / 2352 ))
-			frames["${i}"]=$(( frames_total - frames_this ))
+			if [[ -f $bin ]]; then
+				size=$(stat -c '%s' "$bin")
+				frames_total=$(( size / 2352 ))
+				frames["${i}"]=$(( frames_total - frames_this ))
+			else
+				frames["${i}"]=0
+			fi
+
 			break
 		fi
 	done
