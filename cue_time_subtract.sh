@@ -174,7 +174,7 @@ set_frames () {
 		if [[ -n $frames_next ]]; then
 			frames["${i}"]=$(( frames_next - frames_this ))
 		else
-			if [[ -f $bin ]]; then
+			if [[ -n $bin ]]; then
 				size=$(stat -c '%s' "$bin")
 				frames_total=$(( size / 2352 ))
 				frames["${i}"]=$(( frames_total - frames_this ))
