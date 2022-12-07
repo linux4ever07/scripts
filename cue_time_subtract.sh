@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# This script gets the length of all tracks in a CUE sheet.
+# This script is meant to get the length of all individual tracks in a
+# CUE sheet.
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
@@ -145,12 +146,15 @@ MERGE
 # a track in the BIN file.
 get_frames () {
 	track_n="$1"
-	declare index_ref frames_tmp
+	declare index_0_ref index_1_ref index_ref frames_tmp
 
-	if [[ -n ${cue_lines[${track_n},index,0]} ]]; then
-		index_ref="cue_lines[${track_n},index,0]"
+	index_0_ref="cue_lines[${track_n},index,0]"
+	index_1_ref="cue_lines[${track_n},index,1]"
+
+	if [[ -n ${!index_0_ref} ]]; then
+		index_ref="$index_0_ref"
 	else
-		index_ref="cue_lines[${track_n},index,1]"
+		index_ref="$index_1_ref"
 	fi
 
 	if [[ -n ${!index_ref} ]]; then
