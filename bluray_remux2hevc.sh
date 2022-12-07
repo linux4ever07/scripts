@@ -699,10 +699,10 @@ dts_extract_remux () {
 # 5.1 track in one of those formats.
 	for tmp_type in "${audio_types[@]}"; do
 		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
-			array_ref="audio_tracks[${tmp_type},${i}]"
+			hash_ref="audio_tracks[${tmp_type},${i}]"
 
-			if [[ ${!array_ref} =~ $regex_51 ]]; then
-				audio_track_ref="audio_tracks[${tmp_type},${i}]"
+			if [[ ${!hash_ref} =~ $regex_51 ]]; then
+				audio_track_ref="$hash_ref"
 				audio_format="$tmp_type"
 				switch=1
 				break
