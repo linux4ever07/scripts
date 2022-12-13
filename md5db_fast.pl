@@ -68,7 +68,7 @@ $regex{dotfile} = qr(^/home/[^/]+/\.);
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 
 # Regex for stripping path from file name.
-$regex{path} = qr/^(.*[\/])(.*)$/;
+$regex{path} = qr/^(.*[\\\/])/;
 
 # Delimiter for database.
 my $delim = "\t\*\t";
@@ -624,7 +624,7 @@ sub md5import {
 # Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
 			$fn = $2;
-			$fn =~ s($regex{path})($2);
+			$fn =~ s($regex{path})();
 
 # Add full path to file name, unless it's the current directory.
 			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
