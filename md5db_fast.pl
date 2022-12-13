@@ -62,7 +62,7 @@ my $db = 'md5.db';
 my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
 # Regex for skipping dotfiles in home directories.
-$regex{dotfile} = qr(^/home/[[:alnum:]]+/\.);
+$regex{dotfile} = qr(^/home/[^/]+/\.);
 
 # Regex for separating basename from extension.
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
