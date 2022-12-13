@@ -1015,7 +1015,7 @@ is_handbrake () {
 # filename doesn't match the regex in $regex_m2ts, return from this
 # function, hence leaving the $if_m2ts variable empty.
 if_m2ts () {
-	regex_m2ts='/BDMV/STREAM/[0-9]+.m2ts$'
+	regex_m2ts='/BDMV/STREAM/[0-9]+\.m2ts$'
 
 	if [[ ! $if =~ $regex_m2ts ]]; then
 		return
