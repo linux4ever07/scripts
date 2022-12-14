@@ -37,7 +37,7 @@ format[6]="^(INDEX) ([0-9]{2,}) (${format[2]})$"
 format[7]="^(POSTGAP) (${format[2]})$"
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_path='^(.*[\/])'
+regex_path='^(.*[\\\/])'
 
 declare -A cue_lines
 declare -a frames
