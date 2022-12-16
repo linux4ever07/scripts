@@ -231,7 +231,7 @@ sub parse_srt {
 
 				if (length($this)) { push(@tmp, $this); }
 
-				until ($i >= $end) {
+				until ($i > $end) {
 					$i = $i + 1;
 					$j = $i + 1;
 
