@@ -32,7 +32,7 @@ declare -A md5s
 dn_if="${dirs[0]}"
 unset -v dirs[0]
 
-mapfile -t files < <(find "$dn_if" -type f -exec printf '%q\n' {} \; 2>&-)
+mapfile -t files < <(find "$dn_if" -type f -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	eval f="${files[${i}]}"
@@ -44,7 +44,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 done
 
 for dn in "${dirs[@]}"; do
-	mapfile -t files < <(find "$dn" -type f -exec printf '%q\n' {} \; 2>&-)
+	mapfile -t files < <(find "$dn" -type f -exec printf '%q\n' {} + 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		eval f="${files[${i}]}"
