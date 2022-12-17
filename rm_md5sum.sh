@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script removes duplicate files in the directory given as
 # argument. The files with the oldest modification date will be
