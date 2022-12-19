@@ -228,7 +228,7 @@ sub files2queue {
 	if ($mode eq 'index') {
 		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} eq '1') {
-				if ($fn =~ /.flac$/i) {
+				if ($fn =~ /\.flac$/i) {
 					if (scalar(@flac_req) != 2) { next; }
 				}
 
@@ -243,7 +243,7 @@ sub files2queue {
 	if ($mode eq 'test') {
 		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} ne '1') {
-				if ($fn =~ /.flac$/i) {
+				if ($fn =~ /\.flac$/i) {
 					if (scalar(@flac_req) != 2) { next; }
 
 					$dn = dirname($fn);
@@ -288,7 +288,7 @@ sub files2queue {
 # If script mode is 'test', copy the FLAC file to /dev/shm, otherwise
 # just enqueue it directly. If it's not a FLAC file, use the normal
 # sysread method of reading files into RAM.
-		if ($fn =~ /.flac$/i) {
+		if ($fn =~ /\.flac$/i) {
 			if ($mode eq 'test') {
 				copy($fn, $files{$fn}{dn}) or die "Can't copy '$fn': $!";
 
@@ -792,7 +792,7 @@ sub md5index {
 	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
-		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn, $size); }
+		if ($fn =~ /\.flac$/i) { $tmp_md5 = md5flac($fn, $size); }
 		else { $tmp_md5 = md5sum($fn, $size); }
 
 		if (! length($tmp_md5)) { next; }
@@ -816,7 +816,7 @@ sub md5test {
 	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
-		if ($fn =~ /.flac$/i) { $tmp_md5 = md5flac($fn, $size); }
+		if ($fn =~ /\.flac$/i) { $tmp_md5 = md5flac($fn, $size); }
 		else { $tmp_md5 = md5sum($fn, $size); }
 
 		if (! length($tmp_md5)) { next; }
@@ -928,7 +928,7 @@ while (my $dn = shift(@lib)) {
 # Import *.MD5 files to database.
 		when ('import') {
 			foreach my $fn (sort(keys(%md5h))) {
-				if ($fn =~ /.md5$/i) { md5import($fn); }
+				if ($fn =~ /\.md5$/i) { md5import($fn); }
 			}
 		}
 	}
