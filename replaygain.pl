@@ -550,7 +550,7 @@ sub replaygain {
 		}
 	}
 
-	if (keys(%replaygain) != 1) {
+	if (! keys(%replaygain)) {
 		print $dn . ': adding ReplayGain... ';
 
 		system('metaflac', '--remove-replay-gain', keys(%{$files{flac}}));
