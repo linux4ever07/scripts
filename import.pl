@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# This script is meant to import FLAC albums to my FLAC library
+# This script is meant to import FLAC albums to a FLAC music library
 # directory.
 
 use v5.34;
