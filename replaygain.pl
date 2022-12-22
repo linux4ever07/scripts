@@ -80,7 +80,7 @@ foreach my $dn (@dirs) {
 		rmtag($fn, 'rating');
 		discnumber($fn, $dn);
 		albumartist($fn);
-# rm_albumart();
+# rm_albumart($fn);
 		changed($fn);
 		writetags($fn, 1);
 	}
