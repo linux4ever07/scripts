@@ -13,7 +13,7 @@
 # * Remove tags (only RATING as of right now)
 # * Add DISCNUMBER, ALBUMARTIST, TOTALTRACKS tags
 # * Remove leading 0s from the TRACKNUMBER, TOTALTRACKS, TRACKTOTAL,
-# DISCNUMBER, TOTALDISCS, DISCTOTAL tags.
+# DISCNUMBER, TOTALDISCS, DISCTOTAL tags
 # * Remove album art (right now that subroutine is disabled)
 # * Add ReplayGain tags for all albums, unless they already exist
 # * Sort tag fields alphabetically and uppercase them before writing
@@ -48,19 +48,7 @@ $regex{tag} = qr/^([^=]*)=(.*)$/;
 $regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
 $regex{id3v2} = qr/has an ID3v2 tag/;
 
-# The 'version' subroutine checks the installed version of 'flac'.
-sub version {
-	my($line1);
-
-	open(my $flac_v, '-|', 'flac', '--version')
-	or die "Can't open 'flac': $!";
-	chomp($line1 = <$flac_v>);
-	close($flac_v) or die "Can't close 'flac': $!";
-
-	@flac_version = split(' ', $line1);
-}
-
-version();
+@flac_version = split(' ', `flac --version`);
 
 if (scalar(@ARGV) != 1 or ! -d $ARGV[0]) { usage(); }
 
