@@ -24,7 +24,7 @@ fi
 
 dir=$(readlink -f "$1")
 case="$2"
-depth=0
+depth_max=0
 
 pause_msg="
 You're about to recursively change all the file / directory names
@@ -41,7 +41,7 @@ fi
 printf '\n'
 
 mapfile -d'/' -t path_parts <<<"$dir"
-depth_orig=$(( ${#path_parts[@]} - 1 ))
+depth_og=$(( ${#path_parts[@]} - 1 ))
 
 mapfile -t files < <(find "$dir" 2>&-)
 
@@ -50,16 +50,16 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 	mapfile -d'/' -t path_parts <<<"$fn"
 	depth_tmp=$(( ${#path_parts[@]} - 1 ))
-	depth_diff=$(( depth_tmp - depth_orig ))
+	depth_diff=$(( depth_tmp - depth_og ))
 
-	if [[ $depth_diff -gt $depth ]]; then
-		depth="$depth_diff"
+	if [[ $depth_diff -gt $depth_max ]]; then
+		depth_max="$depth_diff"
 	fi
 done
 
-unset -v files path_parts depth_orig depth_tmp depth_diff
+unset -v files path_parts depth_og depth_tmp depth_diff
 
-for (( i = depth; i > 0; i-- )); do
+for (( i = depth_max; i > 0; i-- )); do
 	mapfile -t files < <(find "$dir" -mindepth "$i" -maxdepth "$i" 2>&-)
 
 	for (( j = 0; j < ${#files[@]}; j++ )); do
