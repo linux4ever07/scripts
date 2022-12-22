@@ -588,9 +588,13 @@ sub writetags {
 		}
 	}
 
-# Push the output tags to the @mflac_of array.
+# Push the output tags to the @mflac_of array. If there's tag fields
+# with empty values, ignore those hash elements. They get
+# unintentionally created, when using references in other subroutines.
 	foreach my $field (sort(keys(%{$$tags_of_ref}))) {
 		my $tag_ref = \$$tags_of_ref->{$field};
+
+		if (! length($$tag_ref)) { next; }
 
 		unless ($field eq 'vendor_ref') {
 			push(@mflac_of, uc($field) . '=' . $$tag_ref);
@@ -717,11 +721,12 @@ sub changed {
 	}
 
 # Collect all the tag fields from the output tags. If there's tag fields
-# with empty values, delete those hash elements. They get
+# with empty values, ignore those hash elements. They get
 # unintentionally created, when using references in other subroutines.
 	foreach my $field (keys(%{$tags_of{$fn}})) {
-		if (! length($tags_of{$fn}{$field})) { delete($tags_of{$fn}{$field}); }
-		else { $fields{$field} = 1; }
+		if (! length($tags_of{$fn}{$field})) { next; }
+
+		$fields{$field} = 1;
 	}
 
 	foreach my $field (sort(keys(%fields))) {
