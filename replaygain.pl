@@ -39,7 +39,7 @@ use File::Basename qw(basename dirname);
 use File::Path qw(make_path);
 use Cwd qw(abs_path);
 
-my(%regex, %tags_if, %tags_of, %files, @dirs, @flac_version, $library, $depth_og);
+my(%regex, %tags_if, %tags_of, %files, @dirs, $library, $depth_og);
 
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
@@ -48,7 +48,16 @@ $regex{tag} = qr/^([^=]*)=(.*)$/;
 $regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
 $regex{id3v2} = qr/has an ID3v2 tag/;
 
-@flac_version = split(' ', `flac --version`);
+# Check if the necessary commands are installed to test FLAC files.
+chomp(my @flac_req = (`command -v flac metaflac 2>&-`));
+
+if (scalar(@flac_req) != 2) {
+	say "\n" . 'This script needs \'flac\' and \'metaflac\' installed!' . "\n";
+	exit
+}
+
+# Check the installed version of 'flac'.
+my @flac_version = split(' ', `flac --version`);
 
 if (scalar(@ARGV) != 1 or ! -d $ARGV[0]) { usage(); }
 
