@@ -14,7 +14,19 @@ use File::Copy qw(copy);
 use Encode qw(decode find_encoding);
 
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my(@dirs, @log, %t, %files, $library);
+my(%regex, %tags, %files, @dirs, @log, $library);
+
+$regex{quote} = qr/^(\")|(\")$/;
+$regex{space} = qr/(^\s*)|(\s*$)/;
+$regex{tag} = qr/^([^=]*)=(.*)$/;
+
+# Check if the necessary commands are installed to test FLAC files.
+my $flac_req = `command -v metaflac`;
+
+if (! length($flac_req)) {
+	say "\n" . 'This script needs \'metaflac\' installed!' . "\n";
+	exit
+}
 
 while (my $arg = shift(@ARGV)) {
 	if (-d $arg) {
@@ -35,9 +47,8 @@ sub usage {
 # The 'gettags' subroutine reads the tags from a FLAC file.
 sub gettags {
 	my $fn = shift;
-	my(%alltags, @lines);
 
-	my $regex = qr/^(\")|(\")$/;
+	my(%alltags, @lines);
 
 	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--export-tags-to=-', $fn)
 	or die "Can't open metaflac: $!";
@@ -45,25 +56,27 @@ sub gettags {
 	close($output) or die "Can't close metaflac: $!";
 
 	foreach my $line (@lines) {
-		my(@tag, $tagname);
+		my(@tag, $field, $value);
 
-		$line =~ s/$regex//g;
+		$line =~ s/$regex{quote}//g;
 
-		@tag = split('=', $line);
+		if ($line =~ m/$regex{tag}/) {
+			$field = lc($1);
+			$value = $2;
 
-		if (! defined($tag[0]) or ! defined($tag[1])) { next; }
+			$field =~ s/$regex{space}//;
+			$value =~ s/$regex{space}//;
+			$value =~ tr/a-zA-Z0-9\.\-_ //dc;
+			$value =~ s/\s+/ /g;
 
-		$tagname = lc($tag[0]);
-		$tagname =~ s/[[:space:]]//g;
-		$tag[1] =~ s/(^\s*)|(\s*$)//g;
-		$tag[1] =~ tr/a-zA-Z0-9\.\-_ //dc;
-		$tag[1] =~ s/ +/ /g;
-
-		if ($tagname eq 'album' or $tagname eq 'albumartist') {
-			$tag[1] =~ s/^\.+//g;
+			if ($field eq 'album' or $field eq 'albumartist') {
+				$value =~ s/^\.+//g;
+			}
 		}
 
-		push(@{$alltags{$tagname}}, $tag[1]);
+		if (! length($field) or ! length($value)) { next; }
+
+		push(@{$alltags{$field}}, $value);
 	}
 
 	return(%alltags);
@@ -76,9 +89,9 @@ sub existstag {
 
 	my @tags = ('artist', 'album', 'tracknumber');
 
-	foreach my $tag (@tags) {
-		if (! defined($t{$tag}) ) {
-			say $fn . ': doesn\'t have ' . $tag . ' tag';
+	foreach my $field (@tags) {
+		if (! length($tags{$fn}{$field})) {
+			say $fn . ': doesn\'t have ' . $field . ' tag';
 			exit;
 		}
 	}
@@ -90,6 +103,7 @@ sub getfiles {
 	my $dn = shift;
 
 	undef(%files);
+	undef(%tags);
 	undef(@log);
 
 	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
@@ -98,10 +112,18 @@ sub getfiles {
 
 		if (! -f $fn) { next; }
 
-		if ($bn =~ /.flac$/i) { $files{$fn} = { gettags($fn) }; }
-		if ($bn =~ /.log$/i) { check_log($fn); }
+		if ($bn =~ /\.flac$/i) { $files{$fn} = { gettags($fn) }; }
+		if ($bn =~ /\.log$/i) { check_log($fn); }
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
+
+	foreach my $fn (keys(%files)) {
+		my $tags_ref = \$files{$fn};
+
+		foreach my $field (keys(%{$files{$fn}})) {
+			$tags{$fn}{$field} = $files{$fn}{$field}->[0];
+		}
+	}
 }
 
 # The 'albumartist' subroutine creates the ALBUMARTIST tag, if it
@@ -110,18 +132,21 @@ sub albumartist {
 	my $fn = shift;
 	my $tracks = shift;
 
-	if (! defined($t{albumartist})) {
+	my $artist_ref = \$tags{$fn}{artist};
+	my $albumartist_ref = \$tags{$fn}{albumartist};
+
+	if (! length($$albumartist_ref)) {
 		my(%artist, $max);
 
 		if ($tracks == 1) { $max = $tracks; } else { $max = $tracks / 2; }
 
 		foreach my $fn (keys(%files)) {
-			$artist{$files{$fn}{artist}->[0]} = 1;
+			$artist{$$artist_ref} = 1;
 		}
 
 		if (keys(%artist) > $max) {
-			$t{albumartist} = 'Various Artists';
-		} else { $t{albumartist} = $t{artist}; }
+			$$albumartist_ref = 'Various Artists';
+		} else { $$albumartist_ref = $$artist_ref; }
 	}
 }
 
@@ -142,12 +167,12 @@ sub check_log {
 
 	$enc_tmp = find_encoding($file_enc);
 
-	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
+	if (length($enc_tmp)) { $enc = $enc_tmp->name; }
 
 	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	$line1 = <$text>;
 	$line1 =~ s/(\r){0,}(\n){0,}$//g;
-	if (defined($enc)) { $line1 = decode($enc, $line1); }
+	if (length($enc)) { $line1 = decode($enc, $line1); }
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@lacc) {
@@ -160,19 +185,21 @@ sub import {
 	my $fc = shift;
 	my $cp = 0;
 	my $cplog = 1;
-	my($newfn, $path);
+	my($newfn, $path, $album_ref);
 
-	foreach my $sf (sort(keys %files)) {
-		undef(%t);
-
-		foreach my $tag (keys(%{$files{$sf}})) {
-			$t{$tag} = $files{$sf}{$tag}->[0];
-		}
+	foreach my $sf (sort(keys(%files))) {
+		my($albumartist_ref, $discnumber_ref, $tracknumber_ref, $title_ref);
 
 		existstag($sf);
 		albumartist($sf, $fc);
 
-		$path = $library . '/' . $t{albumartist} . '/' . $t{album};
+		$albumartist_ref = \$tags{$sf}{albumartist};
+		$album_ref = \$tags{$sf}{album};
+		$discnumber_ref = \$tags{$sf}{discnumber};
+		$tracknumber_ref = \$tags{$sf}{tracknumber};
+		$title_ref = \$tags{$sf}{title};
+
+		$path = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
 
 		if ($cp == 0 and -d $path) {
 			say $path . ': already exists';
@@ -180,10 +207,10 @@ sub import {
 			return;
 		} else { make_path($path); }
 
-		if (defined($t{discnumber})) {
-		  $newfn = sprintf('%s-%02s. %s.flac', $t{discnumber}, $t{tracknumber}, $t{title});
+		if (length($$discnumber_ref)) {
+		  $newfn = sprintf('%s-%02s. %s.flac', $$discnumber_ref, $$tracknumber_ref, $$title_ref);
 		} else {
-		  $newfn = sprintf('%02s. %s.flac', $t{tracknumber}, $t{title});
+		  $newfn = sprintf('%02s. %s.flac', $$tracknumber_ref, $$title_ref);
 		}
 
 		my $tf = $path . '/' . $newfn;
@@ -193,15 +220,15 @@ sub import {
 		$cp++
 	}
 
-	say 'Copied ' . $cp . ' / ' . $fc . ' files from \'' . $t{album} . '\'.' . "\n";
+	say 'Copied ' . $cp . ' / ' . $fc . ' files from \'' . $$album_ref . '\'.' . "\n";
 
 	foreach my $sf (@log) {
 		my $tf;
 
 		if (scalar(@log) > 1) {
-		  $tf = $path . '/' . $cplog . '-' . $t{album} . '.log';
+		  $tf = $path . '/' . $cplog . '-' . $$album_ref . '.log';
 		} else {
-		  $tf = $path . '/' . $t{album} . '.log';
+		  $tf = $path . '/' . $$album_ref . '.log';
 		}
 
 		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...' . "\n";

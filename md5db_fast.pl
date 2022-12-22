@@ -53,7 +53,7 @@ chomp(my $cores = `grep -c '^processor' '/proc/cpuinfo'`);
 $cores++;
 
 # Check if the necessary commands are installed to test FLAC files.
-chomp(my @flac_req = (`command -v flac metaflac 2>&-`));
+chomp(my @flac_req = (`command -v flac metaflac`));
 
 # Name of database file.
 my $db = 'md5.db';

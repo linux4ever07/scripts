@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# This script is meant to manage my FLAC music library, specifically the
+# This script is meant to manage a FLAC music library, specifically the
 # tags.
 
 # This script will:
@@ -31,6 +31,10 @@
 # have the CUE file. I only keep my FLAC albums as separate files per
 # track. I just think it's good practice.
 
+# After running a FLAC library through this script, it will be easier to
+# match albums against the MusicBrainz database, in case you want to use
+# MusicBrainz Picard.
+
 use v5.34;
 use strict;
 use warnings;
@@ -49,7 +53,7 @@ $regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct
 $regex{id3v2} = qr/has an ID3v2 tag/;
 
 # Check if the necessary commands are installed to test FLAC files.
-chomp(my @flac_req = (`command -v flac metaflac 2>&-`));
+chomp(my @flac_req = (`command -v flac metaflac`));
 
 if (scalar(@flac_req) != 2) {
 	say "\n" . 'This script needs \'flac\' and \'metaflac\' installed!' . "\n";
@@ -239,13 +243,13 @@ sub gettags {
 			$field = lc($1);
 			$value = $2;
 
-			if (! length($field) or ! length($value)) { next; }
-
 			$field =~ s/$regex{space}//;
 			$value =~ s/$regex{space}//;
 		}
 
-		if (length($value)) { push(@{$alltags{$field}}, $value); }
+		if (! length($field) or ! length($value)) { next; }
+
+		push(@{$alltags{$field}}, $value);
 	}
 
 	return(%alltags);
@@ -609,10 +613,10 @@ sub writetags {
 # Import the tags from the @mflac_of array.
 		system('metaflac', '--remove-all-tags', $fn);
 		or_warn("Can't remove tags");
-		open(my $output, '|-', 'metaflac', '--import-tags-from=-', $fn)
+		open(my $input, '|-', 'metaflac', '--import-tags-from=-', $fn)
 		or die "Can't import tags: $!";
-		foreach my $line (@mflac_of) { say $output $line; }
-		close($output) or die "Can't close 'metaflac': $!";
+		foreach my $line (@mflac_of) { say $input $line; }
+		close($input) or die "Can't close 'metaflac': $!";
 	}
 }
 

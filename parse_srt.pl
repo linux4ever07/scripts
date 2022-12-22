@@ -49,11 +49,11 @@ sub read_decode_fn {
 
 	$enc_tmp = find_encoding($file_enc);
 
-	if (defined($enc_tmp)) { $enc = $enc_tmp->name; }
+	if (length($enc_tmp)) { $enc = $enc_tmp->name; }
 
 	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	foreach my $line (<$text>) {
-		if (defined($enc)) {
+		if (length($enc)) {
 			$line = decode($enc, $line);
 			$line = encode("utf8", $line);
 		}
