@@ -87,7 +87,7 @@ sub gettags {
 sub existstag {
 	my $fn = shift;
 
-	my @tags = ('artist', 'album', 'tracknumber');
+	my @tags = ('artist', 'album', 'tracknumber', 'title');
 
 	foreach my $field (@tags) {
 		if (! length($tags{$fn}{$field})) {
