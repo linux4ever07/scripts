@@ -223,7 +223,7 @@ sub gettags {
 	chomp(@lines = (<$output>));
 	close($output) or die "Can't close 'metaflac': $!";
 
-	foreach my $line (@lines) {
+	while (my $line = shift(@lines)) {
 		my(@tag, $field, $value);
 
 		$line =~ s/$regex{quote}//g;
