@@ -48,7 +48,7 @@ my(%regex, %tags_if, %tags_of, %files, @dirs, $library, $depth_og);
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{zero} = qr/^0+([0-9]+)$/;
-$regex{tag} = qr/^([^=]*)=(.*)$/;
+$regex{tag} = qr/^([^=]+)=(.*)$/;
 $regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
 $regex{id3v2} = qr/has an ID3v2 tag/;
 
@@ -78,7 +78,7 @@ foreach my $dn (@dirs) {
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
 		existstag($fn, 'artist', 'album', 'tracknumber', 'title');
 		vendor($fn);
-		rmtag($fn, 'rating');
+		rm_tag($fn, 'rating');
 		discnumber($fn, $dn);
 		albumartist($fn);
 # rm_albumart($fn);
@@ -388,8 +388,8 @@ sub vendor {
 	unlink($newfn_stderr) or die "Can't remove '$newfn_stderr': $!";
 }
 
-# The 'rmtag' subroutine removes tags of choice.
-sub rmtag {
+# The 'rm_tag' subroutine removes tags of choice.
+sub rm_tag {
 	my $fn = shift;
 
 	while (my $field = shift(@_)) {

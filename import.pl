@@ -18,7 +18,7 @@ my(%regex, %tags, %files, @dirs, @log, $library);
 
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
-$regex{tag} = qr/^([^=]*)=(.*)$/;
+$regex{tag} = qr/^([^=]+)=(.*)$/;
 
 # Check if the necessary commands are installed to test FLAC files.
 my $flac_req = `command -v metaflac`;
