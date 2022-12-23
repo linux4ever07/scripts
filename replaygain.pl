@@ -76,7 +76,7 @@ foreach my $dn (@dirs) {
 	getfiles($dn);
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
-		existstag($fn, 'artist', 'album', 'title', 'tracknumber');
+		existstag($fn, 'artist', 'album', 'tracknumber', 'title');
 		vendor($fn);
 		rmtag($fn, 'rating');
 		discnumber($fn, $dn);
@@ -628,6 +628,8 @@ sub writetags {
 # input files, based on the changes that have been made to the tags.
 sub tags2fn {
 	my $fn = shift;
+	my($newbn, $newdn, $newfn);
+	my($discnumber, $albumartist, $album, $tracknumber, $title);
 
 	sub rm_special_chars {
 		my $string = shift;
@@ -642,19 +644,19 @@ sub tags2fn {
 	my $tracknumber_ref = \$tags_of{$fn}{tracknumber};
 	my $title_ref = \$tags_of{$fn}{title};
 
-	my $discnumber = $$discnumber_ref;
-	my $albumartist = rm_special_chars($$albumartist_ref);
+	$discnumber = $$discnumber_ref;
+	$albumartist = rm_special_chars($$albumartist_ref);
 	$albumartist =~ s/ +/ /g;
 	$albumartist =~ s/^\.+//g;
-	my $album = rm_special_chars($$album_ref);
+	$album = rm_special_chars($$album_ref);
 	$album =~ s/ +/ /g;
 	$album =~ s/^\.+//g;
-	my $tracknumber = sprintf("%02d", $$tracknumber_ref);
-	my $title = rm_special_chars($$title_ref);
+	$tracknumber = sprintf("%02d", $$tracknumber_ref);
+	$title = rm_special_chars($$title_ref);
 	$title =~ s/ +/ /g;
-	my $newbn = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
-	my $newdn = $library . '/' . $albumartist . '/' . $album;
-	my $newfn = $newdn . '/' . $newbn;
+	$newbn = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
+	$newdn = $library . '/' . $albumartist . '/' . $album;
+	$newfn = $newdn . '/' . $newbn;
 
 	if (! -d $newdn) {
 		make_path($newdn) or die "Can't create directory: $!";
@@ -669,7 +671,11 @@ sub tags2fn {
 # those files to the new directory. This may include log files, etc.
 	if (length($files{other})) {
 		foreach my $fn (keys(%{$files{other}})) {
-			move($fn, $newdn) or die "Can't rename '$fn': $!";
+			$newfn = $newdn . '/' . basename($fn);
+
+			if (! -f $newfn) {
+				move($fn, $newfn) or die "Can't rename '$fn': $!";
+			}
 		}
 
 		delete($files{other});
