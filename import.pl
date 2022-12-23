@@ -176,7 +176,7 @@ sub check_log {
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@lacc) {
-	    if ($line1 =~ /$req/) { push(@log, $fn); last; }
+		if ($line1 =~ /$req/) { push(@log, $fn); last; }
 	}
 }
 
@@ -208,9 +208,9 @@ sub import {
 		} else { make_path($path); }
 
 		if (length($$discnumber_ref)) {
-		  $newfn = sprintf('%s-%02s. %s.flac', $$discnumber_ref, $$tracknumber_ref, $$title_ref);
+			$newfn = sprintf('%s-%02s. %s.flac', $$discnumber_ref, $$tracknumber_ref, $$title_ref);
 		} else {
-		  $newfn = sprintf('%02s. %s.flac', $$tracknumber_ref, $$title_ref);
+			$newfn = sprintf('%02s. %s.flac', $$tracknumber_ref, $$title_ref);
 		}
 
 		my $tf = $path . '/' . $newfn;
@@ -226,9 +226,9 @@ sub import {
 		my $tf;
 
 		if (scalar(@log) > 1) {
-		  $tf = $path . '/' . $cplog . '-' . $$album_ref . '.log';
+			$tf = $path . '/' . $cplog . '-' . $$album_ref . '.log';
 		} else {
-		  $tf = $path . '/' . $$album_ref . '.log';
+			$tf = $path . '/' . $$album_ref . '.log';
 		}
 
 		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...' . "\n";
