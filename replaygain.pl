@@ -433,7 +433,7 @@ sub discnumber {
 	if ($$discnumber_ref =~ m/$regex{fraction}/) {
 		$$discnumber_ref = $1;
 
-		if (! lengh($$totaldiscs_ref)) {
+		if (! length($$totaldiscs_ref)) {
 			$$totaldiscs_ref = $2;
 		}
 	}
@@ -742,7 +742,7 @@ sub totaltracks {
 	if ($$tracknumber_ref =~ m/$regex{fraction}/) {
 		$$tracknumber_ref = $1;
 
-		if (! lengh($$totaltracks_ref)) {
+		if (! length($$totaltracks_ref)) {
 			$$totaltracks_ref = $2;
 		}
 	}
