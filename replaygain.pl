@@ -503,6 +503,59 @@ sub albumartist {
 	}
 }
 
+# The 'rm_albumart' subroutine removes the album art, by removing the
+# PICTURE metadata block.
+sub rm_albumart {
+	my $fn = shift;
+
+	system('metaflac', '--remove', ,'--block-type=PICTURE', $fn);
+	or_warn("Can't remove album art");
+
+	say $fn . ': removed album art';
+}
+
+# The 'changed' subroutine will print any changes that have been made to
+# the tags, by the other subroutines.
+sub changed {
+	my $fn = shift;
+
+	my(%fields);
+
+# Collect all the tag fields from the input tags.
+	foreach my $field (keys(%{$tags_if{$fn}})) {
+		$fields{$field} = 1;
+	}
+
+# Collect all the tag fields from the output tags. If there's tag fields
+# with empty values, ignore those hash elements. They get
+# unintentionally created, when using references in other subroutines.
+	foreach my $field (keys(%{$tags_of{$fn}})) {
+		if (! length($tags_of{$fn}{$field})) { next; }
+
+		$fields{$field} = 1;
+	}
+
+	foreach my $field (sort(keys(%fields))) {
+		my $tag_if_ref = \$tags_if{$fn}{$field};
+		my $tag_of_ref = \$tags_of{$fn}{$field};
+
+		if (! length($$tag_if_ref)) {
+			say $fn . ': added ' . $field . ' tag';
+			next;
+		}
+
+		if (! length($$tag_of_ref)) {
+			say $fn . ': removed ' . $field . ' tag';
+			next;
+		}
+
+		if ($$tag_if_ref ne $$tag_of_ref) {
+			say $fn . ': fixed ' . $field . ' tag';
+			next;
+		}
+	}
+}
+
 # The 'rm_zeropad' subroutine removes leading 0s from the TRACKNUMBER,
 # TOTALTRACKS, TRACKTOTAL, DISCNUMBER, TOTALDISCS, DISCTOTAL tags. This
 # subroutine needs to be run after 'discnumber' and 'totaltracks'.
@@ -532,17 +585,6 @@ sub rm_zeropad {
 	if (length($$disctotal_ref)) {
 		$$disctotal_ref =~ s/$regex{zero}/$1/;
 	}
-}
-
-# The 'rm_albumart' subroutine removes the album art, by removing the
-# PICTURE metadata block.
-sub rm_albumart {
-	my $fn = shift;
-
-	system('metaflac', '--remove', ,'--block-type=PICTURE', $fn);
-	or_warn("Can't remove album art");
-
-	say $fn . ': removed album art';
 }
 
 # The 'replaygain' subroutine adds ReplayGain tags, if they don't exist
@@ -723,48 +765,6 @@ sub totaltracks {
 
 	if (length($$tracktotal_ref) and ! length($$totaltracks_ref)) {
 		$$totaltracks_ref = $$tracktotal_ref;
-	}
-}
-
-# The 'changed' subroutine will print any changes that have been made to
-# the tags, by the other subroutines.
-sub changed {
-	my $fn = shift;
-
-	my(%fields);
-
-# Collect all the tag fields from the input tags.
-	foreach my $field (keys(%{$tags_if{$fn}})) {
-		$fields{$field} = 1;
-	}
-
-# Collect all the tag fields from the output tags. If there's tag fields
-# with empty values, ignore those hash elements. They get
-# unintentionally created, when using references in other subroutines.
-	foreach my $field (keys(%{$tags_of{$fn}})) {
-		if (! length($tags_of{$fn}{$field})) { next; }
-
-		$fields{$field} = 1;
-	}
-
-	foreach my $field (sort(keys(%fields))) {
-		my $tag_if_ref = \$tags_if{$fn}{$field};
-		my $tag_of_ref = \$tags_of{$fn}{$field};
-
-		if (! length($$tag_if_ref)) {
-			say $fn . ': added ' . $field . ' tag';
-			next;
-		}
-
-		if (! length($$tag_of_ref)) {
-			say $fn . ': removed ' . $field . ' tag';
-			next;
-		}
-
-		if ($$tag_if_ref ne $$tag_of_ref) {
-			say $fn . ': fixed ' . $field . ' tag';
-			next;
-		}
 	}
 }
 
