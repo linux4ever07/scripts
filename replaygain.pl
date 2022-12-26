@@ -44,10 +44,14 @@ use File::Path qw(make_path);
 use Cwd qw(abs_path);
 
 my(%regex, %tags_if, %tags_of, %files, @dirs, $library, $depth_og);
+my($discnumber_ref, $totaldiscs_ref, $disctotal_ref);
+my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
+my($tracknumber_ref, $totaltracks_ref, $tracktotal_ref);
 
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{zero} = qr/^0+([0-9]+)$/;
+$regex{fraction} = qr/^([0-9]+)\s*\/\s*([0-9]+)$/;
 $regex{tag} = qr/^([^=]+)=(.*)$/;
 $regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
 $regex{id3v2} = qr/has an ID3v2 tag/;
@@ -76,6 +80,7 @@ foreach my $dn (@dirs) {
 	getfiles($dn);
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
+		mk_refs($fn);
 		existstag($fn, 'artist', 'album', 'tracknumber', 'title');
 		vendor($fn);
 		rm_tag($fn, 'rating');
@@ -93,6 +98,7 @@ foreach my $dn (@dirs) {
 	getfiles($dn);
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
+		mk_refs($fn);
 		tags2fn($fn);
 	}
 }
@@ -115,6 +121,7 @@ foreach my $dn (@dirs) {
 	replaygain($dn);
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
+		mk_refs($fn);
 		totaltracks($fn);
 		rm_zeropad($fn);
 		changed($fn);
@@ -253,6 +260,23 @@ sub gettags {
 	}
 
 	return(%alltags);
+}
+
+# The 'mk_refs' subroutine creates references for other subroutines to
+# have easier access to tags.
+sub mk_refs {
+	my $fn = shift;
+
+	$discnumber_ref = \$tags_of{$fn}{discnumber};
+	$totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
+	$disctotal_ref = \$tags_of{$fn}{disctotal};
+	$tracknumber_ref = \$tags_of{$fn}{tracknumber};
+	$totaltracks_ref = \$tags_of{$fn}{totaltracks};
+	$tracktotal_ref = \$tags_of{$fn}{tracktotal};
+	$artist_ref = \$tags_of{$fn}{artist};
+	$albumartist_ref = \$tags_of{$fn}{albumartist};
+	$album_ref = \$tags_of{$fn}{album};
+	$title_ref = \$tags_of{$fn}{title};
 }
 
 # The 'existstag' subroutine checks for the existence of the chosen tags
@@ -400,18 +424,20 @@ sub rm_tag {
 }
 
 # The 'discnumber' subroutine creates the DISCNUMBER tag, if it doesn't
-# exist already. This subroutine needs to be run before 'albumartist',
-# and 'totaltracks'.
+# exist already. DISCTOTAL is also added, if possible. This subroutine
+# needs to be run before 'albumartist', and 'totaltracks'.
 sub discnumber {
 	my $fn = shift;
 	my $dn = shift;
 
-	my $discnumber_ref = \$tags_of{$fn}{discnumber};
-	my $totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
-	my $disctotal_ref = \$tags_of{$fn}{disctotal};
-	my $album_ref = \$tags_of{$fn}{album};
+	if ($$discnumber_ref =~ m/$regex{fraction}/) {
+		$$discnumber_ref = $1;
 
-# Adding DISCNUMBER tag.
+		if (! lengh($$totaldiscs_ref)) {
+			$$totaldiscs_ref = $2;
+		}
+	}
+
 	if (! length($$discnumber_ref)) {
 		if ($$album_ref =~ m/$regex{disc}/) {
 			$$discnumber_ref = $2;
@@ -434,7 +460,6 @@ sub discnumber {
 		} else { $$discnumber_ref = 1; }
 	}
 
-# Adding TOTALDISCS tag, if possible.
 	if (! length($$totaldiscs_ref)) {
 		if (length($$disctotal_ref)) {
 			$$totaldiscs_ref = $$disctotal_ref;
@@ -448,10 +473,6 @@ sub albumartist {
 	my $fn = shift;
 
 	my(%tracks, $tracks);
-
-	my $discnumber_ref = \$tags_of{$fn}{discnumber};
-	my $artist_ref = \$tags_of{$fn}{artist};
-	my $albumartist_ref = \$tags_of{$fn}{albumartist};
 
 	if (length($$discnumber_ref)) {
 		foreach my $fn (keys(%tags_of)) {
@@ -487,13 +508,6 @@ sub albumartist {
 # subroutine needs to be run after 'discnumber' and 'totaltracks'.
 sub rm_zeropad {
 	my $fn = shift;
-
-	my $tracknumber_ref = \$tags_of{$fn}{tracknumber};
-	my $totaltracks_ref = \$tags_of{$fn}{totaltracks};
-	my $tracktotal_ref = \$tags_of{$fn}{tracktotal};
-	my $discnumber_ref = \$tags_of{$fn}{discnumber};
-	my $totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
-	my $disctotal_ref = \$tags_of{$fn}{disctotal};
 
 	if (length($$tracknumber_ref)) {
 		$$tracknumber_ref =~ s/$regex{zero}/$1/;
@@ -619,7 +633,7 @@ sub writetags {
 		or_warn("Can't remove tags");
 		open(my $input, '|-', 'metaflac', '--import-tags-from=-', $fn)
 		or die "Can't import tags: $!";
-		foreach my $line (@mflac_of) { say $input $line; }
+		while (my $line = shift(@mflac_of)) { say $input $line; }
 		close($input) or die "Can't close 'metaflac': $!";
 	}
 }
@@ -637,12 +651,6 @@ sub tags2fn {
 
 		return($string);
 	}
-
-	my $discnumber_ref = \$tags_of{$fn}{discnumber};
-	my $albumartist_ref = \$tags_of{$fn}{albumartist};
-	my $album_ref = \$tags_of{$fn}{album};
-	my $tracknumber_ref = \$tags_of{$fn}{tracknumber};
-	my $title_ref = \$tags_of{$fn}{title};
 
 	$discnumber = $$discnumber_ref;
 	$albumartist = rm_special_chars($$albumartist_ref);
@@ -689,9 +697,13 @@ sub totaltracks {
 
 	my(%tracks, $tracks);
 
-	my $discnumber_ref = \$tags_of{$fn}{discnumber};
-	my $totaltracks_ref = \$tags_of{$fn}{totaltracks};
-	my $tracktotal_ref = \$tags_of{$fn}{tracktotal};
+	if ($$tracknumber_ref =~ m/$regex{fraction}/) {
+		$$tracknumber_ref = $1;
+
+		if (! lengh($$totaltracks_ref)) {
+			$$totaltracks_ref = $2;
+		}
+	}
 
 	if (length($$discnumber_ref)) {
 		foreach my $fn (keys(%tags_of)) {

@@ -15,6 +15,8 @@ use Encode qw(decode find_encoding);
 
 my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
 my(%regex, %tags, %files, @dirs, @log, $library);
+my($discnumber_ref, $tracknumber_ref);
+my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
@@ -42,6 +44,35 @@ $library = shift(@dirs);
 sub usage {
 	say "\n" . 'Usage: ' . basename($0) . ' [FLAC library directory] .. [directory N]' . "\n";
 	exit;
+}
+
+# The 'getfiles' subroutine gets a list of FLAC files in the directory
+# passed to it.
+sub getfiles {
+	my $dn = shift;
+
+	undef(%files);
+	undef(%tags);
+	undef(@log);
+
+	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
+	foreach my $bn (readdir($dh)) {
+		my $fn = $dn . '/' . $bn;
+
+		if (! -f $fn) { next; }
+
+		if ($bn =~ /\.flac$/i) { $files{$fn} = { gettags($fn) }; }
+		if ($bn =~ /\.log$/i) { check_log($fn); }
+	}
+	closedir $dh or die "Can't close directory '$dn': $!";
+
+	foreach my $fn (keys(%files)) {
+		my $tags_ref = \$files{$fn};
+
+		foreach my $field (keys(%{$files{$fn}})) {
+			$tags{$fn}{$field} = $files{$fn}{$field}[0];
+		}
+	}
 }
 
 # The 'gettags' subroutine reads the tags from a FLAC file.
@@ -82,6 +113,23 @@ sub gettags {
 	return(%alltags);
 }
 
+# The 'mk_refs' subroutine creates references for other subroutines to
+# have easier access to tags.
+sub mk_refs {
+	my $fn = shift;
+
+	$discnumber_ref = \$tags_of{$fn}{discnumber};
+	$totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
+	$disctotal_ref = \$tags_of{$fn}{disctotal};
+	$tracknumber_ref = \$tags_of{$fn}{tracknumber};
+	$totaltracks_ref = \$tags_of{$fn}{totaltracks};
+	$tracktotal_ref = \$tags_of{$fn}{tracktotal};
+	$artist_ref = \$tags_of{$fn}{artist};
+	$albumartist_ref = \$tags_of{$fn}{albumartist};
+	$album_ref = \$tags_of{$fn}{album};
+	$title_ref = \$tags_of{$fn}{title};
+}
+
 # The 'existstag' subroutine checks for the existence of the chosen tags
 # passed to it. If it doesn't find the tag, it quits.
 sub existstag {
@@ -93,35 +141,6 @@ sub existstag {
 		if (! length($tags{$fn}{$field})) {
 			say $fn . ': doesn\'t have ' . $field . ' tag';
 			exit;
-		}
-	}
-}
-
-# The 'getfiles' subroutine gets a list of FLAC files in the directory
-# passed to it.
-sub getfiles {
-	my $dn = shift;
-
-	undef(%files);
-	undef(%tags);
-	undef(@log);
-
-	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
-	foreach my $bn (readdir($dh)) {
-		my $fn = $dn . '/' . $bn;
-
-		if (! -f $fn) { next; }
-
-		if ($bn =~ /\.flac$/i) { $files{$fn} = { gettags($fn) }; }
-		if ($bn =~ /\.log$/i) { check_log($fn); }
-	}
-	closedir $dh or die "Can't close directory '$dn': $!";
-
-	foreach my $fn (keys(%files)) {
-		my $tags_ref = \$files{$fn};
-
-		foreach my $field (keys(%{$files{$fn}})) {
-			$tags{$fn}{$field} = $files{$fn}{$field}->[0];
 		}
 	}
 }
@@ -185,19 +204,12 @@ sub import {
 	my $fc = shift;
 	my $cp = 0;
 	my $cplog = 1;
-	my($newfn, $path, $album_ref);
+	my($newfn, $path);
 
 	foreach my $sf (sort(keys(%files))) {
-		my($albumartist_ref, $discnumber_ref, $tracknumber_ref, $title_ref);
-
+		mk_refs($sf);
 		existstag($sf);
 		albumartist($sf, $fc);
-
-		$albumartist_ref = \$tags{$sf}{albumartist};
-		$album_ref = \$tags{$sf}{album};
-		$discnumber_ref = \$tags{$sf}{discnumber};
-		$tracknumber_ref = \$tags{$sf}{tracknumber};
-		$title_ref = \$tags{$sf}{title};
 
 		$path = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
 
