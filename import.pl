@@ -118,16 +118,12 @@ sub gettags {
 sub mk_refs {
 	my $fn = shift;
 
-	$discnumber_ref = \$tags_of{$fn}{discnumber};
-	$totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
-	$disctotal_ref = \$tags_of{$fn}{disctotal};
-	$tracknumber_ref = \$tags_of{$fn}{tracknumber};
-	$totaltracks_ref = \$tags_of{$fn}{totaltracks};
-	$tracktotal_ref = \$tags_of{$fn}{tracktotal};
-	$artist_ref = \$tags_of{$fn}{artist};
-	$albumartist_ref = \$tags_of{$fn}{albumartist};
-	$album_ref = \$tags_of{$fn}{album};
-	$title_ref = \$tags_of{$fn}{title};
+	$discnumber_ref = \$tags{$fn}{discnumber};
+	$tracknumber_ref = \$tags{$fn}{tracknumber};
+	$artist_ref = \$tags{$fn}{artist};
+	$albumartist_ref = \$tags{$fn}{albumartist};
+	$album_ref = \$tags{$fn}{album};
+	$title_ref = \$tags{$fn}{title};
 }
 
 # The 'existstag' subroutine checks for the existence of the chosen tags
