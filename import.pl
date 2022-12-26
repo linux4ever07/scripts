@@ -70,7 +70,7 @@ sub getfiles {
 		my $tags_ref = \$files{$fn};
 
 		foreach my $field (keys(%{$files{$fn}})) {
-			$tags{$fn}{$field} = $files{$fn}{$field}[0];
+			$tags{$fn}{$field} = $$tags_ref->{$field}[0];
 		}
 	}
 }
