@@ -430,11 +430,13 @@ sub discnumber {
 	my $fn = shift;
 	my $dn = shift;
 
-	if ($$discnumber_ref =~ m/$regex{fraction}/) {
-		$$discnumber_ref = $1;
+	if (length($$discnumber_ref)) {
+		if ($$discnumber_ref =~ m/$regex{fraction}/) {
+			$$discnumber_ref = $1;
 
-		if (! length($$totaldiscs_ref)) {
-			$$totaldiscs_ref = $2;
+			if (! length($$totaldiscs_ref)) {
+				$$totaldiscs_ref = $2;
+			}
 		}
 	}
 
