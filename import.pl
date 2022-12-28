@@ -231,7 +231,7 @@ sub import {
 	say 'Copied ' . $cp . ' / ' . $fc . ' files from \'' . $$album_ref . '\'.' . "\n";
 
 	foreach my $sf (@log) {
-		my $tf;
+		my($tf);
 
 		if (scalar(@log) > 1) {
 			$tf = $path . '/' . $cplog . '-' . $$album_ref . '.log';
