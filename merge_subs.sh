@@ -92,12 +92,14 @@ get_tracks () {
 # add the file name to the 'files_tmp' array, so it can be deleted
 # later.
 	if [[ $ext_tmp != 'mkv' ]]; then
-		mapfile -t mkvmerge_lines < <(mkvmerge -o "$of_tmp" "$if_tmp")
+		printf '\nRemuxing: %s\n' "$if_tmp"
+
+		mapfile -t mkvmerge_lines < <(mkvmerge -o "$of_tmp" "$if_tmp" 2>&1)
 
 		if [[ $? -ne 0 ]]; then
 			printf '%s\n' "${mkvmerge_lines[@]}"
 			printf '\n'
-			return
+			exit
 		fi
 
 		files_tmp+=("$of_tmp")
@@ -327,7 +329,7 @@ eval "${full_args[@]}"
 
 # Removes temporary MKV files.
 if [[ ${#files_tmp[@]} -gt 0 ]]; then
-	rm "${files_tmp[@]}"
+	rm -f "${files_tmp[@]}"
 fi
 
 # Prints the mkvmerge command.

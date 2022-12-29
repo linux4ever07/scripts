@@ -490,7 +490,8 @@ sub albumartist {
 		if (! length($$albumartist_ref)) {
 			my(%artist, $max);
 
-			if ($tracks == 1) { $max = $tracks; } else { $max = $tracks / 2; }
+			if ($tracks == 1) { $max = $tracks; }
+			else { $max = $tracks / 2; }
 
 			foreach my $fn (keys(%tags_of)) {
 				my $artist_ref = \$tags_of{$fn}{artist};
