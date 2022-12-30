@@ -55,10 +55,18 @@ for dn in "${dirs[@]}"; do
 # Loop through files and sub-directories in the current directory.
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
+		switch=0
 
 # If current file name matches any of the special SHIELD directories,
 # ignore it.
-		if [[ $fn == "${ignore[0]}" || $fn == "${ignore[1]}" ]]; then
+		for ignore_fn in "${ignore[@]}"; do
+			if [[ $fn == "$ignore_fn" ]]; then
+				switch=1
+				break
+			fi
+		done
+
+		if [[ $switch -eq 1 ]]; then
 			continue
 		fi
 
