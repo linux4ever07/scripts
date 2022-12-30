@@ -9,7 +9,8 @@
 # be copied to another drive. To avoid errors when using 'cp -rp', we
 # need to move everything to a sub-directory, except the 2 special
 # SHIELD directories. And then copy the content of that sub-directory to
-# the destination drive.
+# the destination drive. However, the script does not do the copying
+# step. That will have to be done manually.
 
 set -eo pipefail
 
