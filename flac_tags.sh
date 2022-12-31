@@ -22,6 +22,8 @@ fi
 
 declare track
 
+regex_num='^[0-9]+$'
+
 gettags () {
 	if="$1"
 
@@ -56,17 +58,16 @@ gettags () {
 }
 
 options () {
-	type="$1"
+	unset -v track
 
-	regex='^[0-9]+$'
+	printf '\n%s\n%s\n\n' '*** BACK (b)' '*** QUIT (q)'
 
-	limit=$(( ${#files[@]} - 1 ))
+	read -p '>'
 
-	read -p '>' track
+	clear
 
-	case "$track" in
+	case "$REPLY" in
 		'b')
-			unset -v track
 			return
 		;;
 		'q')
@@ -74,25 +75,17 @@ options () {
 		;;
 	esac
 
-	if [[ $type == 'flac_out' ]]; then
-		unset -v track
+	if [[ ! $REPLY =~ $regex_num ]]; then
 		return
 	fi
 
-	if [[ ! $track =~ $regex || $track -gt $limit ]]; then
-		unset -v track
+	ref="files[${REPLY}]"
+
+	if [[ -z ${!ref} ]]; then
 		return
 	fi
-}
 
-check_options () {
-	type="$1"
-
-	printf '\n%s\n%s\n\n' '*** BACK (b)' '*** QUIT (q)'
-
-	options "$type"
-
-	clear
+	track="${!ref}"
 }
 
 clear
@@ -104,17 +97,13 @@ while true; do
 		printf '%s) %s\n' "$i" "$(basename "${files[${i}]}")"
 	done
 
-	check_options 'files'
+	options
 
 	if [[ -z $track ]]; then
 		continue
 	fi
 
-	mapfile -t flac_out < <(gettags "${files[${track}]}")
+	gettags "$track"
 
-	for (( i = 0; i < ${#flac_out[@]}; i++ )); do
-		printf '%s\n' "${flac_out[${i}]}"
-	done
-
-	check_options 'flac_out'
+	options
 done

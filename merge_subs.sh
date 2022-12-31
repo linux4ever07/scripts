@@ -20,6 +20,7 @@ of="${if%.[^.]*}-${session}.mkv"
 
 files_n=0
 sub_tracks_n=0
+declare default
 declare -a files files_tmp args full_args range1 range2
 declare -A sub_tracks
 
@@ -275,10 +276,17 @@ for (( i = 1; i < files_n; i++ )); do
 done
 
 printf '\n'
-read -p '>' default
 
-until [[ $default -lt $sub_tracks_n ]]; do
-	read -p '>' default
+until [[ -n $default ]]; do
+	read -p '>'
+
+	if [[ ! $REPLY =~ ^[0-9]+$ ]]; then
+		continue
+	fi
+
+	if [[ -n ${sub_tracks[${REPLY},num]} ]]; then
+		default="$REPLY"
+	fi
 done
 
 printf '\nDefault subtitle track: %s\n' "$default"
