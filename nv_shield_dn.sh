@@ -16,6 +16,7 @@ set -eo pipefail
 
 declare -a dirs ignore
 
+# Creates a function called 'usage', which prints usage and then quits.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [directory] [...]"
 	exit

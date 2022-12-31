@@ -6,11 +6,14 @@
 
 set -eo pipefail
 
+# Creates a function called 'usage', which prints usage and then quits.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [directory]"
 	exit
 }
 
+# If the number of arguments given to the script is not 1, and that
+# argument is not a directory, quit.
 if [[ $# -ne 1 || ! -d $1 ]]; then
 	usage
 fi
