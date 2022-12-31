@@ -15,7 +15,7 @@ if [[ $# -ne 1 || ! -d $1 ]]; then
 	usage
 fi
 
-declare -a target dirs
+declare -a targets dirs
 in_dn=$(readlink -f "$1")
 targets=('Android' 'System Volume Information' '.Trash*')
 
