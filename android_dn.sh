@@ -95,7 +95,7 @@ menu_2 () {
 
 			dirs=("${dirs[@]}")
 
-			printf 'Removed: %s\n' "$tmp_dn"
+			rm -rf "$tmp_dn"
 		;;
 		*)
 			return
