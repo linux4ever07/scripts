@@ -25,7 +25,11 @@ regex_num='^[0-9]+$'
 regex_size='^[0-9]+M'
 regex_date='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}'
 
-menu_1 () {
+# Creates a function called 'menu'. It displays 2 menus. First it
+# displays the directories found, and once a directory is selected it
+# displays options ('list' and 'remove').
+menu () {
+# Directory menu.
 	clear
 
 	printf '\nChoose directory:\n\n'
@@ -44,18 +48,14 @@ menu_1 () {
 		return
 	fi
 
-	ref_dn="dirs[${REPLY}]"
+	tmp_dn="${dirs[${REPLY}]}"
+	n="$REPLY"
 
-	if [[ -z ${!ref_dn} ]]; then
+	if [[ -z $tmp_dn ]]; then
 		return
 	fi
 
-	menu_2 "${!ref_dn}"
-}
-
-menu_2 () {
-	tmp_dn="$1"
-
+# Options menu.
 	clear
 
 	printf '\n%s\n\n' "$tmp_dn"
@@ -86,13 +86,7 @@ menu_2 () {
 				return
 			fi
 
-			for (( i = 0; i < ${#dirs[@]}; i++ )); do
-				if [[ ${dirs[${i}]} == "$tmp_dn" ]]; then
-					unset dirs["${i}"]
-					break
-				fi
-			done
-
+			unset dirs["${n}"]
 			dirs=("${dirs[@]}")
 
 			rm -rf "$tmp_dn"
@@ -103,6 +97,7 @@ menu_2 () {
 	esac
 }
 
+# Gets all directories that matches the target names.
 for dn in "${targets[@]}"; do
 	mapfile -t dirs_tmp < <(find "$in_dn" -type d -iname "$dn" 2>&-)
 	dirs+=("${dirs_tmp[@]}")
@@ -110,11 +105,15 @@ done
 
 unset -v dirs_tmp
 
+# If no directories were found, quit.
 if [[ ${#dirs[@]} -eq 0 ]]; then
 	printf '\n%s\n\n' 'Nothing to do!'
 	exit
 fi
 
+# While there's still directories left in the 'dirs' array, display the
+# menu. If the user wants to quit before that, they can just press
+# Ctrl+C.
 while [[ ${#dirs[@]} -gt 0 ]]; do
-	menu_1
+	menu
 done
