@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script is meant to find Android settings, volume information
-# directories, and trash directories, list their size and content, and
+# This script is meant to find Android settings, lost files, volume
+# information, and trash directories, list their size and content, and
 # give the user the option to remove them.
 
 set -eo pipefail
@@ -20,7 +20,7 @@ fi
 
 declare -a targets dirs
 in_dn=$(readlink -f "$1")
-targets=('Android' 'System Volume Information' '.Trash*')
+targets=('Android' 'LOST.DIR' 'System Volume Information' '.Trash*')
 
 pause_msg='Are you sure? [y/n]: '
 
