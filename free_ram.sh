@@ -66,9 +66,9 @@ get_pids () {
 	done | sort -n
 }
 
-# Creates a function called 'kill_chromium', which kills all child
-# processes belonging to either Chromium or Chrome.
-kill_chromium () {
+# Creates a function called 'kill_chrome', which kills all child
+# processes belonging to either Chrome or Chromium.
+kill_chrome () {
 	declare -a pids_tmp
 
 	mapfile -t pids_tmp < <(get_pids 'chrome' 'chromium')
@@ -156,7 +156,7 @@ while true; do
 
 # If Chrome / Chromium is running, then kill it, print a message to the
 # screen, and append a message to the log.
-		kill_chromium
+		kill_chrome
 
 # Writes cached writes to disk. Hopefully this will also clear up a
 # little RAM.
