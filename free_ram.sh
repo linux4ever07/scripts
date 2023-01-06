@@ -36,8 +36,6 @@ fi
 # Creates a function called 'get_pids', which gets all child process IDs
 # of the command names given to it as arguments.
 get_pids () {
-	declare -A pids
-
 	for comm in "$@"; do
 		regex_comm="^.*${comm}$"
 
@@ -61,13 +59,11 @@ get_pids () {
 				fi
 
 				if [[ $args =~ $regex_comm ]]; then
-					pids["${pid}"]="$args"
+					printf '%s\n' "$pid"
 				fi
 			fi
 		done
-	done
-
-	printf '%s\n' "${!pids[@]}" | sort -n
+	done | sort -n
 }
 
 # Creates a function called 'kill_chromium', which kills all child
@@ -88,11 +84,11 @@ kill_chromium () {
 		pid="${pids_tmp[${i}]}"
 		args=$(ps -p "$pid" -o args=)
 
-# Adding an extra check, which checks if $child_pid is a renderer /
-# extension process. If it's NOT a renderer, or is an extension
-# process, skip it. This will keep extensions and downloads running,
-# even though the other Chrome child processes are killed. Only renderer
-# processes that are NOT extension processes will get killed.
+# Checks if $pid is a renderer / extension process. If it's NOT a
+# renderer, or is an extension process, skip it. This will keep
+# extensions and downloads running, even though the other Chrome child
+# processes are killed. Only renderer processes that are NOT extension
+# processes will get killed.
 		if [[ ! $args =~ $regex_rend ]]; then
 			continue
 		elif [[ $args =~ $regex_ext ]]; then
@@ -122,6 +118,7 @@ kill_firefox () {
 		pid="${pids_tmp[${i}]}"
 		args=$(ps -p "$pid" -o args=)
 
+# Checks if $pid is a renderer process.
 		if [[ ! $args =~ $regex_tab ]]; then
 			continue
 		fi
