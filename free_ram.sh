@@ -15,15 +15,14 @@
 # (i.e. video encoding). To prevent that from happening, I created
 # this script.
 
-# Creates a function called 'now', which will print the date and time.
-now () { date '+%F %H:%M:%S'; }
-
 ram_limit=1000000
 
-regex_pid_args='^[[:blank:]]*([0-9]+)[[:blank:]]*([^ ]+).*$'
+regex_pid_args='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
 regex_rend='--type=renderer'
 regex_ext='--extension-process'
 regex_tab='^.*\-childID [0-9]+.* tab$'
+
+declare -A pids
 
 # Creates a file name for the log.
 log_killed="${HOME}/browser_killed.log"
@@ -33,11 +32,21 @@ if [[ ! -f $log_killed ]]; then
 	touch "$log_killed"
 fi
 
+# Creates a function called 'now', which will print the date and time.
+now () { date '+%F %H:%M:%S'; }
+
 # Creates a function called 'get_pids', which gets all child process IDs
 # of the command names given to it as arguments.
 get_pids () {
+	declare pid args comm_path
+	declare -a match
+
+	for key in "${!pids[@]}"; do
+		unset -v pids["${key}"]
+	done
+
 	for comm in "$@"; do
-		regex_comm="^.*${comm}$"
+		unset -v pid args comm_path
 
 		mapfile -t session < <(ps -C "$comm" -o sid= | tr -d '[:blank:]' | sort -u)
 
@@ -45,58 +54,45 @@ get_pids () {
 			continue
 		fi
 
-		mapfile -t child < <(ps -g "${session[0]}" -o pid=,args=)
+		mapfile -t child < <(ps -H -s "${session[0]}" -o pid=,args=)
 
 		for (( i = 0; i < ${#child[@]}; i++ )); do
 			line="${child[${i}]}"
 
 			if [[ $line =~ $regex_pid_args ]]; then
-				pid="${BASH_REMATCH[1]}"
-				args="${BASH_REMATCH[2]}"
+				match=("${BASH_REMATCH[@]:1}")
+				pid="${match[0]}"
+				args="${match[2]}"
 
-				if [[ $pid -eq ${session[0]} ]]; then
-					continue
-				fi
+				bn=$(basename "$args")
 
-				if [[ $args =~ $regex_comm ]]; then
-					printf '%s\n' "$pid"
+				if [[ $bn == "$comm" ]]; then
+					comm_path="$args"
+					break
 				fi
 			fi
 		done
-	done | sort -n
-}
 
-# Creates a function called 'kill_chrome', which kills all child
-# processes belonging to either Chrome or Chromium.
-kill_chrome () {
-	declare -a pids_tmp
-
-	mapfile -t pids_tmp < <(get_pids 'chrome' 'chromium')
-
-	if [[ ${#pids_tmp[@]} -eq 0 ]]; then
-		return
-	fi
-
-	time=$(now)
-	printf '%s\n\n' "${time}: Killing Chrome / Chromium..." | tee --append "$log_killed"
-
-	for (( i = 0; i < ${#pids_tmp[@]}; i++ )); do
-		pid="${pids_tmp[${i}]}"
-		args=$(ps -p "$pid" -o args=)
-
-# Checks if $pid is a renderer / extension process. If it's NOT a
-# renderer, or is an extension process, skip it. This will keep
-# extensions and downloads running, even though the other Chrome child
-# processes are killed. Only renderer processes that are NOT extension
-# processes will get killed.
-		if [[ ! $args =~ $regex_rend ]]; then
-			continue
-		elif [[ $args =~ $regex_ext ]]; then
+		if [[ -z $comm_path ]]; then
 			continue
 		fi
 
-		printf '%s\n' "SIGKILL: ${pid}"
-		kill -9 "$pid"
+		for (( i = 0; i < ${#child[@]}; i++ )); do
+			line="${child[${i}]}"
+
+			if [[ $line =~ $regex_pid_args ]]; then
+				match=("${BASH_REMATCH[@]:1}")
+				pid="${match[0]}"
+				args="${match[2]}"
+
+				if [[ $args != "$comm_path" ]]; then
+					continue
+				fi
+
+				args+="${match[3]}"
+				pids["${pid}"]="$args"
+			fi
+		done
 	done
 }
 
@@ -105,7 +101,8 @@ kill_chrome () {
 kill_firefox () {
 	declare -a pids_tmp
 
-	mapfile -t pids_tmp < <(get_pids 'firefox' 'firefox.real')
+	get_pids 'firefox' 'firefox.real'
+	mapfile -t pids_tmp < <(printf '%s\n' "${!pids[@]}" | sort -n)
 
 	if [[ ${#pids_tmp[@]} -eq 0 ]]; then
 		return
@@ -116,10 +113,45 @@ kill_firefox () {
 
 	for (( i = 0; i < ${#pids_tmp[@]}; i++ )); do
 		pid="${pids_tmp[${i}]}"
-		args=$(ps -p "$pid" -o args=)
+		args="${pids[${pid}]}"
 
 # Checks if $pid is a renderer process.
 		if [[ ! $args =~ $regex_tab ]]; then
+			continue
+		fi
+
+		printf '%s\n' "SIGKILL: ${pid}"
+		kill -9 "$pid"
+	done
+}
+
+# Creates a function called 'kill_chrome', which kills all child
+# processes belonging to either Chrome or Chromium.
+kill_chrome () {
+	declare -a pids_tmp
+
+	get_pids 'chrome' 'chromium'
+	mapfile -t pids_tmp < <(printf '%s\n' "${!pids[@]}" | sort -n)
+
+	if [[ ${#pids_tmp[@]} -eq 0 ]]; then
+		return
+	fi
+
+	time=$(now)
+	printf '%s\n\n' "${time}: Killing Chrome / Chromium..." | tee --append "$log_killed"
+
+	for (( i = 0; i < ${#pids_tmp[@]}; i++ )); do
+		pid="${pids_tmp[${i}]}"
+		args="${pids[${pid}]}"
+
+# Checks if $pid is a renderer / extension process. If it's NOT a
+# renderer, or is an extension process, skip it. This will keep
+# extensions and downloads running, even though the other Chrome child
+# processes are killed. Only renderer processes that are NOT extension
+# processes will get killed.
+		if [[ ! $args =~ $regex_rend ]]; then
+			continue
+		elif [[ $args =~ $regex_ext ]]; then
 			continue
 		fi
 
