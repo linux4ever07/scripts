@@ -15,7 +15,7 @@ if [[ ! -f $1 ]]; then
 fi
 
 # If the script isn't run with sudo / root privileges, then quit.
-if [[ $(whoami) != 'root' ]]; then
+if [[ "$EUID" != "0" ]]; then
 	printf '\n%s\n\n' 'You need to be root to run this script!'
 	exit
 fi
