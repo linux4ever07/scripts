@@ -201,7 +201,7 @@ sub getfiles {
 	chomp(@lines = (<$find>));
 	close($find) or die "Can't close 'find': $!";
 
-	foreach my $fn (@lines) {
+	while (my $fn = shift(@lines)) {
 		if ($fn =~ m/\.flac$/i) {
 			$files{flac}{$fn} = { gettags($fn) };
 		} else {
