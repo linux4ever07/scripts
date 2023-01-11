@@ -26,21 +26,6 @@ interval=10
 
 declare pw_id
 
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
-
-# If a SIGINT signal is captured, then put the volume back to where it
-# was before running this script.
-ctrl_c () {
-	if [[ -n $pw_id ]]; then
-		set_volume "$volume_og" 'false'
-	fi
-
-	printf '%s\n' '** Trapped CTRL-C'
-
-	exit
-}
-
 # Creates a function called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
 get_id () {

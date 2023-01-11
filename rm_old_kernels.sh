@@ -141,18 +141,18 @@ if [[ ${#remove[@]} -eq 0 ]]; then
 fi
 
 current=$(uname -r)
-latest="${latest[kernel.${arch}]}.${arch}"
+latest_tmp="${latest[kernel.${arch}]}.${arch}"
 
 # If the user does not have the latest installed kernel loaded, ask them
 # to reboot before running the script.
-if [[ $current != "$latest" ]]; then
+if [[ $current != "$latest_tmp" ]]; then
 	cat <<RUNNING
 
 Current running kernel:
 ${current}
 
 Latest installed kernel:
-${latest}
+${latest_tmp}
 
 You need to reboot before running this script, so the latest kernel can
 be loaded. It might also be a good idea to install system updates before
