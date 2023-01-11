@@ -18,6 +18,9 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
+declare -a types args
+types=('quick' 'full')
+
 regex_part="^(.*)[0-9]+$"
 
 while [[ $# -gt 0 ]]; do
@@ -26,6 +29,8 @@ while [[ $# -gt 0 ]]; do
 	if [[ ! -b $device ]]; then
 		usage
 	fi
+
+	unset -v type
 
 # If argument is a partition instead of the device itself, strip the
 # partition number from the path.
@@ -50,6 +55,15 @@ Are you sure? [y/n]: "
 		exit
 	fi
 
+# Ask the user whether they want to do a quick or full format.
+	printf '\n%s\n\n' 'Do you want to do a quick or full format?'
+
+	until [[ -n $type ]]; do
+		select type in "${types[@]}"; do
+			break
+		done
+	done
+
 	printf '\n'
 
 	for n in {1..10}; do
@@ -59,7 +73,16 @@ Are you sure? [y/n]: "
 
 	printf '\n\n%s: %s\n\n' "$device" 'formatting...'
 
-	dd if='/dev/zero' of="$device" bs=1M
+# Depending on whether we're doing a quick or full format, adjust the
+# arguments to 'dd'.
+	args=(dd if=\""/dev/zero"\" of=\""${device}"\" bs=\""1M"\")
+
+	if [[ $type == 'quick' ]]; then
+		args+=(count=\""100"\")
+	fi
+
+# Run 'dd'.
+	eval "${args[@]}"
 
 	if [[ $? -eq 0 ]]; then
 		printf '\n%s: %s\n\n' "$device" 'format succeeded!'
