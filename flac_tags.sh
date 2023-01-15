@@ -90,7 +90,7 @@ options () {
 
 clear
 
-while true; do
+while [[ 1 ]]; do
 	printf '\n%s\n\n' '*** CHOOSE TRACK ***'
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do

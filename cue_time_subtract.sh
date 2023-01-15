@@ -169,7 +169,7 @@ set_frames () {
 	i=0
 	declare frames_this frames_next size frames_total
 
-	while true; do
+	while [[ 1 ]]; do
 		i=$(( i + 1 ))
 		j=$(( i + 1 ))
 		frames_this=$(get_frames "$i")

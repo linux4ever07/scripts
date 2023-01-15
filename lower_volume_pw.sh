@@ -263,7 +263,7 @@ get_count () {
 spin () {
 	spinner=('   ' '.  ' '.. ' '...')
 
-	while true; do
+	while [[ 1 ]]; do
 		for s in "${spinner[@]}"; do
 			printf '\r%s%s' 'Wait' "$s"
 			sleep 0.5

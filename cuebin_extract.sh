@@ -329,7 +329,7 @@ set_frames () {
 	i=0
 	declare frames_this frames_next
 
-	while true; do
+	while [[ 1 ]]; do
 		i=$(( i + 1 ))
 		j=$(( i + 1 ))
 		frames_this=$(get_frames "$i")
@@ -447,7 +447,7 @@ set_gaps () {
 	i=0
 	declare track_ref
 
-	while true; do
+	while [[ 1 ]]; do
 		i=$(( i + 1 ))
 		track_ref="cue_lines[${i},track_number]"
 

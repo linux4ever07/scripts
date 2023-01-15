@@ -161,7 +161,7 @@ kill_chrome () {
 }
 
 # Creates an infinite while loop.
-while true; do
+while [[ 1 ]]; do
 # Sleeps for 1 second.
 	sleep 1
 

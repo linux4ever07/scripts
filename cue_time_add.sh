@@ -68,7 +68,7 @@ frames=0
 printf '\n%s\n\n' "This script will calculate the total time of all the times given."
 printf '%s\n\n' "Type or paste a time in the mm:ss:ff format."
 
-while true; do
+while [[ 1 ]]; do
 # Read input.
 	read in
 
