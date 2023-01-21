@@ -13,7 +13,7 @@ usage () {
 	exit
 }
 
-if [[ $# -lt 2 ]]; then
+if [[ $# -eq 0 ]]; then
 	usage
 fi
 
@@ -26,6 +26,10 @@ for dn in "$@"; do
 
 	dirs+=("$(readlink -f "$dn")")
 done
+
+if [[ ${#dirs[@]} -lt 2 ]]; then
+	usage
+fi
 
 declare -A md5s
 
