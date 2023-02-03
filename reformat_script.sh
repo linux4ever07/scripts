@@ -79,7 +79,7 @@ reformat_comments () {
 
 			end=$(( ${#line_tmp_array[@]} - 1 ))
 
-			for (( k=0; k<${#line_tmp_array[@]}; k++ )); do
+			for (( k = 0; k < ${#line_tmp_array[@]}; k++ )); do
 				word="${#line_tmp_array[${k}]}"
 				word=$(( word + 1 ))
 
