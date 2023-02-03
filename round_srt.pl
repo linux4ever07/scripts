@@ -286,7 +286,7 @@ while (my $fn = shift(@files)) {
 	push(@lines, parse_srt($fn));
 
 	open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
-	while (my $line = shift(@lines)) {
+	foreach my $line (@lines) {
 		print $srt $line . "\r\n";
 	}
 	close($srt) or die "Can't close file '$of': $!";

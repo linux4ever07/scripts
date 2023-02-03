@@ -139,6 +139,6 @@ sub parse_srt {
 
 parse_srt($fn);
 
-while (my $line = shift(@lines)) {
+foreach my $line (@lines) {
 	say $line;
 }
