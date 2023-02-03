@@ -275,12 +275,12 @@ sub parse_srt {
 	return(@lines);
 }
 
-foreach my $fn (@files) {
+while (my $fn = shift(@files)) {
 	push(@lines, parse_srt($fn));
 }
 
 open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
-foreach my $line (@lines) {
+while (my $line = shift(@lines)) {
 	print $srt $line . "\r\n";
 }
 close($srt) or die "Can't close file '$of': $!";

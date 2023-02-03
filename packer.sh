@@ -271,7 +271,7 @@ iso_unpack () {
 	sudo mount "$f" "$iso_mnt" -o loop
 
 	printf '\n%s: %s\n' "$f" 'Extracting files...'
-	cp -p -r "$iso_mnt"/* "$iso_of"
+	cp -rp "$iso_mnt"/* "$iso_of"
 
 	printf '\n%s: %s %s...\n' "$iso_of" 'Changing owner to' "$USER"
 	sudo chown -R "${USER}:${USER}" "$iso_of"
