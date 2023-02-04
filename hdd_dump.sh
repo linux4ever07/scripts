@@ -75,7 +75,6 @@ Difference is ${diff} bytes.
 USED
 
 	exit
-
 fi
 
 # The 'md5copy' function checks the MD5 hash of the input file, and
