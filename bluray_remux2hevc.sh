@@ -312,10 +312,10 @@ break_name () {
 # Declares an associative array (hash), that stores the element numbers
 # for each kind of word separator: dots, hyphens, underscores, spaces.
 	declare -A bname_elements
-	bname_elements[dots]=${#bname_dots[@]}
-	bname_elements[hyphens]=${#bname_hyphens[@]}
-	bname_elements[underscores]=${#bname_underscores[@]}
-	bname_elements[spaces]=${#bname_spaces[@]}
+	bname_elements[dots]="${#bname_dots[@]}"
+	bname_elements[hyphens]="${#bname_hyphens[@]}"
+	bname_elements[underscores]="${#bname_underscores[@]}"
+	bname_elements[spaces]="${#bname_spaces[@]}"
 
 # If there are more dots in $bname than hyphens, underscores or spaces,
 # that means $bname is separated by dots. Otherwise, it's separated by
