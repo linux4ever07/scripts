@@ -483,10 +483,12 @@ copy_track_type () {
 		if [[ -n ${!track_mode_ref} ]]; then
 			if [[ ${!track_mode_ref} =~ $regex_data ]]; then
 				data_tracks+=("$i")
+				continue
 			fi
 
 			if [[ ${!track_mode_ref} =~ $regex_audio ]]; then
 				audio_tracks+=("$i")
+				continue
 			fi
 		else
 			break
@@ -737,9 +739,9 @@ time_convert () {
 }
 
 # Creates a function called 'clean_up', which deletes temporary files:
-# ISO file produced by 'bchunk'
-# Potential WAV files
-# Temporary CUE sheet
+# * ISO file produced by 'bchunk'
+# * Potential WAV files
+# * Temporary CUE sheet
 clean_up () {
 	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.wav" \) 2>&-)
 
