@@ -140,8 +140,6 @@ of_cdr_cue="${of_dn}/${of_name}01_cdr.cue"
 of_ogg_cue="${of_dn}/${of_name}01_ogg.cue"
 of_flac_cue="${of_dn}/${of_name}01_flac.cue"
 
-of_iso="${of_dn}/${of_name}01.iso"
-
 cue="$if"
 cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
@@ -159,6 +157,9 @@ format[7]="^(POSTGAP) (${format[2]})$"
 
 regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex_path='^(.*[\\\/])'
+
+regex_data='^MODE[0-9]+/[0-9]+$'
+regex_audio='^AUDIO$'
 
 regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 regex_iso='\.iso$'
@@ -326,8 +327,9 @@ get_frames () {
 # Creates a function called 'set_frames', which will get the length of
 # all tracks in the BIN file (except the last one).
 set_frames () {
-	i=0
 	declare frames_this frames_next
+
+	i=0
 
 	while [[ 1 ]]; do
 		i=$(( i + 1 ))
@@ -343,14 +345,81 @@ set_frames () {
 	done
 }
 
+# Creates a function called 'get_gaps', which will get pregaps and
+# postgaps from the CUE sheet for the track number given as argument.
+# If there's both a pregap specified using the PREGAP command and INDEX
+# command, those values will be added together. However, a CUE sheet is
+# highly unlikely to specify a pregap twice like that.
+get_gaps () {
+	track_n="$1"
+
+	declare index_0 index_0_ref index_1 index_1_ref frames_tmp
+
+	pregap=0
+	postgap=0
+
+# If the CUE sheet specifies a pregap using the INDEX command, convert
+# that to a PREGAP command.
+	index_0_ref="cue_lines[${track_n},index,0]"
+	index_1_ref="cue_lines[${track_n},index,1]"
+
+	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
+		index_0=$(time_convert "${!index_0_ref}")
+		index_1=$(time_convert "${!index_1_ref}")
+
+		if [[ $index_1 -gt $index_0 ]]; then
+			frames_tmp=$(( index_1 - index_0 ))
+			pregap=$(( pregap + frames_tmp ))
+			gaps["${track_n},index"]="$frames_tmp"
+		fi
+	fi
+
+	pregap_ref="cue_lines[${track_n},pregap]"
+	postgap_ref="cue_lines[${track_n},postgap]"
+
+	if [[ -n ${!pregap_ref} ]]; then
+		frames_tmp=$(time_convert "${!pregap_ref}")
+		pregap=$(( pregap + frames_tmp ))
+	fi
+
+	if [[ -n ${!postgap_ref} ]]; then
+		frames_tmp=$(time_convert "${!postgap_ref}")
+		postgap=$(( postgap + frames_tmp ))
+	fi
+
+	gaps["${track_n},pre"]="$pregap"
+	gaps["${track_n},post"]="$postgap"
+}
+
+# Creates a function called 'set_gaps', which will get pregaps and
+# postgaps for all tracks in the BIN file.
+set_gaps () {
+	declare track_ref
+
+	i=0
+
+	while [[ 1 ]]; do
+		i=$(( i + 1 ))
+		track_ref="cue_lines[${i},track_number]"
+
+		if [[ -n ${!track_ref} ]]; then
+			get_gaps "$i"
+		else
+			break
+		fi
+	done
+}
+
 # Creates a function called 'copy_track', which will extract the raw
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	track_n="$1"
 	of_bin=$(printf '%s/%s%02d.bin' "$of_dn" "$of_name" "$track_n")
-	skip=0
+
 	declare frames_ref gaps_ref count
 	declare -a sector args
+
+	skip=0
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
 # bytes is the size of audio sectors.
@@ -397,65 +466,44 @@ copy_track () {
 	eval "${args[@]}"
 }
 
-# Creates a function called 'get_gaps', which will get pregaps and
-# postgaps from the CUE sheet for the track number given as argument.
-# If there's both a pregap specified using the PREGAP command and INDEX
-# command, those values will be added together. However, a CUE sheet is
-# highly unlikely to specify a pregap twice like that.
-get_gaps () {
-	track_n="$1"
-	pregap=0
-	postgap=0
-	declare index_0 index_0_ref index_1 index_1_ref frames_tmp
+# Creates a function called 'copy_track_type', which will extract the
+# raw binary data for all tracks of either the data or audio type.
+copy_track_type () {
+	track_type="$1"
 
-# If the CUE sheet specifies a pregap using the INDEX command, convert
-# that to a PREGAP command.
-	index_0_ref="cue_lines[${track_n},index,0]"
-	index_1_ref="cue_lines[${track_n},index,1]"
+	declare track_mode_ref tracks_ref
+	declare -a data_tracks audio_tracks
 
-	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
-		index_0=$(time_convert "${!index_0_ref}")
-		index_1=$(time_convert "${!index_1_ref}")
-
-		if [[ $index_1 -gt $index_0 ]]; then
-			frames_tmp=$(( index_1 - index_0 ))
-			pregap=$(( pregap + frames_tmp ))
-			gaps["${track_n},index"]="$frames_tmp"
-		fi
-	fi
-
-	pregap_ref="cue_lines[${track_n},pregap]"
-	postgap_ref="cue_lines[${track_n},postgap]"
-
-	if [[ -n ${!pregap_ref} ]]; then
-		frames_tmp=$(time_convert "${!pregap_ref}")
-		pregap=$(( pregap + frames_tmp ))
-	fi
-
-	if [[ -n ${!postgap_ref} ]]; then
-		frames_tmp=$(time_convert "${!postgap_ref}")
-		postgap=$(( postgap + frames_tmp ))
-	fi
-
-	gaps["${track_n},pre"]="$pregap"
-	gaps["${track_n},post"]="$postgap"
-}
-
-# Creates a function called 'set_gaps', which will get pregaps and
-# postgaps for all tracks in the BIN file.
-set_gaps () {
 	i=0
-	declare track_ref
 
 	while [[ 1 ]]; do
 		i=$(( i + 1 ))
-		track_ref="cue_lines[${i},track_number]"
+		track_mode_ref="cue_lines[${i},track_mode]"
 
-		if [[ -n ${!track_ref} ]]; then
-			get_gaps "$i"
+		if [[ -n ${!track_mode_ref} ]]; then
+			if [[ ${!track_mode_ref} =~ $regex_data ]]; then
+				data_tracks+=("$i")
+			fi
+
+			if [[ ${!track_mode_ref} =~ $regex_audio ]]; then
+				audio_tracks+=("$i")
+			fi
 		else
 			break
 		fi
+	done
+
+	case "$track_type" in
+		'data')
+			tracks_ref='data_tracks[@]'
+		;;
+		'audio')
+			tracks_ref='audio_tracks[@]'
+		;;
+	esac
+
+	for track_n in "${!tracks_ref}"; do
+		copy_track "$track_n"
 	done
 }
 
@@ -688,18 +736,19 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'clean_up', which deletes temporary files,
-# meaning potential WAV files, the ISO file produced by 'bchunk'
-# and the temporary CUE sheet.
+# Creates a function called 'clean_up', which deletes temporary files:
+# ISO file produced by 'bchunk'
+# Potential WAV files
+# Temporary CUE sheet
 clean_up () {
-	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.wav" 2>&-)
+	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.wav" \) 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
 		rm -f "$fn" || exit
 	done
 
-	rm -f "$of_iso" "$cue_tmp_f" || exit
+	rm -f "$cue_tmp_f" || exit
 }
 
 # Check if 'oggenc', 'flac' and 'bchunk' are installed.
@@ -746,4 +795,4 @@ printf '\n'
 clean_up
 
 # Copy data track from original BIN file.
-copy_track 1
+copy_track_type 'data'
