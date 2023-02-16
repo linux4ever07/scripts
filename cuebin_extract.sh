@@ -86,7 +86,7 @@ fi
 
 declare -A audio_types
 
-audio_types=(['cdr']=0 ['ogg']=0 ['flac']=0)
+audio_types=([cdr]=0 [ogg]=0 [flac]=0)
 exclusive=0
 byteswap=0
 
@@ -96,19 +96,19 @@ shift
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		'-cdr')
-			audio_types['cdr']=1
+			audio_types[cdr]=1
 			exclusive=1
 
 			shift
 		;;
 		'-ogg')
-			audio_types['ogg']=1
+			audio_types[ogg]=1
 			exclusive=1
 
 			shift
 		;;
 		'-flac')
-			audio_types['flac']=1
+			audio_types[flac]=1
 			exclusive=1
 
 			shift
@@ -125,7 +125,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ $exclusive -eq 0 ]]; then
-	audio_types=(['cdr']=1 ['ogg']=1 ['flac']=1)
+	audio_types=([cdr]=1 [ogg]=1 [flac]=1)
 fi
 
 session="${RANDOM}-${RANDOM}"
