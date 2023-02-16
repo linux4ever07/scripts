@@ -573,9 +573,9 @@ bin_split () {
 # status.
 	if [[ ${!exit_status_ref} != '0' ]]; then
 		for (( i = 0; i < last; i++ )); do
-			bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
+			line_ref="bchunk_${type_tmp}_stdout[${i}]"
 
-			printf '%s\n' "${!bchunk_stdout_ref}"
+			printf '%s\n' "${!line_ref}"
 		done
 
 		exit
