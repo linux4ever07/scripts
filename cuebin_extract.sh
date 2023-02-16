@@ -471,7 +471,7 @@ copy_track () {
 copy_track_type () {
 	track_type="$1"
 
-	declare track_mode_ref tracks_ref
+	declare track_mode_ref tracks_ref elements
 	declare -a data_tracks audio_tracks
 
 	i=0
@@ -495,14 +495,22 @@ copy_track_type () {
 		fi
 	done
 
+	elements=0
+
 	case "$track_type" in
 		'data')
 			tracks_ref='data_tracks[@]'
+			elements="${#data_tracks[@]}"
 		;;
 		'audio')
 			tracks_ref='audio_tracks[@]'
+			elements="${#audio_tracks[@]}"
 		;;
 	esac
+
+	if [[ $elements -eq 0 ]]; then
+		return
+	fi
 
 	for track_n in "${!tracks_ref}"; do
 		copy_track "$track_n"
