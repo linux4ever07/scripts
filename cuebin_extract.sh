@@ -524,6 +524,8 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
+	declare cdr_args wav_args elements
+
 	unset -v files
 	declare -a files
 
@@ -632,6 +634,8 @@ encode_audio () {
 # sheet, based on the file list created by the 'bin_split' function.
 create_cue () {
 	type="$1"
+
+	declare type_tmp elements
 
 	case "$type" in
 		'cdr')
