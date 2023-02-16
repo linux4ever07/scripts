@@ -143,55 +143,6 @@ MERGE
 	fi
 }
 
-# Creates a function called 'get_frames', which will get the position of
-# a track in the BIN file.
-get_frames () {
-	track_n="$1"
-	declare index_0_ref index_1_ref index_ref frames_tmp
-
-	index_0_ref="cue_lines[${track_n},index,0]"
-	index_1_ref="cue_lines[${track_n},index,1]"
-
-	if [[ -n ${!index_0_ref} ]]; then
-		index_ref="$index_0_ref"
-	else
-		index_ref="$index_1_ref"
-	fi
-
-	if [[ -n ${!index_ref} ]]; then
-		frames_tmp=$(time_convert "${!index_ref}")
-		printf '%s' "$frames_tmp"
-	fi
-}
-
-# Creates a function called 'set_frames', which will get the length of
-# all tracks in the BIN file (except the last one).
-set_frames () {
-	i=0
-	declare frames_this frames_next size frames_total
-
-	while [[ 1 ]]; do
-		i=$(( i + 1 ))
-		j=$(( i + 1 ))
-		frames_this=$(get_frames "$i")
-		frames_next=$(get_frames "$j")
-
-		if [[ -n $frames_next ]]; then
-			frames["${i}"]=$(( frames_next - frames_this ))
-		else
-			if [[ -n $bin ]]; then
-				size=$(stat -c '%s' "$bin")
-				frames_total=$(( size / 2352 ))
-				frames["${i}"]=$(( frames_total - frames_this ))
-			else
-				frames["${i}"]=0
-			fi
-
-			break
-		fi
-	done
-}
-
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
 # sectors.
@@ -237,6 +188,57 @@ time_convert () {
 	fi
 
 	printf '%s' "$time"
+}
+
+# Creates a function called 'get_frames', which will get the position of
+# a track in the BIN file.
+get_frames () {
+	track_n="$1"
+
+	declare index_0_ref index_1_ref index_ref frames_tmp
+
+	index_0_ref="cue_lines[${track_n},index,0]"
+	index_1_ref="cue_lines[${track_n},index,1]"
+
+	if [[ -n ${!index_0_ref} ]]; then
+		index_ref="$index_0_ref"
+	else
+		index_ref="$index_1_ref"
+	fi
+
+	if [[ -n ${!index_ref} ]]; then
+		frames_tmp=$(time_convert "${!index_ref}")
+		printf '%s' "$frames_tmp"
+	fi
+}
+
+# Creates a function called 'set_frames', which will get the length of
+# all tracks in the BIN file (except the last one).
+set_frames () {
+	declare frames_this frames_next size frames_total
+
+	i=0
+
+	while [[ 1 ]]; do
+		i=$(( i + 1 ))
+		j=$(( i + 1 ))
+		frames_this=$(get_frames "$i")
+		frames_next=$(get_frames "$j")
+
+		if [[ -n $frames_next ]]; then
+			frames["${i}"]=$(( frames_next - frames_this ))
+		else
+			if [[ -n $bin ]]; then
+				size=$(stat -c '%s' "$bin")
+				frames_total=$(( size / 2352 ))
+				frames["${i}"]=$(( frames_total - frames_this ))
+			else
+				frames["${i}"]=0
+			fi
+
+			break
+		fi
+	done
 }
 
 read_cue
