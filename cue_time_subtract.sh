@@ -25,6 +25,7 @@ fi
 
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
+declare -A regex
 declare -a format
 
 format[0]='^[0-9]+$'
@@ -36,8 +37,8 @@ format[5]="^(PREGAP) (${format[2]})$"
 format[6]="^(INDEX) ([0-9]{2,}) (${format[2]})$"
 format[7]="^(POSTGAP) (${format[2]})$"
 
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_path='^(.*[\\\/])'
+regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex[path]='^(.*[\\\/])'
 
 declare -A cue_lines
 declare -a frames
@@ -55,7 +56,7 @@ read_cue () {
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			track_n=$(( track_n + 1 ))
-			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex_path}//")
+			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
 			if [[ ! -f $fn ]]; then
@@ -116,7 +117,7 @@ read_cue () {
 		fi
 	}
 
-	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
+	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
 
 	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
 		line="${cue_lines_if[${i}]}"

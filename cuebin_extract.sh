@@ -144,6 +144,7 @@ cue="$if"
 cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
+declare -A regex
 declare -a format offset
 
 format[0]='^[0-9]+$'
@@ -155,15 +156,15 @@ format[5]="^(PREGAP) (${format[2]})$"
 format[6]="^(INDEX) ([0-9]{2,}) (${format[2]})$"
 format[7]="^(POSTGAP) (${format[2]})$"
 
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_path='^(.*[\\\/])'
+regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex[path]='^(.*[\\\/])'
 
-regex_data='^MODE[0-9]+/[0-9]+$'
-regex_audio='^AUDIO$'
+regex[data]='^MODE[0-9]+/[0-9]+$'
+regex[audio]='^AUDIO$'
 
-regex_bchunk='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
-regex_iso='\.iso$'
-regex_wav='\.wav$'
+regex[bchunk]='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
+regex[iso]='\.iso$'
+regex[wav]='\.wav$'
 
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
@@ -206,7 +207,7 @@ read_cue () {
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			track_n=$(( track_n + 1 ))
-			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex_path}//")
+			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
 			if [[ ! -f $fn ]]; then
@@ -272,7 +273,7 @@ read_cue () {
 		fi
 	}
 
-	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex_blank}/\1/")
+	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
 
 	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
 		line="${cue_lines_if[${i}]}"
@@ -481,12 +482,12 @@ copy_track_type () {
 		track_mode_ref="cue_lines[${i},track_mode]"
 
 		if [[ -n ${!track_mode_ref} ]]; then
-			if [[ ${!track_mode_ref} =~ $regex_data ]]; then
+			if [[ ${!track_mode_ref} =~ ${regex[data]} ]]; then
 				data_tracks+=("$i")
 				continue
 			fi
 
-			if [[ ${!track_mode_ref} =~ $regex_audio ]]; then
+			if [[ ${!track_mode_ref} =~ ${regex[audio]} ]]; then
 				audio_tracks+=("$i")
 				continue
 			fi
@@ -523,6 +524,9 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
+	unset -v files
+	declare -a files
+
 	case "$type" in
 		'cdr')
 			type_tmp='cdr'
@@ -536,8 +540,6 @@ bin_split () {
 	esac
 
 	args_tmp=(\""$bin"\" \""$cue_tmp_f"\" \""$of_name"\")
-
-	n=0
 
 	if [[ $byteswap -eq 1 ]]; then
 		cdr_args=(bchunk -s "${args_tmp[@]}")
@@ -579,6 +581,8 @@ bin_split () {
 		exit
 	fi
 
+	n=0
+
 	for (( i = 0; i < last; i++ )); do
 		line_ref="bchunk_${type_tmp}_stdout[${i}]"
 
@@ -590,17 +594,20 @@ bin_split () {
 
 	for (( i = n; i < last; i++ )); do
 		bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
-		line=$(sed -E "s/${regex_bchunk}/\1/" <<<"${!bchunk_stdout_ref}")
 
-		case "$type_tmp" in
-			'cdr')
-				bchunk_cdr_list+=("$line")
-			;;
-			'wav')
-				bchunk_wav_list+=("$line")
-			;;
-		esac
+		if [[ ${!bchunk_stdout_ref} =~ ${regex[bchunk]} ]]; then
+			files+=("${BASH_REMATCH[1]}")
+		fi
 	done
+
+	case "$type_tmp" in
+		'cdr')
+			bchunk_cdr_list=("${files[@]}")
+		;;
+		'wav')
+			bchunk_wav_list=("${files[@]}")
+		;;
+	esac
 }
 
 # Creates a function called 'encode_audio', which will encode the WAVs
@@ -676,7 +683,7 @@ create_cue () {
 		track_mode_ref="cue_lines[${track_n},track_mode]"
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 
-		if [[ ${!line_ref} =~ $regex_iso ]]; then
+		if [[ ${!line_ref} =~ ${regex[iso]} ]]; then
 			eval of_cue_"${type}"_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
 			eval of_cue_"${type}"_list+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
