@@ -593,9 +593,9 @@ bin_split () {
 	done
 
 	for (( i = n; i < last; i++ )); do
-		bchunk_stdout_ref="bchunk_${type_tmp}_stdout[${i}]"
+		line_ref="bchunk_${type_tmp}_stdout[${i}]"
 
-		if [[ ${!bchunk_stdout_ref} =~ ${regex[bchunk]} ]]; then
+		if [[ ${!line_ref} =~ ${regex[bchunk]} ]]; then
 			files+=("${BASH_REMATCH[1]}")
 		fi
 	done
