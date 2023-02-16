@@ -304,10 +304,58 @@ MERGE
 	printf '%s\n' "${cue_tmp[@]}" > "$cue_tmp_f"
 }
 
+# Creates a function called 'time_convert', which converts track length
+# back and forth between the time (mm:ss:ff) format and frames /
+# sectors.
+time_convert () {
+	time="$1"
+
+	m=0
+	s=0
+	f=0
+
+# If argument is in the mm:ss:ff format...
+	if [[ $time =~ ${format[1]} ]]; then
+		m="${BASH_REMATCH[1]#0}"
+		s="${BASH_REMATCH[2]#0}"
+		f="${BASH_REMATCH[3]#0}"
+
+# Converting minutes and seconds to frames, and adding all the numbers
+# together.
+		m=$(( m * 60 * 75 ))
+		s=$(( s * 75 ))
+
+		time=$(( m + s + f ))
+
+# If argument is in the frame format...
+	elif [[ $time =~ ${format[0]} ]]; then
+		f="$time"
+
+# While $f (frames) is equal to (or greater than) 75, clear the $f
+# variable and add 1 to the $s (seconds) variable.
+		while [[ $f -ge 75 ]]; do
+			s=$(( s + 1 ))
+			f=$(( f - 75 ))
+		done
+
+# While $s (seconds) is equal to (or greater than) 60, clear the $s
+# variable and add 1 to the $m (minutes) variable.
+		while [[ $s -ge 60 ]]; do
+			m=$(( m + 1 ))
+			s=$(( s - 60 ))
+		done
+
+		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
+	fi
+
+	printf '%s' "$time"
+}
+
 # Creates a function called 'get_frames', which will get the position of
 # a track in the BIN file.
 get_frames () {
 	track_n="$1"
+
 	declare index_0_ref index_1_ref index_ref frames_tmp
 
 	index_0_ref="cue_lines[${track_n},index,0]"
@@ -708,53 +756,6 @@ create_cue () {
 			set_index
 		fi
 	done
-}
-
-# Creates a function called 'time_convert', which converts track length
-# back and forth between the time (mm:ss:ff) format and frames /
-# sectors.
-time_convert () {
-	time="$1"
-
-	m=0
-	s=0
-	f=0
-
-# If argument is in the mm:ss:ff format...
-	if [[ $time =~ ${format[1]} ]]; then
-		m="${BASH_REMATCH[1]#0}"
-		s="${BASH_REMATCH[2]#0}"
-		f="${BASH_REMATCH[3]#0}"
-
-# Converting minutes and seconds to frames, and adding all the numbers
-# together.
-		m=$(( m * 60 * 75 ))
-		s=$(( s * 75 ))
-
-		time=$(( m + s + f ))
-
-# If argument is in the frame format...
-	elif [[ $time =~ ${format[0]} ]]; then
-		f="$time"
-
-# While $f (frames) is equal to (or greater than) 75, clear the $f
-# variable and add 1 to the $s (seconds) variable.
-		while [[ $f -ge 75 ]]; do
-			s=$(( s + 1 ))
-			f=$(( f - 75 ))
-		done
-
-# While $s (seconds) is equal to (or greater than) 60, clear the $s
-# variable and add 1 to the $m (minutes) variable.
-		while [[ $s -ge 60 ]]; do
-			m=$(( m + 1 ))
-			s=$(( s - 60 ))
-		done
-
-		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
-	fi
-
-	printf '%s' "$time"
 }
 
 # Creates a function called 'clean_up', which deletes temporary files:
