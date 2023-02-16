@@ -524,7 +524,7 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare cdr_args wav_args elements
+	declare cdr_args wav_args type_tmp elements
 
 	unset -v files
 	declare -a files
