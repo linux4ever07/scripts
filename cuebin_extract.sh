@@ -195,7 +195,7 @@ check_cmd () {
 }
 
 # Creates a function called 'read_cue', which will read the input CUE
-# sheet, add full path to filenames listed in the CUE sheet, and create
+# sheet, add full path to file names listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
 	declare -a files not_found cue_tmp
@@ -463,12 +463,23 @@ set_gaps () {
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	track_n="$1"
-	of_bin=$(printf '%s/%s%02d.bin' "$of_dn" "$of_name" "$track_n")
+	track_type="$2"
 
-	declare frames_ref gaps_ref count
+	declare ext frames_ref gaps_ref count skip
 	declare -a sector args
 
-	skip=0
+# Depending on whether the track type is data or audio, use the
+# appropriate file name extension for the output file.
+	case "$track_type" in
+		'data')
+			ext='bin'
+		;;
+		'audio')
+			ext='cdr'
+		;;
+	esac
+
+	of_bin=$(printf '%s/%s%02d.%s' "$of_dn" "$of_name" "$track_n" "$ext")
 
 # 2048 bytes is normally the sector size for data CDs / tracks, and 2352
 # bytes is the size of audio sectors.
@@ -491,6 +502,8 @@ copy_track () {
 
 		args+=(count=\""${count}"\")
 	fi
+
+	skip=0
 
 # If there's a pregap in the CUE sheet specified by an INDEX command,
 # that means the gap is present in the BIN file itself, so we skip that
@@ -562,7 +575,7 @@ copy_track_type () {
 	fi
 
 	for track_n in "${!tracks_ref}"; do
-		copy_track "$track_n"
+		copy_track "$track_n" "$track_type"
 	done
 }
 
