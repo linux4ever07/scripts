@@ -169,8 +169,8 @@ regex[wav]='\.wav$'
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
 
-declare -A cue_lines gaps
-declare -a frames bchunk_cdr_list bchunk_wav_list of_cue_cdr_list of_cue_ogg_list of_cue_flac_list
+declare -A if_cue gaps
+declare -a frames bchunk_cdr bchunk_wav of_cue_cdr of_cue_ogg of_cue_flac
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -224,8 +224,8 @@ read_cue () {
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			cue_lines["${track_n},filename"]="$fn"
-			cue_lines["${track_n},file_format"]="${match[2]}"
+			if_cue["${track_n},filename"]="$fn"
+			if_cue["${track_n},file_format"]="${match[2]}"
 		fi
 
 # If line is a track command...
@@ -235,8 +235,8 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},track_number"]="${match[1]}"
-			cue_lines["${track_n},track_mode"]="${match[2]}"
+			if_cue["${track_n},track_number"]="${match[1]}"
+			if_cue["${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a pregap command...
@@ -245,7 +245,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},pregap"]="${match[1]}"
+			if_cue["${track_n},pregap"]="${match[1]}"
 		fi
 
 # If line is an index command...
@@ -255,7 +255,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},index,${index_n}"]="${match[2]}"
+			if_cue["${track_n},index,${index_n}"]="${match[2]}"
 		fi
 
 # If line is a postgap command...
@@ -264,7 +264,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},postgap"]="${match[1]}"
+			if_cue["${track_n},postgap"]="${match[1]}"
 		fi
 
 # If a string has been created, add it to the 'cue_tmp' array.
@@ -273,10 +273,10 @@ read_cue () {
 		fi
 	}
 
-	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
 
-	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
-		line="${cue_lines_if[${i}]}"
+	for (( i = 0; i < ${#lines[@]}; i++ )); do
+		line="${lines[${i}]}"
 		handle_command "$line"
 	done
 
@@ -358,8 +358,8 @@ get_frames () {
 
 	declare index_0_ref index_1_ref index_ref frames_tmp
 
-	index_0_ref="cue_lines[${track_n},index,0]"
-	index_1_ref="cue_lines[${track_n},index,1]"
+	index_0_ref="if_cue[${track_n},index,0]"
+	index_1_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} ]]; then
 		index_ref="$index_0_ref"
@@ -409,8 +409,8 @@ get_gaps () {
 
 # If the CUE sheet specifies a pregap using the INDEX command, convert
 # that to a PREGAP command.
-	index_0_ref="cue_lines[${track_n},index,0]"
-	index_1_ref="cue_lines[${track_n},index,1]"
+	index_0_ref="if_cue[${track_n},index,0]"
+	index_1_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
 		index_0=$(time_convert "${!index_0_ref}")
@@ -423,8 +423,8 @@ get_gaps () {
 		fi
 	fi
 
-	pregap_ref="cue_lines[${track_n},pregap]"
-	postgap_ref="cue_lines[${track_n},postgap]"
+	pregap_ref="if_cue[${track_n},pregap]"
+	postgap_ref="if_cue[${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
 		frames_tmp=$(time_convert "${!pregap_ref}")
@@ -449,7 +449,7 @@ set_gaps () {
 
 	while [[ 1 ]]; do
 		i=$(( i + 1 ))
-		track_ref="cue_lines[${i},track_number]"
+		track_ref="if_cue[${i},track_number]"
 
 		if [[ -n ${!track_ref} ]]; then
 			get_gaps "$i"
@@ -540,7 +540,7 @@ copy_track_type () {
 
 	while [[ 1 ]]; do
 		i=$(( i + 1 ))
-		track_mode_ref="cue_lines[${i},track_mode]"
+		track_mode_ref="if_cue[${i},track_mode]"
 
 		if [[ -n ${!track_mode_ref} ]]; then
 			if [[ ${!track_mode_ref} =~ ${regex[data]} ]]; then
@@ -665,10 +665,10 @@ bin_split () {
 
 	case "$type_tmp" in
 		'cdr')
-			bchunk_cdr_list=("${files[@]}")
+			bchunk_cdr=("${files[@]}")
 		;;
 		'wav')
-			bchunk_wav_list=("${files[@]}")
+			bchunk_wav=("${files[@]}")
 		;;
 	esac
 }
@@ -712,10 +712,10 @@ create_cue () {
 
 	case "$type_tmp" in
 		'cdr')
-			elements="${#bchunk_cdr_list[@]}"
+			elements="${#bchunk_cdr[@]}"
 		;;
 		'wav')
-			elements="${#bchunk_wav_list[@]}"
+			elements="${#bchunk_wav[@]}"
 		;;
 	esac
 
@@ -745,7 +745,7 @@ create_cue () {
 		line_ref="bchunk_${type_tmp}_list[${i}]"
 
 		track_n=$(( i + 1 ))
-		track_mode_ref="cue_lines[${track_n},track_mode]"
+		track_mode_ref="if_cue[${track_n},track_mode]"
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 
 		if [[ ${!line_ref} =~ ${regex[iso]} ]]; then
@@ -755,13 +755,13 @@ create_cue () {
 		else
 			case "$type" in
 				'cdr')
-					of_cue_cdr_list+=("FILE \"${!line_ref}\" BINARY")
+					of_cue_cdr+=("FILE \"${!line_ref}\" BINARY")
 				;;
 				'ogg')
-					of_cue_ogg_list+=("FILE \"${!line_ref%.wav}.ogg\" OGG")
+					of_cue_ogg+=("FILE \"${!line_ref%.wav}.ogg\" OGG")
 				;;
 				'flac')
-					of_cue_flac_list+=("FILE \"${!line_ref%.wav}.flac\" FLAC")
+					of_cue_flac+=("FILE \"${!line_ref%.wav}.flac\" FLAC")
 				;;
 			esac
 			
