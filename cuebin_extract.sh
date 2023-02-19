@@ -581,7 +581,8 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare args_tmp cdr_args wav_args args_ref type_tmp bchunk_stdout
+	declare args_ref type_tmp bchunk_stdout
+	declare -a args args_cdr args_wav
 
 	unset -v files
 	declare -a files
@@ -603,17 +604,17 @@ bin_split () {
 		return
 	fi
 
-	args_tmp=(\""$bin"\" \""$cue_tmp"\" \""$of_name"\")
+	args=(\""$bin"\" \""$cue_tmp"\" \""$of_name"\")
 
 	if [[ $byteswap -eq 1 ]]; then
-		cdr_args=(bchunk -s "${args_tmp[@]}")
-		wav_args=(bchunk -w -s "${args_tmp[@]}")
+		args_cdr=(bchunk -s "${args[@]}")
+		args_wav=(bchunk -w -s "${args[@]}")
 	else
-		cdr_args=(bchunk "${args_tmp[@]}")
-		wav_args=(bchunk -w "${args_tmp[@]}")
+		args_cdr=(bchunk "${args[@]}")
+		args_wav=(bchunk -w "${args[@]}")
 	fi
 
-	args_ref="${type_tmp}_args[@]"
+	args_ref="args_${type_tmp}[@]"
 
 	mapfile -t bchunk_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
 
