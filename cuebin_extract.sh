@@ -136,10 +136,6 @@ of_name=$(tr '[:blank:]' '_' <<<"$if_name")
 if_dn=$(dirname "$if")
 of_dn="${PWD}/${of_name}-${session}"
 
-of_cdr_cue="${of_dn}/${of_name}01_cdr.cue"
-of_ogg_cue="${of_dn}/${of_name}01_ogg.cue"
-of_flac_cue="${of_dn}/${of_name}01_flac.cue"
-
 cue="$if"
 cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
@@ -816,10 +812,10 @@ for type in "${!audio_types[@]}"; do
 		continue
 	fi
 
-	of_cue_ref="of_${type}_cue"
+	of_cue="${of_dn}/${of_name}01_${type}.cue"
 
 	lines_ref="of_cue_${type}[@]"
-	printf '%s\r\n' "${!lines_ref}" | tee "${!of_cue_ref}"
+	printf '%s\r\n' "${!lines_ref}" | tee "$of_cue"
 
 	printf '\n'
 done
