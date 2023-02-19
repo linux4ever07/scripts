@@ -47,7 +47,7 @@ declare -a frames
 # sheet, add full path to filenames listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
-	declare -a files not_found
+	declare -a files not_found lines
 
 	track_n=0
 

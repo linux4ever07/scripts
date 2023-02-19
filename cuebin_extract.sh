@@ -137,7 +137,7 @@ if_dn=$(dirname "$if")
 of_dn="${PWD}/${of_name}-${session}"
 
 cue="$if"
-cue_tmp_f="/dev/shm/${of_name}-${session}.cue"
+cue_tmp="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 declare -A regex
@@ -173,7 +173,7 @@ trap ctrl_c INT
 
 ctrl_c () {
 	printf '%s\n' '** Trapped CTRL-C'
-	rm -f "$cue_tmp_f"
+	rm -f "$cue_tmp"
 	exit
 }
 
@@ -194,7 +194,7 @@ check_cmd () {
 # sheet, add full path to file names listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
-	declare -a files not_found cue_tmp
+	declare -a files not_found lines lines_tmp
 
 	track_n=0
 
@@ -263,9 +263,9 @@ read_cue () {
 			if_cue["${track_n},postgap"]="${match[1]}"
 		fi
 
-# If a string has been created, add it to the 'cue_tmp' array.
+# If a string has been created, add it to the 'lines_tmp' array.
 		if [[ -n $string ]]; then
-			cue_tmp+=("$string")
+			lines_tmp+=("$string")
 		fi
 	}
 
@@ -297,7 +297,7 @@ MERGE
 		printf '\n'
 	fi
 
-	printf '%s\n' "${cue_tmp[@]}" > "$cue_tmp_f"
+	printf '%s\n' "${lines_tmp[@]}" > "$cue_tmp"
 }
 
 # Creates a function called 'time_convert', which converts track length
@@ -598,7 +598,7 @@ bin_split () {
 		;;
 	esac
 
-	args_tmp=(\""$bin"\" \""$cue_tmp_f"\" \""$of_name"\")
+	args_tmp=(\""$bin"\" \""$cue_tmp"\" \""$of_name"\")
 
 	if [[ $byteswap -eq 1 ]]; then
 		cdr_args=(bchunk -s "${args_tmp[@]}")
@@ -779,7 +779,7 @@ clean_up () {
 		rm -f "$fn" || exit
 	done
 
-	rm -f "$cue_tmp_f" || exit
+	rm -f "$cue_tmp" || exit
 }
 
 # Check if 'oggenc', 'flac' and 'bchunk' are installed.
