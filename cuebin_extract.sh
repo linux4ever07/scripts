@@ -730,27 +730,27 @@ create_cue () {
 
 		if [[ ${!pregap_ref} -gt 0 ]]; then
 			time_tmp=$(time_convert "${!pregap_ref}")
-			eval of_cue_"${type}"_list+=\(\""${offset[1]}PREGAP ${time_tmp}"\"\)
+			eval of_cue_"${type}"+=\(\""${offset[1]}PREGAP ${time_tmp}"\"\)
 		fi
 
-		eval of_cue_"${type}"_list+=\(\""${offset[1]}${index_default}"\"\)
+		eval of_cue_"${type}"+=\(\""${offset[1]}${index_default}"\"\)
 
 		if [[ ${!postgap_ref} -gt 0 ]]; then
 			time_tmp=$(time_convert "${!postgap_ref}")
-			eval of_cue_"${type}"_list+=\(\""${offset[1]}POSTGAP ${time_tmp}"\"\)
+			eval of_cue_"${type}"+=\(\""${offset[1]}POSTGAP ${time_tmp}"\"\)
 		fi
 	}
 
 	for (( i = 0; i < elements; i++ )); do
-		line_ref="bchunk_${type_tmp}_list[${i}]"
+		line_ref="bchunk_${type_tmp}[${i}]"
 
 		track_n=$(( i + 1 ))
 		track_mode_ref="if_cue[${track_n},track_mode]"
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 
 		if [[ ${!line_ref} =~ ${regex[iso]} ]]; then
-			eval of_cue_"${type}"_list+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
-			eval of_cue_"${type}"_list+=\(\""${offset[0]}${track_string}"\"\)
+			eval of_cue_"${type}"+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
+			eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
 		else
 			case "$type" in
@@ -765,7 +765,7 @@ create_cue () {
 				;;
 			esac
 			
-			eval of_cue_"${type}"_list+=\(\""${offset[0]}${track_string}"\"\)
+			eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
 		fi
 	done
@@ -818,7 +818,7 @@ for type in "${!audio_types[@]}"; do
 
 	of_cue_ref="of_${type}_cue"
 
-	lines_ref="of_cue_${type}_list[@]"
+	lines_ref="of_cue_${type}[@]"
 	printf '%s\r\n' "${!lines_ref}" | tee "${!of_cue_ref}"
 
 	printf '\n'
