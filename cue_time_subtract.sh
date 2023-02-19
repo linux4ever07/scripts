@@ -40,7 +40,7 @@ format[7]="^(POSTGAP) (${format[2]})$"
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
 
-declare -A cue_lines
+declare -A if_cue
 declare -a frames
 
 # Creates a function called 'read_cue', which will read the input CUE
@@ -73,8 +73,8 @@ read_cue () {
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			cue_lines["${track_n},filename"]="$fn"
-			cue_lines["${track_n},file_format"]="${match[2]}"
+			if_cue["${track_n},filename"]="$fn"
+			if_cue["${track_n},file_format"]="${match[2]}"
 		fi
 
 # If line is a track command...
@@ -84,8 +84,8 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},track_number"]="${match[1]}"
-			cue_lines["${track_n},track_mode"]="${match[2]}"
+			if_cue["${track_n},track_number"]="${match[1]}"
+			if_cue["${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a pregap command...
@@ -94,7 +94,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},pregap"]="${match[1]}"
+			if_cue["${track_n},pregap"]="${match[1]}"
 		fi
 
 # If line is an index command...
@@ -104,7 +104,7 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},index,${index_n}"]="${match[2]}"
+			if_cue["${track_n},index,${index_n}"]="${match[2]}"
 		fi
 
 # If line is a postgap command...
@@ -113,14 +113,14 @@ read_cue () {
 
 			string="$1"
 
-			cue_lines["${track_n},postgap"]="${match[1]}"
+			if_cue["${track_n},postgap"]="${match[1]}"
 		fi
 	}
 
-	mapfile -t cue_lines_if < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
 
-	for (( i = 0; i < ${#cue_lines_if[@]}; i++ )); do
-		line="${cue_lines_if[${i}]}"
+	for (( i = 0; i < ${#lines[@]}; i++ )); do
+		line="${lines[${i}]}"
 		handle_command "$line"
 	done
 
@@ -197,8 +197,8 @@ get_frames () {
 
 	declare index_0_ref index_1_ref index_ref frames_tmp
 
-	index_0_ref="cue_lines[${track_n},index,0]"
-	index_1_ref="cue_lines[${track_n},index,1]"
+	index_0_ref="if_cue[${track_n},index,0]"
+	index_1_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} ]]; then
 		index_ref="$index_0_ref"
