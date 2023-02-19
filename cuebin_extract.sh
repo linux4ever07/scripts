@@ -581,7 +581,7 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare cdr_args wav_args type_tmp elements
+	declare args_tmp cdr_args wav_args args_ref type_tmp bchunk_stdout
 
 	unset -v files
 	declare -a files
@@ -598,6 +598,11 @@ bin_split () {
 		;;
 	esac
 
+# If WAV files have already been produced, skip this function.
+	if [[ $type_tmp == 'wav' && ${#bchunk_wav[@]} -gt 0 ]]; then
+		return
+	fi
+
 	args_tmp=(\""$bin"\" \""$cue_tmp"\" \""$of_name"\")
 
 	if [[ $byteswap -eq 1 ]]; then
@@ -608,33 +613,21 @@ bin_split () {
 		wav_args=(bchunk -w "${args_tmp[@]}")
 	fi
 
-	case "$type_tmp" in
-		'cdr')
-			mapfile -t bchunk_cdr_stdout < <(eval "${cdr_args[@]}"; printf '%s\n' "$?")
-			elements="${#bchunk_cdr_stdout[@]}"
-		;;
-		'wav')
-# If WAV files have already been produced, skip this function.
-			if [[ ${#bchunk_wav_stdout[@]} -gt 0 ]]; then
-				return
-			fi
+	args_ref="${type_tmp}_args[@]"
 
-			mapfile -t bchunk_wav_stdout < <(eval "${wav_args[@]}"; printf '%s\n' "$?")
-			elements="${#bchunk_wav_stdout[@]}"
-		;;
-	esac
+	mapfile -t bchunk_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
 
-	last=$(( elements - 1 ))
+	last=$(( ${#bchunk_stdout[@]} - 1 ))
 
-	exit_status_ref="bchunk_${type_tmp}_stdout[-1]"
+	exit_status_ref="bchunk_stdout[-1]"
 
 # Print the output from 'bchunk' if it quits with a non-zero exit
 # status.
 	if [[ ${!exit_status_ref} != '0' ]]; then
 		for (( i = 0; i < last; i++ )); do
-			line_ref="bchunk_${type_tmp}_stdout[${i}]"
+			line="${bchunk_stdout[${i}]}"
 
-			printf '%s\n' "${!line_ref}"
+			printf '%s\n' "$line"
 		done
 
 		exit
@@ -643,18 +636,18 @@ bin_split () {
 	n=0
 
 	for (( i = 0; i < last; i++ )); do
-		line_ref="bchunk_${type_tmp}_stdout[${i}]"
+		line="${bchunk_stdout[${i}]}"
 
-		if [[ ${!line_ref} == 'Writing tracks:' ]]; then
+		if [[ $line == 'Writing tracks:' ]]; then
 			n=$(( i + 2 ))
 			break
 		fi
 	done
 
 	for (( i = n; i < last; i++ )); do
-		line_ref="bchunk_${type_tmp}_stdout[${i}]"
+		line="${bchunk_stdout[${i}]}"
 
-		if [[ ${!line_ref} =~ ${regex[bchunk]} ]]; then
+		if [[ $line =~ ${regex[bchunk]} ]]; then
 			files+=("${BASH_REMATCH[1]}")
 		fi
 	done
