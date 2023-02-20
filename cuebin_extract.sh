@@ -632,7 +632,6 @@ bin_split () {
 	if [[ $exit_status != '0' ]]; then
 		for (( i = 0; i < last; i++ )); do
 			line="${bchunk_stdout[${i}]}"
-
 			printf '%s\n' "$line"
 		done
 
