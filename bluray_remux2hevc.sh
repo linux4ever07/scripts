@@ -386,9 +386,9 @@ imdb () {
 	director_regex1='\]\,\"director\":\['
 	director_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
 	runtime_regex1='\,\"runtime\":'
-	runtime_regex2='\"seconds\":(.*)\,\"__typename\":\"Runtime\"'
+	runtime_regex2='\"seconds\":(.*)\,\"displayableProperty\":'
 
-	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 
 # This function gets a URL using cURL.
 	get_page () {
