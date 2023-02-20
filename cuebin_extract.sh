@@ -47,7 +47,7 @@
 # byteswap can be done with 'dd':
 
 # sox in.cdr out.wav
-# dd conv=swab if=in.bin of=out.bin
+# dd conv=swab if=in.cdr of=out.cdr
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
@@ -525,7 +525,11 @@ copy_track () {
 }
 
 # Creates a function called 'copy_track_type', which will extract the
-# raw binary data for all tracks of either the data or audio type.
+# raw binary data for all tracks of either the data or audio type. This
+# function, along with 'copy_track', can replace the functionality of
+# 'bchunk', if needed. It's able to produce identical CDR files for
+# audio tracks. The thing it can't do is turn those files to WAV, so an
+# external command (like 'sox') is needed for that.
 copy_track_type () {
 	track_type="$1"
 
@@ -534,6 +538,8 @@ copy_track_type () {
 
 	i=0
 
+# Loops through all the track modes, to figure out which tracks are
+# data, and which are audio.
 	while [[ 1 ]]; do
 		i=$(( i + 1 ))
 		track_mode_ref="if_cue[${i},track_mode]"
@@ -581,11 +587,8 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare args_ref type_tmp bchunk_stdout
-	declare -a args args_cdr args_wav
-
-	unset -v files
-	declare -a files
+	declare type_tmp args_ref bchunk_stdout exit_status
+	declare -a args args_cdr args_wav files
 
 	case "$type" in
 		'cdr')
@@ -616,15 +619,17 @@ bin_split () {
 
 	args_ref="args_${type_tmp}[@]"
 
+# Runs 'bchunk', captures the output and saves the exit status in a
+# variable, so we can check if errors occurred or not.
 	mapfile -t bchunk_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
 
 	last=$(( ${#bchunk_stdout[@]} - 1 ))
 
-	exit_status_ref="bchunk_stdout[-1]"
+	exit_status="${bchunk_stdout[-1]}"
 
-# Print the output from 'bchunk' if it quits with a non-zero exit
+# Prints the output from 'bchunk' if it quits with a non-zero exit
 # status.
-	if [[ ${!exit_status_ref} != '0' ]]; then
+	if [[ $exit_status != '0' ]]; then
 		for (( i = 0; i < last; i++ )); do
 			line="${bchunk_stdout[${i}]}"
 
@@ -645,6 +650,7 @@ bin_split () {
 		fi
 	done
 
+# Saves the list of files produced by 'bchunk' in the 'files' array.
 	for (( i = n; i < last; i++ )); do
 		line="${bchunk_stdout[${i}]}"
 
@@ -776,14 +782,14 @@ clean_up () {
 	rm -f "$cue_tmp" || exit
 }
 
-# Check if 'oggenc', 'flac' and 'bchunk' are installed.
+# Checks if 'oggenc', 'flac' and 'bchunk' are installed.
 check_cmd oggenc flac bchunk
 
-# Create the output directory and change into it.
+# Creates the output directory and change into it.
 mkdir "$of_dn" || exit
 cd "$of_dn" || exit
 
-# Run the functions.
+# Runs the functions.
 read_cue
 set_frames
 set_gaps
@@ -800,7 +806,7 @@ done
 
 printf '\n'
 
-# Print the created CUE sheet to the terminal, and to the output file.
+# Prints the created CUE sheet to the terminal, and to the output file.
 for type in "${!audio_types[@]}"; do
 	if [[ ${audio_types[${type}]} -eq 0 ]]; then
 		continue
@@ -816,8 +822,8 @@ done
 
 printf '\n' 
 
-# Delete temporary files.
+# Deletes temporary files.
 clean_up
 
-# Copy data track from original BIN file.
+# Copies data track(s) from original BIN file.
 copy_track_type 'data'
