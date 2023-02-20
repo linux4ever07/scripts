@@ -630,9 +630,7 @@ bin_split () {
 # status.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${bchunk_stdout[@]}"
-
 		rm -f "$cue_tmp"
-
 		exit
 	fi
 
