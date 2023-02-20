@@ -623,24 +623,19 @@ bin_split () {
 # variable, so we can check if errors occurred or not.
 	mapfile -t bchunk_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
 
-	last=$(( ${#bchunk_stdout[@]} - 1 ))
-
 	exit_status="${bchunk_stdout[-1]}"
+	unset -v bchunk_stdout[-1]
 
 # Prints the output from 'bchunk' if it quits with a non-zero exit
 # status.
 	if [[ $exit_status != '0' ]]; then
-		for (( i = 0; i < last; i++ )); do
-			line="${bchunk_stdout[${i}]}"
-			printf '%s\n' "$line"
-		done
-
+		printf '%s\n' "${bchunk_stdout[@]}"
 		exit
 	fi
 
 	n=0
 
-	for (( i = 0; i < last; i++ )); do
+	for (( i = 0; i < ${#bchunk_stdout[@]}; i++ )); do
 		line="${bchunk_stdout[${i}]}"
 
 		if [[ $line == 'Writing tracks:' ]]; then
@@ -650,7 +645,7 @@ bin_split () {
 	done
 
 # Saves the list of files produced by 'bchunk' in the 'files' array.
-	for (( i = n; i < last; i++ )); do
+	for (( i = n; i < ${#bchunk_stdout[@]}; i++ )); do
 		line="${bchunk_stdout[${i}]}"
 
 		if [[ $line =~ ${regex[bchunk]} ]]; then
