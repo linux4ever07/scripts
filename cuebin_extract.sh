@@ -630,6 +630,9 @@ bin_split () {
 # status.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${bchunk_stdout[@]}"
+
+		rm -f "$cue_tmp"
+
 		exit
 	fi
 
@@ -673,12 +676,17 @@ encode_audio () {
 			return
 		;;
 		'ogg')
-			oggenc --quality=10 "${of_dn}"/*.wav || exit
+			oggenc --quality=10 "${of_dn}"/*.wav
 		;;
 		'flac')
-			flac -8 "${of_dn}"/*.wav || exit
+			flac -8 "${of_dn}"/*.wav
 		;;
 	esac
+
+	if [[ $? -ne 0 ]]; then
+		rm -f "$cue_tmp"
+		exit
+	fi
 }
 
 # Creates a function called 'create_cue', which will create a new CUE
