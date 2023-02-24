@@ -210,10 +210,8 @@ read_cue () {
 				not_found+=("$fn")
 			fi
 
-			if [[ $track_n -eq 1 ]]; then
-				if [[ -z $bin && -f $fn ]]; then
-					bin="$fn"
-				fi
+			if [[ $track_n -eq 1 && -z $bin && -f $fn ]]; then
+				bin="$fn"
 			fi
 
 			files+=("$fn")
