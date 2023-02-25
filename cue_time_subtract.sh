@@ -43,7 +43,7 @@ regex[path]='^(.*[\\\/])'
 declare -A if_cue
 declare -a frames
 
-# Creates a function called 'read_cue', which will read the input CUE
+# Creates a function called 'read_cue', which will read the source CUE
 # sheet, add full path to filenames listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
@@ -51,6 +51,9 @@ read_cue () {
 
 	track_n=0
 
+# Creates a function called 'handle_command', which will process each
+# line in the CUE sheet and store all the relevant information in the
+# 'if_cue' hash.
 	handle_command () {
 # If line is a FILE command...
 		if [[ $1 =~ ${format[3]} ]]; then
@@ -115,6 +118,7 @@ read_cue () {
 		fi
 	}
 
+# Reads the source CUE sheet and processes the lines.
 	mapfile -t lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
 
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
@@ -122,6 +126,7 @@ read_cue () {
 		handle_command "$line"
 	done
 
+# If there's multiple FILE commands in the CUE sheet, quit.
 	if [[ ${#files[@]} -gt 1 ]]; then
 		cat <<MERGE
 
@@ -132,6 +137,7 @@ MERGE
 		exit
 	fi
 
+# Lists file names that are not real files.
 	if [[ ${#not_found[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
 
