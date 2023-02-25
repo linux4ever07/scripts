@@ -34,13 +34,13 @@
 # whether or not the byte order is correct.
 
 # The ISO file produced by 'bchunk' is discarded, and the data track is
-# instead copied directly from the original BIN file, calculating the
+# instead copied directly from the source BIN file, calculating the
 # length of the data track based on the information gathered from the
 # CUE sheet.
 
 # Since the 'copy_track' function is now able to correctly copy any
-# track from the original BIN file, it may be possible to make this
-# script not depend on 'bchunk' anymore.
+# track from the source BIN file, it may be possible to make this script
+# not depend on 'bchunk' anymore.
 
 # 'sox' is able to convert the resulting BIN files to WAV without using
 # 'bchunk' (if the BIN files have the '.cdr' extension), and the
@@ -199,7 +199,7 @@ read_cue () {
 	track_n=0
 
 	handle_command () {
-# If line is a file command...
+# If line is a FILE command...
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			track_n=$(( track_n + 1 ))
@@ -222,7 +222,7 @@ read_cue () {
 			if_cue["${track_n},file_format"]="${match[2]}"
 		fi
 
-# If line is a track command...
+# If line is a TRACK command...
 		if [[ $1 =~ ${format[4]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			track_n="${match[1]#0}"
@@ -233,7 +233,7 @@ read_cue () {
 			if_cue["${track_n},track_mode"]="${match[2]}"
 		fi
 
-# If line is a pregap command...
+# If line is a PREGAP command...
 		if [[ $1 =~ ${format[5]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
@@ -242,7 +242,7 @@ read_cue () {
 			if_cue["${track_n},pregap"]="${match[1]}"
 		fi
 
-# If line is an index command...
+# If line is an INDEX command...
 		if [[ $1 =~ ${format[6]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			index_n="${match[1]#0}"
@@ -252,7 +252,7 @@ read_cue () {
 			if_cue["${track_n},index,${index_n}"]="${match[2]}"
 		fi
 
-# If line is a postgap command...
+# If line is a POSTGAP command...
 		if [[ $1 =~ ${format[7]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
@@ -401,8 +401,8 @@ get_gaps () {
 	pregap=0
 	postgap=0
 
-# If the CUE sheet specifies a pregap using the INDEX command, convert
-# that to a PREGAP command.
+# If the CUE sheet specifies a pregap using the INDEX command, save that
+# in the 'gaps' hash so it can later be converted to a PREGAP command.
 	index_0_ref="if_cue[${track_n},index,0]"
 	index_1_ref="if_cue[${track_n},index,1]"
 
@@ -417,6 +417,8 @@ get_gaps () {
 		fi
 	fi
 
+# If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
+# 'gaps' hash.
 	pregap_ref="if_cue[${track_n},pregap]"
 	postgap_ref="if_cue[${track_n},postgap]"
 
@@ -557,6 +559,8 @@ copy_track_type () {
 		fi
 	done
 
+# Depending on which track type is intended, copy all the tracks of that
+# type from the source BIN file.
 	elements=0
 
 	case "$track_type" in
@@ -735,6 +739,8 @@ create_cue () {
 		fi
 	}
 
+# Goes through the list of files produced by 'bchunk', and creates a new
+# CUE sheet based on that.
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="bchunk_${type_tmp}[${i}]"
 
@@ -823,5 +829,5 @@ printf '\n'
 # Deletes temporary files.
 clean_up
 
-# Copies data track(s) from original BIN file.
+# Copies data track(s) from source BIN file.
 copy_track_type 'data'

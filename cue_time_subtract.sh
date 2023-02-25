@@ -52,7 +52,7 @@ read_cue () {
 	track_n=0
 
 	handle_command () {
-# If line is a file command...
+# If line is a FILE command...
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			track_n=$(( track_n + 1 ))
@@ -75,7 +75,7 @@ read_cue () {
 			if_cue["${track_n},file_format"]="${match[2]}"
 		fi
 
-# If line is a track command...
+# If line is a TRACK command...
 		if [[ $1 =~ ${format[4]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			track_n="${match[1]#0}"
@@ -86,7 +86,7 @@ read_cue () {
 			if_cue["${track_n},track_mode"]="${match[2]}"
 		fi
 
-# If line is a pregap command...
+# If line is a PREGAP command...
 		if [[ $1 =~ ${format[5]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
@@ -95,7 +95,7 @@ read_cue () {
 			if_cue["${track_n},pregap"]="${match[1]}"
 		fi
 
-# If line is an index command...
+# If line is an INDEX command...
 		if [[ $1 =~ ${format[6]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 			index_n="${match[1]#0}"
@@ -105,7 +105,7 @@ read_cue () {
 			if_cue["${track_n},index,${index_n}"]="${match[2]}"
 		fi
 
-# If line is a postgap command...
+# If line is a POSTGAP command...
 		if [[ $1 =~ ${format[7]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
@@ -211,7 +211,7 @@ get_frames () {
 }
 
 # Creates a function called 'set_frames', which will get the length of
-# all tracks in the BIN file (except the last one).
+# all tracks in the BIN file.
 set_frames () {
 	declare frames_this frames_next size frames_total
 
