@@ -26,7 +26,7 @@ fi
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 declare -A regex
-declare -a format
+declare -a format sector
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -40,8 +40,59 @@ format[7]="^(POSTGAP) (${format[2]})$"
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
 
+# 2048 bytes is normally the sector size for data CDs / tracks, and 2352
+# bytes is the size of audio sectors.
+sector=('2048' '2352')
+
 declare -A if_cue
 declare -a frames
+
+# Creates a function called 'time_convert', which converts track length
+# back and forth between the time (mm:ss:ff) format and frames /
+# sectors.
+time_convert () {
+	time="$1"
+
+	m=0
+	s=0
+	f=0
+
+# If argument is in the mm:ss:ff format...
+	if [[ $time =~ ${format[1]} ]]; then
+		m="${BASH_REMATCH[1]#0}"
+		s="${BASH_REMATCH[2]#0}"
+		f="${BASH_REMATCH[3]#0}"
+
+# Converting minutes and seconds to frames, and adding all the numbers
+# together.
+		m=$(( m * 60 * 75 ))
+		s=$(( s * 75 ))
+
+		time=$(( m + s + f ))
+
+# If argument is in the frame format...
+	elif [[ $time =~ ${format[0]} ]]; then
+		f="$time"
+
+# While $f (frames) is equal to (or greater than) 75, clear the $f
+# variable and add 1 to the $s (seconds) variable.
+		while [[ $f -ge 75 ]]; do
+			s=$(( s + 1 ))
+			f=$(( f - 75 ))
+		done
+
+# While $s (seconds) is equal to (or greater than) 60, clear the $s
+# variable and add 1 to the $m (minutes) variable.
+		while [[ $s -ge 60 ]]; do
+			m=$(( m + 1 ))
+			s=$(( s - 60 ))
+		done
+
+		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
+	fi
+
+	printf '%s' "$time"
+}
 
 # Creates a function called 'read_cue', which will read the source CUE
 # sheet, add full path to filenames listed in the CUE sheet, and create
@@ -95,7 +146,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${track_n},pregap"]="${match[1]}"
+			time_tmp=$(time_convert "${match[1]}")
+			if_cue["${track_n},pregap"]="$time_tmp"
 		fi
 
 # If line is an INDEX command...
@@ -105,7 +157,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${track_n},index,${index_n}"]="${match[2]}"
+			time_tmp=$(time_convert "${match[2]}")
+			if_cue["${track_n},index,${index_n}"]="$time_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -114,7 +167,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${track_n},postgap"]="${match[1]}"
+			time_tmp=$(time_convert "${match[1]}")
+			if_cue["${track_n},postgap"]="$time_tmp"
 		fi
 	}
 
@@ -147,106 +201,59 @@ MERGE
 	fi
 }
 
-# Creates a function called 'time_convert', which converts track length
-# back and forth between the time (mm:ss:ff) format and frames /
-# sectors.
-time_convert () {
-	time="$1"
-
-	m=0
-	s=0
-	f=0
-
-# If argument is in the mm:ss:ff format...
-	if [[ $time =~ ${format[1]} ]]; then
-		m="${BASH_REMATCH[1]#0}"
-		s="${BASH_REMATCH[2]#0}"
-		f="${BASH_REMATCH[3]#0}"
-
-# Converting minutes and seconds to frames, and adding all the numbers
-# together.
-		m=$(( m * 60 * 75 ))
-		s=$(( s * 75 ))
-
-		time=$(( m + s + f ))
-
-# If argument is in the frame format...
-	elif [[ $time =~ ${format[0]} ]]; then
-		f="$time"
-
-# While $f (frames) is equal to (or greater than) 75, clear the $f
-# variable and add 1 to the $s (seconds) variable.
-		while [[ $f -ge 75 ]]; do
-			s=$(( s + 1 ))
-			f=$(( f - 75 ))
-		done
-
-# While $s (seconds) is equal to (or greater than) 60, clear the $s
-# variable and add 1 to the $m (minutes) variable.
-		while [[ $s -ge 60 ]]; do
-			m=$(( m + 1 ))
-			s=$(( s - 60 ))
-		done
-
-		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
-	fi
-
-	printf '%s' "$time"
-}
-
-# Creates a function called 'get_frames', which will get the position of
-# a track in the BIN file.
+# Creates a function called 'get_frames', which will get the length of
+# a track in the BIN file, subtracting pregap if it exists as part of
+# the INDEX commands.
 get_frames () {
-	track_n="$1"
+	this="$1"
+	next=$(( this + 1 ))
 
-	declare index_0_ref index_1_ref index_ref frames_tmp
+	declare index_this_ref index_next_ref frames_tmp size
 
-	index_0_ref="if_cue[${track_n},index,0]"
-	index_1_ref="if_cue[${track_n},index,1]"
+	index_this_ref="if_cue[${this},index,1]"
+	index_next_ref="if_cue[${next},index,0]"
 
-	if [[ -n ${!index_0_ref} ]]; then
-		index_ref="$index_0_ref"
+	if [[ -z ${!index_next_ref} ]]; then
+		index_next_ref="if_cue[${next},index,1]"
+	fi
+
+	frames_tmp=0
+
+	if [[ -z ${!index_next_ref} ]]; then
+		if [[ -n $bin ]]; then
+			size=$(stat -c '%s' "$bin")
+			size=$(( size / ${sector[1]} ))
+
+			frames_tmp=$(( size - ${!index_this_ref} ))
+		fi
 	else
-		index_ref="$index_1_ref"
+		frames_tmp=$(( ${!index_next_ref} - ${!index_this_ref} ))
 	fi
 
-	if [[ -n ${!index_ref} ]]; then
-		frames_tmp=$(time_convert "${!index_ref}")
-		printf '%s' "$frames_tmp"
-	fi
+	frames["${this}"]="$frames_tmp"
 }
 
-# Creates a function called 'set_frames', which will get the length of
-# all tracks in the BIN file.
-set_frames () {
-	declare frames_this frames_next size frames_total
+# Creates a function called 'loop_set', which will get the length of all
+# tracks in the BIN file (except the last one).
+loop_set () {
+	declare track_ref
 
 	i=0
 
 	while [[ 1 ]]; do
 		i=$(( i + 1 ))
-		j=$(( i + 1 ))
-		frames_this=$(get_frames "$i")
-		frames_next=$(get_frames "$j")
+		track_ref="if_cue[${i},track_number]"
 
-		if [[ -n $frames_next ]]; then
-			frames["${i}"]=$(( frames_next - frames_this ))
+		if [[ -n ${!track_ref} ]]; then
+			get_frames "$i"
 		else
-			if [[ -n $bin ]]; then
-				size=$(stat -c '%s' "$bin")
-				frames_total=$(( size / 2352 ))
-				frames["${i}"]=$(( frames_total - frames_this ))
-			else
-				frames["${i}"]=0
-			fi
-
 			break
 		fi
 	done
 }
 
 read_cue
-set_frames
+loop_set
 
 last=$(( ${#frames[@]} + 1 ))
 

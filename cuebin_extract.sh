@@ -141,7 +141,7 @@ cue_tmp="/dev/shm/${of_name}-${session}.cue"
 bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 declare -A regex
-declare -a format offset
+declare -a format offset sector
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -164,6 +164,10 @@ regex[wav]='\.wav$'
 
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
+
+# 2048 bytes is normally the sector size for data CDs / tracks, and 2352
+# bytes is the size of audio sectors.
+sector=('2048' '2352')
 
 declare -A if_cue gaps
 declare -a frames bchunk_cdr bchunk_wav of_cue_cdr of_cue_ogg of_cue_flac
@@ -188,6 +192,53 @@ check_cmd () {
 			exit
 		fi
 	done
+}
+
+# Creates a function called 'time_convert', which converts track length
+# back and forth between the time (mm:ss:ff) format and frames /
+# sectors.
+time_convert () {
+	time="$1"
+
+	m=0
+	s=0
+	f=0
+
+# If argument is in the mm:ss:ff format...
+	if [[ $time =~ ${format[1]} ]]; then
+		m="${BASH_REMATCH[1]#0}"
+		s="${BASH_REMATCH[2]#0}"
+		f="${BASH_REMATCH[3]#0}"
+
+# Converting minutes and seconds to frames, and adding all the numbers
+# together.
+		m=$(( m * 60 * 75 ))
+		s=$(( s * 75 ))
+
+		time=$(( m + s + f ))
+
+# If argument is in the frame format...
+	elif [[ $time =~ ${format[0]} ]]; then
+		f="$time"
+
+# While $f (frames) is equal to (or greater than) 75, clear the $f
+# variable and add 1 to the $s (seconds) variable.
+		while [[ $f -ge 75 ]]; do
+			s=$(( s + 1 ))
+			f=$(( f - 75 ))
+		done
+
+# While $s (seconds) is equal to (or greater than) 60, clear the $s
+# variable and add 1 to the $m (minutes) variable.
+		while [[ $s -ge 60 ]]; do
+			m=$(( m + 1 ))
+			s=$(( s - 60 ))
+		done
+
+		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
+	fi
+
+	printf '%s' "$time"
 }
 
 # Creates a function called 'read_cue', which will read the source CUE
@@ -242,7 +293,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${track_n},pregap"]="${match[1]}"
+			time_tmp=$(time_convert "${match[1]}")
+			if_cue["${track_n},pregap"]="$time_tmp"
 		fi
 
 # If line is an INDEX command...
@@ -252,7 +304,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${track_n},index,${index_n}"]="${match[2]}"
+			time_tmp=$(time_convert "${match[2]}")
+			if_cue["${track_n},index,${index_n}"]="$time_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -261,7 +314,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${track_n},postgap"]="${match[1]}"
+			time_tmp=$(time_convert "${match[1]}")
+			if_cue["${track_n},postgap"]="$time_tmp"
 		fi
 
 # If a string has been created, add it to the 'lines_tmp' array.
@@ -306,105 +360,40 @@ MERGE
 	printf '%s\n' "${lines_tmp[@]}" > "$cue_tmp"
 }
 
-# Creates a function called 'time_convert', which converts track length
-# back and forth between the time (mm:ss:ff) format and frames /
-# sectors.
-time_convert () {
-	time="$1"
-
-	m=0
-	s=0
-	f=0
-
-# If argument is in the mm:ss:ff format...
-	if [[ $time =~ ${format[1]} ]]; then
-		m="${BASH_REMATCH[1]#0}"
-		s="${BASH_REMATCH[2]#0}"
-		f="${BASH_REMATCH[3]#0}"
-
-# Converting minutes and seconds to frames, and adding all the numbers
-# together.
-		m=$(( m * 60 * 75 ))
-		s=$(( s * 75 ))
-
-		time=$(( m + s + f ))
-
-# If argument is in the frame format...
-	elif [[ $time =~ ${format[0]} ]]; then
-		f="$time"
-
-# While $f (frames) is equal to (or greater than) 75, clear the $f
-# variable and add 1 to the $s (seconds) variable.
-		while [[ $f -ge 75 ]]; do
-			s=$(( s + 1 ))
-			f=$(( f - 75 ))
-		done
-
-# While $s (seconds) is equal to (or greater than) 60, clear the $s
-# variable and add 1 to the $m (minutes) variable.
-		while [[ $s -ge 60 ]]; do
-			m=$(( m + 1 ))
-			s=$(( s - 60 ))
-		done
-
-		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
-	fi
-
-	printf '%s' "$time"
-}
-
-# Creates a function called 'get_frames', which will get the position of
-# a track in the BIN file.
+# Creates a function called 'get_frames', which will get the length of
+# a track in the BIN file, subtracting pregap if it exists as part of
+# the INDEX commands.
 get_frames () {
-	track_n="$1"
+	this="$1"
+	next=$(( this + 1 ))
 
-	declare index_0_ref index_1_ref index_ref frames_tmp
+	declare index_this_ref index_next_ref frames_tmp
 
-	index_0_ref="if_cue[${track_n},index,0]"
-	index_1_ref="if_cue[${track_n},index,1]"
+	index_this_ref="if_cue[${this},index,1]"
+	index_next_ref="if_cue[${next},index,0]"
 
-	if [[ -n ${!index_0_ref} ]]; then
-		index_ref="$index_0_ref"
-	else
-		index_ref="$index_1_ref"
+	if [[ -z ${!index_next_ref} ]]; then
+		index_next_ref="if_cue[${next},index,1]"
 	fi
 
-	if [[ -n ${!index_ref} ]]; then
-		frames_tmp=$(time_convert "${!index_ref}")
-		printf '%s' "$frames_tmp"
+	if [[ -z ${!index_next_ref} ]]; then
+		return
 	fi
+
+	frames_tmp=$(( ${!index_next_ref} - ${!index_this_ref} ))
+
+	frames["${this}"]="$frames_tmp"
 }
 
-# Creates a function called 'set_frames', which will get the length of
-# all tracks in the BIN file (except the last one).
-set_frames () {
-	declare frames_this frames_next
-
-	i=0
-
-	while [[ 1 ]]; do
-		i=$(( i + 1 ))
-		j=$(( i + 1 ))
-		frames_this=$(get_frames "$i")
-		frames_next=$(get_frames "$j")
-
-		if [[ -n $frames_next ]]; then
-			frames["${i}"]=$(( frames_next - frames_this ))
-		else
-			break
-		fi
-	done
-}
-
-# Creates a function called 'get_gaps', which will get pregaps and
-# postgaps from the CUE sheet for the track number given as argument.
+# Creates a function called 'get_gaps', which will get pregap and
+# postgap from the CUE sheet for the track number given as argument.
 # If there's both a pregap specified using the PREGAP command and INDEX
 # command, those values will be added together. However, a CUE sheet is
 # highly unlikely to specify a pregap twice like that.
 get_gaps () {
 	track_n="$1"
 
-	declare index_0 index_0_ref index_1 index_1_ref frames_tmp
+	declare index_0_ref index_1_ref frames_tmp pregap postgap
 
 	pregap=0
 	postgap=0
@@ -415,13 +404,9 @@ get_gaps () {
 	index_1_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
-		index_0=$(time_convert "${!index_0_ref}")
-		index_1=$(time_convert "${!index_1_ref}")
-
-		if [[ $index_1 -gt $index_0 ]]; then
-			frames_tmp=$(( index_1 - index_0 ))
+		if [[ ${!index_1_ref} -gt ${!index_0_ref} ]]; then
+			frames_tmp=$(( ${!index_1_ref} - ${!index_0_ref} ))
 			pregap=$(( pregap + frames_tmp ))
-			gaps["${track_n},index"]="$frames_tmp"
 		fi
 	fi
 
@@ -431,22 +416,21 @@ get_gaps () {
 	postgap_ref="if_cue[${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
-		frames_tmp=$(time_convert "${!pregap_ref}")
-		pregap=$(( pregap + frames_tmp ))
+		pregap=$(( pregap + ${!pregap_ref} ))
 	fi
 
 	if [[ -n ${!postgap_ref} ]]; then
-		frames_tmp=$(time_convert "${!postgap_ref}")
-		postgap=$(( postgap + frames_tmp ))
+		postgap=$(( postgap + ${!postgap_ref} ))
 	fi
 
 	gaps["${track_n},pre"]="$pregap"
 	gaps["${track_n},post"]="$postgap"
 }
 
-# Creates a function called 'set_gaps', which will get pregaps and
-# postgaps for all tracks in the BIN file.
-set_gaps () {
+# Creates a function called 'loop_set', which will get the length of all
+# tracks in the BIN file (except the last one). And get pregaps and
+# postgaps of all tracks.
+loop_set () {
 	declare track_ref
 
 	i=0
@@ -456,6 +440,7 @@ set_gaps () {
 		track_ref="if_cue[${i},track_number]"
 
 		if [[ -n ${!track_ref} ]]; then
+			get_frames "$i"
 			get_gaps "$i"
 		else
 			break
@@ -469,8 +454,8 @@ copy_track () {
 	track_n="$1"
 	track_type="$2"
 
-	declare ext frames_ref gaps_ref count skip
-	declare -a sector args
+	declare ext frames_ref gaps_ref index_ref count skip
+	declare -a args
 
 # Depending on whether the track type is data or audio, use the
 # appropriate file name extension for the output file.
@@ -485,43 +470,25 @@ copy_track () {
 
 	of_bin=$(printf '%s/%s%02d.%s' "$of_dn" "$of_name" "$track_n" "$ext")
 
-# 2048 bytes is normally the sector size for data CDs / tracks, and 2352
-# bytes is the size of audio sectors.
-	sector=('2048' '2352')
-
 # Creates the first part of the 'dd' command.
 	args=(dd if=\""${bin}"\" of=\""${of_bin}"\" bs=\""${sector[1]}"\")
 
 # Gets the length of the track, unless it's the last track, in which
-# case the length will be absent from the 'frames' array.
+# case the length will be absent from the 'frames' array. Also, gets the
+# start position of the track.
 	frames_ref="frames[${track_n}]"
-	gaps_ref="gaps[${track_n},index]"
+	index_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!frames_ref} ]]; then
 		count="${!frames_ref}"
-
-		if [[ -n ${!gaps_ref} ]]; then
-			count=$(( count - ${!gaps_ref} ))
-		fi
-
 		args+=(count=\""${count}"\")
 	fi
 
 	skip=0
 
-# If there's a pregap in the CUE sheet specified by an INDEX command,
-# that means the gap is present in the BIN file itself, so we skip that
-# part.
-	if [[ -n ${!gaps_ref} ]]; then
-		skip=$(( skip + ${!gaps_ref} ))
-	fi
-
-# If the track number is higher than '1', figure out how many frames to
-# skip when reading the BIN file.
-	if [[ $track_n -gt 1 ]]; then
-		for (( i = 1; i < track_n; i++ )); do
-			skip=$(( skip + ${frames[${i}]} ))
-		done
+# If the start position of the track is higher than '0', skip frames.
+	if [[ -n ${!index_ref} ]]; then
+		skip="${!index_ref}"
 	fi
 
 	if [[ $skip -gt 0 ]]; then
@@ -803,8 +770,7 @@ cd "$of_dn" || exit
 
 # Runs the functions.
 read_cue
-set_frames
-set_gaps
+loop_set
 
 for type in "${!audio_types[@]}"; do
 	if [[ ${audio_types[${type}]} -eq 0 ]]; then
