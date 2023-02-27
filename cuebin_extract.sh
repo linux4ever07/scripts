@@ -293,8 +293,8 @@ read_cue () {
 
 			string="$1"
 
-			time_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},pregap"]="$time_tmp"
+			frames_tmp=$(time_convert "${match[1]}")
+			if_cue["${track_n},pregap"]="$frames_tmp"
 		fi
 
 # If line is an INDEX command...
@@ -304,8 +304,8 @@ read_cue () {
 
 			string="$1"
 
-			time_tmp=$(time_convert "${match[2]}")
-			if_cue["${track_n},index,${index_n}"]="$time_tmp"
+			frames_tmp=$(time_convert "${match[2]}")
+			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -314,8 +314,8 @@ read_cue () {
 
 			string="$1"
 
-			time_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},postgap"]="$time_tmp"
+			frames_tmp=$(time_convert "${match[1]}")
+			if_cue["${track_n},postgap"]="$frames_tmp"
 		fi
 
 # If a string has been created, add it to the 'lines_tmp' array.
