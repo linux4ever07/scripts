@@ -477,18 +477,24 @@ copy_track () {
 	frames_ref="frames[${track_n}]"
 	index_ref="if_cue[${track_n},index,1]"
 
-	if [[ -n ${!frames_ref} ]]; then
-		count="${!frames_ref}"
-		args+=(count=\""${count}"\")
-	fi
-
+	count=0
 	skip=0
 
-# If the start position of the track is higher than '0', skip frames.
+	if [[ -n ${!frames_ref} ]]; then
+		count="${!frames_ref}"
+	fi
+
 	if [[ -n ${!index_ref} ]]; then
 		skip="${!index_ref}"
 	fi
 
+# If the track length is greater than '0', copy only a limited number of
+# frames.
+	if [[ $count -gt 0 ]]; then
+		args+=(count=\""${count}"\")
+	fi
+
+# If the start position of the track is greater than '0', skip frames.
 	if [[ $skip -gt 0 ]]; then
 		args+=(skip=\""${skip}"\")
 	fi
