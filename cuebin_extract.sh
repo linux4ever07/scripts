@@ -404,10 +404,8 @@ get_gaps () {
 	index_1_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
-		if [[ ${!index_1_ref} -gt ${!index_0_ref} ]]; then
-			frames_tmp=$(( ${!index_1_ref} - ${!index_0_ref} ))
-			pregap=$(( pregap + frames_tmp ))
-		fi
+		frames_tmp=$(( ${!index_1_ref} - ${!index_0_ref} ))
+		pregap=$(( pregap + frames_tmp ))
 	fi
 
 # If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
