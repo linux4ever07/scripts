@@ -194,9 +194,7 @@ MERGE
 # Lists file names that are not real files.
 	if [[ ${#not_found[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
-
 		printf '%s\n' "${not_found[@]}"
-
 		printf '\n'
 	fi
 }

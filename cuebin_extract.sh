@@ -350,9 +350,7 @@ MERGE
 # Lists file names that are not real files.
 	if [[ ${#not_found[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
-
 		printf '%s\n' "${not_found[@]}"
-
 		printf '\n'
 	fi
 
@@ -381,7 +379,6 @@ get_frames () {
 	fi
 
 	frames_tmp=$(( ${!index_next_ref} - ${!index_this_ref} ))
-
 	frames["${this}"]="$frames_tmp"
 }
 
