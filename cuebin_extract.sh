@@ -813,7 +813,7 @@ create_cue () {
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="files_${type_tmp}[${i}]"
 
-		declare fn ext track_mode_ref
+		declare fn ext
 
 		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
@@ -824,12 +824,9 @@ create_cue () {
 
 		track_n=$(( i + 1 ))
 
-		file_n=0
+		file_n="${tracks_file[${track_n}]}"
 
-		until [[ -n ${!track_mode_ref} ]]; do
-			file_n=$(( file_n + 1 ))
-			track_mode_ref="if_cue[${file_n},${track_n},track_mode]"
-		done
+		track_mode_ref="if_cue[${file_n},${track_n},track_mode]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 
@@ -854,7 +851,7 @@ create_cue () {
 			set_index
 		fi
 
-		unset -v fn ext track_mode_ref
+		unset -v fn ext
 	done
 }
 
