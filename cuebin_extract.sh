@@ -813,7 +813,7 @@ create_cue () {
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="files_${type_tmp}[${i}]"
 
-		declare track_mode_ref
+		declare fn ext track_mode_ref
 
 		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
