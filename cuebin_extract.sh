@@ -51,7 +51,7 @@
 # track, so that can be processed by the script directly in this case,
 # without having to merge the BIN/CUE first.
 
-# It may also be possible to use 'ffmpeg' in a similar way to how 'sox',
+# It may also be possible to use 'ffmpeg' in a similar way to how 'sox'
 # is used in the 'cdr2wav' function. But I did not manage to get it
 # working. The command would probably be something like this:
 
