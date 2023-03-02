@@ -498,7 +498,7 @@ copy_track () {
 
 	declare file_n_ref bin_ref frames_ref index_ref
 	declare ext count skip
-	declare -a args
+	declare -a args cmd_stdout
 
 	file_n_ref="tracks_file[${track_n}]"
 	bin_ref="if_cue[${!file_n_ref},filename]"
@@ -615,8 +615,8 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare bin_ref args_ref type_tmp cmd_stdout exit_status
-	declare -a args args_cdr args_wav files
+	declare bin_ref args_ref type_tmp exit_status
+	declare -a args args_cdr args_wav cmd_stdout files
 
 	bin_ref="if_cue[1,filename]"
 
