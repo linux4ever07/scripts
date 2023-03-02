@@ -472,9 +472,7 @@ get_gaps () {
 loop_set () {
 	declare track_n file_n
 
-	elements="${#tracks_file[@]}"
-
-	for (( i = 0; i < elements; i++ )); do
+	for (( i = 0; i < ${#tracks_file[@]}; i++ )); do
 		track_n=$(( i + 1 ))
 		file_n="${tracks_file[${track_n}]}"
 
