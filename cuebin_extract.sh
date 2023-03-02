@@ -695,8 +695,8 @@ bin_split () {
 cdr2wav () {
 	type="$1"
 
-	declare -a files
 	declare type_tmp
+	declare -a files
 
 	type_tmp="${audio_types[${type}]}"
 
