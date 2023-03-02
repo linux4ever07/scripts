@@ -823,7 +823,6 @@ create_cue () {
 		fn=$(basename "$fn")
 
 		track_n=$(( i + 1 ))
-
 		file_n="${tracks_file[${track_n}]}"
 
 		track_mode_ref="if_cue[${file_n},${track_n},track_mode]"
