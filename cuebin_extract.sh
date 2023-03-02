@@ -688,8 +688,9 @@ bin_split () {
 	esac
 }
 
-# Creates a function called 'cdr2wav', which will encode the extracted
-# CDR files to WAV (using 'sox').
+# Creates a function called 'cdr2wav', which will convert the extracted
+# CDR files to WAV (using 'sox'). This function is only run if the
+# '-sox' argument has been passed to the script.
 cdr2wav () {
 	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.cdr" 2>&-)
 
