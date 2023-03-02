@@ -38,9 +38,9 @@
 
 # It's possible to do a byteswap on the audio tracks (to switch the
 # endianness / byte order), through the optional '-byteswap' argument.
-# This is needed in some cases, or the audio tracks will be white noise
-# if the endianness is wrong. So, it's easy to tell whether or not the
-# byte order is correct.
+# This is needed in some cases, or audio tracks will be white noise if
+# the endianness is wrong. So, it's easy to tell whether or not the byte
+# order is correct.
 
 # ISO files produced by 'bchunk' are discarded, and data tracks are
 # instead copied directly from the source BIN file, calculating the
