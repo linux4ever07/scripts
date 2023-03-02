@@ -189,11 +189,13 @@ declare -A if_cue gaps
 declare -a tracks_file tracks_type frames
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
+# trap ctrl-c and call iquit()
+trap iquit INT
 
-ctrl_c () {
-	printf '%s\n' '** Trapped CTRL-C'
+# Creates a function called 'iquit', which removes the temporary CUE
+# sheet and quits. It's used throughout the script to quit when a
+# command fails, or when a SIGINT signal is caught.
+iquit () {
 	rm -f "$cue_tmp"
 	exit
 }
@@ -209,14 +211,6 @@ check_cmd () {
 			exit
 		fi
 	done
-}
-
-# Creates a function called 'iquit', which removes the temporary CUE
-# sheet and quits. It's used throughout the script to quit when a
-# command fails.
-iquit () {
-	rm -f "$cue_tmp"
-	exit
 }
 
 # Creates a function called 'time_convert', which converts track length
