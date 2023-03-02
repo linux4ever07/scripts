@@ -819,12 +819,12 @@ create_cue () {
 
 		declare fn ext
 
-		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
+		fn=$(basename "${!line_ref}")
+
+		if [[ $fn =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
 			ext="${BASH_REMATCH[2]}"
 		fi
-
-		fn=$(basename "$fn")
 
 		track_n=$(( i + 1 ))
 
