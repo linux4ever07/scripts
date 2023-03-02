@@ -592,7 +592,7 @@ copy_track_type () {
 	fi
 
 	for (( i = 0; i < ${#tracks[@]}; i++ )); do
-		track_n=$(( i + 1 ))
+		track_n="${tracks[${i}]}"
 		file_n="${tracks_file[${track_n}]}"
 		track_type_tmp="${tracks_type[${track_n}]}"
 
