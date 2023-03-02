@@ -697,6 +697,29 @@ bin_split () {
 # CDR files to WAV (using 'sox'). This function is only run if the
 # '-sox' argument has been passed to the script.
 cdr2wav () {
+	type="$1"
+
+	declare -a files
+	declare type_tmp
+
+	case "$type" in
+		'cdr')
+			type_tmp='cdr'
+		;;
+		'ogg')
+			type_tmp='wav'
+		;;
+		'flac')
+			type_tmp='wav'
+		;;
+	esac
+
+# If WAV files have already been produced or 'type' is not 'wav', skip
+# this function.
+	if [[ ${#files_wav[@]} -gt 0 || $type_tmp != 'wav' ]]; then
+		return
+	fi
+
 	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.cdr" 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
@@ -887,7 +910,6 @@ loop_set
 
 if [[ $mode == 'sox' ]]; then
 	copy_track_type 'all'
-	cdr2wav
 fi
 
 for type in "${!audio_types[@]}"; do
@@ -897,6 +919,10 @@ for type in "${!audio_types[@]}"; do
 
 	if [[ $mode == 'bchunk' ]]; then
 		bin_split "$type"
+	fi
+
+	if [[ $mode == 'sox' ]]; then
+		cdr2wav "$type"
 	fi
 
 	encode_audio "$type"
