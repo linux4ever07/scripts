@@ -732,7 +732,7 @@ cdr2wav () {
 		sox "$cdr_of" "$wav_of" || iquit
 		rm -f "$cdr_of" || iquit
 
-		if [[ ${audio_types[cdr]} -eq 0 ]]; then
+		if [[ -z ${audio_types_run[cdr]} ]]; then
 			rm -f "$cdr_if" || iquit
 		fi
 
