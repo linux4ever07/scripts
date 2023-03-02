@@ -494,7 +494,7 @@ copy_track () {
 	track_n="$1"
 	track_type="$2"
 
-	declare bin_ref file_n_ref frames_ref gaps_ref index_ref
+	declare file_n_ref bin_ref frames_ref gaps_ref index_ref
 	declare ext count skip
 	declare -a args
 
