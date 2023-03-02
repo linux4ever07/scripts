@@ -126,13 +126,13 @@ while [[ $# -gt 0 ]]; do
 
 			shift
 		;;
-		'-byteswap')
-			byteswap=1
+		'-sox')
+			mode='sox'
 
 			shift
 		;;
-		'-sox')
-			mode='sox'
+		'-byteswap')
+			byteswap=1
 
 			shift
 		;;
