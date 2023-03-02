@@ -645,7 +645,7 @@ bin_split () {
 
 # Runs 'bchunk', captures the output and saves the exit status in a
 # variable, so we can check if errors occurred or not.
-	mapfile -t cmd_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
+	mapfile -t cmd_stdout < <(eval "${!args_ref}" 2>&1; printf '%s\n' "$?")
 
 	exit_status="${cmd_stdout[-1]}"
 	unset -v cmd_stdout[-1]
