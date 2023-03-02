@@ -24,6 +24,10 @@
 
 # https://www.dosbox.com/wiki/IMGMOUNT
 
+# Though, the script will work with all kinds of games, including PS1
+# and Sega Saturn games. All that's required is that the disc image is
+# in the BIN/CUE format.
+
 # Another use case for this script is to simply extract the OST from
 # games, to listen to. Or to just split a BIN/CUE into its separate
 # tracks, with the '-cdr' argument, without encoding the audio.
