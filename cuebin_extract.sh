@@ -315,8 +315,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${file_n},${track_n},track_number"]="${match[1]}"
-			if_cue["${file_n},${track_n},track_mode"]="${match[2]}"
+			if_cue["${track_n},track_number"]="${match[1]}"
+			if_cue["${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a PREGAP command...
@@ -326,7 +326,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${file_n},${track_n},pregap"]="$frames_tmp"
+			if_cue["${track_n},pregap"]="$frames_tmp"
 		fi
 
 # If line is an INDEX command...
@@ -338,7 +338,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[2]}")
-			if_cue["${file_n},${track_n},index,${index_n}"]="$frames_tmp"
+			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -348,7 +348,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${file_n},${track_n},postgap"]="$frames_tmp"
+			if_cue["${track_n},postgap"]="$frames_tmp"
 		fi
 
 # If a string has been created, add it to the 'lines_tmp' array.
@@ -409,15 +409,21 @@ get_frames () {
 	this="$1"
 	next=$(( this + 1 ))
 
-	file_n="$2"
+	declare file_this_ref file_next_ref index_this_ref index_next_ref
+	declare frames_tmp
 
-	declare index_this_ref index_next_ref frames_tmp
+	file_this_ref="tracks_file[${this}]"
+	file_next_ref="tracks_file[${next}]"
 
-	index_this_ref="if_cue[${file_n},${this},index,1]"
-	index_next_ref="if_cue[${file_n},${next},index,0]"
+	if [[ ${!file_this_ref} != "${!file_next_ref}" ]]; then
+		return
+	fi
+
+	index_this_ref="if_cue[${this},index,1]"
+	index_next_ref="if_cue[${next},index,0]"
 
 	if [[ -z ${!index_next_ref} ]]; then
-		index_next_ref="if_cue[${file_n},${next},index,1]"
+		index_next_ref="if_cue[${next},index,1]"
 	fi
 
 	if [[ -z ${!index_next_ref} ]]; then
@@ -435,7 +441,6 @@ get_frames () {
 # highly unlikely to specify a pregap twice like that.
 get_gaps () {
 	track_n="$1"
-	file_n="$2"
 
 	declare index_0_ref index_1_ref frames_tmp pregap postgap
 
@@ -444,8 +449,8 @@ get_gaps () {
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
-	index_0_ref="if_cue[${file_n},${track_n},index,0]"
-	index_1_ref="if_cue[${file_n},${track_n},index,1]"
+	index_0_ref="if_cue[${track_n},index,0]"
+	index_1_ref="if_cue[${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
 		frames_tmp=$(( ${!index_1_ref} - ${!index_0_ref} ))
@@ -454,8 +459,8 @@ get_gaps () {
 
 # If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
 # 'gaps' hash.
-	pregap_ref="if_cue[${file_n},${track_n},pregap]"
-	postgap_ref="if_cue[${file_n},${track_n},postgap]"
+	pregap_ref="if_cue[${track_n},pregap]"
+	postgap_ref="if_cue[${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
 		pregap=$(( pregap + ${!pregap_ref} ))
@@ -473,14 +478,13 @@ get_gaps () {
 # tracks in the BIN file (except the last one). And get pregaps and
 # postgaps of all tracks.
 loop_set () {
-	declare track_n file_n
+	declare track_n
 
 	for (( i = 0; i < ${#tracks_file[@]}; i++ )); do
 		track_n=$(( i + 1 ))
-		file_n="${tracks_file[${track_n}]}"
 
-		get_frames "$track_n" "$file_n"
-		get_gaps "$track_n" "$file_n"
+		get_frames "$track_n"
+		get_gaps "$track_n"
 	done
 }
 
@@ -488,13 +492,14 @@ loop_set () {
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	track_n="$1"
-	file_n="$2"
-	track_type="$3"
+	track_type="$2"
 
-	bin_ref="if_cue[${file_n},filename]"
-
-	declare ext frames_ref gaps_ref index_ref count skip
+	declare bin_ref file_n_ref frames_ref gaps_ref index_ref
+	declare ext count skip
 	declare -a args
+
+	file_n_ref="tracks_file[${track_n}]"
+	bin_ref="if_cue[${!file_n_ref},filename]"
 
 # Depending on whether the track type is data or audio, use the
 # appropriate file name extension for the output file.
@@ -522,7 +527,7 @@ copy_track () {
 # case the length will be absent from the 'frames' array. Also, gets the
 # start position of the track.
 	frames_ref="frames[${track_n}]"
-	index_ref="if_cue[${file_n},${track_n},index,1]"
+	index_ref="if_cue[${track_n},index,1]"
 
 	count=0
 	skip=0
@@ -570,7 +575,7 @@ copy_track () {
 copy_track_type () {
 	track_type="$1"
 
-	declare track_n file_n track_type_tmp
+	declare track_n track_type_ref
 	declare -a tracks
 
 # Depending on whether the track type is set to 'all', 'data' or
@@ -580,9 +585,9 @@ copy_track_type () {
 	else
 		for (( i = 0; i < ${#tracks_type[@]}; i++ )); do
 			track_n=$(( i + 1 ))
-			track_type_tmp="${tracks_type[${track_n}]}"
+			track_type_ref="tracks_type[${track_n}]"
 
-			if [[ $track_type_tmp == "$track_type" ]]; then
+			if [[ ${!track_type_ref} == "$track_type" ]]; then
 				tracks+=("$track_n")
 			fi
 		done
@@ -594,10 +599,9 @@ copy_track_type () {
 
 	for (( i = 0; i < ${#tracks[@]}; i++ )); do
 		track_n="${tracks[${i}]}"
-		file_n="${tracks_file[${track_n}]}"
-		track_type_tmp="${tracks_type[${track_n}]}"
+		track_type_ref="tracks_type[${track_n}]"
 
-		copy_track "$track_n" "$file_n" "$track_type_tmp"
+		copy_track "$track_n" "${!track_type_ref}"
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
@@ -610,10 +614,10 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	bin_ref="if_cue[1,filename]"
-
-	declare type_tmp args_ref cmd_stdout exit_status
+	declare bin_ref args_ref type_tmp cmd_stdout exit_status
 	declare -a args args_cdr args_wav files
+
+	bin_ref="if_cue[1,filename]"
 
 	case "$type" in
 		'cdr')
@@ -823,9 +827,8 @@ create_cue () {
 		fn=$(basename "$fn")
 
 		track_n=$(( i + 1 ))
-		file_n="${tracks_file[${track_n}]}"
 
-		track_mode_ref="if_cue[${file_n},${track_n},track_mode]"
+		track_mode_ref="if_cue[${track_n},track_mode]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 

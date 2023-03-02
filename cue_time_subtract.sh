@@ -149,8 +149,8 @@ read_cue () {
 
 			string="$1"
 
-			if_cue["${file_n},${track_n},track_number"]="${match[1]}"
-			if_cue["${file_n},${track_n},track_mode"]="${match[2]}"
+			if_cue["${track_n},track_number"]="${match[1]}"
+			if_cue["${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a PREGAP command...
@@ -160,7 +160,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${file_n},${track_n},pregap"]="$frames_tmp"
+			if_cue["${track_n},pregap"]="$frames_tmp"
 		fi
 
 # If line is an INDEX command...
@@ -172,7 +172,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[2]}")
-			if_cue["${file_n},${track_n},index,${index_n}"]="$frames_tmp"
+			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -182,7 +182,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${file_n},${track_n},postgap"]="$frames_tmp"
+			if_cue["${track_n},postgap"]="$frames_tmp"
 		fi
 	}
 
@@ -220,27 +220,30 @@ get_frames () {
 	this="$1"
 	next=$(( this + 1 ))
 
-	file_n="$2"
-	bin_ref="if_cue[${file_n},filename]"
-
+	declare file_this_ref file_next_ref bin_ref
 	declare index_this_ref index_next_ref frames_tmp size
 
-	index_this_ref="if_cue[${file_n},${this},index,1]"
-	index_next_ref="if_cue[${file_n},${next},index,0]"
+	file_this_ref="tracks_file[${this}]"
+	file_next_ref="tracks_file[${next}]"
 
-	if [[ -z ${!index_next_ref} ]]; then
-		index_next_ref="if_cue[${file_n},${next},index,1]"
+	bin_ref="if_cue[${!file_this_ref},filename]"
+
+	index_this_ref="if_cue[${this},index,0]"
+	index_next_ref="if_cue[${next},index,0]"
+
+	if [[ -z ${!index_this_ref} ]]; then
+		index_this_ref="if_cue[${this},index,1]"
 	fi
 
-	frames_tmp=0
-
 	if [[ -z ${!index_next_ref} ]]; then
-		if [[ -n ${!bin_ref} ]]; then
-			size=$(stat -c '%s' "${!bin_ref}")
-			size=$(( size / ${sector[1]} ))
+		index_next_ref="if_cue[${next},index,1]"
+	fi
 
-			frames_tmp=$(( size - ${!index_this_ref} ))
-		fi
+	if [[ ${!file_this_ref} != "${!file_next_ref}" ]]; then
+		size=$(stat -c '%s' "${!bin_ref}")
+		size=$(( size / ${sector[1]} ))
+
+		frames_tmp=$(( size - ${!index_this_ref} ))
 	else
 		frames_tmp=$(( ${!index_next_ref} - ${!index_this_ref} ))
 	fi
@@ -255,9 +258,8 @@ loop_set () {
 
 	for (( i = 0; i < ${#tracks_file[@]}; i++ )); do
 		track_n=$(( i + 1 ))
-		file_n="${tracks_file[${track_n}]}"
 
-		get_frames "$track_n" "$file_n"
+		get_frames "$track_n"
 	done
 }
 
