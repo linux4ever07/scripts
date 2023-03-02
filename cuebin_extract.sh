@@ -706,7 +706,7 @@ cdr2wav () {
 		return
 	fi
 
-	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.cdr" 2>&-)
+	mapfile -t files < <(find "$of_dn" -type f -iname "*.cdr" 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		cdr_if="${files[${i}]}"
@@ -862,7 +862,7 @@ create_cue () {
 # * Potential WAV files
 # * Temporary CUE sheet
 clean_up () {
-	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.wav" \) 2>&-)
+	mapfile -t files < <(find "$of_dn" -type f \( -iname "*.iso" -o -iname "*.wav" \) 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
