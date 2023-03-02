@@ -716,7 +716,7 @@ cdr2wav () {
 
 # If WAV files have already been produced or 'type' is not 'wav', skip
 # this function.
-	if [[ ${#files_wav[@]} -gt 0 || $type_tmp != 'wav' ]]; then
+	if [[ $type_tmp != 'wav' || ${#files_wav[@]} -gt 0 ]]; then
 		return
 	fi
 
