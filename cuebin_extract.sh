@@ -95,9 +95,9 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare -A audio_types
+declare -A audio_types audio_types_run
 
-audio_types=([cdr]=0 [ogg]=0 [flac]=0)
+audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
 exclusive=0
 byteswap=0
 
@@ -109,19 +109,19 @@ shift
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		'-cdr')
-			audio_types[cdr]=1
+			audio_types_run[cdr]=1
 			exclusive=1
 
 			shift
 		;;
 		'-ogg')
-			audio_types[ogg]=1
+			audio_types_run[ogg]=1
 			exclusive=1
 
 			shift
 		;;
 		'-flac')
-			audio_types[flac]=1
+			audio_types_run[flac]=1
 			exclusive=1
 
 			shift
@@ -143,7 +143,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ $exclusive -eq 0 ]]; then
-	audio_types=([cdr]=1 [ogg]=1 [flac]=1)
+	for type in "${!audio_types[@]}"; do
+		audio_types_run["${type}"]=1
+	done
 fi
 
 session="${RANDOM}-${RANDOM}"
@@ -618,19 +620,9 @@ bin_split () {
 	declare bin_ref args_ref type_tmp exit_status
 	declare -a args args_cdr args_wav cmd_stdout files
 
-	bin_ref="if_cue[1,filename]"
+	type_tmp="${audio_types[${type}]}"
 
-	case "$type" in
-		'cdr')
-			type_tmp='cdr'
-		;;
-		'ogg')
-			type_tmp='wav'
-		;;
-		'flac')
-			type_tmp='wav'
-		;;
-	esac
+	bin_ref="if_cue[1,filename]"
 
 # If WAV files have already been produced, skip this function.
 	if [[ $type_tmp == 'wav' && ${#files_wav[@]} -gt 0 ]]; then
@@ -702,17 +694,7 @@ cdr2wav () {
 	declare -a files
 	declare type_tmp
 
-	case "$type" in
-		'cdr')
-			type_tmp='cdr'
-		;;
-		'ogg')
-			type_tmp='wav'
-		;;
-		'flac')
-			type_tmp='wav'
-		;;
-	esac
+	type_tmp="${audio_types[${type}]}"
 
 # If WAV files have already been produced or 'type' is not 'wav', skip
 # this function.
@@ -793,17 +775,7 @@ create_cue () {
 
 	declare type_tmp elements
 
-	case "$type" in
-		'cdr')
-			type_tmp='cdr'
-		;;
-		'ogg')
-			type_tmp='wav'
-		;;
-		'flac')
-			type_tmp='wav'
-		;;
-	esac
+	type_tmp="${audio_types[${type}]}"
 
 	case "$type_tmp" in
 		'cdr')
@@ -912,11 +884,7 @@ if [[ $mode == 'sox' ]]; then
 	copy_track_type 'all'
 fi
 
-for type in "${!audio_types[@]}"; do
-	if [[ ${audio_types[${type}]} -eq 0 ]]; then
-		continue
-	fi
-
+for type in "${!audio_types_run[@]}"; do
 	if [[ $mode == 'bchunk' ]]; then
 		bin_split "$type"
 	fi
@@ -930,11 +898,7 @@ for type in "${!audio_types[@]}"; do
 done
 
 # Prints the created CUE sheet to the terminal, and to the output file.
-for type in "${!audio_types[@]}"; do
-	if [[ ${audio_types[${type}]} -eq 0 ]]; then
-		continue
-	fi
-
+for type in "${!audio_types_run[@]}"; do
 	of_cue="${of_dn}/${of_name}01_${type}.cue"
 	lines_ref="of_cue_${type}[@]"
 
