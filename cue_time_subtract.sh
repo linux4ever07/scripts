@@ -214,8 +214,7 @@ read_cue () {
 }
 
 # Creates a function called 'get_frames', which will get the length of
-# a track in the BIN file, subtracting pregap if it exists as part of
-# the INDEX commands.
+# a track in the BIN file.
 get_frames () {
 	this="$1"
 	next=$(( this + 1 ))
