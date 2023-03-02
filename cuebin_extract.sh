@@ -14,7 +14,7 @@
 # 3 formats, and create CUE sheets for all 3 formats as well.
 
 # The original purpose of the script is to take DOS games that have CD
-# audio, and getting rid of the need to store the uncompressed CD audio.
+# audio, and getting rid of the need to store the uncompressed audio.
 # Ogg Vorbis is a lossy codec, so the files are much smaller and near
 # the same quality. In the case of FLAC, it's a lossless format so the
 # quality is identical to native CD audio. The only difference is FLAC
@@ -24,12 +24,16 @@
 
 # https://www.dosbox.com/wiki/IMGMOUNT
 
-# Though, the script will work with all kinds of games, including PS1
-# and Sega Saturn games. All that's required is that the disc image is
-# in the BIN/CUE format.
-
 # Another use case for this script is to simply extract the OST from
-# games, to listen to. Or to just split a BIN/CUE into its separate
+# games, to listen to.
+
+# The script will work with all kinds of games, including PS1 and Sega
+# Saturn games. All that's required is that the disc image is in the
+# BIN/CUE format. Though, I'm not sure if there's emulators that can
+# handle FLAC or Ogg Vorbis tracks. The point would mainly be to listen
+# to the music.
+
+# Yet another use case is to just split a BIN/CUE into its separate
 # tracks, with the '-cdr' argument, without encoding the audio.
 
 # It's possible to do a byteswap on the audio tracks (to switch the
@@ -38,7 +42,7 @@
 # if the endianness is wrong. So, it's easy to tell whether or not the
 # byte order is correct.
 
-# The ISO file produced by 'bchunk' is discarded, and data tracks are
+# ISO files produced by 'bchunk' are discarded, and data tracks are
 # instead copied directly from the source BIN file, calculating the
 # length of tracks based on information gathered from the CUE sheet.
 
