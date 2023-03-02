@@ -415,7 +415,7 @@ get_frames () {
 	file_this_ref="tracks_file[${this}]"
 	file_next_ref="tracks_file[${next}]"
 
-	if [[ ${!file_this_ref} != "${!file_next_ref}" ]]; then
+	if [[ ${!file_this_ref} -ne ${!file_next_ref} ]]; then
 		return
 	fi
 

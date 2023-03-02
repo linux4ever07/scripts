@@ -238,7 +238,7 @@ get_frames () {
 		index_next_ref="if_cue[${next},index,1]"
 	fi
 
-	if [[ ${!file_this_ref} != "${!file_next_ref}" ]]; then
+	if [[ ${!file_this_ref} -ne ${!file_next_ref} ]]; then
 		size=$(stat -c '%s' "${!bin_ref}")
 		size=$(( size / ${sector[1]} ))
 
