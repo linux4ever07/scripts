@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # This script is meant to take an input BIN/CUE file, extract the raw
-# data track, as well as audio tracks in whatever format the user has
-# specified through script arguments. The script simply separates all
-# the tracks (data / audio) of BIN/CUE files.
+# data track(s), as well as audio track(s) in whatever format the user
+# has specified through script arguments. The script simply separates
+# all the tracks (data / audio) of BIN/CUE files.
 
 # Available audio formats are:
 # * cdr (native CD audio)
@@ -33,10 +33,10 @@
 # if the endianness is wrong. So, it's easy to tell whether or not the
 # byte order is correct.
 
-# The ISO file produced by 'bchunk' is discarded, and the data track is
+# The ISO file produced by 'bchunk' is discarded, and data tracks are
 # instead copied directly from the source BIN file, calculating the
-# length of the data track based on the information gathered from the
-# CUE sheet.
+# length of data tracks based on the information gathered from the CUE
+# sheet.
 
 # Since the 'copy_track' function is now able to correctly copy any
 # track from the source BIN file, it's possible to make this script not
