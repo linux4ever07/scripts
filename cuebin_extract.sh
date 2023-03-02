@@ -211,6 +211,14 @@ check_cmd () {
 	done
 }
 
+# Creates a function called 'iquit', which removes the temporary CUE
+# sheet and quits. It's used throughout the script to quit when a
+# command fails.
+iquit () {
+	rm -f "$cue_tmp"
+	exit
+}
+
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
 # sectors.
@@ -366,7 +374,7 @@ read_cue () {
 	done
 
 # If there's multiple FILE commands in the CUE sheet, ask the user to
-# create a merged BIN/CUE.
+# create a merged BIN/CUE. But only if the mode is 'bchunk'.
 	if [[ ${#files[@]} -gt 1 && $mode == 'bchunk' ]]; then
 		cat <<MERGE
 
@@ -494,7 +502,7 @@ copy_track () {
 	track_n="$1"
 	track_type="$2"
 
-	declare file_n_ref bin_ref frames_ref gaps_ref index_ref
+	declare file_n_ref bin_ref frames_ref index_ref
 	declare ext count skip
 	declare -a args
 
@@ -561,8 +569,7 @@ copy_track () {
 # status.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${cmd_stdout[@]}"
-		rm -f "$cue_tmp"
-		exit
+		iquit
 	fi
 }
 
@@ -659,8 +666,7 @@ bin_split () {
 # status.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${cmd_stdout[@]}"
-		rm -f "$cue_tmp"
-		exit
+		iquit
 	fi
 
 	n=0
@@ -721,15 +727,14 @@ cdr2wav () {
 # status.
 		if [[ $exit_status != '0' ]]; then
 			printf '%s\n' "${cmd_stdout[@]}"
-			rm -f "$cue_tmp"
-			exit
+			iquit
 		fi
 
-		sox "$cdr_of" "$wav_of" || exit
-		rm -f "$cdr_of" || exit
+		sox "$cdr_of" "$wav_of" || iquit
+		rm -f "$cdr_of" || iquit
 
 		if [[ ${audio_types[cdr]} -eq 0 ]]; then
-			rm -f "$cdr_if" || exit
+			rm -f "$cdr_if" || iquit
 		fi
 
 		unset -v args cmd_stdout exit_status
@@ -749,17 +754,12 @@ encode_audio () {
 			return
 		;;
 		'ogg')
-			oggenc --quality=10 "${of_dn}"/*.wav
+			oggenc --quality=10 "${of_dn}"/*.wav || iquit
 		;;
 		'flac')
-			flac -8 "${of_dn}"/*.wav
+			flac -8 "${of_dn}"/*.wav || iquit
 		;;
 	esac
-
-	if [[ $? -ne 0 ]]; then
-		rm -f "$cue_tmp"
-		exit
-	fi
 }
 
 # Creates a function called 'create_cue', which will create a new CUE
