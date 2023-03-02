@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # This script is meant to take an input BIN/CUE file, extract the raw
-# data track(s), as well as audio track(s) in whatever format the user
-# has specified through script arguments. The script simply separates
-# all the tracks (data / audio) of BIN/CUE files.
+# track(s) (data / audio) in whatever format the user has specified
+# through script arguments. The script simply separates all the tracks
+# of BIN/CUE files.
 
 # Available audio formats are:
 # * cdr (native CD audio)
@@ -13,8 +13,8 @@
 # If no format is specified as an argument, the script will extract all
 # 3 formats, and create CUE sheets for all 3 formats as well.
 
-# The purpose of the script is to take DOS games that have CD Audio,
-# and getting rid of the need to store the uncompressed CD Audio. Ogg
+# The purpose of the script is to take DOS games that have CD audio,
+# and getting rid of the need to store the uncompressed CD audio. Ogg
 # Vorbis is a lossy codec, so the files are much smaller and near the
 # same quality. In the case of FLAC, it's a lossless format so the
 # quality is identical to native CD audio. The only difference is FLAC
