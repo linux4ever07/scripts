@@ -612,7 +612,7 @@ copy_track_type () {
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_cdr < <(find "$of_dn" -type f -not -iname "*.cue" 2>&- | sort -n)
+	mapfile -t files_cdr < <(find "$of_dn" -type f \( -iname "*.bin" -o -iname "*.cdr" \) 2>&- | sort -n)
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
