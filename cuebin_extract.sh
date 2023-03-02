@@ -40,7 +40,7 @@
 
 # The ISO file produced by 'bchunk' is discarded, and data tracks are
 # instead copied directly from the source BIN file, calculating the
-# length of tracks based on the information gathered from the CUE sheet.
+# length of tracks based on information gathered from the CUE sheet.
 
 # Since the 'copy_track' function is now able to correctly copy any
 # track from the source BIN file, it's possible to make this script not
