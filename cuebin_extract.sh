@@ -29,9 +29,9 @@
 
 # It's possible to do a byteswap on the audio tracks (to switch the
 # endianness / byte order), through the optional '-byteswap' argument.
-# This is needed in some cases to burn games, or the audio tracks will
-# be white noise if the endianness is wrong. So, it's easy to tell
-# whether or not the byte order is correct.
+# This is needed in some cases, or the audio tracks will be white noise
+# if the endianness is wrong. So, it's easy to tell whether or not the
+# byte order is correct.
 
 # The ISO file produced by 'bchunk' is discarded, and the data track is
 # instead copied directly from the source BIN file, calculating the
@@ -39,15 +39,23 @@
 # CUE sheet.
 
 # Since the 'copy_track' function is now able to correctly copy any
-# track from the source BIN file, it may be possible to make this script
-# not depend on 'bchunk' anymore.
+# track from the source BIN file, it's possible to make this script not
+# depend on 'bchunk' anymore. The default mode is to use 'bchunk', but
+# if the user passes the '-sox' argument to the script, then 'sox' is
+# used instead. The end result is identical either way. It's just nice
+# to have a way out, in case a certain program is not available.
 
-# 'sox' is able to convert the resulting BIN files to WAV without using
-# 'bchunk' (if the BIN files have the '.cdr' extension), and the
-# byteswap can be done with 'dd':
+# The advantage of using the '-sox' argument, is that the script is then
+# able to process CUE sheets that contain multiple FILE commands (list
+# multiple BIN files). As an example, Redump will use 1 BIN file /
+# track, so that can be processed by the script directly in this case,
+# without having to merge the BIN/CUE first.
 
-# sox in.cdr out.wav
-# dd conv=swab if=in.cdr of=out.cdr
+# It may also be possible to use 'ffmpeg' in a similar way to how 'sox',
+# is used in the 'cdr2wav' function. But I did not manage to get it
+# working. The command would probably be something like this:
+
+# ffmpeg -i in.cdr -ar 44.1k -ac 2 -f pcm_s16le out.wav
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
@@ -90,6 +98,8 @@ audio_types=([cdr]=0 [ogg]=0 [flac]=0)
 exclusive=0
 byteswap=0
 
+mode='bchunk'
+
 # The loop below handles the arguments to the script.
 shift
 
@@ -118,6 +128,11 @@ while [[ $# -gt 0 ]]; do
 
 			shift
 		;;
+		'-sox')
+			mode='sox'
+
+			shift
+		;;
 		*)
 			usage
 		;;
@@ -130,15 +145,14 @@ fi
 
 session="${RANDOM}-${RANDOM}"
 
-if_name="${if_bn_lc%.[^.]*}"
-of_name=$(tr '[:blank:]' '_' <<<"$if_name")
+if_name="${if_bn_lc%.*}"
+of_name=$(sed -E 's/[[:blank:]]+/_/g' <<<"$if_name")
 
 if_dn=$(dirname "$if")
 of_dn="${PWD}/${of_name}-${session}"
 
 cue="$if"
 cue_tmp="/dev/shm/${of_name}-${session}.cue"
-bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 declare -A regex
 declare -a format offset sector
@@ -154,13 +168,12 @@ format[7]="^(POSTGAP) (${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
+regex[fn]='^(.*)\.([^.]*)$'
 
 regex[data]='^MODE[0-9]+/[0-9]+$'
 regex[audio]='^AUDIO$'
 
-regex[bchunk]='^ *[0-9]+: (.*\.[[:alpha:]]{3}).*$'
-regex[iso]='\.iso$'
-regex[wav]='\.wav$'
+regex[bchunk]='^[[:blank:]]*[0-9]+: (.*\.[[:alpha:]]{3}).*$'
 
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
@@ -170,7 +183,8 @@ offset=('  ' '    ')
 sector=('2048' '2352')
 
 declare -A if_cue gaps
-declare -a frames bchunk_cdr bchunk_wav of_cue_cdr of_cue_ogg of_cue_flac
+declare -a tracks_file tracks_type frames
+declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -245,8 +259,10 @@ time_convert () {
 # sheet, add full path to file names listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
-	declare -a files not_found lines lines_tmp
+	declare file_n track_n
+	declare -a files not_found wrong_format lines lines_tmp
 
+	file_n=0
 	track_n=0
 
 # Creates a function called 'handle_command', which will process each
@@ -256,7 +272,7 @@ read_cue () {
 # If line is a FILE command...
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
-			track_n=$(( track_n + 1 ))
+
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
@@ -264,27 +280,40 @@ read_cue () {
 				not_found+=("$fn")
 			fi
 
-			if [[ $track_n -eq 1 && -z $bin && -f $fn ]]; then
-				bin="$fn"
+			if [[ ${match[2]} != 'BINARY' ]]; then
+				wrong_format+=("$fn")
 			fi
 
 			files+=("$fn")
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			if_cue["${track_n},filename"]="$fn"
-			if_cue["${track_n},file_format"]="${match[2]}"
+			file_n=$(( file_n + 1 ))
+
+			if_cue["${file_n},filename"]="$fn"
+			if_cue["${file_n},file_format"]="${match[2]}"
 		fi
 
 # If line is a TRACK command...
 		if [[ $1 =~ ${format[4]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
+
 			track_n="${match[1]#0}"
+
+			tracks_file["${track_n}"]="$file_n"
+
+			if [[ ${match[2]} =~ ${regex[data]} ]]; then
+				tracks_type["${track_n}"]='data'
+			fi
+
+			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
+				tracks_type["${track_n}"]='audio'
+			fi
 
 			string="$1"
 
-			if_cue["${track_n},track_number"]="${match[1]}"
-			if_cue["${track_n},track_mode"]="${match[2]}"
+			if_cue["${file_n},${track_n},track_number"]="${match[1]}"
+			if_cue["${file_n},${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a PREGAP command...
@@ -294,18 +323,19 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},pregap"]="$frames_tmp"
+			if_cue["${file_n},${track_n},pregap"]="$frames_tmp"
 		fi
 
 # If line is an INDEX command...
 		if [[ $1 =~ ${format[6]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
+
 			index_n="${match[1]#0}"
 
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[2]}")
-			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
+			if_cue["${file_n},${track_n},index,${index_n}"]="$frames_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -315,7 +345,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},postgap"]="$frames_tmp"
+			if_cue["${file_n},${track_n},postgap"]="$frames_tmp"
 		fi
 
 # If a string has been created, add it to the 'lines_tmp' array.
@@ -334,7 +364,7 @@ read_cue () {
 
 # If there's multiple FILE commands in the CUE sheet, ask the user to
 # create a merged BIN/CUE.
-	if [[ ${#files[@]} -gt 1 ]]; then
+	if [[ ${#files[@]} -gt 1 && $mode == 'bchunk' ]]; then
 		cat <<MERGE
 
 This CUE sheet contains multiple FILE commands!
@@ -352,6 +382,17 @@ MERGE
 		printf '\n%s\n\n' 'The files below were not found:'
 		printf '%s\n' "${not_found[@]}"
 		printf '\n'
+
+		exit
+	fi
+
+# Lists file names that have the wrong format.
+	if [[ ${#wrong_format[@]} -gt 0 ]]; then
+		printf '\n%s\n\n' 'The files below have the wrong format:'
+		printf '%s\n' "${wrong_format[@]}"
+		printf '\n'
+
+		exit
 	fi
 
 # Writes the temporary CUE sheet to /dev/shm.
@@ -365,13 +406,15 @@ get_frames () {
 	this="$1"
 	next=$(( this + 1 ))
 
+	file_n="$2"
+
 	declare index_this_ref index_next_ref frames_tmp
 
-	index_this_ref="if_cue[${this},index,1]"
-	index_next_ref="if_cue[${next},index,0]"
+	index_this_ref="if_cue[${file_n},${this},index,1]"
+	index_next_ref="if_cue[${file_n},${next},index,0]"
 
 	if [[ -z ${!index_next_ref} ]]; then
-		index_next_ref="if_cue[${next},index,1]"
+		index_next_ref="if_cue[${file_n},${next},index,1]"
 	fi
 
 	if [[ -z ${!index_next_ref} ]]; then
@@ -389,6 +432,7 @@ get_frames () {
 # highly unlikely to specify a pregap twice like that.
 get_gaps () {
 	track_n="$1"
+	file_n="$2"
 
 	declare index_0_ref index_1_ref frames_tmp pregap postgap
 
@@ -397,8 +441,8 @@ get_gaps () {
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
-	index_0_ref="if_cue[${track_n},index,0]"
-	index_1_ref="if_cue[${track_n},index,1]"
+	index_0_ref="if_cue[${file_n},${track_n},index,0]"
+	index_1_ref="if_cue[${file_n},${track_n},index,1]"
 
 	if [[ -n ${!index_0_ref} && -n ${!index_1_ref} ]]; then
 		frames_tmp=$(( ${!index_1_ref} - ${!index_0_ref} ))
@@ -407,8 +451,8 @@ get_gaps () {
 
 # If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
 # 'gaps' hash.
-	pregap_ref="if_cue[${track_n},pregap]"
-	postgap_ref="if_cue[${track_n},postgap]"
+	pregap_ref="if_cue[${file_n},${track_n},pregap]"
+	postgap_ref="if_cue[${file_n},${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
 		pregap=$(( pregap + ${!pregap_ref} ))
@@ -426,20 +470,16 @@ get_gaps () {
 # tracks in the BIN file (except the last one). And get pregaps and
 # postgaps of all tracks.
 loop_set () {
-	declare track_ref
+	declare track_n file_n
 
-	i=0
+	elements="${#tracks_file[@]}"
 
-	while [[ 1 ]]; do
-		i=$(( i + 1 ))
-		track_ref="if_cue[${i},track_number]"
+	for (( i = 0; i < elements; i++ )); do
+		track_n=$(( i + 1 ))
+		file_n="${tracks_file[${track_n}]}"
 
-		if [[ -n ${!track_ref} ]]; then
-			get_frames "$i"
-			get_gaps "$i"
-		else
-			break
-		fi
+		get_frames "$track_n" "$file_n"
+		get_gaps "$track_n" "$file_n"
 	done
 }
 
@@ -447,7 +487,10 @@ loop_set () {
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	track_n="$1"
-	track_type="$2"
+	file_n="$2"
+	track_type="$3"
+
+	bin_ref="if_cue[${file_n},filename]"
 
 	declare ext frames_ref gaps_ref index_ref count skip
 	declare -a args
@@ -466,13 +509,19 @@ copy_track () {
 	of_bin=$(printf '%s/%s%02d.%s' "$of_dn" "$of_name" "$track_n" "$ext")
 
 # Creates the first part of the 'dd' command.
-	args=(dd if=\""${bin}"\" of=\""${of_bin}"\" bs=\""${sector[1]}"\")
+	args=(dd if=\""${!bin_ref}"\" of=\""${of_bin}"\" bs=\""${sector[1]}"\")
+
+# Does a byteswap if the script was run with the '-byteswap' option, and
+# the track is audio.
+	if [[ $byteswap -eq 1 && $track_type == 'audio' ]]; then
+		args+=(conv=swab)
+	fi
 
 # Gets the length of the track, unless it's the last track, in which
 # case the length will be absent from the 'frames' array. Also, gets the
 # start position of the track.
 	frames_ref="frames[${track_n}]"
-	index_ref="if_cue[${track_n},index,1]"
+	index_ref="if_cue[${file_n},${track_n},index,1]"
 
 	count=0
 	skip=0
@@ -497,7 +546,18 @@ copy_track () {
 	fi
 
 # Runs 'dd'.
-	eval "${args[@]}"
+	mapfile -t cmd_stdout < <(eval "${args[@]}" 2>&1; printf '%s\n' "$?")
+
+	exit_status="${cmd_stdout[-1]}"
+	unset -v cmd_stdout[-1]
+
+# Prints the output from 'dd' if it quits with a non-zero exit
+# status.
+	if [[ $exit_status != '0' ]]; then
+		printf '%s\n' "${cmd_stdout[@]}"
+		rm -f "$cue_tmp"
+		exit
+	fi
 }
 
 # Creates a function called 'copy_track_type', which will extract the
@@ -509,54 +569,38 @@ copy_track () {
 copy_track_type () {
 	track_type="$1"
 
-	declare track_mode_ref tracks_ref elements
-	declare -a data_tracks audio_tracks
+	declare track_n file_n track_type_tmp
+	declare -a tracks
 
-	i=0
+# Depending on whether the track type is set to 'all', 'data' or
+# 'audio', copy only that type from the source BIN file.
+	if [[ $track_type == 'all' ]]; then
+		tracks=("${!tracks_type[@]}")
+	else
+		for (( i = 0; i < ${#tracks_type[@]}; i++ )); do
+			track_n=$(( i + 1 ))
+			track_type_tmp="${tracks_type[${track_n}]}"
 
-# Loops through all the track modes, to figure out which tracks are
-# data, and which are audio.
-	while [[ 1 ]]; do
-		i=$(( i + 1 ))
-		track_mode_ref="if_cue[${i},track_mode]"
-
-		if [[ -n ${!track_mode_ref} ]]; then
-			if [[ ${!track_mode_ref} =~ ${regex[data]} ]]; then
-				data_tracks+=("$i")
-				continue
+			if [[ $track_type_tmp == "$track_type" ]]; then
+				tracks+=("$track_n")
 			fi
+		done
+	fi
 
-			if [[ ${!track_mode_ref} =~ ${regex[audio]} ]]; then
-				audio_tracks+=("$i")
-				continue
-			fi
-		else
-			break
-		fi
-	done
-
-# Depending on which track type is intended, copy all the tracks of that
-# type from the source BIN file.
-	elements=0
-
-	case "$track_type" in
-		'data')
-			tracks_ref='data_tracks[@]'
-			elements="${#data_tracks[@]}"
-		;;
-		'audio')
-			tracks_ref='audio_tracks[@]'
-			elements="${#audio_tracks[@]}"
-		;;
-	esac
-
-	if [[ $elements -eq 0 ]]; then
+	if [[ ${#tracks[@]} -eq 0 ]]; then
 		return
 	fi
 
-	for track_n in "${!tracks_ref}"; do
-		copy_track "$track_n" "$track_type"
+	for (( i = 0; i < ${#tracks[@]}; i++ )); do
+		track_n=$(( i + 1 ))
+		file_n="${tracks_file[${track_n}]}"
+		track_type_tmp="${tracks_type[${track_n}]}"
+
+		copy_track "$track_n" "$file_n" "$track_type_tmp"
 	done
+
+# Creates a file list to be used later in the 'create_cue' function.
+	mapfile -t files_cdr < <(find "$of_dn" -type f -not -iname "*.cue" 2>&- | sort -n)
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
@@ -565,7 +609,9 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare type_tmp args_ref bchunk_stdout exit_status
+	bin_ref="if_cue[1,filename]"
+
+	declare type_tmp args_ref cmd_stdout exit_status
 	declare -a args args_cdr args_wav files
 
 	case "$type" in
@@ -581,11 +627,11 @@ bin_split () {
 	esac
 
 # If WAV files have already been produced, skip this function.
-	if [[ $type_tmp == 'wav' && ${#bchunk_wav[@]} -gt 0 ]]; then
+	if [[ $type_tmp == 'wav' && ${#files_wav[@]} -gt 0 ]]; then
 		return
 	fi
 
-	args=(\""$bin"\" \""$cue_tmp"\" \""$of_name"\")
+	args=(\""${!bin_ref}"\" \""$cue_tmp"\" \""$of_name"\")
 
 	if [[ $byteswap -eq 1 ]]; then
 		args_cdr=(bchunk -s "${args[@]}")
@@ -599,23 +645,23 @@ bin_split () {
 
 # Runs 'bchunk', captures the output and saves the exit status in a
 # variable, so we can check if errors occurred or not.
-	mapfile -t bchunk_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
+	mapfile -t cmd_stdout < <(eval "${!args_ref}"; printf '%s\n' "$?")
 
-	exit_status="${bchunk_stdout[-1]}"
-	unset -v bchunk_stdout[-1]
+	exit_status="${cmd_stdout[-1]}"
+	unset -v cmd_stdout[-1]
 
 # Prints the output from 'bchunk' if it quits with a non-zero exit
 # status.
 	if [[ $exit_status != '0' ]]; then
-		printf '%s\n' "${bchunk_stdout[@]}"
+		printf '%s\n' "${cmd_stdout[@]}"
 		rm -f "$cue_tmp"
 		exit
 	fi
 
 	n=0
 
-	for (( i = 0; i < ${#bchunk_stdout[@]}; i++ )); do
-		line="${bchunk_stdout[${i}]}"
+	for (( i = 0; i < ${#cmd_stdout[@]}; i++ )); do
+		line="${cmd_stdout[${i}]}"
 
 		if [[ $line == 'Writing tracks:' ]]; then
 			n=$(( i + 2 ))
@@ -624,8 +670,8 @@ bin_split () {
 	done
 
 # Saves the list of files produced by 'bchunk' in the 'files' array.
-	for (( i = n; i < ${#bchunk_stdout[@]}; i++ )); do
-		line="${bchunk_stdout[${i}]}"
+	for (( i = n; i < ${#cmd_stdout[@]}; i++ )); do
+		line="${cmd_stdout[${i}]}"
 
 		if [[ $line =~ ${regex[bchunk]} ]]; then
 			files+=("${BASH_REMATCH[1]}")
@@ -634,12 +680,57 @@ bin_split () {
 
 	case "$type_tmp" in
 		'cdr')
-			bchunk_cdr=("${files[@]}")
+			files_cdr=("${files[@]}")
 		;;
 		'wav')
-			bchunk_wav=("${files[@]}")
+			files_wav=("${files[@]}")
 		;;
 	esac
+}
+
+# Creates a function called 'cdr2wav', which will encode the extracted
+# CDR files to WAV (using 'sox').
+cdr2wav () {
+	mapfile -t files < <(find "$of_dn" -maxdepth 1 -type f -iname "*.cdr" 2>&-)
+
+	for (( i = 0; i < ${#files[@]}; i++ )); do
+		cdr_if="${files[${i}]}"
+		cdr_of="${cdr_if%.*}_swapped.cdr"
+		wav_of="${cdr_if%.*}.wav"
+
+		declare exit_status
+		declare -a args cmd_stdout
+
+		args=(dd conv=swab if=\""${cdr_if}"\" of=\""${cdr_of}"\")
+
+# Make a temporary byteswapped copy of the CDR file, before running
+# 'sox' to convert it to WAV. Otherwise, the the audio will just be
+# white noise. Delete the temporary CDR file when done.		
+		mapfile -t cmd_stdout < <(eval "${args[@]}" 2>&1; printf '%s\n' "$?")
+
+		exit_status="${cmd_stdout[-1]}"
+		unset -v cmd_stdout[-1]
+
+# Prints the output from 'dd' if it quits with a non-zero exit
+# status.
+		if [[ $exit_status != '0' ]]; then
+			printf '%s\n' "${cmd_stdout[@]}"
+			rm -f "$cue_tmp"
+			exit
+		fi
+
+		sox "$cdr_of" "$wav_of" || exit
+		rm -f "$cdr_of" || exit
+
+		if [[ ${audio_types[cdr]} -eq 0 ]]; then
+			rm -f "$cdr_if" || exit
+		fi
+
+		unset -v args cmd_stdout exit_status
+	done
+
+# Creates a file list to be used later in the 'create_cue' function.
+	mapfile -t files_wav < <(find "$of_dn" -type f -not -iname "*.cdr" 2>&- | sort -n)
 }
 
 # Creates a function called 'encode_audio', which will encode the WAVs
@@ -686,10 +777,10 @@ create_cue () {
 
 	case "$type_tmp" in
 		'cdr')
-			elements="${#bchunk_cdr[@]}"
+			elements="${#files_cdr[@]}"
 		;;
 		'wav')
-			elements="${#bchunk_wav[@]}"
+			elements="${#files_wav[@]}"
 		;;
 	esac
 
@@ -718,32 +809,41 @@ create_cue () {
 # Goes through the list of files produced by 'bchunk', and creates a new
 # CUE sheet based on that.
 	for (( i = 0; i < elements; i++ )); do
-		line_ref="bchunk_${type_tmp}[${i}]"
+		line_ref="files_${type_tmp}[${i}]"
+
+		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
+			fn="${BASH_REMATCH[1]}"
+			ext="${BASH_REMATCH[2]}"
+		fi
+
+		fn=$(basename "$fn")
 
 		track_n=$(( i + 1 ))
-		track_mode_ref="if_cue[${track_n},track_mode]"
+		track_mode_ref="if_cue[1,${track_n},track_mode]"
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
 
-		if [[ ${!line_ref} =~ ${regex[iso]} ]]; then
-			eval of_cue_"${type}"+=\(\""FILE \\\"${!line_ref%.iso}.bin\\\" BINARY"\"\)
+		if [[ $ext == 'iso' || $ext == 'bin' ]]; then
+			eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.bin\\\" BINARY"\"\)
 			eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
 		else
 			case "$type" in
 				'cdr')
-					of_cue_cdr+=("FILE \"${!line_ref}\" BINARY")
+					of_cue_cdr+=("FILE \"${fn}.cdr\" BINARY")
 				;;
 				'ogg')
-					of_cue_ogg+=("FILE \"${!line_ref%.wav}.ogg\" OGG")
+					of_cue_ogg+=("FILE \"${fn}.ogg\" OGG")
 				;;
 				'flac')
-					of_cue_flac+=("FILE \"${!line_ref%.wav}.flac\" FLAC")
+					of_cue_flac+=("FILE \"${fn}.flac\" FLAC")
 				;;
 			esac
 			
 			eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 			set_index
 		fi
+
+		unset -v fn ext
 	done
 }
 
@@ -762,8 +862,9 @@ clean_up () {
 	rm -f "$cue_tmp" || exit
 }
 
-# Checks if 'oggenc', 'flac' and 'bchunk' are installed.
-check_cmd oggenc flac bchunk
+# Checks if 'oggenc', 'flac' are installed. Depending on which mode is
+# set, check if 'bchunk' or 'sox' is installed.
+check_cmd oggenc flac "$mode"
 
 # Creates the output directory and change into it.
 mkdir "$of_dn" || exit
@@ -773,17 +874,23 @@ cd "$of_dn" || exit
 read_cue
 loop_set
 
+if [[ $mode == 'sox' ]]; then
+	copy_track_type 'all'
+	cdr2wav
+fi
+
 for type in "${!audio_types[@]}"; do
 	if [[ ${audio_types[${type}]} -eq 0 ]]; then
 		continue
 	fi
 
-	bin_split "$type"
+	if [[ $mode == 'bchunk' ]]; then
+		bin_split "$type"
+	fi
+
 	encode_audio "$type"
 	create_cue "$type"
 done
-
-printf '\n'
 
 # Prints the created CUE sheet to the terminal, and to the output file.
 for type in "${!audio_types[@]}"; do
@@ -792,11 +899,10 @@ for type in "${!audio_types[@]}"; do
 	fi
 
 	of_cue="${of_dn}/${of_name}01_${type}.cue"
-
 	lines_ref="of_cue_${type}[@]"
-	printf '%s\r\n' "${!lines_ref}" | tee "$of_cue"
 
 	printf '\n'
+	printf '%s\r\n' "${!lines_ref}" | tee "$of_cue"
 done
 
 printf '\n' 
@@ -805,4 +911,6 @@ printf '\n'
 clean_up
 
 # Copies data track(s) from source BIN file.
-copy_track_type 'data'
+if [[ $mode == 'bchunk' ]]; then
+	copy_track_type 'data'
+fi

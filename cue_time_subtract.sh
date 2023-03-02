@@ -7,7 +7,7 @@ if=$(readlink -f "$1")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
-if_name="${if_bn_lc%.[^.]*}"
+if_name="${if_bn_lc%.*}"
 if_dn=$(dirname "$if")
 cue="$if"
 
@@ -22,8 +22,6 @@ usage () {
 if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
-
-bin=$(find "$if_dn" -maxdepth 1 -type f -iname "${if_name}.bin" 2>&- | head -n 1)
 
 declare -A regex
 declare -a format sector
@@ -45,7 +43,7 @@ regex[path]='^(.*[\\\/])'
 sector=('2048' '2352')
 
 declare -A if_cue
-declare -a frames
+declare -a tracks_file tracks_type frames
 
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
@@ -98,8 +96,10 @@ time_convert () {
 # sheet, add full path to filenames listed in the CUE sheet, and create
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
-	declare -a files not_found lines
+	declare file_n track_n
+	declare -a files not_found wrong_format lines
 
+	file_n=0
 	track_n=0
 
 # Creates a function called 'handle_command', which will process each
@@ -109,7 +109,7 @@ read_cue () {
 # If line is a FILE command...
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
-			track_n=$(( track_n + 1 ))
+
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
@@ -117,27 +117,40 @@ read_cue () {
 				not_found+=("$fn")
 			fi
 
-			if [[ $track_n -eq 1 && -z $bin && -f $fn ]]; then
-				bin="$fn"
+			if [[ ${match[2]} != 'BINARY' ]]; then
+				wrong_format+=("$fn")
 			fi
 
 			files+=("$fn")
 
 			string="${match[0]} \"${fn}\" ${match[2]}"
 
-			if_cue["${track_n},filename"]="$fn"
-			if_cue["${track_n},file_format"]="${match[2]}"
+			file_n=$(( file_n + 1 ))
+
+			if_cue["${file_n},filename"]="$fn"
+			if_cue["${file_n},file_format"]="${match[2]}"
 		fi
 
 # If line is a TRACK command...
 		if [[ $1 =~ ${format[4]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
+
 			track_n="${match[1]#0}"
+
+			tracks_file["${track_n}"]="$file_n"
+
+			if [[ ${match[2]} =~ ${regex[data]} ]]; then
+				tracks_type["${track_n}"]='data'
+			fi
+
+			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
+				tracks_type["${track_n}"]='audio'
+			fi
 
 			string="$1"
 
-			if_cue["${track_n},track_number"]="${match[1]}"
-			if_cue["${track_n},track_mode"]="${match[2]}"
+			if_cue["${file_n},${track_n},track_number"]="${match[1]}"
+			if_cue["${file_n},${track_n},track_mode"]="${match[2]}"
 		fi
 
 # If line is a PREGAP command...
@@ -147,18 +160,19 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},pregap"]="$frames_tmp"
+			if_cue["${file_n},${track_n},pregap"]="$frames_tmp"
 		fi
 
 # If line is an INDEX command...
 		if [[ $1 =~ ${format[6]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
+
 			index_n="${match[1]#0}"
 
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[2]}")
-			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
+			if_cue["${file_n},${track_n},index,${index_n}"]="$frames_tmp"
 		fi
 
 # If line is a POSTGAP command...
@@ -168,7 +182,7 @@ read_cue () {
 			string="$1"
 
 			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},postgap"]="$frames_tmp"
+			if_cue["${file_n},${track_n},postgap"]="$frames_tmp"
 		fi
 	}
 
@@ -180,22 +194,22 @@ read_cue () {
 		handle_command "$line"
 	done
 
-# If there's multiple FILE commands in the CUE sheet, quit.
-	if [[ ${#files[@]} -gt 1 ]]; then
-		cat <<MERGE
-
-This CUE sheet contains multiple FILE commands!
-
-MERGE
-
-		exit
-	fi
-
 # Lists file names that are not real files.
 	if [[ ${#not_found[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'The files below were not found:'
 		printf '%s\n' "${not_found[@]}"
 		printf '\n'
+
+		exit
+	fi
+
+# Lists file names that have the wrong format.
+	if [[ ${#wrong_format[@]} -gt 0 ]]; then
+		printf '\n%s\n\n' 'The files below have the wrong format:'
+		printf '%s\n' "${wrong_format[@]}"
+		printf '\n'
+
+		exit
 	fi
 }
 
@@ -206,20 +220,23 @@ get_frames () {
 	this="$1"
 	next=$(( this + 1 ))
 
+	file_n="$2"
+	bin_ref="if_cue[${file_n},filename]"
+
 	declare index_this_ref index_next_ref frames_tmp size
 
-	index_this_ref="if_cue[${this},index,1]"
-	index_next_ref="if_cue[${next},index,0]"
+	index_this_ref="if_cue[${file_n},${this},index,1]"
+	index_next_ref="if_cue[${file_n},${next},index,0]"
 
 	if [[ -z ${!index_next_ref} ]]; then
-		index_next_ref="if_cue[${next},index,1]"
+		index_next_ref="if_cue[${file_n},${next},index,1]"
 	fi
 
 	frames_tmp=0
 
 	if [[ -z ${!index_next_ref} ]]; then
-		if [[ -n $bin ]]; then
-			size=$(stat -c '%s' "$bin")
+		if [[ -n ${!bin_ref} ]]; then
+			size=$(stat -c '%s' "${!bin_ref}")
 			size=$(( size / ${sector[1]} ))
 
 			frames_tmp=$(( size - ${!index_this_ref} ))
@@ -234,19 +251,15 @@ get_frames () {
 # Creates a function called 'loop_set', which will get the length of all
 # tracks in the BIN file (except the last one).
 loop_set () {
-	declare track_ref
+	declare track_n file_n
 
-	i=0
+	elements="${#tracks_file[@]}"
 
-	while [[ 1 ]]; do
-		i=$(( i + 1 ))
-		track_ref="if_cue[${i},track_number]"
+	for (( i = 0; i < elements; i++ )); do
+		track_n=$(( i + 1 ))
+		file_n="${tracks_file[${track_n}]}"
 
-		if [[ -n ${!track_ref} ]]; then
-			get_frames "$i"
-		else
-			break
-		fi
+		get_frames "$track_n" "$file_n"
 	done
 }
 
