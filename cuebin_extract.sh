@@ -106,9 +106,9 @@ fi
 declare -A audio_types audio_types_run
 
 audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
-byteswap=0
 
 mode='bchunk'
+byteswap=0
 
 # The loop below handles the arguments to the script.
 shift
