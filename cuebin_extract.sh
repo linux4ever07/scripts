@@ -13,10 +13,10 @@
 # If no format is specified as an argument, the script will extract all
 # 3 formats, and create CUE sheets for all 3 formats as well.
 
-# The purpose of the script is to take DOS games that have CD audio,
-# and getting rid of the need to store the uncompressed CD audio. Ogg
-# Vorbis is a lossy codec, so the files are much smaller and near the
-# same quality. In the case of FLAC, it's a lossless format so the
+# The original purpose of the script is to take DOS games that have CD
+# audio, and getting rid of the need to store the uncompressed CD audio.
+# Ogg Vorbis is a lossy codec, so the files are much smaller and near
+# the same quality. In the case of FLAC, it's a lossless format so the
 # quality is identical to native CD audio. The only difference is FLAC
 # is losslessly compressed so the files are slightly smaller. The
 # generated CUE sheets can be used with DOSBox, using the 'IMGMOUNT'
@@ -25,7 +25,8 @@
 # https://www.dosbox.com/wiki/IMGMOUNT
 
 # Another use case for this script is to simply extract the OST from
-# games, to listen to.
+# games, to listen to. Or to just split a BIN/CUE into its separate
+# tracks, with the '-cdr' argument, without encoding the audio.
 
 # It's possible to do a byteswap on the audio tracks (to switch the
 # endianness / byte order), through the optional '-byteswap' argument.
