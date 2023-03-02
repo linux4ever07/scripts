@@ -743,6 +743,13 @@ cdr2wav () {
 encode_audio () {
 	type="$1"
 
+# If there's no WAV files, return from this function. This makes it
+# possible for the script to finish normally, even if there's no audio
+# tracks.
+	if [[ ${#files_wav[@]} -eq 0 ]]; then
+		return
+	fi
+
 	case "$type" in
 		'cdr')
 			return
