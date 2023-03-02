@@ -106,7 +106,6 @@ fi
 declare -A audio_types audio_types_run
 
 audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
-exclusive=0
 byteswap=0
 
 mode='bchunk'
@@ -118,19 +117,16 @@ while [[ $# -gt 0 ]]; do
 	case "$1" in
 		'-cdr')
 			audio_types_run[cdr]=1
-			exclusive=1
 
 			shift
 		;;
 		'-ogg')
 			audio_types_run[ogg]=1
-			exclusive=1
 
 			shift
 		;;
 		'-flac')
 			audio_types_run[flac]=1
-			exclusive=1
 
 			shift
 		;;
@@ -150,7 +146,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-if [[ $exclusive -eq 0 ]]; then
+if [[ ${#audio_types_run[@]} -eq 0 ]]; then
 	for type in "${!audio_types[@]}"; do
 		audio_types_run["${type}"]=1
 	done
