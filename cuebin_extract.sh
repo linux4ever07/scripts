@@ -78,6 +78,9 @@ Usage: $(basename "$0") [cue] [...]
 -flac
 	Audio tracks will be output exclusively in FLAC.
 
+-sox
+	Uses 'sox' instead of 'bchunk' to convert CD audio to WAV.
+
 -byteswap
 	Reverses the endianness / byte order of the audio tracks.
 
