@@ -182,8 +182,6 @@ regex[fn]='^(.*)\.([^.]*)$'
 regex[data]='^MODE[0-9]+/[0-9]+$'
 regex[audio]='^AUDIO$'
 
-regex[bchunk]='^[[:blank:]]*[0-9]+: (.*\.[[:alpha:]]{3}).*$'
-
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
 
@@ -632,7 +630,7 @@ bin_split () {
 	type="$1"
 
 	declare bin_ref args_ref type_tmp exit_status
-	declare -a args args_cdr args_wav cmd_stdout files
+	declare -a args args_cdr args_wav cmd_stdout
 
 	type_tmp="${audio_types[${type}]}"
 
@@ -669,32 +667,13 @@ bin_split () {
 		iquit
 	fi
 
-	n=0
-
-	for (( i = 0; i < ${#cmd_stdout[@]}; i++ )); do
-		line="${cmd_stdout[${i}]}"
-
-		if [[ $line == 'Writing tracks:' ]]; then
-			n=$(( i + 2 ))
-			break
-		fi
-	done
-
-# Saves the list of files produced by 'bchunk' in the 'files' array.
-	for (( i = n; i < ${#cmd_stdout[@]}; i++ )); do
-		line="${cmd_stdout[${i}]}"
-
-		if [[ $line =~ ${regex[bchunk]} ]]; then
-			files+=("${BASH_REMATCH[1]}")
-		fi
-	done
-
+# Creates a file list to be used later in the 'create_cue' function.
 	case "$type_tmp" in
 		'cdr')
-			files_cdr=("${files[@]}")
+			mapfile -t files_cdr < <(get_files *.iso *.cdr)
 		;;
 		'wav')
-			files_wav=("${files[@]}")
+			mapfile -t files_wav < <(get_files *.iso *.wav)
 		;;
 	esac
 }
