@@ -773,7 +773,8 @@ encode_audio () {
 }
 
 # Creates a function called 'create_cue', which will create a new CUE
-# sheet, based on the file list created by the 'bin_split' function.
+# sheet, based on the file lists created by the 'bin_split',
+# 'copy_track_type' and 'cdr2wav' functions.
 create_cue () {
 	type="$1"
 
@@ -812,8 +813,8 @@ create_cue () {
 		fi
 	}
 
-# Goes through the list of files produced by 'bchunk', and creates a new
-# CUE sheet based on that.
+# Goes through the list of files produced by previously run functions,
+# and creates a new CUE sheet based on that.
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="files_${type_tmp}[${i}]"
 
