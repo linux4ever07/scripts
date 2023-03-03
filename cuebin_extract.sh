@@ -220,11 +220,11 @@ check_cmd () {
 # Creates a function called 'get_files', which will be used to generate
 # file lists to be used by other functions.
 get_files () {
-	for fn in "$@"; do
-		if [[ -f $fn ]]; then
-			printf '%s\n' "$fn"
-		fi
-	done | sort -n
+	shopt -s nullglob
+
+	printf '%s\n' $@ | sort -n
+
+	shopt -u nullglob
 }
 
 # Creates a function called 'time_convert', which converts track length
@@ -620,7 +620,7 @@ copy_track_type () {
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_cdr < <(get_files *.bin *.cdr)
+	mapfile -t files_cdr < <(get_files "*.bin" "*.cdr")
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
@@ -670,10 +670,10 @@ bin_split () {
 # Creates a file list to be used later in the 'create_cue' function.
 	case "$type_tmp" in
 		'cdr')
-			mapfile -t files_cdr < <(get_files *.iso *.cdr)
+			mapfile -t files_cdr < <(get_files "*.iso" "*.cdr")
 		;;
 		'wav')
-			mapfile -t files_wav < <(get_files *.iso *.wav)
+			mapfile -t files_wav < <(get_files "*.iso" "*.wav")
 		;;
 	esac
 }
@@ -695,7 +695,7 @@ cdr2wav () {
 		return
 	fi
 
-	mapfile -t files < <(get_files *.cdr)
+	mapfile -t files < <(get_files "*.cdr")
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		cdr_if="${files[${i}]}"
@@ -733,7 +733,7 @@ cdr2wav () {
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_wav < <(get_files *.bin *.wav)
+	mapfile -t files_wav < <(get_files "*.bin" "*.wav")
 }
 
 # Creates a function called 'encode_audio', which will encode the WAVs
@@ -852,7 +852,7 @@ create_cue () {
 clean_up () {
 	declare -a files
 
-	mapfile -t files < <(get_files *.iso *.wav)
+	mapfile -t files < <(get_files "*.iso" "*.wav")
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
