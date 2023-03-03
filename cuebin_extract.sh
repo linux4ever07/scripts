@@ -876,7 +876,7 @@ clean_up () {
 # set, check if 'bchunk' or 'sox' is installed.
 check_cmd 'oggenc' 'flac' "$mode"
 
-# Creates the output directory and change into it.
+# Creates the output directory and changes into it.
 mkdir "$of_dn" || exit
 cd "$of_dn" || exit
 
