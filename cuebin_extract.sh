@@ -219,6 +219,16 @@ check_cmd () {
 	done
 }
 
+# Creates a function called 'get_files', which will be used to generate
+# file lists to be used by other functions.
+get_files () {
+	for fn in "$@"; do
+		if [[ -f $fn ]]; then
+			printf '%s\n' "$fn"
+		fi
+	done | sort -n
+}
+
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
 # sectors.
@@ -612,7 +622,7 @@ copy_track_type () {
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_cdr < <(find "$of_dn" -type f \( -iname "*.bin" -o -iname "*.cdr" \) 2>&- | sort -n)
+	mapfile -t files_cdr < <(get_files *.bin *.cdr)
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
@@ -706,7 +716,7 @@ cdr2wav () {
 		return
 	fi
 
-	mapfile -t files < <(find "$of_dn" -type f -iname "*.cdr" 2>&-)
+	mapfile -t files < <(get_files *.cdr)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		cdr_if="${files[${i}]}"
@@ -744,7 +754,7 @@ cdr2wav () {
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_wav < <(find "$of_dn" -type f -not -iname "*.cdr" 2>&- | sort -n)
+	mapfile -t files_wav < <(get_files *.bin *.wav)
 }
 
 # Creates a function called 'encode_audio', which will encode the WAVs
@@ -820,9 +830,7 @@ create_cue () {
 
 		declare fn ext
 
-		fn=$(basename "${!line_ref}")
-
-		if [[ $fn =~ ${regex[fn]} ]]; then
+		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
 			ext="${BASH_REMATCH[2]}"
 		fi
@@ -863,7 +871,9 @@ create_cue () {
 # * Potential WAV files
 # * Temporary CUE sheet
 clean_up () {
-	mapfile -t files < <(find "$of_dn" -type f \( -iname "*.iso" -o -iname "*.wav" \) 2>&-)
+	declare -a files
+
+	mapfile -t files < <(get_files *.iso *.wav)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
