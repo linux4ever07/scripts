@@ -707,7 +707,7 @@ cdr2wav () {
 
 		args=(dd conv=swab if=\""${cdr_if}"\" of=\""${cdr_of}"\")
 
-# Make a temporary byteswapped copy of the CDR file, before running
+# Makes a temporary byteswapped copy of the CDR file, before running
 # 'sox' to convert it to WAV. Otherwise, the the audio will just be
 # white noise. Delete the temporary CDR file when done.		
 		mapfile -t cmd_stdout < <(eval "${args[@]}" 2>&1; printf '%s\n' "$?")
