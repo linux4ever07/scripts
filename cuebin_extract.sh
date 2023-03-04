@@ -634,7 +634,8 @@ bin_split () {
 
 	bin_ref="if_cue[1,filename]"
 
-# If WAV files have already been produced, skip this function.
+# If type is 'wav' and WAV files have already been produced, return from
+# this function.
 	if [[ $type_tmp == 'wav' && ${#files_wav[@]} -gt 0 ]]; then
 		return
 	fi
@@ -687,8 +688,8 @@ cdr2wav () {
 
 	type_tmp="${audio_types[${type}]}"
 
-# If WAV files have already been produced or 'type' is not 'wav', skip
-# this function.
+# If type is not 'wav' or WAV files have already been produced, return
+# from this function.
 	if [[ $type_tmp != 'wav' || ${#files_wav[@]} -gt 0 ]]; then
 		return
 	fi
@@ -739,17 +740,18 @@ cdr2wav () {
 encode_audio () {
 	type="$1"
 
-# If there's no WAV files, return from this function. This makes it
-# possible for the script to finish normally, even if there's no audio
-# tracks.
-	if [[ ${#files_wav[@]} -eq 0 ]]; then
+	declare type_tmp
+
+	type_tmp="${audio_types[${type}]}"
+
+# If type is not 'wav' or there's no WAV files, return from this
+# function. This makes it possible for the script to finish normally,
+# even if there's no audio tracks.
+	if [[ $type_tmp != 'wav' || ${#files_wav[@]} -eq 0 ]]; then
 		return
 	fi
 
 	case "$type" in
-		'cdr')
-			return
-		;;
 		'ogg')
 			oggenc --quality=10 "${of_dn}"/*.wav || iquit
 		;;
