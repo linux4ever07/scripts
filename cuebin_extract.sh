@@ -622,7 +622,7 @@ copy_track_type () {
 }
 
 # Creates a function called 'bin_split', which will run 'bchunk' on the
-# input file, to separate the tracks.
+# BIN file, to separate the tracks.
 bin_split () {
 	type="$1"
 
