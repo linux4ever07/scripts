@@ -106,18 +106,18 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'time_calc', which adds centiseconds to the
-# current 'time line', until it's at least 1 centisecond more than
-# previous 'time line'.
+# Creates a function called 'time_calc', which will make sure the
+# current 'time line' is at least 1 centisecond greater than previous
+# 'time line'.
 time_calc () {
 	start_time_tmp="$1"
 	stop_time_tmp="$2"
 
-# Until the value of the current 'time_line' is higher than the
-# previous, add 1 centisecond.
-	until [[ $start_time_tmp -gt $stop_time_tmp ]]; do
-		start_time_tmp=$(( start_time_tmp + 100 ))
-	done
+# If the previous 'time line' is greater than the current one, make the
+# current 'time line' 1 centisecond greater than that.
+	if [[ $stop_time_tmp -gt $start_time_tmp ]]; then
+		start_time_tmp=$(( stop_time_tmp + 100 ))
+	fi
 
 	printf '%s' "$start_time_tmp"
 }

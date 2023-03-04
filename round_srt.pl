@@ -149,17 +149,16 @@ sub time_convert {
 	return($time);
 }
 
-# The 'time_calc' subroutine adds centiseconds to the current
-# 'time line', until it's at least 1 centisecond more than previous
-# 'time line'.
+# The 'time_calc' subroutine makes sure the current 'time line' is at
+# least 1 centisecond greater than previous 'time line'.
 sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
-# Until the value of the current 'time_line' is higher than the
-# previous, add 1 centisecond.
-	until ($start_time > $stop_time) {
-		$start_time = $start_time + 100;
+# If the previous 'time line' is greater than the current one, make the
+# current 'time line' 1 centisecond greater than that.
+	if ($stop_time > $start_time) {
+		$start_time = $stop_time + 100;
 	}
 
 	return($start_time);
