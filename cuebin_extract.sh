@@ -704,7 +704,7 @@ cdr2wav () {
 		declare exit_status
 		declare -a args cmd_stdout
 
-		args=(dd conv=swab if=\""${cdr_if}"\" of=\""${cdr_of}"\")
+		args=(dd if=\""${cdr_if}"\" of=\""${cdr_of}"\" conv=swab)
 
 # Makes a temporary byteswapped copy of the CDR file, before running
 # 'sox' to convert it to WAV. Otherwise, the the audio will just be
