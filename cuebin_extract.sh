@@ -222,10 +222,10 @@ check_cmd () {
 get_files () {
 	shopt -s nullglob
 
-	files=($@)
+	files_tmp=($@)
 
-	if [[ ${#files[@]} -gt 0 ]]; then
-		printf '%s\n' "${files[@]}" | sort -n
+	if [[ ${#files_tmp[@]} -gt 0 ]]; then
+		printf '%s\n' "${files_tmp[@]}" | sort -n
 	fi
 
 	shopt -u nullglob
