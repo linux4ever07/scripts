@@ -224,11 +224,11 @@ get_files () {
 
 	files_tmp=($@)
 
+	shopt -u nullglob
+
 	if [[ ${#files_tmp[@]} -gt 0 ]]; then
 		printf '%s\n' "${files_tmp[@]}" | sort -n
 	fi
-
-	shopt -u nullglob
 }
 
 # Creates a function called 'time_convert', which converts track length
