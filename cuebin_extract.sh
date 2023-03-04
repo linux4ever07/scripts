@@ -736,7 +736,7 @@ cdr2wav () {
 }
 
 # Creates a function called 'encode_audio', which will encode the WAVs
-# created by 'bchunk'.
+# created by 'bchunk' (or by 'sox').
 encode_audio () {
 	type="$1"
 
