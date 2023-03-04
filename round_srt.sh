@@ -106,8 +106,8 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'time_calc', which will make sure the
-# current 'time line' is at least 1 centisecond greater than previous
+# Creates a function called 'time_calc', which makes sure the current
+# 'time line' is at least 1 centisecond greater than previous
 # 'time line'.
 time_calc () {
 	start_time_tmp="$1"
