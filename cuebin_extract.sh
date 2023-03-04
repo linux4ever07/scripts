@@ -220,6 +220,8 @@ check_cmd () {
 # Creates a function called 'get_files', which will be used to generate
 # file lists to be used by other functions.
 get_files () {
+	declare -a files_tmp
+
 	shopt -s nullglob
 
 	files_tmp=($@)
