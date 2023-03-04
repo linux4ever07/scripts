@@ -19,6 +19,7 @@ use warnings;
 use File::Basename qw(basename);
 use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
+use POSIX qw(floor);
 
 my($dn, $of, $delim, $offset, $n);
 my(@files, @lines, @format);
@@ -126,32 +127,13 @@ sub time_convert {
 	} elsif ($time =~ /$format[0]/) {
 		$cs = $time;
 
-# While $cs (centiseconds) is equal to (or greater than) 1000, clear the
-# $cs variable and add 1 to the $s (seconds) variable.
-		while ($cs >= 1000) {
-			$s = $s + 1;
-			$cs = $cs - 1000;
-		}
+		$s = floor($cs / 1000);
+		$m = floor($s / 60);
+		$h = floor($m / 60);
 
-# While $s (seconds) is equal to (or greater than) 60, clear the $s
-# variable and add 1 to the $m (minutes) variable.
-		while ($s >= 60) {
-			$m = $m + 1;
-			$s = $s - 60;
-		}
-
-# While $m (minutes) is equal to (or greater than) 60, clear the $m
-# variable and add 1 to the $h (hours) variable.
-		while ($m >= 60) {
-			$h = $h + 1;
-			$m = $m - 60;
-		}
-
-# While $h (hours) is equal to 100 (or greater than), clear the $h
-# variable.
-		while ($h >= 100) {
-			$h = $h - 100;
-		}
+		$cs = floor($cs % 1000);
+		$s = floor($s % 60);
+		$m = floor($m % 60);
 
 		$time = sprintf('%02d:%02d:%02d,%03d', $h, $m, $s, $cs);
 	}

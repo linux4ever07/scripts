@@ -92,32 +92,13 @@ time_convert () {
 	elif [[ $time =~ ${format[0]} ]]; then
 		cs="$time"
 
-# While $cs (centiseconds) is equal to (or greater than) 1000, clear the
-# $cs variable and add 1 to the $s (seconds) variable.
-		while [[ $cs -ge 1000 ]]; do
-			s=$(( s + 1 ))
-			cs=$(( cs - 1000 ))
-		done
+		s=$(( cs / 1000 ))
+		m=$(( s / 60 ))
+		h=$(( m / 60 ))
 
-# While $s (seconds) is equal to (or greater than) 60, clear the $s
-# variable and add 1 to the $m (minutes) variable.
-		while [[ $s -ge 60 ]]; do
-			m=$(( m + 1 ))
-			s=$(( s - 60 ))
-		done
-
-# While $m (minutes) is equal to (or greater than) 60, clear the $m
-# variable and add 1 to the $h (hours) variable.
-		while [[ $m -ge 60 ]]; do
-			h=$(( h + 1 ))
-			m=$(( m - 60 ))
-		done
-
-# While $h (hours) is equal to 100 (or greater than), clear the $h
-# variable.
-		while [[ $h -ge 100 ]]; do
-			h=$(( h - 100 ))
-		done
+		cs=$(( cs % 1000 ))
+		s=$(( s % 60 ))
+		m=$(( m % 60 ))
 
 		time=$(printf '%02d:%02d:%02d,%03d' "$h" "$m" "$s" "$cs")
 	fi

@@ -72,19 +72,11 @@ time_convert () {
 	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
-# While $f (frames) is equal to (or greater than) 75, clear the $f
-# variable and add 1 to the $s (seconds) variable.
-		while [[ $f -ge 75 ]]; do
-			s=$(( s + 1 ))
-			f=$(( f - 75 ))
-		done
+		s=$(( f / 75 ))
+		m=$(( s / 60 ))
 
-# While $s (seconds) is equal to (or greater than) 60, clear the $s
-# variable and add 1 to the $m (minutes) variable.
-		while [[ $s -ge 60 ]]; do
-			m=$(( m + 1 ))
-			s=$(( s - 60 ))
-		done
+		f=$(( f % 75 ))
+		s=$(( s % 60 ))
 
 		time=$(printf '%02d:%02d:%02d' "$m" "$s" "$f")
 	fi
