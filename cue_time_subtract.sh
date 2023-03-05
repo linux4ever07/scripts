@@ -17,8 +17,8 @@ usage () {
 	exit
 }
 
-# If $if is not a real file, or it has the wrong extension, print usage
-# and quit.
+# If input is not a real file, or it has the wrong extension, print
+# usage and quit.
 if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
