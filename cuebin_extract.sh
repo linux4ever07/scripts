@@ -795,7 +795,7 @@ encode_audio () {
 create_cue () {
 	type="$1"
 
-	declare type_tmp elements
+	declare elements type_tmp
 
 	elements=0
 
