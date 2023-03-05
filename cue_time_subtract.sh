@@ -225,7 +225,7 @@ get_frames () {
 	file_this_ref="tracks_file[${this}]"
 	file_next_ref="tracks_file[${next}]"
 
-	sector_ref="tracks_sector[${track_n}]"
+	sector_ref="tracks_sector[${this}]"
 	bin_ref="if_cue[${!file_this_ref},filename]"
 
 	index_this_ref="if_cue[${this},index,0]"
