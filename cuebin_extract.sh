@@ -218,7 +218,7 @@ check_cmd () {
 
 # Creates a function called 'run_cmd', which will be used to run
 # external commands, capture their output, and print the output if the
-# command fails.
+# command fails (and quit).
 run_cmd () {
 	declare exit_status
 	declare -a args_tmp cmd_stdout
@@ -230,8 +230,8 @@ run_cmd () {
 	exit_status="${cmd_stdout[-1]}"
 	unset -v cmd_stdout[-1]
 
-# Prints the output from the command if it quits with a non-zero exit
-# status, and then quits.
+# Prints the output from the command if it has a non-zero exit status,
+# and then quits.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${cmd_stdout[@]}"
 		iquit
