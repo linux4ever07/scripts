@@ -723,7 +723,7 @@ cdr2wav () {
 			rm -f "$cdr_if" || iquit
 		fi
 
-		unset -v args_ffmpeg args_sox args_ref
+		unset -v args_ref args_ffmpeg args_sox
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
