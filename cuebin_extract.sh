@@ -231,7 +231,7 @@ run_cmd () {
 	unset -v cmd_stdout[-1]
 
 # Prints the output from the command if it quits with a non-zero exit
-# status.
+# status, and then quits.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${cmd_stdout[@]}"
 		iquit
