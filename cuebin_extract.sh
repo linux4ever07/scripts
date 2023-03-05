@@ -63,7 +63,7 @@
 # is used in the 'cdr2wav' function. But I did not manage to get it
 # working. The command would probably be something like this:
 
-# ffmpeg -i in.cdr -ar 44.1k -ac 2 -f pcm_s16le out.wav
+# ffmpeg -i in.cdr -c:a pcm_s16le -ar 44.1k -ac 2 -f s16le out.wav
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
