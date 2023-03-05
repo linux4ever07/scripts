@@ -46,24 +46,19 @@
 # instead copied directly from the source BIN file, calculating the
 # length of tracks based on information gathered from the CUE sheet.
 
-# Since the 'copy_track' function is now able to correctly copy any
-# track from the source BIN file, it's possible to make this script not
-# depend on 'bchunk' anymore. The default mode is to use 'bchunk', but
-# if the user passes the '-sox' argument to the script, then 'sox' is
-# used instead. The end result is identical either way. It's just nice
-# to have a way out, in case a certain program is not available.
+# Since the 'copy_track' function is able to correctly copy any track
+# from the source BIN file, it's possible to make this script not depend
+# on 'bchunk' anymore. The default mode is to use 'bchunk', but if the
+# user passes the '-ffmpeg' or '-sox' argument to the script, then
+# 'ffmpeg' or 'sox' is used instead. The end result is identical either
+# way. It's just nice to have a way out, in case a certain program is
+# not available.
 
-# The advantage of using the '-sox' argument, is that the script is then
-# able to process CUE sheets that contain multiple FILE commands (list
-# multiple BIN files). As an example, Redump will use 1 BIN file /
-# track, so that can be processed by the script directly in this case,
-# without having to merge the BIN/CUE first.
-
-# It may also be possible to use 'ffmpeg' in a similar way to how 'sox'
-# is used in the 'cdr2wav' function. But I did not manage to get it
-# working. The command would probably be something like this:
-
-# ffmpeg -i in.cdr -c:a pcm_s16le -ar 44.1k -ac 2 -f s16le out.wav
+# The advantage of using the '-ffmpeg' and '-sox' arguments, is that the
+# script is then able to process CUE sheets that contain multiple FILE
+# commands (list multiple BIN files). As an example, Redump will use 1
+# BIN file / track, so that can be processed by the script directly in
+# this case, without having to merge the BIN/CUE first.
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
@@ -85,6 +80,9 @@ Usage: $(basename "$0") [cue] [...]
 
 -flac
 	Audio tracks will be output exclusively in FLAC.
+
+-ffmpeg
+	Uses 'ffmpeg' instead of 'bchunk' to convert CD audio to WAV.
 
 -sox
 	Uses 'sox' instead of 'bchunk' to convert CD audio to WAV.
@@ -127,6 +125,11 @@ while [[ $# -gt 0 ]]; do
 		;;
 		'-flac')
 			audio_types_run[flac]=1
+
+			shift
+		;;
+		'-ffmpeg')
+			mode='ffmpeg'
 
 			shift
 		;;
@@ -215,6 +218,28 @@ check_cmd () {
 			exit
 		fi
 	done
+}
+
+# Creates a function called 'run_cmd', which will be used to run
+# external commands, capture their output, and print the output if the
+# command fails.
+run_cmd () {
+	declare exit_status
+	declare -a args_tmp cmd_stdout
+
+	args_tmp=("$@")
+
+	mapfile -t cmd_stdout < <(eval "${args_tmp[@]}" 2>&1; printf '%s\n' "$?")
+
+	exit_status="${cmd_stdout[-1]}"
+	unset -v cmd_stdout[-1]
+
+# Prints the output from the command if it quits with a non-zero exit
+# status.
+	if [[ $exit_status != '0' ]]; then
+		printf '%s\n' "${cmd_stdout[@]}"
+		iquit
+	fi
 }
 
 # Creates a function called 'get_files', which will be used to generate
@@ -510,7 +535,7 @@ copy_track () {
 
 	declare file_n_ref bin_ref frames_ref index_ref
 	declare ext count skip
-	declare -a args cmd_stdout
+	declare -a args
 
 	file_n_ref="tracks_file[${track_n}]"
 	bin_ref="if_cue[${!file_n_ref},filename]"
@@ -566,17 +591,7 @@ copy_track () {
 	fi
 
 # Runs 'dd'.
-	mapfile -t cmd_stdout < <(eval "${args[@]}" 2>&1; printf '%s\n' "$?")
-
-	exit_status="${cmd_stdout[-1]}"
-	unset -v cmd_stdout[-1]
-
-# Prints the output from 'dd' if it quits with a non-zero exit
-# status.
-	if [[ $exit_status != '0' ]]; then
-		printf '%s\n' "${cmd_stdout[@]}"
-		iquit
-	fi
+	run_cmd "${args[@]}"
 }
 
 # Creates a function called 'copy_track_type', which will extract the
@@ -584,7 +599,7 @@ copy_track () {
 # function, along with 'copy_track', can replace the functionality of
 # 'bchunk', if needed. It's able to produce identical CDR files for
 # audio tracks. The thing it can't do is turn those files to WAV, so an
-# external command (like 'sox') is needed for that.
+# external command (like 'ffmpeg' or 'sox') is needed for that.
 copy_track_type () {
 	track_type="$1"
 
@@ -626,8 +641,8 @@ copy_track_type () {
 bin_split () {
 	type="$1"
 
-	declare bin_ref args_ref type_tmp exit_status
-	declare -a args args_cdr args_wav cmd_stdout
+	declare bin_ref args_ref type_tmp
+	declare -a args args_cdr args_wav
 
 	type_tmp="${audio_types[${type}]}"
 
@@ -651,19 +666,8 @@ bin_split () {
 
 	args_ref="args_${type_tmp}[@]"
 
-# Runs 'bchunk', captures the output and saves the exit status in a
-# variable, so we can check if errors occurred or not.
-	mapfile -t cmd_stdout < <(eval "${!args_ref}" 2>&1; printf '%s\n' "$?")
-
-	exit_status="${cmd_stdout[-1]}"
-	unset -v cmd_stdout[-1]
-
-# Prints the output from 'bchunk' if it quits with a non-zero exit
-# status.
-	if [[ $exit_status != '0' ]]; then
-		printf '%s\n' "${cmd_stdout[@]}"
-		iquit
-	fi
+# Runs 'bchunk'.
+	run_cmd "${!args_ref}"
 
 # Creates a file list to be used later in the 'create_cue' function.
 	case "$type_tmp" in
@@ -677,8 +681,8 @@ bin_split () {
 }
 
 # Creates a function called 'cdr2wav', which will convert the extracted
-# CDR files to WAV (using 'sox'). This function is only run if the
-# '-sox' argument has been passed to the script.
+# CDR files to WAV (using 'ffmpeg' or 'sox'). This function is only run
+# if the '-ffmpeg' or '-sox' argument has been passed to the script.
 cdr2wav () {
 	type="$1"
 
@@ -697,37 +701,30 @@ cdr2wav () {
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		cdr_if="${files[${i}]}"
-		cdr_of="${cdr_if%.*}_swapped.cdr"
 		wav_of="${cdr_if%.*}.wav"
 
-		declare exit_status
-		declare -a args cmd_stdout
+		declare -a args
 
-		args=(dd if=\""${cdr_if}"\" of=\""${cdr_of}"\" conv=swab)
+# Depending on what the mode is, run 'ffmpeg' or 'sox' on the CDR file,
+# specifying 'little-endian' for the input.
+		case "$mode" in
+			'ffmpeg')
+				args=(-ar 44.1k -ac 2)
+				args=(ffmpeg -f s16le "${args[@]}" -i \""${cdr_if}"\" -c:a pcm_s16le "${args[@]}" \""${wav_of}"\")
+			;;
+			'sox')
+				args=(sox -L \""${cdr_if}"\" \""${wav_of}"\")
+			;;
+		esac
 
-# Makes a temporary byteswapped copy of the CDR file, before running
-# 'sox' to convert it to WAV. Otherwise, the the audio will just be
-# white noise. Delete the temporary CDR file when done.		
-		mapfile -t cmd_stdout < <(eval "${args[@]}" 2>&1; printf '%s\n' "$?")
+		run_cmd "${args[@]}"
 
-		exit_status="${cmd_stdout[-1]}"
-		unset -v cmd_stdout[-1]
-
-# Prints the output from 'dd' if it quits with a non-zero exit
-# status.
-		if [[ $exit_status != '0' ]]; then
-			printf '%s\n' "${cmd_stdout[@]}"
-			iquit
-		fi
-
-		sox "$cdr_of" "$wav_of" || iquit
-		rm -f "$cdr_of" || iquit
-
+# If 'cdr' is not among the chosen audio types, delete the CDR file.
 		if [[ -z ${audio_types_run[cdr]} ]]; then
 			rm -f "$cdr_if" || iquit
 		fi
 
-		unset -v args cmd_stdout exit_status
+		unset -v args
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
@@ -873,7 +870,7 @@ cd "$of_dn" || exit
 read_cue
 loop_set
 
-if [[ $mode == 'sox' ]]; then
+if [[ $mode == 'ffmpeg' || $mode == 'sox' ]]; then
 	copy_track_type 'all'
 fi
 
@@ -882,7 +879,7 @@ for type in "${!audio_types_run[@]}"; do
 		bin_split "$type"
 	fi
 
-	if [[ $mode == 'sox' ]]; then
+	if [[ $mode == 'ffmpeg' || $mode == 'sox' ]]; then
 		cdr2wav "$type"
 	fi
 
