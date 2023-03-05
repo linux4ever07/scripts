@@ -217,8 +217,8 @@ check_cmd () {
 }
 
 # Creates a function called 'run_cmd', which will be used to run
-# external commands, capture their output, and print the output if the
-# command fails (and quit).
+# external commands, capture their output, and print the output (and
+# quit) if the command fails.
 run_cmd () {
 	declare exit_status
 	declare -a args_tmp cmd_stdout
