@@ -797,6 +797,8 @@ create_cue () {
 
 	declare type_tmp elements
 
+	elements=0
+
 	type_tmp="${audio_types[${type}]}"
 
 	case "$type_tmp" in
