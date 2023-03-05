@@ -88,10 +88,18 @@ time_convert () {
 # a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
 	declare file_n track_n
-	declare -a files not_found wrong_format lines
+	declare -a files not_found wrong_format wrong_mode lines
 
 	file_n=0
 	track_n=0
+
+	declare -A error_msgs
+	declare -a error_types
+
+	error_msgs[not_found]='The files below were not found:'
+	error_msgs[wrong_format]='The files below have the wrong format:'
+	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
+	error_types=('not_found' 'wrong_format' 'wrong_mode')
 
 # Creates a function called 'handle_command', which will process each
 # line in the CUE sheet and store all the relevant information in the
@@ -147,6 +155,12 @@ read_cue () {
 				tracks_sector["${track_n}"]=2352
 			fi
 
+# If the track mode was not recognized, then it's useless even trying to
+# process this CUE sheet.
+			if [[ -z ${tracks_sector[${track_n}]} ]]; then
+				wrong_mode+=("$track_n")
+			fi
+
 			string="$1"
 
 			if_cue["${track_n},track_number"]="${match[1]}"
@@ -194,23 +208,36 @@ read_cue () {
 		handle_command "$line"
 	done
 
-# Lists file names that are not real files.
-	if [[ ${#not_found[@]} -gt 0 ]]; then
-		printf '\n%s\n\n' 'The files below were not found:'
-		printf '%s\n' "${not_found[@]}"
+# If errors were found, print them and quit.
+	for error in "${error_types[@]}"; do
+		declare list_ref msg_ref
+		elements=0
+
+		case "$error" in
+			'not_found')
+				elements="${#not_found[@]}"
+			;;
+			'wrong_format')
+				elements="${#wrong_format[@]}"
+			;;
+			'wrong_mode')
+				elements="${#wrong_mode[@]}"
+			;;
+		esac
+
+		if [[ $elements -eq 0 ]]; then
+			continue
+		fi
+
+		list_ref="${error}[@]"
+		msg_ref="error_msgs[${error}]"
+
+		printf '\n%s\n\n' "${!msg_ref}"
+		printf '%s\n' "${!list_ref}"
 		printf '\n'
 
 		exit
-	fi
-
-# Lists file names that have the wrong format.
-	if [[ ${#wrong_format[@]} -gt 0 ]]; then
-		printf '\n%s\n\n' 'The files below have the wrong format:'
-		printf '%s\n' "${wrong_format[@]}"
-		printf '\n'
-
-		exit
-	fi
+	done
 }
 
 # Creates a function called 'get_frames', which will get the length of
