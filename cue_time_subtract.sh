@@ -24,7 +24,7 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 fi
 
 declare -A regex
-declare -a format sector
+declare -a format
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -38,12 +38,11 @@ format[7]="^(POSTGAP) (${format[2]})$"
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
 
-# 2048 bytes is normally the sector size for data CDs / tracks, and 2352
-# bytes is the size of audio sectors.
-sector=('2048' '2352')
+regex[data]='^MODE([0-9]+)/([0-9]+)$'
+regex[audio]='^AUDIO$'
 
 declare -A if_cue
-declare -a tracks_file tracks_type frames
+declare -a tracks_file tracks_type tracks_sector frames
 
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
@@ -102,9 +101,13 @@ read_cue () {
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
+# Strips quotes, and path that may be present in the CUE sheet, and adds
+# full path to the basename.
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
+# If file can't be found, or format isn't binary, then it's useless even
+# trying to process this CUE sheet.
 			if [[ ! -f $fn ]]; then
 				not_found+=("$fn")
 			fi
@@ -129,14 +132,19 @@ read_cue () {
 
 			track_n="${match[1]#0}"
 
+# Saves the file number associated with this track.
 			tracks_file["${track_n}"]="$file_n"
 
+# Figures out if this track is data or audio, and saves the sector size.
+# Typical sector size is 2048 for data CDs, and 2352 for audio CDs.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
 				tracks_type["${track_n}"]='data'
+				tracks_sector["${track_n}"]="${BASH_REMATCH[2]}"
 			fi
 
 			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
 				tracks_type["${track_n}"]='audio'
+				tracks_sector["${track_n}"]=2352
 			fi
 
 			string="$1"
@@ -211,12 +219,13 @@ get_frames () {
 	this="$1"
 	next=$(( this + 1 ))
 
-	declare file_this_ref file_next_ref bin_ref
+	declare file_this_ref file_next_ref sector_ref bin_ref
 	declare index_this_ref index_next_ref frames_tmp size
 
 	file_this_ref="tracks_file[${this}]"
 	file_next_ref="tracks_file[${next}]"
 
+	sector_ref="tracks_sector[${track_n}]"
 	bin_ref="if_cue[${!file_this_ref},filename]"
 
 	index_this_ref="if_cue[${this},index,0]"
@@ -232,7 +241,7 @@ get_frames () {
 
 	if [[ ${!file_this_ref} -ne ${!file_next_ref} ]]; then
 		size=$(stat -c '%s' "${!bin_ref}")
-		size=$(( size / ${sector[1]} ))
+		size=$(( size / ${!sector_ref} ))
 
 		frames_tmp=$(( size - ${!index_this_ref} ))
 	else

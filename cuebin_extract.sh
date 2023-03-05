@@ -311,6 +311,8 @@ read_cue () {
 		if [[ $1 =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
+# Strips quotes, and path that may be present in the CUE sheet, and adds
+# full path to the basename.
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
