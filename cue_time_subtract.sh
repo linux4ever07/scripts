@@ -157,7 +157,7 @@ read_cue () {
 
 # If the track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
-			if [[ -z ${tracks_sector[${track_n}]} ]]; then
+			if [[ -z ${tracks_type[${track_n}]} ]]; then
 				wrong_mode+=("$track_n")
 			fi
 
