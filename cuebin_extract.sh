@@ -254,9 +254,9 @@ get_files () {
 	fi
 }
 
-# Creates a function called 'time_convert', which converts track length
-# back and forth between the time (mm:ss:ff) format and frames /
-# sectors.
+# Creates a function called 'time_convert', which converts track
+# timestamps back and forth between the time (mm:ss:ff) format and
+# frames / sectors.
 time_convert () {
 	time="$1"
 
@@ -596,9 +596,9 @@ copy_track () {
 		args+=(conv=swab)
 	fi
 
-# Gets the length of the track, unless it's the last track, in which
-# case the length will be absent from the 'frames' array. Also, gets the
-# start position of the track.
+# Gets the length of the track, unless it's the last track (of the
+# current BIN file), in which case the length will be absent from the
+# 'frames' array. Also, gets the start position of the track.
 	frames_ref="frames[${track_n}]"
 	index_ref="if_cue[${track_n},index,1]"
 

@@ -44,9 +44,9 @@ regex[audio]='^AUDIO$'
 declare -a tracks_file tracks_type tracks_sector frames
 declare -A if_cue
 
-# Creates a function called 'time_convert', which converts track length
-# back and forth between the time (mm:ss:ff) format and frames /
-# sectors.
+# Creates a function called 'time_convert', which converts track
+# timestamps back and forth between the time (mm:ss:ff) format and
+# frames / sectors.
 time_convert () {
 	time="$1"
 
