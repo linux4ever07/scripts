@@ -440,7 +440,8 @@ MERGE
 
 # If errors were found, print them and quit.
 	for error in "${error_types[@]}"; do
-		declare msg_ref list_ref
+		declare elements msg_ref list_ref
+
 		elements=0
 
 		case "$error" in
