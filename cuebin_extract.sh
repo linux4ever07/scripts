@@ -167,7 +167,7 @@ cue="$if"
 cue_tmp="/dev/shm/${of_name}-${session}.cue"
 
 declare -A regex
-declare -a format offset sector
+declare -a format offset
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -182,18 +182,14 @@ regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
 regex[fn]='^(.*)\.([^.]*)$'
 
-regex[data]='^MODE[0-9]+/[0-9]+$'
+regex[data]='^MODE([0-9]+)/([0-9]+)$'
 regex[audio]='^AUDIO$'
 
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
 
-# 2048 bytes is normally the sector size for data CDs / tracks, and 2352
-# bytes is the size of audio sectors.
-sector=('2048' '2352')
-
 declare -A if_cue gaps
-declare -a tracks_file tracks_type frames
+declare -a tracks_file tracks_type tracks_sector frames
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 
 # trap ctrl-c and call iquit()
@@ -318,6 +314,8 @@ read_cue () {
 			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
 			fn="${if_dn}/${fn}"
 
+# If file can't be found, or format isn't binary, then it's useless even
+# trying to process this CUE sheet.
 			if [[ ! -f $fn ]]; then
 				not_found+=("$fn")
 			fi
@@ -342,14 +340,19 @@ read_cue () {
 
 			track_n="${match[1]#0}"
 
+# Saves the file number associated with this track.
 			tracks_file["${track_n}"]="$file_n"
 
+# Figures out if this track is data or audio, and saves the sector size.
+# Typical sector size is 2048 for data CDs, and 2352 for audio CDs.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
 				tracks_type["${track_n}"]='data'
+				tracks_sector["${track_n}"]="${BASH_REMATCH[2]}"
 			fi
 
 			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
 				tracks_type["${track_n}"]='audio'
+				tracks_sector["${track_n}"]=2352
 			fi
 
 			string="$1"
@@ -533,11 +536,12 @@ copy_track () {
 	track_n="$1"
 	track_type="$2"
 
-	declare file_n_ref bin_ref frames_ref index_ref
+	declare file_n_ref sector_ref bin_ref frames_ref index_ref
 	declare ext count skip
 	declare -a args
 
 	file_n_ref="tracks_file[${track_n}]"
+	sector_ref="tracks_sector[${track_n}]"
 	bin_ref="if_cue[${!file_n_ref},filename]"
 
 # Depending on whether the track type is data or audio, use the
@@ -554,7 +558,7 @@ copy_track () {
 	of_bin=$(printf '%s/%s%02d.%s' "$of_dn" "$of_name" "$track_n" "$ext")
 
 # Creates the first part of the 'dd' command.
-	args=(dd if=\""${!bin_ref}"\" of=\""${of_bin}"\" bs=\""${sector[1]}"\")
+	args=(dd if=\""${!bin_ref}"\" of=\""${of_bin}"\" bs=\""${!sector_ref}"\")
 
 # Does a byteswap if the script was run with the '-byteswap' option, and
 # the track is audio.
