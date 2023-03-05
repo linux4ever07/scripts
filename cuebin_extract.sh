@@ -294,8 +294,9 @@ time_convert () {
 }
 
 # Creates a function called 'read_cue', which will read the source CUE
-# sheet, add full path to file names listed in the CUE sheet, and create
-# a new temporary CUE sheet in /dev/shm based on this.
+# sheet, get all the relevant information from it and store that in
+# variables. It will also add full path to file names listed in the CUE
+# sheet, and create a new temporary CUE sheet in /dev/shm based on this.
 read_cue () {
 	declare file_n track_n
 	declare -a files not_found wrong_format wrong_mode lines lines_tmp
