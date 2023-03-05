@@ -895,7 +895,7 @@ clean_up () {
 }
 
 # Checks if 'oggenc', 'flac' are installed. Depending on which mode is
-# set, check if 'bchunk' or 'sox' is installed.
+# set, check if 'bchunk', 'ffmpeg' or 'sox' is installed.
 check_cmd 'oggenc' 'flac' "$mode"
 
 # Creates the output directory and changes into it.
