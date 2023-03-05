@@ -703,28 +703,27 @@ cdr2wav () {
 		cdr_if="${files[${i}]}"
 		wav_of="${cdr_if%.*}.wav"
 
-		declare -a args
+		declare args_ref
+		declare -a args_ffmpeg args_sox
+
+# Creates the command arguments for 'ffmpeg' and 'sox'.
+		args_ffmpeg=(-ar 44.1k -ac 2)
+		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${cdr_if}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${wav_of}"\")
+
+		args_sox=(sox -L \""${cdr_if}"\" \""${wav_of}"\")
 
 # Depending on what the mode is, run 'ffmpeg' or 'sox' on the CDR file,
 # specifying 'little-endian' for the input.
-		case "$mode" in
-			'ffmpeg')
-				args=(-ar 44.1k -ac 2)
-				args=(ffmpeg -f s16le "${args[@]}" -i \""${cdr_if}"\" -c:a pcm_s16le "${args[@]}" \""${wav_of}"\")
-			;;
-			'sox')
-				args=(sox -L \""${cdr_if}"\" \""${wav_of}"\")
-			;;
-		esac
+		args_ref="args_${mode}[@]"
 
-		run_cmd "${args[@]}"
+		run_cmd "${!args_ref}"
 
 # If 'cdr' is not among the chosen audio types, delete the CDR file.
 		if [[ -z ${audio_types_run[cdr]} ]]; then
 			rm -f "$cdr_if" || iquit
 		fi
 
-		unset -v args
+		unset -v args_ffmpeg args_sox args_ref
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
