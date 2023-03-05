@@ -354,7 +354,7 @@ read_cue () {
 			tracks_file["${track_n}"]="$file_n"
 
 # Figures out if this track is data or audio, and saves the sector size.
-# Typical sector size is 2048 for data CDs, and 2352 for audio CDs.
+# Typical sector size is 2048 bytes for data CDs, and 2352 for audio.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
 				tracks_type["${track_n}"]='data'
 				tracks_sector["${track_n}"]="${BASH_REMATCH[2]}"
@@ -877,7 +877,7 @@ create_cue () {
 }
 
 # Creates a function called 'clean_up', which deletes temporary files:
-# * ISO file produced by 'bchunk'
+# * ISO file(s) produced by 'bchunk'
 # * Potential WAV files
 # * Temporary CUE sheet
 clean_up () {
