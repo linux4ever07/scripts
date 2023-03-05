@@ -23,8 +23,8 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare -A regex
 declare -a format
+declare -A regex
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -41,8 +41,8 @@ regex[path]='^(.*[\\\/])'
 regex[data]='^MODE([0-9]+)/([0-9]+)$'
 regex[audio]='^AUDIO$'
 
-declare -A if_cue
 declare -a tracks_file tracks_type tracks_sector frames
+declare -A if_cue
 
 # Creates a function called 'time_convert', which converts track length
 # back and forth between the time (mm:ss:ff) format and frames /
@@ -90,16 +90,16 @@ read_cue () {
 	declare file_n track_n
 	declare -a files not_found wrong_format wrong_mode lines
 
+	declare -a error_types
+	declare -A error_msgs
+
 	file_n=0
 	track_n=0
 
-	declare -A error_msgs
-	declare -a error_types
-
+	error_types=('not_found' 'wrong_format' 'wrong_mode')
 	error_msgs[not_found]='The files below were not found:'
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
-	error_types=('not_found' 'wrong_format' 'wrong_mode')
 
 # Creates a function called 'handle_command', which will process each
 # line in the CUE sheet and store all the relevant information in the

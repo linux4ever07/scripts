@@ -166,8 +166,8 @@ of_dn="${PWD}/${of_name}-${session}"
 cue="$if"
 cue_tmp="/dev/shm/${of_name}-${session}.cue"
 
-declare -A regex
 declare -a format offset
+declare -A regex
 
 format[0]='^[0-9]+$'
 format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
@@ -188,9 +188,9 @@ regex[audio]='^AUDIO$'
 index_default='INDEX 01 00:00:00'
 offset=('  ' '    ')
 
-declare -A if_cue gaps
 declare -a tracks_file tracks_type tracks_sector frames
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
+declare -A if_cue gaps
 
 # trap ctrl-c and call iquit()
 trap iquit INT
@@ -300,16 +300,16 @@ read_cue () {
 	declare file_n track_n
 	declare -a files not_found wrong_format wrong_mode lines lines_tmp
 
-	declare -A error_msgs
 	declare -a error_types
+	declare -A error_msgs
 
 	file_n=0
 	track_n=0
 
+	error_types=('not_found' 'wrong_format' 'wrong_mode')
 	error_msgs[not_found]='The files below were not found:'
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
-	error_types=('not_found' 'wrong_format' 'wrong_mode')
 
 # Creates a function called 'handle_command', which will process each
 # line in the CUE sheet and store all the relevant information in the
