@@ -210,7 +210,7 @@ read_cue () {
 
 # If errors were found, print them and quit.
 	for error in "${error_types[@]}"; do
-		declare list_ref msg_ref
+		declare msg_ref list_ref
 		elements=0
 
 		case "$error" in
@@ -229,8 +229,8 @@ read_cue () {
 			continue
 		fi
 
-		list_ref="${error}[@]"
 		msg_ref="error_msgs[${error}]"
+		list_ref="${error}[@]"
 
 		printf '\n%s\n\n' "${!msg_ref}"
 		printf '%s\n' "${!list_ref}"
