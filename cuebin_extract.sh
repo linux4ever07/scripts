@@ -771,22 +771,25 @@ encode_audio () {
 	type="$1"
 
 	declare type_tmp
+	declare -a files
 
 	type_tmp="${audio_types[${type}]}"
+
+	mapfile -t files < <(get_files "*.wav")
 
 # If type is not 'wav' or there's no WAV files, return from this
 # function. This makes it possible for the script to finish normally,
 # even if there's no audio tracks.
-	if [[ $type_tmp != 'wav' || ${#files_wav[@]} -eq 0 ]]; then
+	if [[ $type_tmp != 'wav' || ${#files[@]} -eq 0 ]]; then
 		return
 	fi
 
 	case "$type" in
 		'ogg')
-			oggenc --quality=10 "${of_dn}"/*.wav || iquit
+			oggenc --quality=10 "${files[@]}" || iquit
 		;;
 		'flac')
-			flac -8 "${of_dn}"/*.wav || iquit
+			flac -8 "${files[@]}" || iquit
 		;;
 	esac
 }
