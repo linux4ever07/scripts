@@ -157,8 +157,8 @@ fi
 
 session="${RANDOM}-${RANDOM}"
 
-if_name="${if_bn_lc%.*}"
-of_name=$(sed -E 's/[[:blank:]]+/_/g' <<<"$if_name")
+of_name="${if_bn_lc%.*}"
+of_name=$(sed -E 's/[[:blank:]]+/_/g' <<<"$of_name")
 
 if_dn=$(dirname "$if")
 of_dn="${PWD}/${of_name}-${session}"
