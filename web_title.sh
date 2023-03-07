@@ -1,13 +1,30 @@
 #!/bin/bash
 
-# Gets the title of a URL.
+# Gets the title of a URL. Might be useful for IRC bots, as an example.
+
+declare -a words
+declare -A regex
+
+regex[blank]='[[:blank:]]+'
+regex[url]='^(http)(s)?:\/\/'
+regex[title]='<title>(.*)<\/title>'
 
 agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
-regex='<title>(.*)<\/title>'
+
+mapfile -d' ' -t words < <(sed -E "s/${regex[blank]}/ /g" <<<"$@")
+words[-1]="${words[-1]%$'\n'}"
 
 # This function gets a URL using cURL.
 get_page () {
 	curl --location --user-agent "$agent" --retry 10 --retry-delay 10 --connect-timeout 10 --silent "$1" 2>&-
 }
 
-get_page "$1" | grep -m 1 -Eo "$regex" | sed -E "s/${regex}/\1/"
+for (( i = 0; i < ${#words[@]}; i++ )); do
+	word="${words[${i}]}"
+
+	if [[ ! $word =~ ${regex[url]} ]]; then
+		continue
+	fi
+
+	get_page "$word" | grep -m 1 -Eo "${regex[title]}" | sed -E "s/${regex[title]}/\1/"
+done
