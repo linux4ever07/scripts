@@ -87,7 +87,7 @@ time_convert () {
 # variables.
 read_cue () {
 	declare file_n track_n
-	declare -a files not_found wrong_format wrong_mode lines
+	declare -a files not_found wrong_format wrong_mode lines lines_tmp
 
 	declare -a error_types
 	declare -A error_msgs
@@ -125,12 +125,14 @@ read_cue () {
 
 			files+=("$fn")
 
-			string="${match[0]} \"${fn}\" ${match[2]}"
+			lines_tmp+=("${match[0]} \"${fn}\" ${match[2]}")
 
 			file_n=$(( file_n + 1 ))
 
 			if_cue["${file_n},filename"]="$fn"
 			if_cue["${file_n},file_format"]="${match[2]}"
+
+			return
 		fi
 
 # If line is a TRACK command...
@@ -160,20 +162,24 @@ read_cue () {
 				wrong_mode+=("$track_n")
 			fi
 
-			string="$1"
+			lines_tmp+=("$1")
 
 			if_cue["${track_n},track_number"]="${match[1]}"
 			if_cue["${track_n},track_mode"]="${match[2]}"
+
+			return
 		fi
 
 # If line is a PREGAP command...
 		if [[ $1 =~ ${format[5]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
-			string="$1"
+			lines_tmp+=("$1")
 
 			frames_tmp=$(time_convert "${match[1]}")
 			if_cue["${track_n},pregap"]="$frames_tmp"
+
+			return
 		fi
 
 # If line is an INDEX command...
@@ -182,20 +188,24 @@ read_cue () {
 
 			index_n="${match[1]#0}"
 
-			string="$1"
+			lines_tmp+=("$1")
 
 			frames_tmp=$(time_convert "${match[2]}")
 			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
+
+			return
 		fi
 
 # If line is a POSTGAP command...
 		if [[ $1 =~ ${format[7]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
-			string="$1"
+			lines_tmp+=("$1")
 
 			frames_tmp=$(time_convert "${match[1]}")
 			if_cue["${track_n},postgap"]="$frames_tmp"
+
+			return
 		fi
 	}
 
