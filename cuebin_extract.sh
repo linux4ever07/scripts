@@ -182,7 +182,7 @@ regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
 regex[fn]='^(.*)\.([^.]*)$'
 
-regex[data]='^MODE([0-9]+)/([0-9]+)$'
+regex[data]='^MODE([0-9]+)\/([0-9]+)$'
 regex[audio]='^AUDIO$'
 
 index_default='INDEX 01 00:00:00'
