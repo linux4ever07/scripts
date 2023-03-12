@@ -69,11 +69,11 @@ while [[ 1 ]]; do
 	fi
 
 # Add 1 to the track ($t) variable.
-	let t++
+	t=$(( t + 1 ))
 
 # Convert time to frames, and add that number to the total number in the
 # $frames variable. Convert that number back to the mm:ss:ff format.
-	tmp_frames=$(time_convert "$in")
+	in=$(time_convert "$in")
 	frames=$(( frames + tmp_frames ))
 	time=$(time_convert "$frames")
 
