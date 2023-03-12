@@ -69,7 +69,7 @@ while [[ 1 ]]; do
 		continue
 	fi
 
-# Adds 1 to the track ($t) variable.
+# Adds 1 to the track number.
 	track_n=$(( track_n + 1 ))
 
 # Converts time to frames, and adds that number to the total time.
