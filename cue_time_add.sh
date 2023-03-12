@@ -51,32 +51,31 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Initiate the global variable $t, for counting the iterations of the
-# loop, which will be echoed as track number. $frames stores the total
-# time in frames.
-t=1
+# Initiates the global variables. For counting the iterations of the
+# loop (track number), and storing the total time in frames.
+track_n=1
 frames=0
 
 printf '\n%s\n\n' "This script will calculate the total time of all the times given."
 printf '%s\n\n' "Type or paste a time in the mm:ss:ff format."
 
 while [[ 1 ]]; do
-# Read input.
+# Reads input.
 	read in
 
 	if [[ ! $in =~ ${format[1]} ]]; then
 		continue
 	fi
 
-# Add 1 to the track ($t) variable.
-	t=$(( t + 1 ))
+# Adds 1 to the track ($t) variable.
+	track_n=$(( track_n + 1 ))
 
-# Convert time to frames, and add that number to the total number in the
-# $frames variable. Convert that number back to the mm:ss:ff format.
+# Converts time to frames, and adds that number to the total time.
+# Converts that number back to the mm:ss:ff format.
 	in=$(time_convert "$in")
 	frames=$(( frames + tmp_frames ))
 	time=$(time_convert "$frames")
 
 # Prints the current total time in the mm:ss:ff format.
-	printf "\n*** Track %d start: %s ***\n" "$t" "$time"
+	printf "\n*** Track %d start: %s ***\n" "$track_n" "$time"
 done
