@@ -10,7 +10,7 @@
 declare -a format
 
 format[0]='^[0-9]+$'
-format[1]='([0-9]{2}):([0-9]{2}):([0-9]{2})'
+format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2})$'
 
 # Creates a function called 'time_convert', which converts track
 # timestamps back and forth between the time (mm:ss:ff) format and
@@ -73,7 +73,7 @@ while [[ 1 ]]; do
 # Converts time to frames, and adds that number to the total time.
 # Converts that number back to the mm:ss:ff format.
 	in=$(time_convert "$in")
-	frames=$(( frames + tmp_frames ))
+	frames=$(( frames + in ))
 	time=$(time_convert "$frames")
 
 # Prints the current total time in the mm:ss:ff format.
