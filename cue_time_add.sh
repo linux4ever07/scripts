@@ -63,6 +63,8 @@ while [[ 1 ]]; do
 # Reads input.
 	read in
 
+# Continues the next iteration of the loop if input doesn't match the
+# correct format.
 	if [[ ! $in =~ ${format[1]} ]]; then
 		continue
 	fi
