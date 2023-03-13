@@ -851,26 +851,26 @@ create_cue () {
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="files_${type_tmp}[${i}]"
 
-		declare fn ext track_n mode_ref format_ref track_string
+		declare fn ext ext_ref track_n mode_ref format_ref track_string
 
 		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
 			ext="${BASH_REMATCH[2]}"
-			ext="${ext_true[${ext}]}"
 		fi
 
 		track_n=$(( i + 1 ))
 
 		mode_ref="if_cue[${track_n},track_mode]"
+		ext_ref="ext_true[${ext}]"
 		format_ref="ext_format[${ext}]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
 
-		eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.${ext}\\\" ${!format_ref}"\"\)
+		eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.${!ext_ref}\\\" ${!format_ref}"\"\)
 		eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 		set_index
 
-		unset -v fn ext track_n mode_ref format_ref track_string
+		unset -v fn ext ext_ref track_n mode_ref format_ref track_string
 	done
 }
 
