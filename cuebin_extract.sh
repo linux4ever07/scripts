@@ -808,7 +808,7 @@ create_cue () {
 	declare elements type_tmp
 	declare -A ext_true ext_format
 
-	ext_true=([iso]='bin' [bin]='bin' [wav]="$type")
+	ext_true=([iso]='bin' [bin]='bin' [cdr]='cdr' [wav]="$type")
 	ext_format=([bin]='BINARY' [cdr]='BINARY' [ogg]='OGG' [flac]='FLAC')
 
 	elements=0
