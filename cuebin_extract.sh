@@ -862,7 +862,7 @@ create_cue () {
 
 		mode_ref="if_cue[${track_n},track_mode]"
 		ext_ref="ext_true[${ext}]"
-		format_ref="ext_format[${ext}]"
+		format_ref="ext_format[${!ext_ref}]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
 
