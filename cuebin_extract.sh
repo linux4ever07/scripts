@@ -806,6 +806,10 @@ create_cue () {
 	type="$1"
 
 	declare elements type_tmp
+	declare -A ext_true ext_format
+
+	ext_true=([iso]='bin' [bin]='bin' [wav]="$type")
+	ext_format=([bin]='BINARY' [cdr]='BINARY' [ogg]='OGG' [flac]='FLAC')
 
 	elements=0
 
@@ -847,41 +851,26 @@ create_cue () {
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="files_${type_tmp}[${i}]"
 
-		declare fn ext
+		declare fn ext track_n mode_ref format_ref track_string
 
 		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
 			ext="${BASH_REMATCH[2]}"
+			ext="${ext_true[${ext}]}"
 		fi
 
 		track_n=$(( i + 1 ))
 
-		track_mode_ref="if_cue[${track_n},track_mode]"
+		mode_ref="if_cue[${track_n},track_mode]"
+		format_ref="ext_format[${ext}]"
 
-		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!track_mode_ref}")
+		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
 
-		if [[ $ext == 'iso' || $ext == 'bin' ]]; then
-			eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.bin\\\" BINARY"\"\)
-			eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
-			set_index
-		else
-			case "$type" in
-				'cdr')
-					of_cue_cdr+=("FILE \"${fn}.cdr\" BINARY")
-				;;
-				'ogg')
-					of_cue_ogg+=("FILE \"${fn}.ogg\" OGG")
-				;;
-				'flac')
-					of_cue_flac+=("FILE \"${fn}.flac\" FLAC")
-				;;
-			esac
-			
-			eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
-			set_index
-		fi
+		eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.${ext}\\\" ${!format_ref}"\"\)
+		eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
+		set_index
 
-		unset -v fn ext
+		unset -v fn ext track_n mode_ref format_ref track_string
 	done
 }
 
