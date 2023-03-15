@@ -185,9 +185,6 @@ regex[fn]='^(.*)\.([^.]*)$'
 regex[data]='^MODE([0-9]+)\/([0-9]+)$'
 regex[audio]='^AUDIO$'
 
-index_default='INDEX 01 00:00:00'
-offset=('  ' '    ')
-
 declare -a tracks_file tracks_type tracks_sector frames
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 declare -A if_cue gaps
@@ -805,14 +802,16 @@ encode_audio () {
 create_cue () {
 	type="$1"
 
-	declare elements type_tmp
+	declare index_default offset elements type_tmp
 	declare -A ext_format
+
+	index_default='INDEX 01 00:00:00'
+	offset=('  ' '    ')
 
 	ext_format=([bin]='BINARY' [cdr]='BINARY' [ogg]='OGG' [flac]='FLAC')
 
-	elements=0
-
 	type_tmp="${audio_types[${type}]}"
+	elements=0
 
 	case "$type_tmp" in
 		'cdr')
