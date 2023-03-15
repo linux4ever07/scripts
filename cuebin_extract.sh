@@ -823,11 +823,22 @@ create_cue () {
 		;;
 	esac
 
-# Creates a function called 'set_index', which will add the INDEX
-# command, and add pregap or postgap, if they exist in the source CUE
-# sheet.
-	set_index () {
+# Creates a function called 'set_track_info', which will add FILE,
+# TRACK, PREGAP, INDEX and POSTGAP commands. Pregap and postgap is only
+# added if they exist in the source CUE sheet.
+	set_track_info () {
+		track_n="$1"
+
+		declare mode_ref format_ref track_string
 		declare pregap_ref postgap_ref time_tmp
+
+		mode_ref="if_cue[${track_n},track_mode]"
+		format_ref="ext_format[${ext}]"
+
+		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
+
+		eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.${ext}\\\" ${!format_ref}"\"\)
+		eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 
 		pregap_ref="gaps[${track_n},pre]"
 		postgap_ref="gaps[${track_n},post]"
@@ -850,13 +861,17 @@ create_cue () {
 	for (( i = 0; i < elements; i++ )); do
 		line_ref="files_${type_tmp}[${i}]"
 
-		declare fn ext track_n mode_ref format_ref track_string
+		declare fn ext track_n
 
+# Separates filename from filename extension.
 		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
 			ext="${BASH_REMATCH[2]}"
 		fi
 
+# If the extension is 'iso' (cause 'bchunk' produces ISO files for data
+# tracks), change that to 'bin'. If the extension is 'wav', then the
+# correct extension is the same as the current audio type.
 		case "$ext" in
 			'iso')
 				ext='bin'
@@ -868,16 +883,10 @@ create_cue () {
 
 		track_n=$(( i + 1 ))
 
-		mode_ref="if_cue[${track_n},track_mode]"
-		format_ref="ext_format[${ext}]"
+# Sets all the relevant file / track information.
+		set_track_info "$track_n"
 
-		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
-
-		eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.${ext}\\\" ${!format_ref}"\"\)
-		eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
-		set_index
-
-		unset -v fn ext track_n mode_ref format_ref track_string
+		unset -v fn ext track_n
 	done
 }
 
