@@ -802,11 +802,11 @@ encode_audio () {
 create_cue () {
 	type="$1"
 
-	declare index_default elements type_tmp
+	declare index_string elements type_tmp
 	declare -a offset
 	declare -A ext_format
 
-	index_default='INDEX 01 00:00:00'
+	index_string='INDEX 01 00:00:00'
 
 	offset=('  ' '    ')
 	ext_format=([bin]='BINARY' [cdr]='BINARY' [ogg]='OGG' [flac]='FLAC')
@@ -846,7 +846,7 @@ create_cue () {
 			eval of_cue_"${type}"+=\(\""${offset[1]}PREGAP ${time_tmp}"\"\)
 		fi
 
-		eval of_cue_"${type}"+=\(\""${offset[1]}${index_default}"\"\)
+		eval of_cue_"${type}"+=\(\""${offset[1]}${index_string}"\"\)
 
 		if [[ ${!postgap_ref} -gt 0 ]]; then
 			time_tmp=$(time_convert "${!postgap_ref}")
