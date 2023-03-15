@@ -166,7 +166,7 @@ of_dn="${PWD}/${of_name}-${session}"
 cue="$if"
 cue_tmp="/dev/shm/${of_name}-${session}.cue"
 
-declare -a format offset
+declare -a format
 declare -A regex
 
 format[0]='^[0-9]+$'
