@@ -882,7 +882,7 @@ create_cue () {
 		track_n=$(( i + 1 ))
 
 # Sets all the relevant file / track information.
-		set_track_info "$track_n"
+		set_track_info
 
 		unset -v fn ext track_n
 	done
