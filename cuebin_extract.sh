@@ -807,8 +807,8 @@ create_cue () {
 	declare -A ext_format
 
 	index_default='INDEX 01 00:00:00'
-	offset=('  ' '    ')
 
+	offset=('  ' '    ')
 	ext_format=([bin]='BINARY' [cdr]='BINARY' [ogg]='OGG' [flac]='FLAC')
 
 	type_tmp="${audio_types[${type}]}"
