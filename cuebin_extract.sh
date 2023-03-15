@@ -827,8 +827,6 @@ create_cue () {
 # TRACK, PREGAP, INDEX and POSTGAP commands. Pregap and postgap is only
 # added if they exist in the source CUE sheet.
 	set_track_info () {
-		track_n="$1"
-
 		declare mode_ref format_ref track_string
 		declare pregap_ref postgap_ref time_tmp
 
