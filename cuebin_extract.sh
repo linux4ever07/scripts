@@ -861,7 +861,7 @@ create_cue () {
 
 		declare fn ext track_n
 
-# Separates filename from filename extension.
+# Separates file name from extension.
 		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
 			fn="${BASH_REMATCH[1]}"
 			ext="${BASH_REMATCH[2]}"
