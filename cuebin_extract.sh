@@ -802,7 +802,8 @@ encode_audio () {
 create_cue () {
 	type="$1"
 
-	declare index_default offset elements type_tmp
+	declare index_default elements type_tmp
+	declare -a offset
 	declare -A ext_format
 
 	index_default='INDEX 01 00:00:00'
