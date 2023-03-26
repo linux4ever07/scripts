@@ -268,7 +268,6 @@ get_gaps () {
 
 # Creates a function called 'get_length', which will get the length, and
 # start position (in bytes), of all tracks in the respective BIN files.
-# Subtracting pregap if it exists as part of the INDEX commands.
 get_length () {
 	declare bytes_total
 
@@ -283,14 +282,10 @@ get_length () {
 
 		size=$(stat -c '%s' "${!file_ref}")
 
-		bytes_track=$(( size - ${tracks_start[${this}]} ))
+		bytes_track=$(( size - ${!start_ref} ))
 		bytes_total=0
 
 		tracks_length["${this}"]="$bytes_track"
-
-# If the BIN file related to this track is different from the next
-# track (or this is the last track), then we start over from '0' again
-# for the next iteration of the loop.
 	}
 
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
@@ -300,10 +295,10 @@ get_length () {
 		next="${tracks_total[${j}]}"
 
 		declare bytes_pregap bytes_track frames
-		declare file_n_this_ref file_n_next_ref file_ref
-		declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
 		declare pregap_this_ref pregap_next_ref
-		declare sector_ref
+		declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
+		declare file_n_this_ref file_n_next_ref file_ref
+		declare sector_ref start_ref
 
 		pregap_this_ref="gaps[${this},pre]"
 		pregap_next_ref="gaps[${next},pre]"
@@ -319,6 +314,8 @@ get_length () {
 		file_ref="if_cue[${!file_n_this_ref},filename]"
 
 		sector_ref="tracks_sector[${this}]"
+
+		start_ref="tracks_start[${this}]"
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
@@ -352,10 +349,9 @@ get_length () {
 			frames=$(( frames - ${!pregap_next_ref} ))
 
 			bytes_track=$(( frames * ${!sector_ref} ))
+			(( bytes_total += (bytes_track + bytes_pregap) ))
 
 			tracks_length["${this}"]="$bytes_track"
-
-			(( bytes_total += (bytes_track + bytes_pregap) ))
 		fi
 
 # If the BIN file associated with this track is different from the next

@@ -447,7 +447,6 @@ get_gaps () {
 
 # Creates a function called 'get_length', which will get the length, and
 # start position (in bytes), of all tracks in the respective BIN files.
-# Subtracting pregap if it exists as part of the INDEX commands.
 get_length () {
 	declare bytes_total
 
