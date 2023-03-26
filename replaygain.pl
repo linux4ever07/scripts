@@ -250,8 +250,8 @@ sub gettags {
 			$field = lc($1);
 			$value = $2;
 
-			$field =~ s/$regex{space}//;
-			$value =~ s/$regex{space}//;
+			$field =~ s/$regex{space}//g;
+			$value =~ s/$regex{space}//g;
 		}
 
 		if (! length($field) or ! length($value)) { next; }
