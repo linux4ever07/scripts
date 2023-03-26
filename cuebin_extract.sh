@@ -445,42 +445,6 @@ get_gaps () {
 	fi
 }
 
-# Creates a function called 'block_calc', which will be used to get the
-# optimal block size to use in the 'copy_track' function when reading
-# and writing tracks using 'dd'. Bigger block sizes makes the process
-# faster, and the reason for being able to handle variable block sizes
-# is that it's technically possible for a CUE sheet to contain tracks
-# that have different sector sizes. And that will affect the start
-# positions of tracks. This function counts down from 16KB, subtracting
-# 4 bytes at each iteration of the loop, until a matching block size is
-# found. We're using 4 byte increments cause that guarantees the block
-# size will be divisible by the common CD sector sizes:
-# * 2048
-# * 2324
-# * 2336
-# * 2352
-# * 2448
-block_calc () {
-	bytes1="$1"
-	bytes2="$2"
-
-	declare block_size block_diff1 block_diff2
-
-	block_size=16384
-
-	block_diff1=$(( $bytes1 % block_size ))
-	block_diff2=$(( $bytes2 % block_size ))
-
-	until [[ $block_diff1 -eq 0 && $block_diff2 -eq 0 ]]; do
-		(( block_size -= 4 ))
-
-		block_diff1=$(( $bytes1 % block_size ))
-		block_diff2=$(( $bytes2 % block_size ))
-	done
-
-	printf '%s' "$block_size"
-}
-
 # Creates a function called 'get_length', which will get the length, and
 # start position (in bytes), of all tracks in the respective BIN files.
 # Subtracting pregap if it exists as part of the INDEX commands.
@@ -603,6 +567,42 @@ loop_set () {
 
 		get_gaps "$track_n"
 	done
+}
+
+# Creates a function called 'block_calc', which will be used to get the
+# optimal block size to use in the 'copy_track' function when reading
+# and writing tracks using 'dd'. Bigger block sizes makes the process
+# faster, and the reason for being able to handle variable block sizes
+# is that it's technically possible for a CUE sheet to contain tracks
+# that have different sector sizes. And that will affect the start
+# positions of tracks. This function counts down from 16KB, subtracting
+# 4 bytes at each iteration of the loop, until a matching block size is
+# found. We're using 4 byte increments cause that guarantees the block
+# size will be divisible by the common CD sector sizes:
+# * 2048
+# * 2324
+# * 2336
+# * 2352
+# * 2448
+block_calc () {
+	bytes1="$1"
+	bytes2="$2"
+
+	declare block_size block_diff1 block_diff2
+
+	block_size=16384
+
+	block_diff1=$(( $bytes1 % block_size ))
+	block_diff2=$(( $bytes2 % block_size ))
+
+	until [[ $block_diff1 -eq 0 && $block_diff2 -eq 0 ]]; do
+		(( block_size -= 4 ))
+
+		block_diff1=$(( $bytes1 % block_size ))
+		block_diff2=$(( $bytes2 % block_size ))
+	done
+
+	printf '%s' "$block_size"
 }
 
 # Creates a function called 'copy_track', which will extract the raw
