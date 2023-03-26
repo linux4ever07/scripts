@@ -266,8 +266,9 @@ get_gaps () {
 	fi
 }
 
-# Creates a function called 'get_length', which will get the length, and
-# start position (in bytes), of all tracks in the respective BIN files.
+# Creates a function called 'get_length', which will get the start
+# position, and length, (in bytes) of all tracks in the respective BIN
+# files.
 get_length () {
 	declare bytes_total
 
