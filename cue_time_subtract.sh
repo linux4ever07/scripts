@@ -8,8 +8,6 @@ if_dn=$(dirname "$if")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
-cue="$if"
-
 # Creates a function called 'usage', which will print usage and quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [cue]"
@@ -35,13 +33,13 @@ format[6]="^(INDEX) ([0-9]{2,}) (${format[2]})$"
 format[7]="^(POSTGAP) (${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex[path]='^(.*[\\\/])'
+regex[path]='^(.*[\\/])'
 
-regex[data]='^MODE([0-9]+)\/([0-9]+)$'
+regex[data]='^MODE([0-9])/([0-9]{4})$'
 regex[audio]='^AUDIO$'
 
-declare -a tracks_file tracks_type tracks_sector frames
-declare -A if_cue
+declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total
+declare -A if_cue gaps
 
 # Creates a function called 'time_convert', which converts track
 # timestamps back and forth between the time (mm:ss:ff) format and
@@ -84,10 +82,11 @@ time_convert () {
 
 # Creates a function called 'read_cue', which will read the source CUE
 # sheet, get all the relevant information from it and store that in
-# variables.
+# variables. It will also add full path to file names listed in the CUE
+# sheet.
 read_cue () {
 	declare file_n track_n
-	declare -a files not_found wrong_format wrong_mode lines lines_tmp
+	declare -a files not_found wrong_format wrong_mode lines
 
 	declare -a error_types
 	declare -A error_msgs
@@ -125,9 +124,7 @@ read_cue () {
 
 			files+=("$fn")
 
-			lines_tmp+=("${match[0]} \"${fn}\" ${match[2]}")
-
-			file_n=$(( file_n + 1 ))
+			(( file_n += 1 ))
 
 			if_cue["${file_n},filename"]="$fn"
 			if_cue["${file_n},file_format"]="${match[2]}"
@@ -143,6 +140,10 @@ read_cue () {
 
 # Saves the file number associated with this track.
 			tracks_file["${track_n}"]="$file_n"
+
+# Saves the current track number (and in effect, every track number) in
+# an array so the exact track numbers can be referenced later.
+			tracks_total+=("$track_n")
 
 # Figures out if this track is data or audio, and saves the sector size.
 # Typical sector size is 2048 bytes for data CDs, and 2352 for audio.
@@ -162,8 +163,6 @@ read_cue () {
 				wrong_mode+=("$track_n")
 			fi
 
-			lines_tmp+=("$1")
-
 			if_cue["${track_n},track_number"]="${match[1]}"
 			if_cue["${track_n},track_mode"]="${match[2]}"
 
@@ -174,10 +173,8 @@ read_cue () {
 		if [[ $1 =~ ${format[5]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
-			lines_tmp+=("$1")
-
-			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},pregap"]="$frames_tmp"
+			frames=$(time_convert "${match[1]}")
+			if_cue["${track_n},pregap"]="$frames"
 
 			return
 		fi
@@ -188,10 +185,8 @@ read_cue () {
 
 			index_n="${match[1]#0}"
 
-			lines_tmp+=("$1")
-
-			frames_tmp=$(time_convert "${match[2]}")
-			if_cue["${track_n},index,${index_n}"]="$frames_tmp"
+			frames=$(time_convert "${match[2]}")
+			if_cue["${track_n},index,${index_n}"]="$frames"
 
 			return
 		fi
@@ -200,17 +195,15 @@ read_cue () {
 		if [[ $1 =~ ${format[7]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
-			lines_tmp+=("$1")
-
-			frames_tmp=$(time_convert "${match[1]}")
-			if_cue["${track_n},postgap"]="$frames_tmp"
+			frames=$(time_convert "${match[1]}")
+			if_cue["${track_n},postgap"]="$frames"
 
 			return
 		fi
 	}
 
 # Reads the source CUE sheet and processes the lines.
-	mapfile -t lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"$if" | sed -E "s/${regex[blank]}/\1/")
 
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
@@ -250,65 +243,174 @@ read_cue () {
 	done
 }
 
-# Creates a function called 'get_frames', which will get the length of
-# a track in the BIN file.
-get_frames () {
-	this="$1"
-	next=$(( this + 1 ))
+# Creates a function called 'get_gaps', which will get pregap and
+# postgap from the CUE sheet for the track number given as argument.
+# If there's both a pregap specified using the PREGAP command and INDEX
+# command, those values will be added together. However, a CUE sheet is
+# highly unlikely to specify a pregap twice like that.
+get_gaps () {
+	track_n="$1"
 
-	declare file_this_ref file_next_ref sector_ref bin_ref
-	declare index_this_ref index_next_ref frames_tmp size
+# If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
+# 'gaps' hash. Add it to the value that might already be there, cause of
+# pregaps specified by INDEX commands.
+	pregap_ref="if_cue[${track_n},pregap]"
+	postgap_ref="if_cue[${track_n},postgap]"
 
-	file_this_ref="tracks_file[${this}]"
-	file_next_ref="tracks_file[${next}]"
-
-	sector_ref="tracks_sector[${this}]"
-	bin_ref="if_cue[${!file_this_ref},filename]"
-
-	index_this_ref="if_cue[${this},index,0]"
-	index_next_ref="if_cue[${next},index,0]"
-
-	if [[ -z ${!index_this_ref} ]]; then
-		index_this_ref="if_cue[${this},index,1]"
+	if [[ -n ${!pregap_ref} ]]; then
+		(( ${gaps[${track_n},pre]} += ${!pregap_ref} ))
 	fi
 
-	if [[ -z ${!index_next_ref} ]]; then
-		index_next_ref="if_cue[${next},index,1]"
+	if [[ -n ${!postgap_ref} ]]; then
+		(( ${gaps[${track_n},post]} += ${!postgap_ref} ))
 	fi
-
-	if [[ ${!file_this_ref} -ne ${!file_next_ref} ]]; then
-		size=$(stat -c '%s' "${!bin_ref}")
-		size=$(( size / ${!sector_ref} ))
-
-		frames_tmp=$(( size - ${!index_this_ref} ))
-	else
-		frames_tmp=$(( ${!index_next_ref} - ${!index_this_ref} ))
-	fi
-
-	frames["${this}"]="$frames_tmp"
 }
 
-# Creates a function called 'loop_set', which will get the length of all
-# tracks in the BIN file (except the last one).
+# Creates a function called 'get_length', which will get the length, and
+# start position (in bytes), of all tracks in the respective BIN files.
+# Subtracting pregap if it exists as part of the INDEX commands.
+get_length () {
+	declare bytes_total
+
+	bytes_total=0
+
+# Creates a function called 'get_size', which will get the track length
+# by reading the size of the BIN file associated with this track. This
+# function will also reset the 'bytes_total' variable to '0' (as the
+# current track is last in the current BIN file).
+	get_size () {
+		declare size
+
+		size=$(stat -c '%s' "${!file_ref}")
+
+		bytes_track=$(( size - ${tracks_start[${this}]} ))
+		bytes_total=0
+
+		tracks_length["${this}"]="$bytes_track"
+
+# If the BIN file related to this track is different from the next
+# track (or this is the last track), then we start over from '0' again
+# for the next iteration of the loop.
+	}
+
+	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
+		j=$(( i + 1 ))
+
+		this="${tracks_total[${i}]}"
+		next="${tracks_total[${j}]}"
+
+		declare bytes_pregap bytes_track frames
+		declare file_n_this_ref file_n_next_ref file_ref
+		declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
+		declare pregap_this_ref pregap_next_ref
+		declare sector_ref
+
+		pregap_this_ref="gaps[${this},pre]"
+		pregap_next_ref="gaps[${next},pre]"
+
+		index0_this_ref="if_cue[${this},index,0]"
+		index1_this_ref="if_cue[${this},index,1]"
+		index0_next_ref="if_cue[${next},index,0]"
+		index1_next_ref="if_cue[${next},index,1]"
+
+		file_n_this_ref="tracks_file[${this}]"
+		file_n_next_ref="tracks_file[${next}]"
+
+		file_ref="if_cue[${!file_n_this_ref},filename]"
+
+		sector_ref="tracks_sector[${this}]"
+
+# If the CUE sheet specifies a pregap using the INDEX command, save that
+# in the 'gaps' hash so it can later be converted to a PREGAP command.
+		if [[ -n ${!index0_this_ref} && -z ${!pregap_this_ref} ]]; then
+			gaps["${this},pre"]=$(( ${!index1_this_ref} - ${!index0_this_ref} ))
+		fi
+
+		if [[ -n ${!index0_next_ref} ]]; then
+			gaps["${next},pre"]=$(( ${!index1_next_ref} - ${!index0_next_ref} ))
+		fi
+
+# Converts potential pregap frames to bytes, and adds it to the total
+# bytes of the track position. This makes it possible for the
+# 'copy_track' function to skip over the useless junk data in the
+# pregap, when reading the track.
+		bytes_pregap=$(( ${!pregap_this_ref} * ${!sector_ref} ))
+		tracks_start["${this}"]=$(( bytes_total + bytes_pregap ))
+
+# If this is the last track, get the track length by reading the size of
+# the BIN file associated with this track.
+		if [[ -z $next ]]; then
+			get_size
+			continue
+		fi
+
+# If the BIN file associated with this track is the same as the next
+# track, get the track length by subtracting the start position of the
+# current track from the position of the next track.
+		if [[ ${!file_n_this_ref} -eq ${!file_n_next_ref} ]]; then
+			frames=$(( ${!index1_next_ref} - ${!index1_this_ref} ))
+			frames=$(( frames - ${!pregap_next_ref} ))
+
+			bytes_track=$(( frames * ${!sector_ref} ))
+
+			tracks_length["${this}"]="$bytes_track"
+
+			(( bytes_total += (bytes_track + bytes_pregap) ))
+		fi
+
+# If the BIN file associated with this track is different from the next
+# track, get the track length by reading the size of the BIN file
+# associated with this track.
+		if [[ ${!file_n_this_ref} -ne ${!file_n_next_ref} ]]; then
+			get_size
+		fi
+	done
+}
+
+# Creates a function called 'loop_set', which will get the start
+# positions, lengths, pregaps and postgaps for all tracks.
 loop_set () {
-	declare track_n file_n
+	declare this next track_n
 
-	for (( i = 0; i < ${#tracks_file[@]}; i++ )); do
-		track_n=$(( i + 1 ))
+	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
+		track_n="${tracks_total[${i}]}"
 
-		get_frames "$track_n"
+		gaps["${track_n},pre"]=0
+		gaps["${track_n},post"]=0
+	done
+
+	get_length
+
+	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
+		track_n="${tracks_total[${i}]}"
+
+		get_gaps "$track_n"
 	done
 }
 
 read_cue
 loop_set
 
-last=$(( ${#frames[@]} + 1 ))
-
 printf '\n'
 
-for (( i = 1; i < last; i++ )); do
-	printf 'Track %02d) %s , frames: %s\n' "$i" "$(time_convert "${frames[${i}]}")" "${frames[${i}]}"
+for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
+	track_n="${tracks_total[${i}]}"
+
+	declare length_ref sector_ref frames
+
+	pregap_ref="gaps[${track_n},pre]"
+	length_ref="tracks_length[${track_n}]"
+	sector_ref="tracks_sector[${track_n}]"
+
+	frames=$(( ${!length_ref} / ${!sector_ref} ))
+
+	printf 'Track %02d)\n' "$track_n"
+
+	if [[ ${!pregap_ref} -gt 0 ]]; then
+		printf '  pregap: %s , frames: %s\n' "$(time_convert "${!pregap_ref}")" "${!pregap_ref}"
+	fi
+
+	printf '  length: %s , frames: %s\n' "$(time_convert "$frames")" "$frames"
 done
 
 printf '\n'
