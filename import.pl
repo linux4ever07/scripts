@@ -95,8 +95,8 @@ sub gettags {
 			$field = lc($1);
 			$value = $2;
 
-			$field =~ s/$regex{space}//g;
-			$value =~ s/$regex{space}//g;
+			$field =~ s/$regex{space}//;
+			$value =~ s/$regex{space}//;
 			$value =~ tr/a-zA-Z0-9\.\-_ //dc;
 			$value =~ s/\s+/ /g;
 
