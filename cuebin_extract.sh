@@ -466,10 +466,6 @@ get_length () {
 		bytes_total=0
 
 		tracks_length["${this}"]="$bytes_track"
-
-# If the BIN file related to this track is different from the next
-# track (or this is the last track), then we start over from '0' again
-# for the next iteration of the loop.
 	}
 
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
