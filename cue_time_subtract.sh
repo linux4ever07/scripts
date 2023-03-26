@@ -297,7 +297,7 @@ get_length () {
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
-		if [[ -n ${!index0_this_ref} && -z ${!pregap_this_ref} ]]; then
+		if [[ -n ${!index0_this_ref} && ${!pregap_this_ref} -eq 0 ]]; then
 			gaps["${this},pre"]=$(( ${!index1_this_ref} - ${!index0_this_ref} ))
 		fi
 
