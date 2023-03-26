@@ -243,29 +243,6 @@ read_cue () {
 	done
 }
 
-# Creates a function called 'get_gaps', which will get pregap and
-# postgap from the CUE sheet for the track number given as argument.
-# If there's both a pregap specified using the PREGAP command and INDEX
-# command, those values will be added together. However, a CUE sheet is
-# highly unlikely to specify a pregap twice like that.
-get_gaps () {
-	track_n="$1"
-
-# If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
-# 'gaps' hash. Add it to the value that might already be there, cause of
-# pregaps specified by INDEX commands.
-	pregap_ref="if_cue[${track_n},pregap]"
-	postgap_ref="if_cue[${track_n},postgap]"
-
-	if [[ -n ${!pregap_ref} ]]; then
-		(( ${gaps[${track_n},pre]} += ${!pregap_ref} ))
-	fi
-
-	if [[ -n ${!postgap_ref} ]]; then
-		(( ${gaps[${track_n},post]} += ${!postgap_ref} ))
-	fi
-}
-
 # Creates a function called 'get_length', which will get the start
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
@@ -377,12 +354,6 @@ loop_set () {
 	done
 
 	get_length
-
-	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
-		track_n="${tracks_total[${i}]}"
-
-		get_gaps "$track_n"
-	done
 }
 
 read_cue
