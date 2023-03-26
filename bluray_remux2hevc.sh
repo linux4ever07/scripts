@@ -370,7 +370,7 @@ imdb () {
 
 	y_regex='^\(([0-9]{4})\)$'
 
-	id_regex='\/title\/(tt[0-9]+)'
+	id_regex='/title/(tt[0-9]+)'
 	title_regex1='\,\"originalTitleText\":'
 	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	year_regex1='\,\"releaseYear\":'
@@ -521,7 +521,7 @@ dts_extract_remux () {
 	regex_51=', 5.1\(.*\),'
 
 	regex_stream='^ +Stream #'
-	regex_kbps=', ([0-9]+) kb\/s'
+	regex_kbps=', ([0-9]+) kb/s'
 	regex_bps='^ +BPS.*: ([0-9]+)$'
 	regex_last3='^[0-9]+([0-9]{3})$'
 

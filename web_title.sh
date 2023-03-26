@@ -6,8 +6,8 @@ declare -a words
 declare -A regex
 
 regex[blank]='[[:blank:]]+'
-regex[url]='^(http)(s)?:\/\/'
-regex[title]='<title>(.*)<\/title>'
+regex[url]='^(http)(s)?://'
+regex[title]='<title>(.*)</title>'
 
 agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 
