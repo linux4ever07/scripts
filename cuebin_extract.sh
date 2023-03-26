@@ -529,10 +529,9 @@ get_length () {
 			frames=$(( frames - ${!pregap_next_ref} ))
 
 			bytes_track=$(( frames * ${!sector_ref} ))
+			(( bytes_total += (bytes_track + bytes_pregap) ))
 
 			tracks_length["${this}"]="$bytes_track"
-
-			(( bytes_total += (bytes_track + bytes_pregap) ))
 		fi
 
 # If the BIN file associated with this track is different from the next
