@@ -42,8 +42,8 @@ fi
 if=$(readlink -f "$1")
 switch=0
 
-regex1='^([[:alpha:]]+):\/\/'
-regex2=':([0-9]+)'
+regex1='^([[:alpha:]]+):\/\/.*'
+regex2='^.*:([0-9]+).*$'
 regex3='\/.*$'
 regex4='\/announce(\.[^.]*){0,1}$'
 regex5='\/$'
@@ -98,8 +98,8 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 	fi
 
 	address=$(sed -E -e "s_${regex1}__" -e "s_${regex2}__" -e "s_${regex3}__" <<<"$tracker")
-	protocol=$(grep -Eo "$regex1" <<<"$tracker" | sed -E "s_${regex1}_\1_")
-	port=$(grep -Eo "$regex2" <<<"$tracker" | sed -E "s_${regex2}_\1_")
+	protocol=$(sed -E "s_${regex1}_\1_" <<<"$tracker")
+	port=$(sed -E "s_${regex2}_\1_" <<<"$tracker")
 
 	case $protocol in
 		http*)
