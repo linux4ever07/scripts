@@ -162,7 +162,7 @@ regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'
 regex[fn]='^(.*)\.([^.]*)$'
 
-regex[data]='^MODE([0-9])/([0-9]{4})$'
+regex[data]='^MODE([0-9])\/([0-9]{4})$'
 regex[audio]='^AUDIO$'
 
 declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total

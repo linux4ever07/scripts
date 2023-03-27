@@ -42,11 +42,11 @@ fi
 if=$(readlink -f "$1")
 switch=0
 
-regex1='^([[:alpha:]]+)://'
+regex1='^([[:alpha:]]+):\/\/'
 regex2=':([0-9]+)'
-regex3='/.*$'
-regex4='/announce(\.[^.]*){0,1}$'
-regex5='/$'
+regex3='\/.*$'
+regex4='\/announce(\.[^.]*){0,1}$'
+regex5='\/$'
 
 declare -a trackers
 
