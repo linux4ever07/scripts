@@ -53,7 +53,7 @@ ctrl_c () {
 # Creates a function called 'restore_n_quit', which will restore STDOUT
 # to the shell, and then quit.
 restore_n_quit () {
-	regex_dev='^/dev'
+	regex_dev='^\/dev'
 
 	if [[ $c_tty =~ $regex_dev ]]; then
 		exec 1>"$c_tty"

@@ -370,7 +370,7 @@ imdb () {
 
 	y_regex='^\(([0-9]{4})\)$'
 
-	id_regex='/title/(tt[0-9]+)'
+	id_regex='\/title\/(tt[0-9]+)'
 	title_regex1='\,\"originalTitleText\":'
 	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	year_regex1='\,\"releaseYear\":'
@@ -521,7 +521,7 @@ dts_extract_remux () {
 	regex_51=', 5.1\(.*\),'
 
 	regex_stream='^ +Stream #'
-	regex_kbps=', ([0-9]+) kb/s'
+	regex_kbps=', ([0-9]+) kb\/s'
 	regex_bps='^ +BPS.*: ([0-9]+)$'
 	regex_last3='^[0-9]+([0-9]{3})$'
 
@@ -1015,7 +1015,7 @@ is_handbrake () {
 # filename doesn't match the regex in $regex_m2ts, return from this
 # function, hence leaving the $if_m2ts variable empty.
 if_m2ts () {
-	regex_m2ts='/BDMV/STREAM/[0-9]+\.m2ts$'
+	regex_m2ts='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
 
 	if [[ ! $if =~ $regex_m2ts ]]; then
 		return
