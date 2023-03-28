@@ -781,8 +781,8 @@ encode_audio () {
 }
 
 # Creates a function called 'create_cue', which will create a new CUE
-# sheet, based on the file lists created by the 'bin_split',
-# 'copy_track_type' and 'cdr2wav' functions.
+# sheet, based on the file lists created by the 'copy_track_type' and
+# 'cdr2wav' functions.
 create_cue () {
 	type="$1"
 
