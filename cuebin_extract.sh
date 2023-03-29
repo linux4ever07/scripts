@@ -702,8 +702,7 @@ copy_track_type () {
 }
 
 # Creates a function called 'cdr2wav', which will convert the extracted
-# CDR files to WAV (using 'ffmpeg' or 'sox'). This function is only run
-# if the '-ffmpeg' or '-sox' argument has been passed to the script.
+# CDR files to WAV (using 'ffmpeg' or 'sox').
 cdr2wav () {
 	type="$1"
 
