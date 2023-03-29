@@ -587,14 +587,14 @@ block_calc () {
 
 	block_size=16384
 
-	block_diff1=$(( $bytes1 % block_size ))
-	block_diff2=$(( $bytes2 % block_size ))
+	block_diff1=$(( bytes1 % block_size ))
+	block_diff2=$(( bytes2 % block_size ))
 
 	until [[ $block_diff1 -eq 0 && $block_diff2 -eq 0 ]]; do
 		(( block_size -= 4 ))
 
-		block_diff1=$(( $bytes1 % block_size ))
-		block_diff2=$(( $bytes2 % block_size ))
+		block_diff1=$(( bytes1 % block_size ))
+		block_diff2=$(( bytes2 % block_size ))
 	done
 
 	printf '%s' "$block_size"
