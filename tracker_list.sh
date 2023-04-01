@@ -40,12 +40,11 @@ if [[ $2 == '-nocheck' ]]; then
 fi
 
 if=$(readlink -f "$1")
-switch=0
 
 regex1='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
-regex2='^.*:([0-9]+).*$'
+regex2='^(.*):([0-9]+)(.*)$'
 
-declare -a protocols addresses ends
+declare -a protocols addresses ends ports
 
 mapfile -t lines < <(tr -d '\r' <"$if" | tr -d '[:blank:]' | tr '[:upper:]' '[:lower:]' | sort --unique)
 
@@ -62,12 +61,24 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	address="${BASH_REMATCH[2]}"
 	end="${BASH_REMATCH[3]}"
 
+	port=80
+
+	if [[ $end =~ $regex2 ]]; then
+		end="${BASH_REMATCH[1]}${BASH_REMATCH[3]}"
+		port="${BASH_REMATCH[2]}"
+	fi
+
 	for (( j = 0; j < ${#addresses[@]}; j++ )); do
 		protocol_tmp="${protocols[${j}]}"
 		address_tmp="${addresses[${j}]}"
 		end_tmp="${ends[${j}]}"
+		port_tmp="${ports[${j}]}"
 
 		if [[ $protocol != "$protocol_tmp" ]]; then
+			continue
+		fi
+
+		if [[ $port != "$port_tmp" ]]; then
 			continue
 		fi
 
@@ -87,6 +98,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		protocols+=("$protocol")
 		addresses+=("$address")
 		ends+=("$end")
+		ports+=("$port")
 	fi
 done
 
@@ -94,16 +106,15 @@ for (( i = 0; i < ${#addresses[@]}; i++ )); do
 	protocol="${protocols[${i}]}"
 	address="${addresses[${i}]}"
 	end="${ends[${i}]}"
+	port="${ports[${i}]}"
 
-	tracker="${protocol}://${address}${end}"
+	tracker="${protocol}://${address}:${port}${end}"
 
 	if [[ $nocheck -eq 1 ]]; then
 		printf '%s\n\n' "$tracker"
 
 		continue
 	fi
-
-	port=$(sed -E "s_${regex2}_\1_" <<<"$end")
 
 	case $protocol in
 		http*)
