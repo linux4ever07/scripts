@@ -42,53 +42,60 @@ fi
 if=$(readlink -f "$1")
 switch=0
 
-regex1='^([[:alpha:]]+):\/\/([^:\/]+).*$'
+regex1='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
 regex2='^.*:([0-9]+).*$'
-regex3='\/announce(\.[^.]*){0,1}$'
-regex4='\/$'
 
-declare -a trackers
+declare -a protocols addresses ends
 
 mapfile -t lines < <(tr -d '\r' <"$if" | tr -d '[:blank:]' | tr '[:upper:]' '[:lower:]' | sort --unique)
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
+
 	switch=0
 
-	if [[ -n $line ]]; then
-		for (( j = 0; j < ${#trackers[@]}; j++ )); do
-			line_tmp=$(sed -E -e "s_${regex3}__" -e "s_${regex4}__" <<<"$line")
+	if [[ ! $line =~ $regex1 ]]; then
+		continue
+	fi
 
-			if [[ ${trackers[${j}]} =~ $line_tmp ]]; then
-				switch=1
+	protocol="${BASH_REMATCH[1]}"
+	address="${BASH_REMATCH[2]}"
+	end="${BASH_REMATCH[3]}"
 
-				array_l="${#trackers[${j}]}"
-				line_l="${#line}"
+	for (( j = 0; j < ${#addresses[@]}; j++ )); do
+		protocol_tmp="${protocols[${j}]}"
+		address_tmp="${addresses[${j}]}"
+		end_tmp="${ends[${j}]}"
 
-				if [[ $line_l > $array_l && $line =~ $regex3 ]]; then
-					trackers["${j}"]="$line"
-				fi
-			fi
-		done
-
-		if [[ $switch -eq 0 ]]; then
-			trackers+=("$line")
+		if [[ $protocol != "$protocol_tmp" ]]; then
+			continue
 		fi
+
+		if [[ $address == "$address_tmp" ]]; then
+			switch=1
+
+			end_l="${#end}"
+			end_tmp_l="${#end_tmp}"
+
+			if [[ $end_l > $end_tmp_l ]]; then
+				ends["${j}"]="$end"
+			fi
+		fi
+	done
+
+	if [[ $switch -eq 0 ]]; then
+		protocols+=("$protocol")
+		addresses+=("$address")
+		ends+=("$end")
 	fi
 done
 
-declare -A md5h
+for (( i = 0; i < ${#addresses[@]}; i++ )); do
+	protocol="${protocols[${i}]}"
+	address="${addresses[${i}]}"
+	end="${ends[${i}]}"
 
-for (( i = 0; i < ${#trackers[@]}; i++ )); do
-	tracker="${trackers[${i}]}"
-	md5=$(md5sum -b <<<"$tracker")
-	md5="${md5%% *}"
-
-	if [[ ${md5h[${md5}]} -eq 1 ]]; then
-		continue
-	else
-		md5h["${md5}"]=1
-	fi
+	tracker="${protocol}://${address}${end}"
 
 	if [[ $nocheck -eq 1 ]]; then
 		printf '%s\n\n' "$tracker"
@@ -96,9 +103,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 		continue
 	fi
 
-	address=$(sed -E -e "s_${regex1}_\2_" <<<"$tracker")
-	protocol=$(sed -E "s_${regex1}_\1_" <<<"$tracker")
-	port=$(sed -E "s_${regex2}_\1_" <<<"$tracker")
+	port=$(sed -E "s_${regex2}_\1_" <<<"$end")
 
 	case $protocol in
 		http*)
