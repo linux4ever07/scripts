@@ -42,11 +42,10 @@ fi
 if=$(readlink -f "$1")
 switch=0
 
-regex1='^([[:alpha:]]+):\/\/.*$'
+regex1='^([[:alpha:]]+):\/\/([^:\/]+).*$'
 regex2='^.*:([0-9]+).*$'
-regex3='\/.*$'
-regex4='\/announce(\.[^.]*){0,1}$'
-regex5='\/$'
+regex3='\/announce(\.[^.]*){0,1}$'
+regex4='\/$'
 
 declare -a trackers
 
@@ -58,7 +57,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	if [[ -n $line ]]; then
 		for (( j = 0; j < ${#trackers[@]}; j++ )); do
-			line_tmp=$(sed -E -e "s_${regex4}__" -e "s_${regex5}__" <<<"$line")
+			line_tmp=$(sed -E -e "s_${regex3}__" -e "s_${regex4}__" <<<"$line")
 
 			if [[ ${trackers[${j}]} =~ $line_tmp ]]; then
 				switch=1
@@ -66,7 +65,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 				array_l="${#trackers[${j}]}"
 				line_l="${#line}"
 
-				if [[ $line_l > $array_l && $line =~ $regex4 ]]; then
+				if [[ $line_l > $array_l && $line =~ $regex3 ]]; then
 					trackers["${j}"]="$line"
 				fi
 			fi
@@ -97,7 +96,7 @@ for (( i = 0; i < ${#trackers[@]}; i++ )); do
 		continue
 	fi
 
-	address=$(sed -E -e "s_${regex1}__" -e "s_${regex2}__" -e "s_${regex3}__" <<<"$tracker")
+	address=$(sed -E -e "s_${regex1}_\2_" <<<"$tracker")
 	protocol=$(sed -E "s_${regex1}_\1_" <<<"$tracker")
 	port=$(sed -E "s_${regex2}_\1_" <<<"$tracker")
 
