@@ -364,7 +364,7 @@ printf '\n'
 for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 	track_n="${tracks_total[${i}]}"
 
-	declare length_ref sector_ref frames
+	declare pregap_ref length_ref sector_ref frames
 
 	pregap_ref="gaps[${track_n},pre]"
 	length_ref="tracks_length[${track_n}]"
