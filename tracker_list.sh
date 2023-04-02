@@ -53,6 +53,12 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	switch=0
 
+# Deletes the line from memory, since we already have a temporary
+# duplicate.
+	lines["${i}"]=''
+
+# Checks if the current line matches the URL regex, and if not continue
+# the next iteration of the loop.
 	if [[ ! $line =~ $regex1 ]]; then
 		continue
 	fi
@@ -61,6 +67,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	address="${BASH_REMATCH[2]}"
 	end="${BASH_REMATCH[3]}"
 
+# If there's no port number in the URL, use port 80. Otherwise, just use
+# the one in the URL.
 	port=80
 
 	if [[ $end =~ $regex2 ]]; then
@@ -68,6 +76,8 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		port="${BASH_REMATCH[2]}"
 	fi
 
+# Compares the tracker URL with ones that have already been added to the
+# list.
 	for (( j = 0; j < ${#addresses[@]}; j++ )); do
 		protocol_tmp="${protocols[${j}]}"
 		address_tmp="${addresses[${j}]}"
@@ -82,6 +92,9 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 			continue
 		fi
 
+# If the address matches, then check which has the longest URL ending.
+# A new element will not be created in the list, but the longest match
+# is used.
 		if [[ $address == "$address_tmp" ]]; then
 			switch=1
 
@@ -94,6 +107,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		fi
 	done
 
+# If this URL is unique, add it to the different lists.
 	if [[ $switch -eq 0 ]]; then
 		protocols+=("$protocol")
 		addresses+=("$address")
@@ -102,6 +116,9 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	fi
 done
 
+# The loop below goes through each URL, and checks online status. If the
+# URL is online, print it. If '-nocheck' was used, just print the URL
+# and keep iterating the loop.
 for (( i = 0; i < ${#addresses[@]}; i++ )); do
 	protocol="${protocols[${i}]}"
 	address="${addresses[${i}]}"
