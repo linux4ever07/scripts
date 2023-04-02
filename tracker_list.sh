@@ -46,7 +46,7 @@ regex2='^(.*):([0-9]+)(.*)$'
 
 declare -a protocols addresses ends ports
 
-mapfile -t lines < <(tr -d '\r' <"$if" | tr -d '[:blank:]' | tr '[:upper:]' '[:lower:]' | sort --unique)
+mapfile -t lines < <(tr -d '\r' <"$if" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:blank:]]+/\n/g' | sort --unique)
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
