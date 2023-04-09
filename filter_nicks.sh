@@ -15,7 +15,8 @@ if [[ $# -lt 2 || ! -f $1 ]]; then
 fi
 
 if=$(readlink -f "$1")
-of="${if%.[^.]*}-${RANDOM}-${RANDOM}.txt"
+if_bn=$(basename "$if")
+of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
 declare -a lines times
 declare -A regex nicks nicks_tmp
