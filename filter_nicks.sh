@@ -34,9 +34,7 @@ if_nick () {
 	word="${words[1]}"
 
 	if [[ $word =~ ${regex[nick]} ]]; then
-		nick="${BASH_REMATCH[1]}"
-
-		printf '%s' "$nick"
+		printf '%s' "${BASH_REMATCH[1]}"
 	fi
 }
 
@@ -107,9 +105,9 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	for nick_tmp in "${!nicks[@]}"; do
-		if [[ $nick == "$nick_tmp" ]]; then
-			printf '%s\n' "${time}${line}"
-		fi
-	done
+	nick_ref="${nicks[${nick}]}"
+
+	if [[ -n ${!nick_ref} ]]; then
+		printf '%s\n' "${time}${line}"
+	fi
 done | tee "$of"
