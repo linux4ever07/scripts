@@ -46,12 +46,14 @@ nick_utf8_convert () {
 	declare string_out
 
 	for (( z = 0; z < ${#string_in}; z++ )); do
-		if [[ ${string_in:${z}:1} =~ ${regex[utf8]} ]]; then
-			string_out+="${BASH_REMATCH[0]}"
+		char_tmp="${string_in:${z}:1}"
+
+		if [[ ${char_tmp} =~ ${regex[utf8]} ]]; then
+			string_out+="${char_tmp}"
 			continue
 		fi
 
-		string_out+=$(printf '_%X' "'${string_in:${z}:1}")
+		string_out+=$(printf '_%X' "'${char_tmp}")
 	done
 
 	printf '%s' "$string_out"
