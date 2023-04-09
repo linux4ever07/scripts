@@ -23,7 +23,7 @@ of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 declare -a lines times
 declare -A regex nicks nicks_tmp
 
-regex[utf8]='([[:alnum:]])'
+regex[utf8]='^([[:alnum:]])$'
 regex[nick]='^<\+*(.*)>$'
 regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
 
