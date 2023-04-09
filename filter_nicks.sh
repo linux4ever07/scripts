@@ -5,25 +5,23 @@
 # highlight. The purpose is to highlight a specific conversation going
 # on between the nicks specified.
 
-if=$(readlink -f "$1")
-of="${if%.[^.]*}-${RANDOM}-${RANDOM}.txt"
-
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
 	exit
 }
 
-if [[ ! -f $if || -z $2 ]]; then
+if [[ $# -lt 2 || ! -f $1 ]]; then
 	usage
 fi
 
-declare -A regex
+if=$(readlink -f "$1")
+of="${if%.[^.]*}-${RANDOM}-${RANDOM}.txt"
+
+declare -a lines times
+declare -A regex nicks nicks_tmp
 
 regex[nick]='^<\+*(.*)>$'
 regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
-
-declare -a lines times
-declare -A nicks nicks_tmp
 
 shift
 
@@ -100,6 +98,7 @@ done
 # This loop prints all the lines that match the nicks collected by
 # the previous loop.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
+	time="${times[${i}]}"
 	line="${lines[${i}]}"
 
 	nick=$(if_nick)
@@ -110,7 +109,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	for nick_tmp in "${!nicks[@]}"; do
 		if [[ $nick == "$nick_tmp" ]]; then
-			printf '%s\n' "$line"
+			printf '%s\n' "${time}${line}"
 		fi
 	done
 done | tee "$of"
