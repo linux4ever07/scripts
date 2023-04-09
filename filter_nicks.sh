@@ -105,7 +105,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	nick_ref="${nicks[${nick}]}"
+	nick_ref="nicks[${nick}]"
 
 	if [[ -n ${!nick_ref} ]]; then
 		printf '%s\n' "${time}${line}"
