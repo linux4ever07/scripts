@@ -27,9 +27,9 @@ regex[utf8]='([[:alnum:]])'
 regex[nick]='^<\+*(.*)>$'
 regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
 
-# Creates a function called 'if_nick', which will print the nick this
+# Creates a function called 'get_nick', which will print the nick this
 # line belongs to.
-if_nick () {
+get_nick () {
 	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 	word="${words[1]}"
 
@@ -80,7 +80,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	time="${times[${i}]}"
 	line="${lines[${i}]}"
 
-	nick=$(if_nick)
+	nick=$(get_nick)
 	nick_utf8=$(nick_utf8_convert "$nick")
 
 	if [[ -n $nick_utf8 ]]; then
@@ -93,7 +93,7 @@ done
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
-	nick=$(if_nick)
+	nick=$(get_nick)
 	nick_utf8=$(nick_utf8_convert "$nick")
 
 	if [[ -z $nick_utf8 ]]; then
@@ -128,7 +128,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	time="${times[${i}]}"
 	line="${lines[${i}]}"
 
-	nick=$(if_nick)
+	nick=$(get_nick)
 	nick_utf8=$(nick_utf8_convert "$nick")
 
 	if [[ -z $nick_utf8 ]]; then
