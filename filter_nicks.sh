@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This script is meant to filter out nicks from IRC logs, except the
-# nicks given as arguments, and whatever other nicks those nicks
-# highlight. The purpose is to highlight a specific conversation going
-# on between the nicks specified.
+# This script is meant to filter out nicks from Konversation IRC logs,
+# except the nicks given as arguments, and whatever other nicks those
+# nicks highlight. The purpose is to highlight a specific conversation
+# going on between the nicks specified.
 
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
