@@ -21,15 +21,14 @@ of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 declare -a lines times
 declare -A regex nicks nicks_tmp
 
+regex[utf8]='([[:alnum:]])'
 regex[nick]='^<\+*(.*)>$'
 regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
 
 shift
 
-for nick in "$@"; do
-	nicks["${nick,,}"]=1
-done
-
+# Creates a function called 'if_nick', which will print the nick this
+# line belongs to.
 if_nick () {
 	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 	word="${words[1]}"
@@ -38,6 +37,30 @@ if_nick () {
 		printf '%s' "${BASH_REMATCH[1]}"
 	fi
 }
+
+# Creates a function called 'nick_utf8_convert', which will convert
+# special characters in the nick to their UTF8 code. This is to be able
+# to use the nick as a hash element name.
+nick_utf8_convert () {
+	string_in="$@"
+	declare string_out
+
+	for (( z = 0; z < ${#string_in}; z++ )); do
+		if [[ ${string_in:${z}:1} =~ ${regex[utf8]} ]]; then
+			string_out+="${BASH_REMATCH[0]}"
+			continue
+		fi
+
+		string_out+=$(printf '_%X' "'${string_in:${z}:1}")
+	done
+
+	printf '%s' "$string_out"
+}
+
+for nick in "$@"; do
+	nick_utf8=$(nick_utf8_convert "${nick,,}")
+	nicks["${nick_utf8}"]="${nick,,}"
+done
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
@@ -54,9 +77,10 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	nick=$(if_nick)
+	nick_utf8=$(nick_utf8_convert "$nick")
 
-	if [[ -n $nick ]]; then
-		nicks_tmp["${nick}"]=1
+	if [[ -n $nick_utf8 ]]; then
+		nicks_tmp["${nick_utf8}"]="$nick"
 	fi
 done
 
@@ -66,12 +90,13 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	nick=$(if_nick)
+	nick_utf8=$(nick_utf8_convert "$nick")
 
-	if [[ -z $nick ]]; then
+	if [[ -z $nick_utf8 ]]; then
 		continue
 	fi
 
-	nick_ref="nicks[${nick}]"
+	nick_ref="nicks[${nick_utf8}]"
 
 	if [[ -z ${!nick_ref} ]]; then
 		continue
@@ -79,12 +104,13 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 
-	for nick_tmp in "${!nicks_tmp[@]}"; do
+	for nick_tmp in "${nicks_tmp[@]}"; do
 		regex[nick_tmp]="^[[:punct:]]*${nick_tmp}[[:punct:]]*$"
 
 		for word in "${words[@]}"; do
 			if [[ $word =~ ${regex[nick_tmp]} ]]; then
-				nicks["${nick_tmp}"]=1
+				nick_tmp_utf8=$(nick_utf8_convert "$nick_tmp")
+				nicks["${nick_tmp_utf8}"]="${nick_tmp}"
 
 				break
 			fi
@@ -99,12 +125,13 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
 	nick=$(if_nick)
+	nick_utf8=$(nick_utf8_convert "$nick")
 
-	if [[ -z $nick ]]; then
+	if [[ -z $nick_utf8 ]]; then
 		continue
 	fi
 
-	nick_ref="nicks[${nick}]"
+	nick_ref="nicks[${nick_utf8}]"
 
 	if [[ -n ${!nick_ref} ]]; then
 		printf '%s\n' "${time}${line}"
