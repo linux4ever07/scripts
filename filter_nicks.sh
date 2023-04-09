@@ -17,74 +17,56 @@ if [[ ! -f $if || -z $2 ]]; then
 	usage
 fi
 
-regex1='^<'
-regex2='^<\+*(.*)>$'
-regex3='[:,.?!]+$'
+declare -A regex
 
-switch=0
+regex[nick]='^<\+*(.*)>$'
+regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
+
+declare -a lines times
+declare -A nicks nicks_tmp
 
 shift
-
-declare -A nicks nicks_tmp
 
 for nick in "$@"; do
 	nicks["${nick,,}"]=1
 done
 
 if_nick () {
-	if [[ $line_tmp =~ $regex1 ]]; then
-		nick="${line_tmp%% *}"
-		nick=$(sed -E "s/${regex2}/\1/" <<<"$nick")
+	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
+	word="${words[1]}"
 
-		printf '%s' "${nick,,}"
+	if [[ $word =~ ${regex[nick]} ]]; then
+		nick="${BASH_REMATCH[1]}"
+
+		printf '%s' "$nick"
 	fi
 }
 
-mapfile -t lines <"$if"
+mapfile -t lines < <(tr -d '\r' <"$if")
 
 # This loop finds all the nicks in the log and adds them to a hash.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	line="${lines[${i}]}"
-
-	if [[ $switch -eq 0 ]]; then
-		line_tmp="$line"
-
-		n=0
-
-		until [[ $line_tmp =~ $regex1 || $n -eq ${#line_tmp} ]]; do
-			line_tmp="${line:${n}}"
-			n=$(( n + 1 ))
-		done
-
-		if [[ $n -lt ${#line_tmp} ]]; then
-			switch=1
-		else
-			continue
-		fi
-
-		unset -v line_tmp
-
-		if [[ $n -gt 0 ]]; then
-			n=$(( n - 1 ))
-		fi
-	fi
-
-	line_tmp="${line:${n}}"
-
-	nick=$(if_nick)
-
-	if [[ -z $nick ]]; then
+	if [[ ! ${lines[${i}]} =~ ${regex[line]} ]]; then
 		continue
 	fi
 
-	nicks_tmp["${nick}"]=1
+	times["${i}"]="${BASH_REMATCH[1]}"
+	lines["${i}"]="${BASH_REMATCH[2]}"
+
+	time="${times[${i}]}"
+	line="${lines[${i}]}"
+
+	nick=$(if_nick)
+
+	if [[ -n $nick ]]; then
+		nicks_tmp["${nick}"]=1
+	fi
 done
 
 # This loop finds all the nicks highlighted by the nicks given as
 # arguments to the script, and adds them to the nick hash.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
-	line_tmp="${line:${n}}"
 
 	nick=$(if_nick)
 
@@ -94,13 +76,15 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	for nick_tmp in "${!nicks[@]}"; do
 		if [[ $nick == "$nick_tmp" ]]; then
-			mapfile -d' ' -t line_array < <(sed -E 's/[[:blank:]]+/ /g' <<<"${line_tmp,,}")
+			mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 
-			for (( k = 0; k < ${#line_array[@]}; k++ )); do
-				word=$(sed -E "s/${regex3}//" <<<"${line_array[${k}]}")
+			for (( k = 0; k < ${#words[@]}; k++ )); do
+				word="${words[${k}]}"
 
 				for nick_tmp_2 in "${!nicks_tmp[@]}"; do
-					if [[ $word == "$nick_tmp_2" ]]; then
+					regex[nick_tmp]="^[[:punct:]]*${nick_tmp_2}[[:punct:]]*$"
+
+					if [[ $word =~ ${regex[nick_tmp]} ]]; then
 						nicks["${nick_tmp_2}"]=1
 
 						break
@@ -117,7 +101,6 @@ done
 # the previous loop.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
-	line_tmp="${line:${n}}"
 
 	nick=$(if_nick)
 
