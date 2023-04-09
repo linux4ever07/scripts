@@ -37,10 +37,10 @@ get_nick () {
 	fi
 }
 
-# Creates a function called 'nick_utf8_convert', which will convert
-# special characters in the nick to their UTF8 code. This is to be able
-# to use the nick as a hash element name, even if the nick contains
-# special characters.
+# Creates a function called 'nick_utf8_convert', which will convert all
+# characters in the nick to their UTF8 code. This is to be able to use
+# the nick as a hash element name, even if the nick contains special
+# characters.
 nick_utf8_convert () {
 	string_in="$@"
 	declare string_out
