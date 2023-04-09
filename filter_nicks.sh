@@ -5,11 +5,13 @@
 # nicks highlight. The purpose is to highlight a specific conversation
 # going on between the nicks specified.
 
+# Creates a function called 'usage', which will print usage and quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
 	exit
 }
 
+# Checks if the arguments are in order.
 if [[ $# -lt 2 || ! -f $1 ]]; then
 	usage
 fi
@@ -24,8 +26,6 @@ declare -A regex nicks nicks_tmp
 regex[utf8]='([[:alnum:]])'
 regex[nick]='^<\+*(.*)>$'
 regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
-
-shift
 
 # Creates a function called 'if_nick', which will print the nick this
 # line belongs to.
@@ -58,6 +58,8 @@ nick_utf8_convert () {
 
 	printf '%s' "$string_out"
 }
+
+shift
 
 for nick in "$@"; do
 	nick_utf8=$(nick_utf8_convert "${nick,,}")
