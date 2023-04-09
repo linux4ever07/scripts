@@ -70,27 +70,23 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	for nick_tmp in "${!nicks[@]}"; do
-		if [[ $nick == "$nick_tmp" ]]; then
-			mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
+	nick_ref="nicks[${nick}]"
 
-			for (( k = 0; k < ${#words[@]}; k++ )); do
-				word="${words[${k}]}"
+	if [[ -n ${!nick_ref} ]]; then
+		mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 
-				for nick_tmp_2 in "${!nicks_tmp[@]}"; do
-					regex[nick_tmp]="^[[:punct:]]*${nick_tmp_2}[[:punct:]]*$"
+		for word in "${words[@]}"; do
+			for nick_tmp in "${!nicks_tmp[@]}"; do
+				regex[nick_tmp]="^[[:punct:]]*${nick_tmp}[[:punct:]]*$"
 
-					if [[ $word =~ ${regex[nick_tmp]} ]]; then
-						nicks["${nick_tmp_2}"]=1
+				if [[ $word =~ ${regex[nick_tmp]} ]]; then
+					nicks["${nick_tmp}"]=1
 
-						break
-					fi
-				done
+					break
+				fi
 			done
-
-			break
-		fi
-	done
+		done
+	fi
 done
 
 # This loop prints all the lines that match the nicks collected by
