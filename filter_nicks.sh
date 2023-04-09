@@ -78,10 +78,10 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 
-	for word in "${words[@]}"; do
-		for nick_tmp in "${!nicks_tmp[@]}"; do
-			regex[nick_tmp]="^[[:punct:]]*${nick_tmp}[[:punct:]]*$"
+	for nick_tmp in "${!nicks_tmp[@]}"; do
+		regex[nick_tmp]="^[[:punct:]]*${nick_tmp}[[:punct:]]*$"
 
+		for word in "${words[@]}"; do
 			if [[ $word =~ ${regex[nick_tmp]} ]]; then
 				nicks["${nick_tmp}"]=1
 
