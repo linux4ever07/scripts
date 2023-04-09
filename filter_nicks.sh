@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This script is meant to filter out nicks from Konversation IRC logs,
-# except the nicks given as arguments, and whatever other nicks those
-# nicks highlight. The purpose is to highlight a specific conversation
-# going on between the nicks specified.
+# This script is meant to filter out nicks from Konversation IRC log
+# excerpts, except the nicks given as arguments, and whatever other
+# nicks those nicks highlight. The purpose is to highlight a specific
+# conversation going on between the nicks specified.
 
 # Creates a function called 'usage', which will print usage and quit.
 usage () {
@@ -23,7 +23,6 @@ of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 declare -a lines times
 declare -A regex nicks nicks_tmp
 
-regex[utf8]='^([[:alnum:]])$'
 regex[nick]='^<\+*(.*)>$'
 regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
 
@@ -40,18 +39,14 @@ get_nick () {
 
 # Creates a function called 'nick_utf8_convert', which will convert
 # special characters in the nick to their UTF8 code. This is to be able
-# to use the nick as a hash element name.
+# to use the nick as a hash element name, even if the nick contains
+# special characters.
 nick_utf8_convert () {
 	string_in="$@"
 	declare string_out
 
 	for (( z = 0; z < ${#string_in}; z++ )); do
 		char_tmp="${string_in:${z}:1}"
-
-		if [[ ${char_tmp} =~ ${regex[utf8]} ]]; then
-			string_out+="${char_tmp}"
-			continue
-		fi
 
 		string_out+=$(printf '_%X' "'${char_tmp}")
 	done
