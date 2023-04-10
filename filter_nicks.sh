@@ -81,7 +81,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	times["${i}"]="${BASH_REMATCH[1]}"
 	lines["${i}"]="${BASH_REMATCH[2]}"
 
-	time="${times[${i}]}"
 	line="${lines[${i}]}"
 
 	set_vars
