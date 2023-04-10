@@ -20,7 +20,7 @@ if=$(readlink -f "$1")
 if_bn=$(basename "$if")
 of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
-declare line nick nick_utf8
+declare time line nick nick_utf8
 declare -a lines times words
 declare -A regex nicks nicks_tmp
 
@@ -54,9 +54,12 @@ utf8_convert () {
 	printf '%s' "$string_out"
 }
 
-# Creates a function called 'set_vars', which will split the current
-# line into words, and get the nick this line belongs to.
+# Creates a function called 'set_vars', which will get the current line,
+# split it into words, and get the nick it belongs to.
 set_vars () {
+	time="${times[${i}]}"
+	line="${lines[${i}]}"
+
 	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 
 	nick=$(get_nick)
@@ -81,8 +84,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	times["${i}"]="${BASH_REMATCH[1]}"
 	lines["${i}"]="${BASH_REMATCH[2]}"
 
-	line="${lines[${i}]}"
-
 	set_vars
 
 	if [[ -n $nick_utf8 ]]; then
@@ -93,8 +94,6 @@ done
 # This loop finds all the nicks highlighted by the nicks given as
 # arguments to the script, and adds them to the nick hash.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	line="${lines[${i}]}"
-
 	set_vars
 
 	if [[ -z $nick_utf8 ]]; then
@@ -124,9 +123,6 @@ done
 # This loop prints all the lines that match the nicks collected by
 # the previous loop.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	time="${times[${i}]}"
-	line="${lines[${i}]}"
-
 	set_vars
 
 	if [[ -z $nick_utf8 ]]; then
