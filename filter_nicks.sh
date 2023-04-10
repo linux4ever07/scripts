@@ -20,7 +20,8 @@ if=$(readlink -f "$1")
 if_bn=$(basename "$if")
 of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
-declare -a lines times
+declare line nick nick_utf8
+declare -a lines times words
 declare -A regex nicks nicks_tmp
 
 regex[nick]='^<\+*(.*)>$'
@@ -29,7 +30,6 @@ regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-
 # Creates a function called 'get_nick', which will print the nick this
 # line belongs to.
 get_nick () {
-	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
 	word="${words[1]}"
 
 	if [[ $word =~ ${regex[nick]} ]]; then
@@ -37,11 +37,11 @@ get_nick () {
 	fi
 }
 
-# Creates a function called 'nick_utf8_convert', which will convert all
+# Creates a function called 'utf8_convert', which will convert all
 # characters in the nick to their UTF8 code. This is to be able to use
 # the nick as a hash element name, even if the nick contains special
 # characters.
-nick_utf8_convert () {
+utf8_convert () {
 	string_in="$@"
 	declare string_out
 
@@ -54,10 +54,19 @@ nick_utf8_convert () {
 	printf '%s' "$string_out"
 }
 
+# Creates a function called 'set_vars', which will split the current
+# line into words, and get the nick this line belongs to.
+set_vars () {
+	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
+
+	nick=$(get_nick)
+	nick_utf8=$(utf8_convert "$nick")
+}
+
 shift
 
 for nick in "$@"; do
-	nick_utf8=$(nick_utf8_convert "${nick,,}")
+	nick_utf8=$(utf8_convert "${nick,,}")
 	nicks["${nick_utf8}"]="${nick,,}"
 done
 
@@ -75,8 +84,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	time="${times[${i}]}"
 	line="${lines[${i}]}"
 
-	nick=$(get_nick)
-	nick_utf8=$(nick_utf8_convert "$nick")
+	set_vars
 
 	if [[ -n $nick_utf8 ]]; then
 		nicks_tmp["${nick_utf8}"]="$nick"
@@ -88,8 +96,7 @@ done
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
-	nick=$(get_nick)
-	nick_utf8=$(nick_utf8_convert "$nick")
+	set_vars
 
 	if [[ -z $nick_utf8 ]]; then
 		continue
@@ -101,14 +108,12 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		continue
 	fi
 
-	mapfile -t words < <(sed -E 's/[[:blank:]]+/\n/g' <<<"${line,,}")
-
 	for nick_tmp in "${nicks_tmp[@]}"; do
 		regex[nick_tmp]="^[[:punct:]]*${nick_tmp}[[:punct:]]*$"
 
 		for word in "${words[@]}"; do
 			if [[ $word =~ ${regex[nick_tmp]} ]]; then
-				nick_tmp_utf8=$(nick_utf8_convert "$nick_tmp")
+				nick_tmp_utf8=$(utf8_convert "$nick_tmp")
 				nicks["${nick_tmp_utf8}"]="${nick_tmp}"
 
 				break
@@ -123,8 +128,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	time="${times[${i}]}"
 	line="${lines[${i}]}"
 
-	nick=$(get_nick)
-	nick_utf8=$(nick_utf8_convert "$nick")
+	set_vars
 
 	if [[ -z $nick_utf8 ]]; then
 		continue
