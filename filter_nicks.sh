@@ -21,7 +21,7 @@ if_bn=$(basename "$if")
 of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
 declare time line nick nick_utf8
-declare -a lines times words
+declare -a times lines words
 declare -A regex nicks nicks_tmp
 
 regex[nick]='^<\+*(.*)>$'
