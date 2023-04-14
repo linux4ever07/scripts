@@ -246,30 +246,29 @@ cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
 # necessary commands are installed. If any of the commands are missing
 # print them and quit.
 check_cmd () {
-	declare -a missing_pkgs
-	declare -A pkg
+	declare -a missing_pkg
+	declare -A cmd_pkg
 
-# Declares an associative array (hash), which contains the package names
-# of the commands that are needed by the script.
-	pkg["${cmd[0]}"]='HandBrake'
-	pkg["${cmd[1]}"]='ffmpeg'
-	pkg["${cmd[2]}"]='mkvtoolnix'
-	pkg["${cmd[3]}"]='curl'
-	pkg["${cmd[4]}"]='flac'
+# Saves the package names of the commands that are needed by the script.
+	cmd_pkg["${cmd[0]}"]='HandBrake'
+	cmd_pkg["${cmd[1]}"]='ffmpeg'
+	cmd_pkg["${cmd[2]}"]='mkvtoolnix'
+	cmd_pkg["${cmd[3]}"]='curl'
+	cmd_pkg["${cmd[4]}"]='flac'
 
 	for cmd_tmp in "${cmd[@]}"; do
 		command -v "$cmd_tmp" 1>&-
 
 		if [[ $? -ne 0 ]]; then
-			missing_pkgs+=("$cmd_tmp")
+			missing_pkg+=("$cmd_tmp")
 		fi
 	done
 
-	if [[ ${#missing_pkgs[@]} -gt 0 ]]; then
+	if [[ ${#missing_pkg[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'You need to install the following through your package manager:'
 
-		for cmd_tmp in "${missing_pkgs[@]}"; do
-			printf '%s\n' "${pkg[${cmd_tmp}]}"
+		for cmd_tmp in "${missing_pkg[@]}"; do
+			printf '%s\n' "${cmd_pkg[${cmd_tmp}]}"
 		done
 
 		printf '\n'

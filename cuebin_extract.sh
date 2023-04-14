@@ -173,19 +173,19 @@ declare -A if_cue gaps
 # necessary commands are installed. If any of the commands are missing
 # print them and quit.
 check_cmd () {
-	declare -a missing_pkgs
+	declare -a missing_pkg
 
 	for cmd in "$@"; do
 		command -v "$cmd" 1>&-
 
 		if [[ $? -ne 0 ]]; then
-			missing_pkgs+=("$cmd")
+			missing_pkg+=("$cmd")
 		fi
 	done
 
-	if [[ ${#missing_pkgs[@]} -gt 0 ]]; then
+	if [[ ${#missing_pkg[@]} -gt 0 ]]; then
 		printf '\n%s\n\n' 'You need to install the following through your package manager:'
-		printf '%s\n' "${missing_pkgs[@]}"
+		printf '%s\n' "${missing_pkg[@]}"
 		printf '\n'
 		exit
 	fi
