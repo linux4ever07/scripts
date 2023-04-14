@@ -183,7 +183,7 @@ check_cmd () {
 	done
 
 	if [[ ${#missing_pkgs[@]} -gt 0 ]]; then
-		printf '\n%s\n\n' "You need to install the following through your package manager:"
+		printf '\n%s\n\n' 'You need to install the following through your package manager:'
 		printf '%s\n' "${missing_pkgs[@]}"
 		printf '\n'
 		exit
