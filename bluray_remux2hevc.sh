@@ -242,26 +242,41 @@ fi
 # Creates an array of the list of commands needed by this script.
 cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
 
+# This creates a function called 'check_cmd', which will check if the
+# necessary commands are installed. If any of the commands are missing
+# print them and quit.
+check_cmd () {
+	declare -a missing_pkgs
+	declare -A pkg
+
 # Declares an associative array (hash), which contains the package names
 # of the commands that are needed by the script.
-declare -A pkg
-pkg["${cmd[0]}"]='HandBrake'
-pkg["${cmd[1]}"]='ffmpeg'
-pkg["${cmd[2]}"]='mkvtoolnix'
-pkg["${cmd[3]}"]='curl'
-pkg["${cmd[4]}"]='flac'
+	pkg["${cmd[0]}"]='HandBrake'
+	pkg["${cmd[1]}"]='ffmpeg'
+	pkg["${cmd[2]}"]='mkvtoolnix'
+	pkg["${cmd[3]}"]='curl'
+	pkg["${cmd[4]}"]='flac'
 
-# Checks if HandBrake, ffmpeg, mkvtoolnix and curl are available on
-# this system. If not, display a message, and quit.
-for cmd_tmp in "${cmd[@]}"; do
-	check=$(basename "$(command -v "${cmd_tmp}")")
+	for cmd_tmp in "${cmd[@]}"; do
+		command -v "$cmd_tmp" 1>&-
 
-	if [[ -z $check ]]; then
-		printf '\n%s\n' "You need ${pkg[${cmd_tmp}]} installed on your system."
-		printf '%s\n\n' 'Install it through your package manager.'
+		if [[ $? -ne 0 ]]; then
+			missing_pkgs+=("$cmd_tmp")
+		fi
+	done
+
+	if [[ ${#missing_pkgs[@]} -gt 0 ]]; then
+		printf '\n%s\n\n' 'You need to install the following through your package manager:'
+
+		for cmd_tmp in "${missing_pkgs[@]}"; do
+			printf '%s\n' "${pkg[${cmd_tmp}]}"
+		done
+
+		printf '\n'
+
 		exit
 	fi
-done
+}
 
 # This creates a function called 'fsencode', which will delete special
 # characters that are not allowed in filenames on certain filesystems.
@@ -1102,6 +1117,8 @@ is_torrent () {
 		printf '%s\r\n' "$md5" | tee "$md5_f"
 	fi
 }
+
+check_cmd
 
 is_torrent
 

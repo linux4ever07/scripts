@@ -169,8 +169,9 @@ declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length trac
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 declare -A if_cue gaps
 
-# Creates a function called 'check_cmd', which will check if the
-# necessary commands are installed.
+# This creates a function called 'check_cmd', which will check if the
+# necessary commands are installed. If any of the commands are missing
+# print them and quit.
 check_cmd () {
 	declare -a missing_pkgs
 
