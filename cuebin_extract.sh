@@ -196,11 +196,9 @@ check_cmd () {
 # quit) if the command fails.
 run_cmd () {
 	declare exit_status
-	declare -a args_tmp cmd_stdout
+	declare -a cmd_stdout
 
-	args_tmp=("$@")
-
-	mapfile -t cmd_stdout < <(eval "${args_tmp[@]}" 2>&1; printf '%s\n' "$?")
+	mapfile -t cmd_stdout < <(eval "$@" 2>&1; printf '%s\n' "$?")
 
 	exit_status="${cmd_stdout[-1]}"
 	unset -v cmd_stdout[-1]
