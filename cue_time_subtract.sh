@@ -85,7 +85,7 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare file_n track_n
+	declare line file_n track_n
 	declare -a files not_found wrong_format wrong_mode lines
 
 	declare -a error_types
@@ -104,7 +104,7 @@ read_cue () {
 # 'if_cue' hash.
 	handle_command () {
 # If line is a FILE command...
-		if [[ $1 =~ ${format[3]} ]]; then
+		if [[ $line =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
 # Strips quotes, and path that may be present in the CUE sheet, and adds
@@ -133,7 +133,7 @@ read_cue () {
 		fi
 
 # If line is a TRACK command...
-		if [[ $1 =~ ${format[4]} ]]; then
+		if [[ $line =~ ${format[4]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
 			track_n="${match[1]#0}"
@@ -170,7 +170,7 @@ read_cue () {
 		fi
 
 # If line is a PREGAP command...
-		if [[ $1 =~ ${format[5]} ]]; then
+		if [[ $line =~ ${format[5]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
@@ -180,7 +180,7 @@ read_cue () {
 		fi
 
 # If line is an INDEX command...
-		if [[ $1 =~ ${format[6]} ]]; then
+		if [[ $line =~ ${format[6]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
 			index_n="${match[1]#0}"
@@ -192,7 +192,7 @@ read_cue () {
 		fi
 
 # If line is a POSTGAP command...
-		if [[ $1 =~ ${format[7]} ]]; then
+		if [[ $line =~ ${format[7]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
@@ -207,7 +207,7 @@ read_cue () {
 
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
-		handle_command "$line"
+		handle_command
 	done
 
 # If errors were found, print them and quit.
@@ -247,7 +247,11 @@ read_cue () {
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
 get_length () {
-	declare bytes_total
+	declare bytes_pregap bytes_track bytes_total frames
+	declare pregap_this_ref pregap_next_ref
+	declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
+	declare file_n_this_ref file_n_next_ref file_ref
+	declare sector_ref start_ref
 
 	bytes_total=0
 
@@ -271,12 +275,6 @@ get_length () {
 
 		this="${tracks_total[${i}]}"
 		next="${tracks_total[${j}]}"
-
-		declare bytes_pregap bytes_track frames
-		declare pregap_this_ref pregap_next_ref
-		declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
-		declare file_n_this_ref file_n_next_ref file_ref
-		declare sector_ref start_ref
 
 		pregap_this_ref="gaps[${this},pre]"
 		pregap_next_ref="gaps[${next},pre]"
