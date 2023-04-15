@@ -551,7 +551,7 @@ get_length () {
 # Creates a function called 'loop_set', which will get the start
 # positions, lengths, pregaps and postgaps for all tracks.
 loop_set () {
-	declare this next track_n
+	declare track_n
 
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 		track_n="${tracks_total[${i}]}"
