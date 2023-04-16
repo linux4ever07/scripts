@@ -86,7 +86,7 @@ time_convert () {
 # sheet.
 read_cue () {
 	declare line file_n track_n
-	declare -a files not_found wrong_format wrong_mode lines
+	declare -a lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
 	declare -A error_msgs
@@ -95,6 +95,7 @@ read_cue () {
 	track_n=0
 
 	error_types=('not_found' 'wrong_format' 'wrong_mode')
+	error_msgs[no_files]='No files were found in CUE sheet!'
 	error_msgs[not_found]='The files below were not found:'
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
@@ -211,6 +212,11 @@ read_cue () {
 	done
 
 # If errors were found, print them and quit.
+	if [[ ${#files[@]} -eq 0 ]]; then
+		printf '\n%s\n\n' "${error_msgs[no_files]}"
+		exit
+	fi
+
 	for error in "${error_types[@]}"; do
 		declare elements msg_ref list_ref
 
