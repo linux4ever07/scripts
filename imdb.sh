@@ -55,7 +55,7 @@ imdb () {
 
 	y_regex='^\(([0-9]{4})\)$'
 
-	id_regex='\/title\/(tt[0-9]+)'
+	id_regex='^.*\/title\/(tt[0-9]+).*$'
 	title_regex1='\,\"originalTitleText\":'
 	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	year_regex1='\,\"releaseYear\":'
@@ -147,7 +147,7 @@ imdb () {
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	mapfile -t id_array < <(get_page "$url_tmp" | grep -Eo "$id_regex" | sed -E "s/${id_regex}/\1/")
+	mapfile -t id_array < <(get_page "$url_tmp" | sed -nE "s/${id_regex}/\1/p")
 	id="${id_array[0]}"
 
 	if [[ -z $id ]]; then
