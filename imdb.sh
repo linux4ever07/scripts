@@ -22,7 +22,9 @@ fi
 # the special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
-	curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" <<<"$@" | sed -E 's/..(.*).../\1/'
+	url_string="$@"
+
+	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$string" 'http://localhost' | sed -E 's/^.{18}(.*)/\1/'
 }
 
 # Creates a function called 'time_calc', which will translate seconds
