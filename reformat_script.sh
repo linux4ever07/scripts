@@ -20,7 +20,7 @@ set -eo pipefail
 
 # If the script isn't run with sudo / root privileges, quit.
 if [[ $EUID -ne 0 ]]; then
-	printf '\n%s\n\n' "You need to be root to run this script!"
+	printf '\n%s\n\n' 'You need to be root to run this script!'
 	exit
 fi
 
@@ -36,11 +36,11 @@ session="${RANDOM}-${RANDOM}"
 of="/dev/shm/${bn%.*}-${session}.txt"
 
 limit=72
-regex1='^([[:blank:]]*)(#+)([[:blank:]]*)'
+regex1='^[[:blank:]]*#+[[:blank:]]*'
 regex2='^[[:blank:]]+'
 regex3='[[:blank:]]+$'
 regex4='[[:blank:]]+'
-regex5='^( {4})'
+regex5='^ {4}'
 regex6='^#!'
 
 declare -a lines_in lines_out
