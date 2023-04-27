@@ -142,7 +142,7 @@ reformat_comments () {
 # Creates a function called 'reformat_lines', which will fix indentation
 # among other things.
 reformat_lines () {
-	unset -v indent
+	declare indent
 
 	if [[ $line_this =~ $regex1 ]]; then
 		line_this=$(sed -E -e "s/${regex1}/# /" -e "s/${regex4}/ /g" <<<"$line_this")
