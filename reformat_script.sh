@@ -114,8 +114,6 @@ reformat_comments () {
 		string='#'
 		chars=1
 
-		end=$(( ${#buffer[@]} - 1 ))
-
 		for (( k = 0; k < ${#buffer[@]}; k++ )); do
 			word="${buffer[${k}]}"
 
@@ -129,11 +127,9 @@ reformat_comments () {
 				string="# ${word}"
 				(( chars = (${#word} + 2) ))
 			fi
-
-			if [[ $k -eq $end ]]; then
-				lines_out+=("$string")
-			fi
 		done
+
+		lines_out+=("$string")
 	fi
 
 	(( i -= 1 ))
