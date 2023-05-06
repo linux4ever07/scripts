@@ -163,6 +163,7 @@ check_cmd () {
 		command -v "$1"
 	}
 
+	declare cmd_tmp name_tmp
 	declare -A cmd name
 
 	cmd[dar]=$(check 'dar')
@@ -181,12 +182,13 @@ check_cmd () {
 	name[iso]='7zip'
 	name[lzh]='7zip'
 
-	for cmd_type in "${!cmd[@]}"; do
-		if [[ $1 == "$cmd_type" ]]; then
-			if [[ -z ${cmd[${cmd_type}]} ]]; then
-				cat <<CMD
+	cmd_tmp="${cmd[${1}]}"
+	name_tmp="${name[${1}]}"
 
-'${name[${cmd_type}]}' is not installed!
+	if [[ -z ${cmd_tmp} ]]; then
+		cat <<CMD
+
+'${name_tmp}' is not installed!
 Install it through your package manager.
 
 In the case of 'rar', you can get the Linux version for free @
@@ -201,10 +203,8 @@ this line:
 PATH="\${HOME}/bin:\${PATH}"
 
 CMD
-				restore_n_quit
-			fi
-		fi
-	done
+		restore_n_quit
+	fi
 }
 
 # Creates a function called 'create_names', which will create variables

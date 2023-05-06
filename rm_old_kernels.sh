@@ -39,32 +39,34 @@ version_compare () {
 	declare -a num newest_num
 
 	for version_tmp in "${version_array[@]}"; do
-		if [[ $version_tmp =~ ${regex[version]} ]]; then
-			num=("${BASH_REMATCH[@]:1}")
+		if [[ ! $version_tmp =~ ${regex[version]} ]]; then
+			continue
+		fi
 
-			if [[ -z $newest ]]; then
-				newest="$version_tmp"
-				newest_num=("${num[@]}")
-				continue
-			fi
+		num=("${BASH_REMATCH[@]:1}")
+
+		if [[ -z $newest ]]; then
+			newest="$version_tmp"
+			newest_num=("${num[@]}")
+			continue
+		fi
 
 # This loop goes through each number, and first checks if the number is
 # lower than the previous version that was checked. If it is, then break
 # the loop. Since it's checking the numbers from left to right, if a
 # version is older, one of the first numbers is going to be lower, even
 # if one of the later numbers may be higher.
-			for (( z = 0; z < ${#num[@]}; z++ )); do
-				if [[ ${num[${z}]} -lt ${newest_num[${z}]} ]]; then
-					break
-				fi
+		for (( z = 0; z < ${#num[@]}; z++ )); do
+			if [[ ${num[${z}]} -lt ${newest_num[${z}]} ]]; then
+				break
+			fi
 
-				if [[ ${num[${z}]} -gt ${newest_num[${z}]} ]]; then
-					newest="$version_tmp"
-					newest_num=("${num[@]}")
-					break
-				fi
-			done
-		fi
+			if [[ ${num[${z}]} -gt ${newest_num[${z}]} ]]; then
+				newest="$version_tmp"
+				newest_num=("${num[@]}")
+				break
+			fi
+		done
 	done
 
 	printf '%s' "$newest"
