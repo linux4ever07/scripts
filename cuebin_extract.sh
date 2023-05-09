@@ -215,7 +215,11 @@ run_cmd () {
 # file lists to be used by other functions.
 get_files () {
 	for glob in "$@"; do
-		compgen -G "$glob"
+		compgen -G "$glob" 1>&-
+
+		if [[ $? -eq 0 ]]; then
+			printf '%s\n' $glob
+		fi
 	done | sort -n
 }
 

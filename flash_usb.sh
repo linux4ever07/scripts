@@ -31,7 +31,11 @@ regex_part='\-part[0-9]+$'
 # files. This is to prevent errors for when a pattern has no matches.
 glob_test () {
 	for glob in "$@"; do
-		compgen -G "$glob"
+		compgen -G "$glob" 1>&-
+
+		if [[ $? -eq 0 ]]; then
+			printf '%s\n' $glob
+		fi
 	done
 }
 
