@@ -215,7 +215,7 @@ run_cmd () {
 # file lists to be used by other functions.
 get_files () {
 	for glob in "$@"; do
-		compgen -G $glob
+		compgen -G "$glob"
 	done | sort -n
 }
 
