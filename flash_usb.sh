@@ -26,9 +26,21 @@ declare device
 
 regex_part='\-part[0-9]+$'
 
+# Creates a function called 'glob_test', which will print file names in
+# the current directory, but only if the glob pattern matches actual
+# files. This is to prevent errors for when a pattern has no matches.
+glob_test () {
+	for glob in "$@"; do
+		compgen -G $glob
+	done
+}
+
+# Creates a function called 'device_menu', which will generate a list of
+# available USB devices and allow the user to select one of them in a
+# menu.
 device_menu () {
 	cd '/dev/disk/by-id'
-	mapfile -t devices < <(ls -1 usb-* | grep -Ev "$regex_part")
+	mapfile -t devices < <(glob_test usb-* | grep -Ev "$regex_part")
 
 	if [[ ${#devices[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' 'No USB storage devices found!'

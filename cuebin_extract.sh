@@ -214,17 +214,9 @@ run_cmd () {
 # Creates a function called 'get_files', which will be used to generate
 # file lists to be used by other functions.
 get_files () {
-	declare -a files_tmp
-
-	shopt -s nullglob
-
-	files_tmp=($@)
-
-	shopt -u nullglob
-
-	if [[ ${#files_tmp[@]} -gt 0 ]]; then
-		printf '%s\n' "${files_tmp[@]}" | sort -n
-	fi
+	for glob in "$@"; do
+		compgen -G $glob
+	done | sort -n
 }
 
 # Creates a function called 'time_convert', which converts track
