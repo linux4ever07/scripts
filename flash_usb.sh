@@ -40,7 +40,7 @@ glob_test () {
 # menu.
 device_menu () {
 	cd '/dev/disk/by-id'
-	mapfile -t devices < <(glob_test usb-* | grep -Ev "$regex_part")
+	mapfile -t devices < <(glob_test "usb-*" | grep -Ev "$regex_part")
 
 	if [[ ${#devices[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' 'No USB storage devices found!'
