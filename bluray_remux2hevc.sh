@@ -342,7 +342,7 @@ break_name () {
 
 	regex_year='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
-# This for loop is to go through the word list.
+# This for loop is for going through the word list.
 	for (( i = 0; i < elements; i++ )); do
 		array_ref="bname_${type_tmp}[${i}]"
 
