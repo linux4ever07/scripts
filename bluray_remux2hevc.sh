@@ -3,7 +3,7 @@
 # Usage: bluray_remux2hevc.sh [mkv|m2ts] -out [directory] [...]
 
 # This script will:
-# * Parse the input filename (a 1080p Blu-Ray (remux or full)), get
+# * Parse the input file name (a 1080p Blu-Ray (remux or full)), get
 # movie info from IMDb, incl. name and year.
 # * Extract core DTS track from DTS-HD MA track (with ffmpeg).
 # * Remux the input file (MKV or M2TS), without all its audio tracks,
@@ -130,7 +130,7 @@ fi
 if=$(readlink -f "$1")
 bname=$(basename "$if")
 
-# Generates a random number, which can be used for these filenames:
+# Generates a random number, which can be used for these file names:
 # output, output remux, input info txt, output info txt, output remux
 # info txt.
 session="${RANDOM}-${RANDOM}"
@@ -169,7 +169,7 @@ v_bitrate=5000
 a_encoder='copy:dts'
 
 # Creates a variable which contains the last part of the output
-# filename.
+# file name.
 rls_type='1080p.BluRay.x265.DTS'
 
 # The loop below handles the arguments to the script.
@@ -278,10 +278,10 @@ check_cmd () {
 }
 
 # This creates a function called 'fsencode', which will delete special
-# characters that are not allowed in filenames on certain filesystems.
+# characters that are not allowed in file names on certain filesystems.
 # The characters in the regex are allowed. All others are deleted. Based
-# on the "POSIX fully portable filenames" entry:
-# https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
+# on the "POSIX fully portable file names" entry:
+# https://en.wikipedia.org/wiki/Filename#Comparison_of_file name_limitations
 fsencode () {
 	sed -E 's/[^ A-Za-z0-9._-]//g' <<<"$1"
 }
@@ -295,38 +295,24 @@ uriencode () {
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)/\1/'
 }
 
-# This creates a function called 'break_name', which will break up
-# the input filename, and parse it, to extract the movie name, and year.
+# This creates a function called 'break_name', which will break up the
+# input file name, and parse it, to extract the movie title, and year.
 break_name () {
-# Sets $bname to the first argument passed to this function.
 	bname=$(sed -E 's/[[:blank:]]+/ /g' <<<"$1")
-
-	declare -a name
 
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
-	regex='^(.*)([[:punct:]]|[[:blank:]]){1,}([0-9]{4})([[:punct:]]|[[:blank:]]){1,}(.*)$'
-
-# If $tmp can't be parsed, set it to the input filename instead,
-# although limit the string by 64 characters, and remove possible
-# trailing whitespace from the string.
-	if [[ $bname =~ $regex ]]; then
-		tmp="${BASH_REMATCH[1]}"
-		year="(${BASH_REMATCH[3]})"
-	else
-		tmp=$(sed -E "s/${regex_blank}/\1/" <<<"${bname:0:64}")
-	fi
-
-# Break $bname up in a list of words, and store those words in arrays,
+# Break the name up in a list of words, and store those words in arrays,
 # depending on whether $bname is separated by dots, hyphens,
 # underscores or spaces.
-	mapfile -d'.' -t bname_dots <<<"$tmp"
-	mapfile -d'-' -t bname_hyphens <<<"$tmp"
-	mapfile -d'_' -t bname_underscores <<<"$tmp"
-	mapfile -d' ' -t bname_spaces <<<"$tmp"
+	mapfile -d'.' -t bname_dots <<<"$bname"
+	mapfile -d'-' -t bname_hyphens <<<"$bname"
+	mapfile -d'_' -t bname_underscores <<<"$bname"
+	mapfile -d' ' -t bname_spaces <<<"$bname"
 
-# Declares an associative array (hash), that stores the element numbers
-# for each kind of word separator: dots, hyphens, underscores, spaces.
+# Declares a hash, that stores the element numbers for each kind of word
+# separator: dots, hyphens, underscores, spaces.
+# This will be used to figure out the correct word separator.
 	declare -A bname_elements
 
 	bname_elements[dots]="${#bname_dots[@]}"
@@ -339,13 +325,9 @@ break_name () {
 	bname_underscores[-1]="${bname_underscores[-1]%$'\n'}"
 	bname_spaces[-1]="${bname_spaces[-1]%$'\n'}"
 
-# If there are more dots in $bname than hyphens, underscores or spaces,
-# that means $bname is separated by dots. Otherwise, it's separated by
-# hyphens, underscores or spaces. In either case, loop through the word
-# list in either array, and break the name up in separate words.
 	elements=0
 
-# This for loop is to figure out if $bname is separated by dots,
+# This for loop is to figure out if the name is separated by dots,
 # hyphens, underscores or spaces.
 	for type in "${types[@]}"; do
 		number_ref="bname_elements[${type}]"
@@ -356,20 +338,25 @@ break_name () {
 		fi
 	done
 
+	declare -a name
+
+	regex_year='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
+
 # This for loop is to go through the word list.
 	for (( i = 0; i < elements; i++ )); do
-# Creates a reference, pointing to the $i element of the
-# 'bname_$type_tmp' array.
 		array_ref="bname_${type_tmp}[${i}]"
 
 		if [[ -n ${!array_ref} ]]; then
+# If this element matches the year regex, stop adding elements to the
+# 'name' array, as we got the full name already (incl. the year).
+			if [[ ${!array_ref} =~ $regex_year ]]; then
+				name+=("(${BASH_REMATCH[2]})")
+				break
+			fi
+
 			name+=("${!array_ref}")
 		fi
 	done
-
-	if [[ -n $year ]]; then
-		name+=("$year")
-	fi
 
 # Prints the complete parsed name.
 	name_string="${name[@]}"
@@ -874,10 +861,10 @@ sub_mux () {
 }
 
 # Creates a function called 'info_txt', which creates info txt files
-# containing information generated by ffmpeg. It creates a separate
-# txt file for input file, output file and remux output.
-# If the mediainfo command is installed, a text file containing
-# information from that will also be created.
+# containing information generated by ffmpeg. It creates a separate txt
+# file for input file, output file and remux output. If the mediainfo
+# command is installed, a text file containing information from that
+# will also be created.
 info_txt () {
 # Creates the basename of $of and $of_remux.
 	of_bname=$(basename "$of")
@@ -885,9 +872,9 @@ info_txt () {
 
 	cmd[5]=$(basename "$(command -v "mediainfo")")
 
-# Creates filenames for the info txt files, which contain the
-# information generated by 'ffmpeg'. Also creates filenames for
-# HandBrake version and options, and filenames for ffmpeg version and
+# Creates file names for the info txt files, which contain the
+# information generated by 'ffmpeg'. Also creates file names for
+# HandBrake version and options, and file names for ffmpeg version and
 # options.
 	if_info_f="${info_dir}/${bname}_info.txt"
 	of_info_f="${info_dir}/${of_bname}_info.txt"
@@ -908,8 +895,8 @@ info_txt () {
 	info_list_2=('hb_version_info' 'hb_opts_info' 'ff_version_info' 'ff_opts_info' 'size_info')
 	info_list_3=("${info_list_1[@]}" "${info_list_2[@]}")
 
-# If the info txt filenames (in list 1) already exist, add a random
-# number to the end of the filename.
+# If the info txt file names (in list 1) already exist, add a random
+# number to the end of the file name.
 	for txt_f in "${info_list_1[@]}"; do
 		txt_ref="${txt_f}_f"
 
@@ -1028,11 +1015,11 @@ is_handbrake () {
 	done
 }
 
-# Creates a function called 'if_m2ts', which will be called if
-# input file is an M2TS, in the directory structure '/BDMV/STREAM/'.
-# The function outputs a name, which can be used with the 'break_name'
-# function, to get the movie information from IMDb. If the input
-# filename doesn't match the regex in $regex_m2ts, return from this
+# Creates a function called 'if_m2ts', which will be called if input
+# file is an M2TS, in the directory structure '/BDMV/STREAM/'. The
+# function outputs a name, which can be used with the 'break_name'
+# function, to get the movie information from IMDb. If the input file
+# name doesn't match the regex in $regex_m2ts, return from this
 # function, hence leaving the $if_m2ts variable empty.
 if_m2ts () {
 	regex_m2ts='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
@@ -1049,12 +1036,12 @@ if_m2ts () {
 }
 
 # Creates a function called 'get_name', which will get the movie title
-# and year, based on the input filename.
+# and year, based on the input file name.
 get_name () {
 	year='0000'
 	regex='^(.*) ([0-9]{4})$'
 
-# If the input filename is an M2TS, get the movie title and year from
+# If the input file name is an M2TS, get the movie title and year from
 # the surrounding directory structure.
 	if_m2ts=$(if_m2ts)
 
@@ -1062,7 +1049,7 @@ get_name () {
 		bname="$if_m2ts"
 	fi
 
-# Breaks up the input filename, and gets its IMDb name.
+# Breaks up the input file name, and gets its IMDb name.
 	bname_tmp=$(break_name "$bname")
 
 # Gets information from IMDb, and removes special characters.
@@ -1091,10 +1078,10 @@ get_name () {
 	printf '%s\n' "$year"
 }
 
-# Creates a function called 'is_torrent', which checks if the filename
-# ends with '.part', or if there's a filename in the same directory that
-# ends with '.part'. If there is, wait until the filename changes, and
-# '.part' is removed from the filename. This function recognizes if
+# Creates a function called 'is_torrent', which checks if the file name
+# ends with '.part', or if there's a file name in the same directory
+# that ends with '.part'. If there is, wait until the file name changes,
+# and '.part' is removed from the file name. This function recognizes if
 # input file is an unfinished download, and waits for the file to fully
 # download before processing it.
 is_torrent () {
@@ -1142,15 +1129,15 @@ of_dir="${of_dir}/${of_bname}"
 info_dir="${of_dir}/Info"
 mkdir -p "$info_dir"
 
-# Creates the output filename, as well as the remux output filename.
+# Creates the output file name, as well as the remux output file name.
 of="${of_dir}/${of_bname}.mkv"
 of_tmp="${of_dir}/${of_bname}.TMP-${session}.mkv"
 of_remux="${of_dir}/${title}.${year}.REMUX.mkv"
 
-# Creates a filename which will contain the commands run by this script.
-# Also creates a filename that will store the output from HandBrake.
-# If the filename already exists, delete that file, and then create
-# a new one.
+# Creates a file name which will contain the commands run by this
+# script. Also creates a file name that will store the output from
+# HandBrake. If the file name already exists, delete that file, and then
+# create a new one.
 command_f="${of_dir}/Info/${title}.${year}_commands.txt"
 hb_log_f="${of_dir}/Info/${title}.${year}_HandBrake_log.txt"
 
@@ -1163,8 +1150,8 @@ for txt_f in "$command_f" "$hb_log_f"; do
 done
 
 if [[ $exist -ne 1 ]]; then
-# If output filename already exists, add a random number to the end of
-# the filename.
+# If output file name already exists, add a random number to the end of
+# the file name.
 	if [[ -f $of ]]; then
 		of="${of_dir}/${of_bname}-${session}.mkv"
 	elif [[ -f $of_remux ]]; then
