@@ -299,7 +299,7 @@ uriencode () {
 # the input filename, and parse it, to extract the movie name, and year.
 break_name () {
 # Sets $bname to the first argument passed to this function.
-	bname="$1"
+	bname=$(sed -E 's/[[:blank:]]+/ /g' <<<"$1")
 
 	declare -a name
 
@@ -356,10 +356,8 @@ break_name () {
 # 'bname_$temp_type' array.
 		array_ref="bname_${temp_type}[${i}]"
 
-		temp_name=$(tr -d '[:space:]' <<<"${!array_ref}")
-
-		if [[ -n $temp_name ]]; then
-			name+=("$temp_name")
+		if [[ -n ${!array_ref} ]]; then
+			name+=("${!array_ref}")
 		fi
 	done
 
