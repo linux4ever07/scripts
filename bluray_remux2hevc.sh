@@ -307,23 +307,23 @@ break_name () {
 
 	regex='^(.*)([[:punct:]]|[[:blank:]]){1,}([0-9]{4})([[:punct:]]|[[:blank:]]){1,}(.*)$'
 
-# If $temp can't be parsed, set it to the input filename instead,
+# If $tmp can't be parsed, set it to the input filename instead,
 # although limit the string by 64 characters, and remove possible
 # trailing whitespace from the string.
 	if [[ $bname =~ $regex ]]; then
-		temp="${BASH_REMATCH[1]}"
+		tmp="${BASH_REMATCH[1]}"
 		year="(${BASH_REMATCH[3]})"
 	else
-		temp=$(sed -E "s/${regex_blank}/\1/" <<<"${bname:0:64}")
+		tmp=$(sed -E "s/${regex_blank}/\1/" <<<"${bname:0:64}")
 	fi
 
 # Break $bname up in a list of words, and store those words in arrays,
 # depending on whether $bname is separated by dots, hyphens,
 # underscores or spaces.
-	mapfile -d'.' -t bname_dots <<<"$temp"
-	mapfile -d'-' -t bname_hyphens <<<"$temp"
-	mapfile -d'_' -t bname_underscores <<<"$temp"
-	mapfile -d' ' -t bname_spaces <<<"$temp"
+	mapfile -d'.' -t bname_dots <<<"$tmp"
+	mapfile -d'-' -t bname_hyphens <<<"$tmp"
+	mapfile -d'_' -t bname_underscores <<<"$tmp"
+	mapfile -d' ' -t bname_spaces <<<"$tmp"
 
 # Declares an associative array (hash), that stores the element numbers
 # for each kind of word separator: dots, hyphens, underscores, spaces.
