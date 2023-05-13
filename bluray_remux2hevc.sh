@@ -292,7 +292,7 @@ fsencode () {
 uriencode () {
 	url_string="$@"
 
-	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)/\1/'
+	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)$/\1/'
 }
 
 # Creates a function called 'break_name', which will break up the

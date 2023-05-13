@@ -24,7 +24,7 @@ fi
 uriencode () {
 	url_string="$@"
 
-	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)/\1/'
+	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)$/\1/'
 }
 
 # Creates a function called 'time_calc', which will translate seconds
