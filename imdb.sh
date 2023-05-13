@@ -18,8 +18,8 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
-# This creates a function called 'uriencode', which will translate
-# the special characters in any string to be URL friendly. This will be
+# Creates a function called 'uriencode', which will translate the
+# special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
 	url_string="$@"
@@ -43,8 +43,8 @@ time_calc () {
 	printf '%02d:%02d:%02d' "$h" "$m" "$s"
 }
 
-# This creates a function called 'imdb', which will look up the movie
-# name on IMDb.
+# Creates a function called 'imdb', which will look up the movie name on
+# IMDb.
 # https://www.imdb.com/search/title/
 # https://www.imdb.com/interfaces/
 imdb () {

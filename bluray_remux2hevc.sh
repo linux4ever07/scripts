@@ -242,7 +242,7 @@ fi
 # Creates an array of the list of commands needed by this script.
 cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
 
-# This creates a function called 'check_cmd', which will check if the
+# Creates a function called 'check_cmd', which will check if the
 # necessary commands are installed. If any of the commands are missing
 # print them and quit.
 check_cmd () {
@@ -277,7 +277,7 @@ check_cmd () {
 	fi
 }
 
-# This creates a function called 'fsencode', which will delete special
+# Creates a function called 'fsencode', which will delete special
 # characters that are not allowed in file names on certain filesystems.
 # The characters in the regex are allowed. All others are deleted. Based
 # on the "POSIX fully portable file names" entry:
@@ -286,8 +286,8 @@ fsencode () {
 	sed -E 's/[^ A-Za-z0-9._-]//g' <<<"$1"
 }
 
-# This creates a function called 'uriencode', which will translate
-# the special characters in any string to be URL friendly. This will be
+# Creates a function called 'uriencode', which will translate the
+# special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
 	url_string="$@"
@@ -295,7 +295,7 @@ uriencode () {
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)/\1/'
 }
 
-# This creates a function called 'break_name', which will break up the
+# Creates a function called 'break_name', which will break up the
 # input file name, and parse it, to extract the movie title, and year.
 break_name () {
 	bname=$(sed -E 's/[[:blank:]]+/ /g' <<<"$1")
@@ -363,8 +363,8 @@ break_name () {
 	printf '%s' "$name_string"
 }
 
-# This creates a function called 'imdb', which will look up the movie
-# name on IMDb, based on the file name of the input file.
+# Creates a function called 'imdb', which will look up the movie name on
+# IMDb, based on the file name of the input file.
 # https://www.imdb.com/search/title/
 # https://www.imdb.com/interfaces/
 imdb () {
