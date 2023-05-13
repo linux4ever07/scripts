@@ -346,15 +346,15 @@ break_name () {
 
 		if [[ ${!number_ref} -gt $elements ]]; then
 			elements="${!number_ref}"
-			temp_type="$type"
+			type_tmp="$type"
 		fi
 	done
 
 # This for loop is to go through the word list.
 	for (( i = 0; i < elements; i++ )); do
 # Creates a reference, pointing to the $i element of the
-# 'bname_$temp_type' array.
-		array_ref="bname_${temp_type}[${i}]"
+# 'bname_$type_tmp' array.
+		array_ref="bname_${type_tmp}[${i}]"
 
 		if [[ -n ${!array_ref} ]]; then
 			name+=("${!array_ref}")
