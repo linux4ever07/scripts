@@ -342,10 +342,10 @@ break_name () {
 # This for loop is to figure out if $bname is separated by dots,
 # hyphens, underscores or spaces.
 	for type in "${types[@]}"; do
-		temp_number="bname_elements[${type}]"
+		number_ref="bname_elements[${type}]"
 
-		if [[ ${!temp_number} -gt $elements ]]; then
-			elements="${!temp_number}"
+		if [[ ${!number_ref} -gt $elements ]]; then
+			elements="${!number_ref}"
 			temp_type="$type"
 		fi
 	done
