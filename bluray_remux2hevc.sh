@@ -310,6 +310,12 @@ break_name () {
 	mapfile -d'_' -t bname_underscores <<<"$bname"
 	mapfile -d' ' -t bname_spaces <<<"$bname"
 
+# Gets rid of the newline at the end of the last element of each array.
+	bname_dots[-1]="${bname_dots[-1]%$'\n'}"
+	bname_hyphens[-1]="${bname_hyphens[-1]%$'\n'}"
+	bname_underscores[-1]="${bname_underscores[-1]%$'\n'}"
+	bname_spaces[-1]="${bname_spaces[-1]%$'\n'}"
+
 # Declares a hash, that stores the element numbers for each kind of word
 # separator: dots, hyphens, underscores, spaces.
 # This will be used to figure out the correct word separator.
@@ -320,15 +326,10 @@ break_name () {
 	bname_elements[underscores]="${#bname_underscores[@]}"
 	bname_elements[spaces]="${#bname_spaces[@]}"
 
-	bname_dots[-1]="${bname_dots[-1]%$'\n'}"
-	bname_hyphens[-1]="${bname_hyphens[-1]%$'\n'}"
-	bname_underscores[-1]="${bname_underscores[-1]%$'\n'}"
-	bname_spaces[-1]="${bname_spaces[-1]%$'\n'}"
-
 	elements=0
 
-# This for loop is to figure out if the name is separated by dots,
-# hyphens, underscores or spaces.
+# This for loop figures out if the name is separated by dots, hyphens,
+# underscores or spaces.
 	for type in "${types[@]}"; do
 		number_ref="bname_elements[${type}]"
 
@@ -342,7 +343,7 @@ break_name () {
 
 	regex_year='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
-# This for loop is for going through the word list.
+# This for loop goes through the word list.
 	for (( i = 0; i < elements; i++ )); do
 		array_ref="bname_${type_tmp}[${i}]"
 
