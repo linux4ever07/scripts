@@ -302,9 +302,9 @@ break_name () {
 
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
-# Break the name up in a list of words, and store those words in arrays,
-# depending on whether the file name is separated by dots, hyphens,
-# underscores or spaces.
+# Breaks the name up in a list of words, and store those words in
+# arrays, depending on whether the file name is separated by dots,
+# hyphens, underscores or spaces.
 	mapfile -d'.' -t bname_dots <<<"$bname"
 	mapfile -d'-' -t bname_hyphens <<<"$bname"
 	mapfile -d'_' -t bname_underscores <<<"$bname"
