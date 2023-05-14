@@ -303,7 +303,7 @@ break_name () {
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
 # Break the name up in a list of words, and store those words in arrays,
-# depending on whether $bname is separated by dots, hyphens,
+# depending on whether the file name is separated by dots, hyphens,
 # underscores or spaces.
 	mapfile -d'.' -t bname_dots <<<"$bname"
 	mapfile -d'-' -t bname_hyphens <<<"$bname"
@@ -316,8 +316,7 @@ break_name () {
 	bname_underscores[-1]="${bname_underscores[-1]%$'\n'}"
 	bname_spaces[-1]="${bname_spaces[-1]%$'\n'}"
 
-# Declares a hash, that stores the element numbers for each kind of word
-# separator: dots, hyphens, underscores, spaces.
+# Declares a hash that stores the total element numbers.
 # This will be used to figure out the correct word separator.
 	declare -A bname_elements
 
