@@ -280,7 +280,7 @@ check_cmd () {
 # Creates a function called 'fsencode', which will delete special
 # characters that are not allowed in file names on certain filesystems.
 # The characters in the regex are allowed. All others are deleted. Based
-# on the "POSIX fully portable file names" entry:
+# on the 'POSIX fully portable file names' entry:
 # https://en.wikipedia.org/wiki/Filename#Comparison_of_file name_limitations
 fsencode () {
 	sed -E 's/[^ A-Za-z0-9._-]//g' <<<"$1"
@@ -941,7 +941,7 @@ info_txt () {
 }
 
 # Creates a function called 'run_or_quit', which will run any command
-# stored in the $args array, and quit if the command returns a false
+# stored in the 'args' array, and quit if the command returns a false
 # exit status.
 run_or_quit () {
 	eval "${args[@]}" || exit "$?"
