@@ -645,17 +645,21 @@ dts_extract_remux () {
 			parse_ffmpeg
 
 			for (( i = 0; i < ${#streams[@]}; i++ )); do
+				stream="${streams[${i}]}"
+
 # See if the current line is an audio track. If so, save the bitrate.
-				if [[ ${streams[${i}]} =~ $regex_audio ]]; then
+				if [[ $stream =~ $regex_audio ]]; then
 					bps_if="${bitrates[${i}]}"
 					break
 				fi
 			done
 		else
 			for (( i = 0; i < ${#streams[@]}; i++ )); do
+				stream="${streams[${i}]}"
+
 # See if the current line matches the chosen audio track. If so, save
 # the bitrate.
-				if [[ ${streams[${i}]} == "${!audio_track_ref}" ]]; then
+				if [[ $stream == "${!audio_track_ref}" ]]; then
 					bps_if="${bitrates[${i}]}"
 					break
 				fi
@@ -688,17 +692,19 @@ dts_extract_remux () {
 # lines are audio, and if they match the types of audio we're looking
 # for.
 	for (( i = 0; i < ${#streams[@]}; i++ )); do
+		stream="${streams[${i}]}"
+
 # See if the current line is an audio track, and the same language as
 # $lang.
-		if [[ ! ${streams[${i}]} =~ $regex_audio ]]; then
+		if [[ ! $stream =~ $regex_audio ]]; then
 			continue
 		fi
 
 		for tmp_type in "${audio_types[@]}"; do
 			n="elements[${tmp_type}]"
 
-			if [[ ${streams[${i}]} =~ ${type[${tmp_type}]} ]]; then
-				audio_tracks["${tmp_type},${!n}"]="${streams[${i}]}"
+			if [[ $stream =~ ${type[${tmp_type}]} ]]; then
+				audio_tracks["${tmp_type},${!n}"]="$stream"
 				elements["${tmp_type}"]=$(( ${!n} + 1 ))
 			fi
 		done
