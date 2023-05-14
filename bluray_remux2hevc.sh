@@ -346,16 +346,18 @@ break_name () {
 	for (( i = 0; i < elements; i++ )); do
 		array_ref="bname_${type_tmp}[${i}]"
 
-		if [[ -n ${!array_ref} ]]; then
+		if [[ -z ${!array_ref} ]]; then
+			continue
+		fi
+
 # If this element matches the year regex, stop adding elements to the
 # 'name' array, as we got the full name already (incl. the year).
-			if [[ ${!array_ref} =~ $regex_year ]]; then
-				name+=("(${BASH_REMATCH[2]})")
-				break
-			fi
-
-			name+=("${!array_ref}")
+		if [[ ${!array_ref} =~ $regex_year ]]; then
+			name+=("(${BASH_REMATCH[2]})")
+			break
 		fi
+
+		name+=("${!array_ref}")
 	done
 
 # Prints the complete parsed name.
