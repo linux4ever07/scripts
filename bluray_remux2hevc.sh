@@ -632,12 +632,12 @@ dts_extract_remux () {
 			run_or_quit
 			args=("${cmd[4]}" -d \""${flac_tmp}"\")
 			run_or_quit
-			args=(rm \""${flac_tmp}"\")
+			args=(rm -f \""${flac_tmp}"\")
 			run_or_quit
 
 # Gets information about the WAV file.
 			mapfile -t if_info_tmp < <(eval "${cmd[1]}" -hide_banner -i \""${wav_tmp}"\" 2>&1)
-			args=(rm \""${wav_tmp}"\")
+			args=(rm -f \""${wav_tmp}"\")
 			run_or_quit
 
 			unset -v streams bitrates
@@ -690,16 +690,18 @@ dts_extract_remux () {
 	for (( i = 0; i < ${#streams[@]}; i++ )); do
 # See if the current line is an audio track, and the same language as
 # $lang.
-		if [[ ${streams[${i}]} =~ $regex_audio ]]; then
-			for tmp_type in "${audio_types[@]}"; do
-				n="elements[${tmp_type}]"
-
-				if [[ ${streams[${i}]} =~ ${type[${tmp_type}]} ]]; then
-					audio_tracks["${tmp_type},${!n}"]="${streams[${i}]}"
-					elements["${tmp_type}"]=$(( ${!n} + 1 ))
-				fi
-			done
+		if [[ ! ${streams[${i}]} =~ $regex_audio ]]; then
+			continue
 		fi
+
+		for tmp_type in "${audio_types[@]}"; do
+			n="elements[${tmp_type}]"
+
+			if [[ ${streams[${i}]} =~ ${type[${tmp_type}]} ]]; then
+				audio_tracks["${tmp_type},${!n}"]="${streams[${i}]}"
+				elements["${tmp_type}"]=$(( ${!n} + 1 ))
+			fi
+		done
 	done
 
 	switch=0
@@ -710,12 +712,14 @@ dts_extract_remux () {
 		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
 			hash_ref="audio_tracks[${tmp_type},${i}]"
 
-			if [[ ${!hash_ref} =~ $regex_51 ]]; then
-				audio_track_ref="$hash_ref"
-				audio_format="$tmp_type"
-				switch=1
-				break
+			if [[ ! ${!hash_ref} =~ $regex_51 ]]; then
+				continue
 			fi
+
+			audio_track_ref="$hash_ref"
+			audio_format="$tmp_type"
+			switch=1
+			break
 		done
 
 		if [[ $switch -eq 1 ]]; then
@@ -963,15 +967,17 @@ check_res () {
 # for.
 	for (( i = 0; i < ${#if_info[@]}; i++ )); do
 # See if the current line is a video track.
-		if [[ ${if_info[${i}]} =~ $regex_video ]]; then
-			if_res="${BASH_REMATCH[1]}"
-
-			if [[ ! $if_res =~ $regex_res ]]; then
-				switch='1'
-			fi
-
-			break
+		if [[ ! ${if_info[${i}]} =~ $regex_video ]]; then
+			continue
 		fi
+
+		if_res="${BASH_REMATCH[1]}"
+
+		if [[ ! $if_res =~ $regex_res ]]; then
+			switch='1'
+		fi
+
+		break
 	done
 
 	if [[ $switch -eq 1 ]]; then
@@ -997,13 +1003,15 @@ is_handbrake () {
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-			if [[ ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
-				pid="${BASH_REMATCH[1]}"
-				comm="${BASH_REMATCH[2]}"
-
-				printf '%s: %s\n' 'PID' "$pid"
-				printf '%s: %s\n\n' 'COMMAND' "$comm"
+			if [[ ! ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+				continue
 			fi
+
+			pid="${BASH_REMATCH[1]}"
+			comm="${BASH_REMATCH[2]}"
+
+			printf '%s: %s\n' 'PID' "$pid"
+			printf '%s: %s\n\n' 'COMMAND' "$comm"
 		done
 	fi
 
@@ -1145,7 +1153,7 @@ hb_log_f="${of_dir}/Info/${title}.${year}_HandBrake_log.txt"
 
 for txt_f in "$command_f" "$hb_log_f"; do
 	if [[ -f $txt_f ]]; then
-		rm "$txt_f"
+		rm -f "$txt_f"
 	fi
 
 	touch "$txt_f"
