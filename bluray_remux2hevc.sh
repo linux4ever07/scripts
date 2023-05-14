@@ -966,7 +966,7 @@ check_res () {
 	regex_video='^ +Stream #.*: Video: .*, ([0-9]+x[0-9]+).*$'
 	regex_res='^1920x'
 
-	switch='0'
+	switch=0
 
 # Go through the information about the input file, and see if any of the
 # lines are video, and if they match the type of video we're looking
@@ -980,7 +980,7 @@ check_res () {
 		if_res="${BASH_REMATCH[1]}"
 
 		if [[ ! $if_res =~ $regex_res ]]; then
-			switch='1'
+			switch=1
 		fi
 
 		break
