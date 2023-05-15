@@ -359,7 +359,7 @@ break_name () {
 # If this element matches the year regex, stop going through the
 # array elements.
 		if [[ ${!array_ref} =~ $regex_year ]]; then
-			year_tmp=("${BASH_REMATCH[2]}")
+			year_tmp="${BASH_REMATCH[2]}"
 
 			elements="$i"
 
