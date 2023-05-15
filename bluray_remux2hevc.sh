@@ -1074,8 +1074,6 @@ if_m2ts () {
 # Creates a function called 'get_name', which will get the movie title
 # and year, based on the input file name.
 get_name () {
-	regex='^(.*) ([0-9]{4})$'
-
 # If the input file name is an M2TS, get the movie title and year from
 # the surrounding directory structure.
 	if_m2ts=$(if_m2ts)
