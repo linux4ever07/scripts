@@ -13,17 +13,20 @@ regex_pid_comm='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 mapfile -t hb_pids < <(ps -C "$comm" -o pid,args | tail -n +2)
 
 for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-	if [[ ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
-		pid="${BASH_REMATCH[1]}"
-		args="${BASH_REMATCH[2]}"
+	if [[ ! ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+		continue
+	fi
 
-		state=$(ps -p "$pid" -o state | tail -n +2)
+	pid="${BASH_REMATCH[1]}"
+	args="${BASH_REMATCH[2]}"
 
-		if [[ $state != 'T' ]]; then
-			continue
-		fi
+	state=$(ps -p "$pid" -o state | tail -n +2)
 
-		cat <<INFO
+	if [[ $state != 'T' ]]; then
+		continue
+	fi
+
+	cat <<INFO
 
 STARTING!
 PID: ${pid}
@@ -31,6 +34,5 @@ COMMAND: ${args}
 
 INFO
 
-		kill -s 18 "$pid"
-	fi
+	kill -s 18 "$pid"
 done
