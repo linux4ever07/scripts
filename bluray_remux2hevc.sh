@@ -338,11 +338,36 @@ break_name () {
 		fi
 	done
 
-	declare -a name
+	declare title_tmp year_tmp
+
+	year_tmp='0000'
 
 	regex_year='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
-# This for loop goes through the word list.
+# This for loop goes through the word list from right to left, until it
+# finds a year. If the year is found, it's saved in a variable, and the
+# elements variable is modified so the next for loop will not go beyond
+# the element that contains the year, when saving the words that
+# comprise the title.
+	for (( i = elements; i > 0; i-- )); do
+		array_ref="bname_${type_tmp}[${i}]"
+
+		if [[ -z ${!array_ref} ]]; then
+			continue
+		fi
+
+# If this element matches the year regex, stop going through the
+# array elements.
+		if [[ ${!array_ref} =~ $regex_year ]]; then
+			year_tmp=("${BASH_REMATCH[2]}")
+
+			elements="$i"
+
+			break
+		fi
+	done
+
+# This for loop goes through the word list that comprises the title.
 	for (( i = 0; i < elements; i++ )); do
 		array_ref="bname_${type_tmp}[${i}]"
 
@@ -350,19 +375,14 @@ break_name () {
 			continue
 		fi
 
-# If this element matches the year regex, stop adding elements to the
-# 'name' array, as we got the full name already (incl. the year).
-		if [[ ${!array_ref} =~ $regex_year ]]; then
-			name+=("(${BASH_REMATCH[2]})")
-			break
-		fi
-
-		name+=("${!array_ref}")
+		title_tmp+="${!array_ref} "
 	done
 
+	title_tmp="${title_tmp% }"
+
 # Prints the complete parsed name.
-	name_string="${name[@]}"
-	printf '%s' "$name_string"
+	printf '%s\n' "$title_tmp"
+	printf '%s\n' "$year_tmp"
 }
 
 # Creates a function called 'imdb', which will look up the movie name on
@@ -1054,7 +1074,6 @@ if_m2ts () {
 # Creates a function called 'get_name', which will get the movie title
 # and year, based on the input file name.
 get_name () {
-	year='0000'
 	regex='^(.*) ([0-9]{4})$'
 
 # If the input file name is an M2TS, get the movie title and year from
@@ -1066,29 +1085,28 @@ get_name () {
 	fi
 
 # Breaks up the input file name, and gets its IMDb name.
-	bname_tmp=$(break_name "$bname")
+	mapfile -t bname_tmp < <(break_name "$bname")
 
-# Gets information from IMDb, and removes special characters.
-	mapfile -t imdb_tmp < <(fsencode "$(imdb "$bname_tmp")")
+	title="${bname_tmp[0]}"
+	year="${bname_tmp[1]}"
+
+# Gets information from IMDb.
+	if [[ $year != '0000' ]]; then
+		mapfile -t imdb_tmp < <(imdb "${title} (${year})")
+	else
+		mapfile -t imdb_tmp < <(imdb "$title")
+	fi
 
 # If IMDb lookup succeeded, use that information.
-# If not, use the information in $bname_tmp instead, but delete special
-# characters.
+# If not, use the information in the 'bname_tmp' array instead.
 	if [[ -n ${imdb_tmp[0]} ]]; then
 		title="${imdb_tmp[0]}"
 		year="${imdb_tmp[1]}"
-	else
-		bname_tmp_fs=$(fsencode "$bname_tmp")
-
-		if [[ $bname_tmp_fs =~ $regex ]]; then
-			title="${BASH_REMATCH[1]}"
-			year="${BASH_REMATCH[2]}"
-		else
-			title="$bname_tmp_fs"
-		fi
 	fi
 
-	title=$(tr ' ' '.' <<<"$title")
+# Delete special characters from the title, and translate spaces to
+# dots.
+	title=$(fsencode "$title" | tr ' ' '.')
 
 	printf '%s\n' "$title"
 	printf '%s\n' "$year"
