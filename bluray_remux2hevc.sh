@@ -1102,7 +1102,7 @@ get_name () {
 		year="${imdb_tmp[1]}"
 	fi
 
-# Delete special characters from the title, and translate spaces to
+# Deletes special characters from the title, and translates spaces to
 # dots.
 	title=$(fsencode "$title" | tr ' ' '.')
 
