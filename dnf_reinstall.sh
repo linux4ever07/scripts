@@ -48,11 +48,11 @@ dnf_install () {
 
 case "$mode" in
 	'full')
-		mapfile -t dnf_pkgs < <(dnf list --installed | sed -E 's/[[:blank:]]+/ /g' | cut -d' ' -f1)
+		mapfile -t dnf_pkgs < <(dnf list --installed | sed -E 's/^([^ ]+).*$/\1/')
 		dnf_install
 	;;
 	'verify')
-		mapfile -t dnf_pkgs < <(rpm -qf $(rpm -Va | sed -E 's|^.* /|/|') | sort -u)
+		mapfile -t dnf_pkgs < <(rpm -qf $(rpm -Va | sed -E 's/^[^/]+(.*)$/\1/') | sort -u)
 		dnf_install
 	;;
 esac
