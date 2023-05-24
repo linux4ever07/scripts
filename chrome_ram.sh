@@ -155,7 +155,7 @@ restore_chrome () {
 		mv "$bak_cache" "$og_cache" || exit
 	fi
 
-	rm -rf "$shm_dn"
+	rm -r "$shm_dn"
 
 	sync
 	cd "$cwd"
@@ -198,7 +198,7 @@ if [[ $mode == 'normal' ]]; then
 		cp -rp "${files[@]}" "$shm_cache" || exit
 	fi
 
-	rm -rf "$bak_cache" || exit
+	rm -r "$bak_cache" || exit
 fi
 
 printf '\n%s\n\n' 'Starting Chrome...'
@@ -215,7 +215,7 @@ if [[ $mode == 'normal' ]]; then
 		tar -cf "$tar_fn" * || kill_chrome
 	fi
 
-	rm -rf "$bak_cfg" || kill_chrome
+	rm -r "$bak_cfg" || kill_chrome
 fi
 
 cd "$shm_cfg" || kill_chrome

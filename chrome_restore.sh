@@ -112,7 +112,7 @@ case "$mode" in
 
 		sync
 
-		rm -rf "$ram_fn" || exit
+		rm -r "$ram_fn" || exit
 	;;
 	'backup')
 		if [[ -z $bak_fn ]]; then
