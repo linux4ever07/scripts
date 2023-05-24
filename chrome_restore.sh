@@ -49,8 +49,6 @@ regex[bn]='google-chrome-[0-9]+-[0-9]+'
 regex[ram]="^${regex[bn]}$"
 regex[bak]="^${regex[bn]}\.tar$"
 
-dirs=("${HOME}/.config" "${HOME}/.cache")
-
 mapfile -t files < <(find '/dev/shm' -mindepth 1 -maxdepth 1 -type d -name "google-chrome-*")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
