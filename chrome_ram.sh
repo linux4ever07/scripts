@@ -186,8 +186,18 @@ ln -s "$shm_cache" "$og_cache" || exit
 if [[ $mode == 'normal' ]]; then
 	printf '\n%s\n\n' 'Copying Chrome config / cache to /dev/shm...'
 
-	cp -rp "$bak_cfg"/* "$shm_cfg" || exit
-	cp -rp "$bak_cache"/* "$shm_cache" || exit
+	mapfile -t files < <(compgen -G "${bak_cfg}/*")
+
+	if [[ ${#files[@]} -gt 0 ]]; then
+		cp -rp "${files[@]}" "$shm_cfg" || exit
+	fi
+
+	mapfile -t files < <(compgen -G "${bak_cache}/*")
+
+	if [[ ${#files[@]} -gt 0 ]]; then
+		cp -rp "${files[@]}" "$shm_cache" || exit
+	fi
+
 	rm -rf "$bak_cache" || exit
 fi
 
@@ -198,7 +208,13 @@ pid="$!"
 
 if [[ $mode == 'normal' ]]; then
 	cd "$bak_cfg" || kill_chrome
-	tar -cf "$tar_fn" * || kill_chrome
+
+	mapfile -t files < <(compgen -G "*")
+
+	if [[ ${#files[@]} -gt 0 ]]; then
+		tar -cf "$tar_fn" * || kill_chrome
+	fi
+
 	rm -rf "$bak_cfg" || kill_chrome
 fi
 
