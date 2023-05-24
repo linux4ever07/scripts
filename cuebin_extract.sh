@@ -743,7 +743,7 @@ cdr2wav () {
 
 # If 'cdr' is not among the chosen audio types, delete the CDR file.
 		if [[ -z ${audio_types_run[cdr]} ]]; then
-			rm -f "$cdr_if" || exit
+			rm "$cdr_if" || exit
 		fi
 
 		unset -v args_ref args_ffmpeg args_sox
@@ -866,7 +866,7 @@ clean_up () {
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		fn="${files[${i}]}"
-		rm -f "$fn" || exit
+		rm "$fn" || exit
 	done
 }
 
