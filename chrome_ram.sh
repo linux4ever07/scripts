@@ -135,14 +135,14 @@ BACKUP
 	tar -cf "$tar_fn" *
 
 	if [[ -f $tar_fn_old ]]; then
-		rm -f "$tar_fn_old"
+		rm "$tar_fn_old"
 	fi
 }
 
 restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
-	rm -f "$og_cfg" "$og_cache" || exit
+	rm "$og_cfg" "$og_cache" || exit
 
 	if [[ $mode == 'normal' ]]; then
 		mkdir -p "$og_cfg" "$og_cache" || exit

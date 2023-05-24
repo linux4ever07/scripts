@@ -85,7 +85,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-rm -f "$cfg" "$cache" || exit
+rm "$cfg" "$cache" || exit
 
 mkdir -p "$cfg" "$cache" || exit
 
