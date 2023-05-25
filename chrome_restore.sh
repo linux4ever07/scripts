@@ -33,11 +33,9 @@ case "$1" in
 	;;
 esac
 
-declare session ram_fn ram_date bak_fn bak_date
+declare ram_fn ram_date bak_fn bak_date
 declare -a files
 declare -A regex
-
-session="${RANDOM}-${RANDOM}"
 
 ram_date=0
 bak_date=0
