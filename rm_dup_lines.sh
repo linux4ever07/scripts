@@ -42,7 +42,7 @@ get_client () {
 	done
 }
 
-mapfile -t files < <(find . -type f -iname "*.log" -o -iname "*.txt" 2>&-)
+mapfile -t files < <(find "$PWD" -type f -iname "*.log" -o -iname "*.txt" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
