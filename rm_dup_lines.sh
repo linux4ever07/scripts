@@ -60,18 +60,13 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 	for (( j = 0; j < ${#lines[@]}; j++ )); do
 		line="${lines[${j}]}"
+		line_tmp="$line"
 
-		if [[ -z ${regex[client]} ]]; then
-			printf '%s\n' "$line" >> "$fn_out"
-			continue
+		if [[ -n ${regex[client]} ]]; then
+			if [[ $line =~ ${regex[client]} ]]; then
+				line_tmp="${BASH_REMATCH[1]}"
+			fi
 		fi
-
-		if [[ ! $line =~ ${regex[client]} ]]; then
-			printf '%s\n' "$line" >> "$fn_out"
-			continue
-		fi
-
-		line_tmp="${BASH_REMATCH[1]}"
 
 		if [[ $j -ge 1 ]]; then
 			if [[ $line_tmp == "$previous" ]]; then
