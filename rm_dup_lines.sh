@@ -52,8 +52,6 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 	touch "$fn_out"
 
-	unset -v previous
-
 	mapfile -t lines < <(tr -d '\r' <"$fn")
 
 	get_client
@@ -78,6 +76,8 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 		printf '%s\n' "$line" >> "$fn_out"
 	done
+
+	unset -v previous
 
 	touch -r "$fn" "$fn_out"
 	mv "$fn_out" "$fn"
