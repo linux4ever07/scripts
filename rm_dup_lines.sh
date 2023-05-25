@@ -3,43 +3,75 @@
 # This script removes duplicate lines from IRC logs in the current
 # directory.
 
-konversation_regex='^\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\]'
-irssi_regex='^[0-9]+:[0-9]+'
-hexchat_regex='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+'
+set -eo pipefail
 
-dn="/dev/shm/rm_dup_lines-${RANDOM}-${RANDOM}"
+declare -a clients lines
+declare -A regex
+
+clients=('hexchat' 'irccloud' 'irssi' 'konversation')
+
+regex[hexchat]='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+(.*)$'
+regex[irccloud]='^\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\](.*)$'
+regex[irssi]='^[0-9]+:[0-9]+(.*)$'
+regex[konversation]='^\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\](.*)$'
+
+session="${RANDOM}-${RANDOM}"
+dn="/dev/shm/rm_dup_lines-${session}"
 
 mkdir "$dn"
+
+get_client () {
+	declare switch
+
+	switch=0
+
+	for (( z = 0; z < ${#lines[@]}; z++ )); do
+		line="${lines[${z}]}"
+
+		for client in "${clients[@]}"; do
+			if [[ $line =~ ${regex[${client}]} ]]; then
+				regex[client]="${regex[${client}]}"
+				switch=1
+				break
+			fi
+		done
+
+		if [[ $switch -eq 1 ]]; then
+			break
+		fi
+	done
+}
 
 mapfile -t files < <(find . -type f -iname "*.log" -o -iname "*.txt" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
 	bn=$(basename "$fn")
-	fn_out="${dn}/${bn%.[^.]*}-${RANDOM}-${RANDOM}.log"
+
+	fn_out="${dn}/${bn}"
 
 	touch "$fn_out"
 
 	unset -v previous
 
-	mapfile -t lines <"$fn"
+	mapfile -t lines < <(tr -d '\r' <"$fn")
+
+	get_client
 
 	for (( j = 0; j < ${#lines[@]}; j++ )); do
 		line="${lines[${j}]}"
 
-		unset -v line_tmp
-
-		if [[ $line =~ $konversation_regex ]]; then
-			line_tmp=$(sed -E "s/${konversation_regex}//" <<<"$line")
-		elif [[ $line =~ $irssi_regex ]]; then
-			line_tmp=$(sed -E "s/${irssi_regex}//" <<<"$line")
-		elif [[ $line =~ $hexchat_regex ]]; then
-			line_tmp=$(sed -E "s/${hexchat_regex}//" <<<"$line")
+		if [[ -z ${regex[client]} ]]; then
+			printf '%s\n' "$line" >> "$fn_out"
+			continue
 		fi
 
-		if [[ -z $line_tmp ]]; then
-			line_tmp="$line"
+		if [[ ! $line =~ ${regex[client]} ]]; then
+			printf '%s\n' "$line" >> "$fn_out"
+			continue
 		fi
+
+		line_tmp="${BASH_REMATCH[1]}"
 
 		if [[ $j -ge 1 ]]; then
 			if [[ $line_tmp == "$previous" ]]; then
