@@ -77,7 +77,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 		printf '%s\n' "$line" >> "$fn_out"
 	done
 
-	unset -v previous
+	unset -v previous regex[client]
 
 	touch -r "$fn" "$fn_out"
 	mv "$fn_out" "$fn"
