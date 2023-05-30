@@ -839,10 +839,12 @@ create_cue () {
 		declare fn ext
 
 # Separates file name and extension.
-		if [[ ${!line_ref} =~ ${regex[fn]} ]]; then
-			fn="${BASH_REMATCH[1]}"
-			ext="${BASH_REMATCH[2]}"
+		if [[ ! ${!line_ref} =~ ${regex[fn]} ]]; then
+			continue
 		fi
+
+		fn="${BASH_REMATCH[1]}"
+		ext="${BASH_REMATCH[2]}"
 
 # If the extension is 'wav', then the correct extension is the same as
 # the current audio type.
