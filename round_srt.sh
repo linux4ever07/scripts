@@ -20,11 +20,13 @@ usage () {
 }
 
 if=$(readlink -f "$1")
-session="${RANDOM}-${RANDOM}"
-of="${if%.[^.]*}"
-of="${of}-${session}.srt"
+if_bn=$(basename "$if")
+if_bn_lc="${if_bn,,}"
 
-if [[ ! -f $if ]]; then
+session="${RANDOM}-${RANDOM}"
+of="${if%.*}-${session}.srt"
+
+if [[ ! -f $if || ${if_bn_lc##*.} != 'srt' ]]; then
 	usage
 fi
 

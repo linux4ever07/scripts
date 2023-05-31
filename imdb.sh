@@ -18,6 +18,8 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
+declare -A regex
+
 # Creates a function called 'uriencode', which will translate the
 # special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
@@ -55,25 +57,27 @@ imdb () {
 	mapfile -d' ' -t term < <(sed -E 's/[[:blank:]]+/ /g' <<<"$@")
 	term[-1]="${term[-1]%$'\n'}"
 
-	y_regex='^\(([0-9]{4})\)$'
+	regex[y]='^\(([0-9]{4})\)$'
 
-	id_regex='^.*\/title\/(tt[0-9]+).*$'
-	title_regex1='\,\"originalTitleText\":'
-	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
-	year_regex1='\,\"releaseYear\":'
-	year_regex2='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
-	plot_regex1='\"plotText\":'
-	plot_regex2='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
-	rating_regex1='\,\"ratingsSummary\":'
-	rating_regex2='\"aggregateRating\":(.*)\,\"voteCount\":.*\,\"__typename\":\"RatingsSummary\"'
-	genre_regex1='\"genres\":\['
-	genre_regex2='\"text\":\"(.*)\"\,\"id\":\".*\"\,\"__typename\":\"Genre\"'
-	actor_regex1='\,\"actor\":\['
-	actor_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
-	director_regex1='\]\,\"director\":\['
-	director_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
-	runtime_regex1='\,\"runtime\":'
-	runtime_regex2='\"seconds\":(.*)\,\"displayableProperty\":'
+	regex[id]='^.*\/title\/(tt[0-9]+).*$'
+	regex[title1]='\,\"originalTitleText\":'
+	regex[title2]='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
+	regex[year1]='\,\"releaseYear\":'
+	regex[year2]='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
+	regex[plot1]='\"plotText\":'
+	regex[plot2]='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
+	regex[rating1]='\,\"ratingsSummary\":'
+	regex[rating2]='\"aggregateRating\":(.*)\,\"voteCount\":.*\,\"__typename\":\"RatingsSummary\"'
+	regex[genre1]='\"genres\":\['
+	regex[genre2]='\"text\":\"(.*)\"\,\"id\":\".*\"\,\"__typename\":\"Genre\"'
+	regex[actor1]='\,\"actor\":\['
+	regex[actor2]='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
+	regex[director1]='\]\,\"director\":\['
+	regex[director2]='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
+	regex[runtime1]='\,\"runtime\":'
+	regex[runtime2]='\"seconds\":(.*)\,\"displayableProperty\":'
+
+	regex[list]='^,$'
 
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 
@@ -90,8 +94,6 @@ imdb () {
 		declare -A lists
 
 		lists=(['genre']=1 ['actor']=1 ['director']=1)
-
-		regex_list='^,$'
 
 		z=$(( z + 1 ))
 
@@ -111,7 +113,7 @@ imdb () {
 
 			z=$(( z + 1 ))
 
-			if [[ ${tmp_array[${z}]} =~ $regex_list ]]; then
+			if [[ ${tmp_array[${z}]} =~ ${regex[list]} ]]; then
 				z=$(( z + 1 ))
 			else
 				z=$(( z - 1 ))
@@ -125,7 +127,7 @@ imdb () {
 		eval "${json_type}"=\""${string}"\"
 	}
 
-	if [[ ${term[-1]} =~ $y_regex ]]; then
+	if [[ ${term[-1]} =~ ${regex[y]} ]]; then
 		y="${BASH_REMATCH[1]}"
 		unset -v term[-1]
 	fi
@@ -149,7 +151,7 @@ imdb () {
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	mapfile -t id_array < <(get_page "$url_tmp" | sed -nE "s/${id_regex}/\1/p")
+	mapfile -t id_array < <(get_page "$url_tmp" | sed -nE "s/${regex[id]}/\1/p")
 	id="${id_array[0]}"
 
 	if [[ -z $id ]]; then
@@ -176,8 +178,8 @@ imdb () {
 		fi
 
 		for json_type in "${!json_types[@]}"; do
-			json_regex1_ref="${json_type}_regex1"
-			json_regex2_ref="${json_type}_regex2"
+			json_regex1_ref="regex[${json_type}1]"
+			json_regex2_ref="regex[${json_type}2]"
 
 			if [[ ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
 				get_list

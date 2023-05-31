@@ -156,9 +156,32 @@ lang='eng'
 # if any.
 declare tune
 
+declare -A regex
+
 # Creates some global regexes.
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_zero='^0+([0-9]+)$'
+regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex[zero]='^0+([0-9]+)$'
+
+# Creates some function-specific regexes.
+regex[lang]='^[[:alpha:]]{3}$'
+regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
+
+regex[audio]="^ +Stream #0:[0-9]+\(${lang}\){0,1}: Audio: .*$"
+regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
+
+regex[stream]='^ +Stream #(0:[0-9]+)'
+regex[kbps]=', ([0-9]+) kb\/s'
+regex[bps]='^ +BPS.*: ([0-9]+)$'
+regex[last3]='^[0-9]+([0-9]{3})$'
+
+regex[video]='^ +Stream #.*: Video: .*, ([0-9]+x[0-9]+).*$'
+regex[res]='^1920x'
+
+regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
+
+regex[m2ts]='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
+
+regex[part]='\.part$'
 
 # Setting some variables that will be used to create a full HandBrake
 # command, with args.
@@ -191,9 +214,7 @@ while [[ $# -gt 0 ]]; do
 		'-lang')
 			shift
 
-			regex_lang='^[[:alpha:]]{3}$'
-
-			if [[ ! $1 =~ $regex_lang ]]; then
+			if [[ ! $1 =~ ${regex[lang]} ]]; then
 				usage
 			else
 				lang="${1,,}"
@@ -342,8 +363,6 @@ break_name () {
 
 	year_tmp='0000'
 
-	regex_year='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
-
 # This for loop goes through the word list from right to left, until it
 # finds a year. If the year is found, it's saved in a variable, and the
 # elements variable is modified so the next for loop will not go beyond
@@ -358,7 +377,7 @@ break_name () {
 
 # If this element matches the year regex, stop going through the
 # array elements.
-		if [[ ${!array_ref} =~ $regex_year ]]; then
+		if [[ ${!array_ref} =~ ${regex[year]} ]]; then
 			year_tmp="${BASH_REMATCH[2]}"
 
 			elements="$i"
@@ -397,25 +416,27 @@ imdb () {
 	mapfile -d' ' -t term < <(sed -E 's/[[:blank:]]+/ /g' <<<"$@")
 	term[-1]="${term[-1]%$'\n'}"
 
-	y_regex='^\(([0-9]{4})\)$'
+	regex[y]='^\(([0-9]{4})\)$'
 
-	id_regex='^.*\/title\/(tt[0-9]+).*$'
-	title_regex1='\,\"originalTitleText\":'
-	title_regex2='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
-	year_regex1='\,\"releaseYear\":'
-	year_regex2='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
-	plot_regex1='\"plotText\":'
-	plot_regex2='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
-	rating_regex1='\,\"ratingsSummary\":'
-	rating_regex2='\"aggregateRating\":(.*)\,\"voteCount\":.*\,\"__typename\":\"RatingsSummary\"'
-	genre_regex1='\"genres\":\['
-	genre_regex2='\"text\":\"(.*)\"\,\"id\":\".*\"\,\"__typename\":\"Genre\"'
-	actor_regex1='\,\"actor\":\['
-	actor_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
-	director_regex1='\]\,\"director\":\['
-	director_regex2='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
-	runtime_regex1='\,\"runtime\":'
-	runtime_regex2='\"seconds\":(.*)\,\"displayableProperty\":'
+	regex[id]='^.*\/title\/(tt[0-9]+).*$'
+	regex[title1]='\,\"originalTitleText\":'
+	regex[title2]='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
+	regex[year1]='\,\"releaseYear\":'
+	regex[year2]='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
+	regex[plot1]='\"plotText\":'
+	regex[plot2]='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
+	regex[rating1]='\,\"ratingsSummary\":'
+	regex[rating2]='\"aggregateRating\":(.*)\,\"voteCount\":.*\,\"__typename\":\"RatingsSummary\"'
+	regex[genre1]='\"genres\":\['
+	regex[genre2]='\"text\":\"(.*)\"\,\"id\":\".*\"\,\"__typename\":\"Genre\"'
+	regex[actor1]='\,\"actor\":\['
+	regex[actor2]='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
+	regex[director1]='\]\,\"director\":\['
+	regex[director2]='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
+	regex[runtime1]='\,\"runtime\":'
+	regex[runtime2]='\"seconds\":(.*)\,\"displayableProperty\":'
+
+	regex[list]='^,$'
 
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 
@@ -432,8 +453,6 @@ imdb () {
 		declare -A lists
 
 		lists=(['genre']=1 ['actor']=1 ['director']=1)
-
-		regex_list='^,$'
 
 		z=$(( z + 1 ))
 
@@ -453,7 +472,7 @@ imdb () {
 
 			z=$(( z + 1 ))
 
-			if [[ ${tmp_array[${z}]} =~ $regex_list ]]; then
+			if [[ ${tmp_array[${z}]} =~ ${regex[list]} ]]; then
 				z=$(( z + 1 ))
 			else
 				z=$(( z - 1 ))
@@ -467,7 +486,7 @@ imdb () {
 		eval "${json_type}"=\""${string}"\"
 	}
 
-	if [[ ${term[-1]} =~ $y_regex ]]; then
+	if [[ ${term[-1]} =~ ${regex[y]} ]]; then
 		y="${BASH_REMATCH[1]}"
 		unset -v term[-1]
 	fi
@@ -491,7 +510,7 @@ imdb () {
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
 	fi
 
-	mapfile -t id_array < <(get_page "$url_tmp" | sed -nE "s/${id_regex}/\1/p")
+	mapfile -t id_array < <(get_page "$url_tmp" | sed -nE "s/${regex[id]}/\1/p")
 	id="${id_array[0]}"
 
 	if [[ -z $id ]]; then
@@ -518,8 +537,8 @@ imdb () {
 		fi
 
 		for json_type in "${!json_types[@]}"; do
-			json_regex1_ref="${json_type}_regex1"
-			json_regex2_ref="${json_type}_regex2"
+			json_regex1_ref="regex[${json_type}1]"
+			json_regex2_ref="regex[${json_type}2]"
 
 			if [[ ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
 				get_list
@@ -546,14 +565,6 @@ imdb () {
 # the input file, without all its audio tracks but with the video and
 # subtitle tracks, and with the core DTS track.
 dts_extract_remux () {
-	regex_audio="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: Audio: .*$"
-	regex_51=', 5.1\(.*\),'
-
-	regex_stream='^ +Stream #'
-	regex_kbps=', ([0-9]+) kb\/s'
-	regex_bps='^ +BPS.*: ([0-9]+)$'
-	regex_last3='^[0-9]+([0-9]{3})$'
-
 	high_kbps='1536'
 	low_kbps='768'
 	high_bps='1537000'
@@ -561,7 +572,8 @@ dts_extract_remux () {
 	bps_limit=$(( (high_bps - low_bps) / 2 ))
 	use_kbps="${high_kbps}k"
 
-	declare -A type elements audio_tracks
+	declare -A type elements audio_tracks audio_maps audio_channels
+
 	type[dts_hdma]='dts \(DTS-HD MA\)'
 	type[truehd]='truehd'
 	type[pcm]='pcm_bluray'
@@ -575,6 +587,8 @@ dts_extract_remux () {
 	elements[dts]=0
 	elements[ac3]=0
 
+	declare -a streams maps bitrates
+
 	audio_types=('dts_hdma' 'truehd' 'pcm' 'flac' 'dts' 'ac3')
 
 	if_info_tmp=("${if_info[@]}")
@@ -584,11 +598,15 @@ dts_extract_remux () {
 	parse_ffmpeg () {
 		declare n
 
+		streams=()
+		maps=()
+		bitrates=()
+
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
 			line="${if_info_tmp[${i}]}"
 
 # If line is a stream...
-			if [[ $line =~ $regex_stream ]]; then
+			if [[ $line =~ ${regex[stream]} ]]; then
 				if [[ -z $n ]]; then
 					n=0
 				else
@@ -596,16 +614,17 @@ dts_extract_remux () {
 				fi
 
 				streams["${n}"]="$line"
+				maps["${n}"]="${BASH_REMATCH[1]}"
 
 # If stream line contains bitrate, use that.
-				if [[ $line =~ $regex_kbps ]]; then
+				if [[ $line =~ ${regex[kbps]} ]]; then
 					bps=$(( ${BASH_REMATCH[1]} * 1000 ))
 					bitrates["${n}"]="$bps"
 				fi
 			fi
 
 # If line is a bitrate...
-			if [[ $line =~ $regex_bps ]]; then
+			if [[ $line =~ ${regex[bps]} ]]; then
 				bps="${BASH_REMATCH[1]}"
 
 # If bitrate has already been set, skip this line.
@@ -614,10 +633,10 @@ dts_extract_remux () {
 				fi
 
 # If input bitrate consists of at least 4 digits, get the last 3 digits.
-				if [[ $bps =~ $regex_last3 ]]; then
+				if [[ $bps =~ ${regex[last3]} ]]; then
 					bps_last="${BASH_REMATCH[1]}"
 
-					if [[ $bps_last =~ $regex_zero ]]; then
+					if [[ $bps_last =~ ${regex[zero]} ]]; then
 						bps_last="${BASH_REMATCH[1]}"
 					fi
 
@@ -660,26 +679,24 @@ dts_extract_remux () {
 			args=(rm -f \""${wav_tmp}"\")
 			run_or_quit
 
-			unset -v streams bitrates
-			declare -a streams bitrates
 			parse_ffmpeg
 
 			for (( i = 0; i < ${#streams[@]}; i++ )); do
 				stream="${streams[${i}]}"
 
 # See if the current line is an audio track. If so, save the bitrate.
-				if [[ $stream =~ $regex_audio ]]; then
+				if [[ $stream =~ ${regex[audio]} ]]; then
 					bps_if="${bitrates[${i}]}"
 					break
 				fi
 			done
 		else
 			for (( i = 0; i < ${#streams[@]}; i++ )); do
-				stream="${streams[${i}]}"
+				map="${maps[${i}]}"
 
 # See if the current line matches the chosen audio track. If so, save
 # the bitrate.
-				if [[ $stream == "${!audio_track_ref}" ]]; then
+				if [[ $map == "${!map_ref}" ]]; then
 					bps_if="${bitrates[${i}]}"
 					break
 				fi
@@ -705,7 +722,6 @@ dts_extract_remux () {
 		fi
 	}
 
-	declare -a streams bitrates
 	parse_ffmpeg
 
 # Go through the information about the input file, and see if any of the
@@ -713,10 +729,11 @@ dts_extract_remux () {
 # for.
 	for (( i = 0; i < ${#streams[@]}; i++ )); do
 		stream="${streams[${i}]}"
+		map="${maps[${i}]}"
 
 # See if the current line is an audio track, and the same language as
 # $lang.
-		if [[ ! $stream =~ $regex_audio ]]; then
+		if [[ ! $stream =~ ${regex[audio]} ]]; then
 			continue
 		fi
 
@@ -725,47 +742,67 @@ dts_extract_remux () {
 
 			if [[ $stream =~ ${type[${tmp_type}]} ]]; then
 				audio_tracks["${tmp_type},${!n}"]="$stream"
+				audio_maps["${tmp_type},${!n}"]="$map"
 				elements["${tmp_type}"]=$(( ${!n} + 1 ))
 			fi
 		done
 	done
 
-	switch=0
-
-# Go through the different types of audio and see if we have a matching
-# 5.1 track in one of those formats.
+# Go through the different types of audio and see if we have matching
+# surround tracks in those formats.
 	for tmp_type in "${audio_types[@]}"; do
 		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
-			hash_ref="audio_tracks[${tmp_type},${i}]"
+			track_ref="audio_tracks[${tmp_type},${i}]"
 
-			if [[ ! ${!hash_ref} =~ $regex_51 ]]; then
+			audio_channels["${tmp_type},${i}"]=0
+
+			if [[ ! ${!track_ref} =~ ${regex[surround]} ]]; then
 				continue
 			fi
 
-			audio_track_ref="$hash_ref"
-			audio_format="$tmp_type"
-			switch=1
-			break
+			audio_channels["${tmp_type},${i}"]="${BASH_REMATCH[1]}"
+		done
+	done
+
+# Go through the format priority list in descending order, and pick the
+# audio track that has the highest number of channels (if possible).
+	for tmp_type in "${audio_types[@]}"; do
+		declare map channel
+		channel=0
+
+		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
+			track_ref="audio_tracks[${tmp_type},${i}]"
+			map_ref="audio_maps[${tmp_type},${i}]"
+			channel_ref="audio_channels[${tmp_type},${i}]"
+
+			if [[ ${!channel_ref} -gt $channel ]]; then
+				map="$map_ref"
+				channel="${!channel_ref}"
+			fi
 		done
 
-		if [[ $switch -eq 1 ]]; then
+		if [[ $channel -ge 5 ]]; then
+			map_ref="$map"
+			audio_format="$tmp_type"
 			break
 		fi
+
+		unset -v map map_ref channel
 	done
 
 # Pick the first audio track in the list, in the preferred available
-# format, if $audio_track_ref is still empty.
-	if [[ -z $audio_track_ref ]]; then
+# format, if $map_ref is still empty.
+	if [[ -z $map_ref ]]; then
 		for tmp_type in "${audio_types[@]}"; do
 			if [[ ${elements[${tmp_type}]} -gt 0 ]]; then
-				audio_track_ref="audio_tracks[${tmp_type},0]"
+				map_ref="audio_maps[${tmp_type},0]"
 				audio_format="$tmp_type"
 				break
 			fi
 		done
 	fi
 
-	if [[ -z $audio_track_ref ]]; then
+	if [[ -z $map_ref ]]; then
 		cat <<NO_MATCH
 
 ${if}
@@ -785,11 +822,8 @@ NO_MATCH
 		exit
 	fi
 
-# Gets the ffmpeg map code of the audio track.
-	map=$(sed -E "s/${regex_audio}/\1/" <<<"${!audio_track_ref}")
-
 # Creates first part of ffmpeg command.
-	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${map}" -map 0:s?)
+	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${!map_ref}" -map 0:s?)
 
 # Creates ffmpeg command.
 	case "$audio_format" in
@@ -983,9 +1017,6 @@ run_or_quit () {
 # of the input file, to see if it's 1080p, which is the resolution we
 # want when using this script.
 check_res () {
-	regex_video='^ +Stream #.*: Video: .*, ([0-9]+x[0-9]+).*$'
-	regex_res='^1920x'
-
 	switch=0
 
 # Go through the information about the input file, and see if any of the
@@ -993,13 +1024,13 @@ check_res () {
 # for.
 	for (( i = 0; i < ${#if_info[@]}; i++ )); do
 # See if the current line is a video track.
-		if [[ ! ${if_info[${i}]} =~ $regex_video ]]; then
+		if [[ ! ${if_info[${i}]} =~ ${regex[video]} ]]; then
 			continue
 		fi
 
 		if_res="${BASH_REMATCH[1]}"
 
-		if [[ ! $if_res =~ $regex_res ]]; then
+		if [[ ! $if_res =~ ${regex[res]} ]]; then
 			switch=1
 		fi
 
@@ -1018,8 +1049,6 @@ check_res () {
 is_handbrake () {
 	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
 
-	regex_pid_comm='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
-
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")
 
@@ -1029,7 +1058,7 @@ is_handbrake () {
 		printf '\n%s\n\n' 'Waiting for this to finish:'
 
 		for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-			if [[ ! ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+			if [[ ! ${hb_pids[${i}]} =~ ${regex[pid_comm]} ]]; then
 				continue
 			fi
 
@@ -1055,12 +1084,10 @@ is_handbrake () {
 # file is an M2TS, in the directory structure '/BDMV/STREAM/'. The
 # function outputs a name, which can be used with the 'break_name'
 # function, to get the movie information from IMDb. If the input file
-# name doesn't match the regex in $regex_m2ts, return from this
-# function, hence leaving the $if_m2ts variable empty.
+# name doesn't match the regex, return from this function, hence leaving
+# the $if_m2ts variable empty.
 if_m2ts () {
-	regex_m2ts='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
-
-	if [[ ! $if =~ $regex_m2ts ]]; then
+	if [[ ! $if =~ ${regex[m2ts]} ]]; then
 		return
 	fi
 
@@ -1117,9 +1144,7 @@ get_name () {
 # input file is an unfinished download, and waits for the file to fully
 # download before processing it.
 is_torrent () {
-	regex_part='\.part$'
-
-	if [[ $if =~ $regex_part ]]; then
+	if [[ $if =~ ${regex[part]} ]]; then
 		if_tmp="$if"
 	else
 		if_tmp="${if}.part"
