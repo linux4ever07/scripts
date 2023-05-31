@@ -166,7 +166,7 @@ regex[zero]='^0+([0-9]+)$'
 regex[lang]='^[[:alpha:]]{3}$'
 regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
-regex[audio]="^ +Stream #0:[0-9]+\(${lang}\){0,1}: Audio: .*$"
+regex[audio]="^ +Stream #0:[0-9]+(\(${lang}\)){0,1}: Audio: .*$"
 regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
 
 regex[stream]='^ +Stream #(0:[0-9]+)'
