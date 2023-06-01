@@ -587,7 +587,7 @@ dts_extract_remux () {
 	elements[dts]=0
 	elements[ac3]=0
 
-	declare -a streams maps bitrates
+	declare -a audio_types if_info_tmp streams maps bitrates
 
 	audio_types=('dts_hdma' 'truehd' 'pcm' 'flac' 'dts' 'ac3')
 
@@ -740,11 +740,14 @@ dts_extract_remux () {
 		for tmp_type in "${audio_types[@]}"; do
 			n="elements[${tmp_type}]"
 
-			if [[ $stream =~ ${type[${tmp_type}]} ]]; then
-				audio_tracks["${tmp_type},${!n}"]="$stream"
-				audio_maps["${tmp_type},${!n}"]="$map"
-				elements["${tmp_type}"]=$(( ${!n} + 1 ))
+			if [[ ! $stream =~ ${type[${tmp_type}]} ]]; then
+				continue
 			fi
+
+			audio_tracks["${tmp_type},${!n}"]="$stream"
+			audio_maps["${tmp_type},${!n}"]="$map"
+			elements["${tmp_type}"]=$(( ${!n} + 1 ))
+			break
 		done
 	done
 
