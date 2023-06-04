@@ -66,6 +66,27 @@ USAGE
 	exit
 }
 
+# Creates a function called 'run_cmd', which will be used to run
+# external commands, capture their output, and print the output (and
+# quit) if the command fails.
+run_cmd () {
+	declare exit_status
+	declare -a cmd_stdout
+
+	mapfile -t cmd_stdout < <(eval "$@" 2>&1; printf '%s\n' "$?")
+
+	exit_status="${cmd_stdout[-1]}"
+	unset -v cmd_stdout[-1]
+
+# Prints the output from the command if it has a non-zero exit status,
+# and then quits.
+	if [[ $exit_status != '0' ]]; then
+		printf '%s\n' "${cmd_stdout[@]}"
+		printf '\n'
+		exit
+	fi
+}
+
 # Creates a function called 'get_tracks', which will read the metadata
 # of media files, and if they contain subtitle tracks, store those in
 # the 'sub_tracks' hash.
@@ -201,27 +222,6 @@ get_tracks () {
 			fi
 		fi
 	done
-}
-
-# Creates a function called 'run_cmd', which will be used to run
-# external commands, capture their output, and print the output (and
-# quit) if the command fails.
-run_cmd () {
-	declare exit_status
-	declare -a cmd_stdout
-
-	mapfile -t cmd_stdout < <(eval "$@" 2>&1; printf '%s\n' "$?")
-
-	exit_status="${cmd_stdout[-1]}"
-	unset -v cmd_stdout[-1]
-
-# Prints the output from the command if it has a non-zero exit status,
-# and then quits.
-	if [[ $exit_status != '0' ]]; then
-		printf '%s\n' "${cmd_stdout[@]}"
-		printf '\n'
-		exit
-	fi
 }
 
 # The loop below handles the arguments to the script.
