@@ -207,6 +207,7 @@ run_cmd () {
 # and then quits.
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${cmd_stdout[@]}"
+		printf '\n'
 		exit
 	fi
 }

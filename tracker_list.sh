@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script parses a BitTorrent tracker list text file, sorts, removes
+# This script parses BitTorrent tracker list text files, sorts, removes
 # duplicates, checks online status of each URL, and prints the list to
 # STDOUT in the correct format.
 
@@ -22,40 +22,70 @@
 
 # tracker_list.sh 'trackers.txt' | tee 'trackers_checked.txt'
 
+declare -a files
+
+nocheck=0
+
+# Creates a function called 'usage', which prints usage and then quits.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [tracker txt] [-nocheck]"
 	exit
 }
 
-if [[ ! -f $1 ]]; then
-	usage
-elif [[ -n $2 && $2 != '-nocheck' ]]; then
+# The loop below handles the arguments to the script.
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		'-nocheck')
+			nocheck=1
+
+			shift
+		;;
+		*)
+			if [[ -f $1 ]]; then
+				files+=("$(readlink -f "$1")")
+			else
+				usage
+			fi
+
+			shift
+		;;
+	esac
+done
+
+if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
-
-nocheck=0
-
-if [[ $2 == '-nocheck' ]]; then
-	nocheck=1
-fi
-
-if=$(readlink -f "$1")
 
 regex1='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
 regex2='^(.*):([0-9]+)(.*)$'
 
-declare -a protocols addresses ends ports
+declare -a lines_out protocols addresses ends ports
 
-mapfile -t lines < <(tr -d '\r' <"$if" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:blank:]]+/\n/g' | sort --unique)
+# Creates a function called 'get_lines', which reads the files given as
+# arguments to the script into memory.
+get_lines () {
+	declare -a lines lines_in
 
-for (( i = 0; i < ${#lines[@]}; i++ )); do
-	line="${lines[${i}]}"
+	for (( z = 0; z < ${#files[@]}; z++ )); do
+		fn="${files[${z}]}"
+
+		mapfile -t lines < <(tr -d '\r' <"$fn" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:blank:]]+/\n/g')
+		lines_in+=("${lines[@]}")
+	done
+
+	mapfile -t lines_out < <(printf '%s\n' "${lines_in[@]}" | sort -u)
+}
+
+get_lines
+
+for (( i = 0; i < ${#lines_out[@]}; i++ )); do
+	line="${lines_out[${i}]}"
 
 	switch=0
 
 # Deletes the line from memory, since we already have a temporary
 # duplicate.
-	lines["${i}"]=''
+	lines_out["${i}"]=''
 
 # Checks if the current line matches the URL regex, and if not continue
 # the next iteration of the loop.
