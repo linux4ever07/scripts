@@ -64,13 +64,17 @@ declare -a lines_out protocols addresses ends ports
 # Creates a function called 'get_lines', which reads the files given as
 # arguments to the script into memory.
 get_lines () {
-	declare -a lines lines_in
+	declare -a lines_in
 
 	for (( z = 0; z < ${#files[@]}; z++ )); do
 		fn="${files[${z}]}"
 
+		declare -a lines
+
 		mapfile -t lines < <(tr -d '\r' <"$fn" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:blank:]]+/\n/g')
 		lines_in+=("${lines[@]}")
+
+		unset -v lines
 	done
 
 	mapfile -t lines_out < <(printf '%s\n' "${lines_in[@]}" | sort -u)
