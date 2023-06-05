@@ -28,10 +28,10 @@ regex[nick]='^<\+*(.*)>$'
 
 clients=('hexchat' 'irccloud' 'irssi' 'konversation')
 
-regex[hexchat]='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+(.*)$'
-regex[irccloud]='^\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\](.*)$'
-regex[irssi]='^[0-9]+:[0-9]+(.*)$'
-regex[konversation]='^\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\](.*)$'
+regex[hexchat]='^([[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+)(.*)$'
+regex[irccloud]='^(\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\])(.*)$'
+regex[irssi]='^([0-9]+:[0-9]+)(.*)$'
+regex[konversation]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
 
 # Creates a function called 'get_client', which will figure out which
 # client was used to generate the IRC log in question, to be able to
