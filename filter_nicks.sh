@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This script is meant to filter out nicks from Konversation IRC log
-# excerpts, except the nicks given as arguments, and whatever other
-# nicks those nicks highlight. The purpose is to highlight a specific
-# conversation going on between the nicks specified.
+# This script is meant to filter out nicks from IRC log excerpts, except
+# the nicks given as arguments, and whatever other nicks those nicks
+# highlight. The purpose is to highlight a specific conversation going
+# on between the nicks specified.
 
 # Creates a function called 'usage', which will print usage and quit.
 usage () {
@@ -21,11 +21,42 @@ if_bn=$(basename "$if")
 of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
 
 declare time line nick nick_utf8
-declare -a times lines words
+declare -a times lines words clients
 declare -A regex nicks nicks_tmp
 
 regex[nick]='^<\+*(.*)>$'
-regex[line]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
+
+clients=('hexchat' 'irccloud' 'irssi' 'konversation')
+
+regex[hexchat]='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+(.*)$'
+regex[irccloud]='^\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\](.*)$'
+regex[irssi]='^[0-9]+:[0-9]+(.*)$'
+regex[konversation]='^\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\](.*)$'
+
+# Creates a function called 'get_client', which will figure out which
+# client was used to generate the IRC log in question, to be able to
+# parse it correctly.
+get_client () {
+	declare switch
+
+	switch=0
+
+	for (( z = 0; z < ${#lines[@]}; z++ )); do
+		line="${lines[${z}]}"
+
+		for client in "${clients[@]}"; do
+			if [[ $line =~ ${regex[${client}]} ]]; then
+				regex[client]="${regex[${client}]}"
+				switch=1
+				break
+			fi
+		done
+
+		if [[ $switch -eq 1 ]]; then
+			break
+		fi
+	done
+}
 
 # Creates a function called 'get_nick', which will print the nick this
 # line belongs to.
@@ -75,9 +106,15 @@ done
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
+get_client
+
+if [[ -z ${regex[client]} ]]; then
+	exit
+fi
+
 # This loop finds all the nicks in the log and adds them to a hash.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	if [[ ! ${lines[${i}]} =~ ${regex[line]} ]]; then
+	if [[ ! ${lines[${i}]} =~ ${regex[client]} ]]; then
 		continue
 	fi
 
