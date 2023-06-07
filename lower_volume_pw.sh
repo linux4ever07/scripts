@@ -12,13 +12,17 @@
 
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
-regex_id='^id ([0-9]+),'
-regex_node='^node\.description = \"(.*)\"'
-regex_class='^media\.class = \"(.*)\"'
-regex_sink='^Audio\/Sink$'
-regex_volume='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
-regex_zero='^0+([0-9]+)$'
-regex_split='^([0-9]+)([0-9]{6})$'
+declare -A regex
+
+regex[id]='^id ([0-9]+),'
+regex[node]='^node\.description = \"(.*)\"'
+regex[class]='^media\.class = \"(.*)\"'
+regex[sink]='^Audio\/Sink$'
+regex[volume]='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
+regex[zero]='^0+([0-9]+)$'
+regex[split]='^([0-9]+)([0-9]{6})$'
+regex[cfg_node]='^node = (.*)$'
+
 full_volume=1000000
 no_volume=0
 target_volume=0
@@ -30,8 +34,6 @@ declare pw_id
 # use, based on user selection or the existence of a configuration file.
 get_id () {
 	declare -A pw_parsed nodes
-
-	regex_cfg_node='^node = (.*)$'
 
 	match_node () {
 		for pw_id_tmp in "${!nodes[@]}"; do
@@ -53,7 +55,7 @@ get_id () {
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
 		line="${pw_info[${i}]}"
 		
-		if [[ $line =~ $regex_id ]]; then
+		if [[ $line =~ ${regex[id]} ]]; then
 			if [[ -z $n ]]; then
 				n=0
 			else
@@ -63,11 +65,11 @@ get_id () {
 			pw_parsed["${n},id"]="${BASH_REMATCH[1]}"
 		fi
 
-		if [[ $line =~ $regex_node ]]; then
+		if [[ $line =~ ${regex[node]} ]]; then
 			pw_parsed["${n},node"]="${BASH_REMATCH[1]}"
 		fi
 
-		if [[ $line =~ $regex_class ]]; then
+		if [[ $line =~ ${regex[class]} ]]; then
 			pw_parsed["${n},class"]="${BASH_REMATCH[1]}"
 		fi
 	done
@@ -76,7 +78,7 @@ get_id () {
 
 # Save the ids and node names of every node that's an audio sink.
 	for (( i = 0; i < n; i++ )); do
-		if [[ ${pw_parsed[${i},class]} =~ $regex_sink ]]; then
+		if [[ ${pw_parsed[${i},class]} =~ ${regex[sink]} ]]; then
 			nodes["${pw_parsed[${i},id]}"]="${pw_parsed[${i},node]}"
 		fi
 	done
@@ -90,7 +92,7 @@ get_id () {
 		for (( i = 0; i < ${#lines[@]}; i++ )); do
 			line="${lines[${i}]}"
 
-			if [[ $line =~ $regex_cfg_node ]]; then
+			if [[ $line =~ ${regex[cfg_node]} ]]; then
 				pw_node="${BASH_REMATCH[1]}"
 
 				break
@@ -139,10 +141,10 @@ get_volume () {
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
 		line="${pw_dump[${i}]}"
 
-		if [[ $line =~ $regex_volume ]]; then
+		if [[ $line =~ ${regex[volume]} ]]; then
 			volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
 
-			if [[ $volume =~ $regex_zero ]]; then
+			if [[ $volume =~ ${regex[zero]} ]]; then
 				volume="${BASH_REMATCH[1]}"
 			fi
 
@@ -162,11 +164,11 @@ set_volume () {
 	volume_tmp="$1"
 	mute_tmp="$2"
 
-	if [[ $volume_tmp =~ $regex_split ]]; then
+	if [[ $volume_tmp =~ ${regex[split]} ]]; then
 		volume_1="${BASH_REMATCH[1]}"
 		volume_2="${BASH_REMATCH[2]}"
 
-		if [[ $volume_2 =~ $regex_zero ]]; then
+		if [[ $volume_2 =~ ${regex[zero]} ]]; then
 			volume_2="${BASH_REMATCH[1]}"
 		fi
 	else
