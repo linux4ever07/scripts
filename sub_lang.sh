@@ -105,12 +105,14 @@ unset -v mkvinfo_tracks
 
 sort_list () {
 	for (( i = 0; i < n; i++ )); do
-		if [[ ${tracks[${i},sub]} -eq 1 ]]; then
-			if [[ -n ${tracks[${i},lang]} ]]; then
-				printf '%s\n' "${tracks[${i},lang]}"
-			elif [[ -n ${tracks[${i},name]} ]]; then
-				printf '%s\n' "${tracks[${i},name]}"
-			fi
+		if [[ ${tracks[${i},sub]} -ne 1 ]]; then
+			continue
+		fi
+
+		if [[ -n ${tracks[${i},lang]} ]]; then
+			printf '%s\n' "${tracks[${i},lang]}"
+		elif [[ -n ${tracks[${i},name]} ]]; then
+			printf '%s\n' "${tracks[${i},name]}"
 		fi
 	done | sort -u
 }
