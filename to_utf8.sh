@@ -47,15 +47,14 @@ regex[fn]='^(.*)\.([^.]*)$'
 # it will encode that file to UTF-8.
 read_decode_fn () {
 	declare charset of
-	declare -a cmd_stdout
 
-	mapfile -t cmd_stdout < <(file -i "$fn")
+	charset=$(file -i "$fn")
 
-	if [[ ${#cmd_stdout[@]} -eq 0 ]]; then
+	if [[ -z $charset ]]; then
 		return
 	fi
 
-	if [[ ! ${cmd_stdout[0]} =~ ${regex[charset]} ]]; then
+	if [[ ! $charset =~ ${regex[charset]} ]]; then
 		return
 	fi
 
