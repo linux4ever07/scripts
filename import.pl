@@ -18,6 +18,8 @@ my(%regex, %tags, %files, @dirs, @log, $library);
 my($discnumber_ref, $tracknumber_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
+$regex{charset} = qr/charset=(.*)[[:blank:]]*$/;
+
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{tag} = qr/^([^=]+)=(.*)$/;
@@ -178,7 +180,7 @@ sub check_log {
 	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_output =~ /charset=(.*)[[:space:]]*$/;
+	$file_output =~ /$regex{charset}/;
 	$file_enc = $1;
 
 	$enc_tmp = find_encoding($file_enc);

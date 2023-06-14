@@ -22,9 +22,10 @@ use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
 my($dn, $of, $delim, $offset, $n);
-my(@files, @lines, @format);
+my(%regex, @files, @lines, @format);
 
-my $regex_ext = qr/\.([^.]*)$/;
+$regex{fn} = qr/^(.*)\.([^.]*)$/;
+$regex{charset} = qr/charset=(.*)[[:blank:]]*$/;
 
 $offset = 0;
 $n = 0;
@@ -39,8 +40,8 @@ while (my $arg = shift(@ARGV)) {
 
 	if (length($arg)) {
 		$fn = abs_path($arg);
-		$fn =~ /$regex_ext/;
-		$ext = lc($1);
+		$fn =~ /$regex{fn}/;
+		$ext = lc($2);
 	}
 
 	if (! -f $fn or $ext ne 'srt') { usage(); }
@@ -71,7 +72,7 @@ sub read_decode_fn {
 	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_output =~ /charset=(.*)[[:space:]]*$/;
+	$file_output =~ /$regex{charset}/;
 	$file_enc = $1;
 
 	$enc_tmp = find_encoding($file_enc);

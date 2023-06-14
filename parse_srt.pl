@@ -10,16 +10,17 @@ use File::Basename qw(basename);
 use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 
-my(@lines, @format, $fn, $ext);
+my(%regex, @lines, @format, $fn, $ext);
 
-my $regex_ext = qr/\.([^.]*)$/;
+$regex{fn} = qr/^(.*)\.([^.]*)$/;
+$regex{charset} = qr/charset=(.*)[[:blank:]]*$/;
 
 if (! scalar(@ARGV)) { usage(); }
 
 if (length($ARGV[0])) {
 	$fn = abs_path($ARGV[0]);
-	$fn =~ /$regex_ext/;
-	$ext = lc($1);
+	$fn =~ /$regex{fn}/;
+	$ext = lc($2);
 }
 
 if (! -f $fn or $ext ne 'srt') { usage(); }
@@ -44,7 +45,7 @@ sub read_decode_fn {
 	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_output =~ /charset=(.*)[[:space:]]*$/;
+	$file_output =~ /$regex{charset}/;
 	$file_enc = $1;
 
 	$enc_tmp = find_encoding($file_enc);
