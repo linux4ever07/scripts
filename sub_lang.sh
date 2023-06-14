@@ -19,6 +19,7 @@ regex_sub="^Track type: subtitles$"
 regex_lang="^Language( \(.*\)){0,1}: (.*)$"
 regex_name="^Name: (.*)$"
 
+# Creates a function called 'usage', which prints usage and then quits.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [mkv]"
 	exit
@@ -103,6 +104,8 @@ n=$(( n + 1 ))
 
 unset -v mkvinfo_tracks
 
+# Creates a function called 'sort_list', which will sort any subtitle
+# tracks it finds in alphabetical order, and remove duplicates.
 sort_list () {
 	for (( i = 0; i < n; i++ )); do
 		if [[ ${tracks[${i},sub]} -ne 1 ]]; then
