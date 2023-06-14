@@ -33,8 +33,9 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare session
+declare charset_of session
 
+charset_of='UTF-8'
 session="${RANDOM}-${RANDOM}"
 
 declare -A regex
@@ -46,31 +47,35 @@ regex[fn]='^(.*)\.([^.]*)$'
 # the correct character set encoding of the input file. If it succeeds,
 # it will encode that file to UTF-8.
 read_decode_fn () {
-	declare charset of
+	declare charset_if of
 
-	charset=$(file -i "$fn")
+	charset_if=$(file -i "$if")
 
-	if [[ -z $charset ]]; then
+	if [[ -z $charset_if ]]; then
 		return
 	fi
 
-	if [[ ! $charset =~ ${regex[charset]} ]]; then
+	if [[ ! $charset_if =~ ${regex[charset]} ]]; then
 		return
 	fi
 
-	charset="${BASH_REMATCH[1]^^}"
+	charset_if="${BASH_REMATCH[1]^^}"
 
-	if [[ $fn =~ ${regex[fn]} ]]; then
+	if [[ $if =~ ${regex[fn]} ]]; then
 		of="${BASH_REMATCH[1]}-${session}.${BASH_REMATCH[2]}"
 	else
-		of="${fn}-${session}"
+		of="${if}-${session}"
 	fi
 
-	iconv -f "$charset" -t 'UTF-8' -o "$of" "$fn"
+	iconv -f "$charset_if" -t "$charset_of" -o "$of" "$if"
+
+	printf '\n(%s -> %s) %s %s\n\n' "$charset_if" "$charset_of" 'Wrote file:' "$of"
+
+	unset -v charset_if of
 }
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
+	if="${files[${i}]}"
 
 	read_decode_fn
 done
