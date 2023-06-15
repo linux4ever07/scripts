@@ -40,8 +40,9 @@ session="${RANDOM}-${RANDOM}"
 
 declare -A regex
 
-regex[charset]='charset=(.*)[[:blank:]]*$'
 regex[fn]='^(.*)\.([^.]*)$'
+regex[charset1]='([^; ]+)$'
+regex[charset2]='^charset=(.*)$'
 
 # Creates a function called 'read_decode_fn', which tries to figure out
 # the correct character set encoding of the input file. If it succeeds,
@@ -49,13 +50,19 @@ regex[fn]='^(.*)\.([^.]*)$'
 read_decode_fn () {
 	declare charset_if of
 
-	charset_if=$(file -i "$if")
+	charset_if=$(file -bi "$if")
 
 	if [[ -z $charset_if ]]; then
 		return
 	fi
 
-	if [[ ! $charset_if =~ ${regex[charset]} ]]; then
+	if [[ ! $charset_if =~ ${regex[charset1]} ]]; then
+		return
+	fi
+
+	charset_if="${BASH_REMATCH[1]}"
+
+	if [[ ! $charset_if =~ ${regex[charset2]} ]]; then
 		return
 	fi
 

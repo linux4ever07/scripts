@@ -25,7 +25,8 @@ use POSIX qw(floor);
 my(%regex, @files, @format, $delim);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
-$regex{charset} = qr/charset=(.*)[[:blank:]]*$/;
+$regex{charset1} = qr/([^; ]+)$/;
+$regex{charset2} = qr/^charset=(.*)$/;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -62,11 +63,13 @@ sub read_decode_fn {
 	my $fn = shift;
 	my($file_output, $file_enc, $enc, $enc_tmp, @lines);
 
-	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
+	open(my $info, '-|', 'file', '-bi', $fn) or die "Can't run file: $!";
 	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_output =~ /$regex{charset}/;
+	$file_output =~ /$regex{charset1}/;
+	$file_enc = $1;
+	$file_enc =~ /$regex{charset2}/;
 	$file_enc = $1;
 
 	$enc_tmp = find_encoding($file_enc);

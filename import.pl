@@ -18,7 +18,8 @@ my(%regex, %tags, %files, @dirs, @log, $library);
 my($discnumber_ref, $tracknumber_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
-$regex{charset} = qr/charset=(.*)[[:blank:]]*$/;
+$regex{charset1} = qr/([^; ]+)$/;
+$regex{charset2} = qr/^charset=(.*)$/;
 
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
@@ -176,11 +177,13 @@ sub check_log {
 	my $fn = shift;
 	my($file_output, $file_enc, $enc, $enc_tmp, $line1);
 
-	open(my $info, '-|', 'file', '-i', $fn) or die "Can't run file: $!";
+	open(my $info, '-|', 'file', '-bi', $fn) or die "Can't run file: $!";
 	chomp($file_output = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_output =~ /$regex{charset}/;
+	$file_output =~ /$regex{charset1}/;
+	$file_enc = $1;
+	$file_enc =~ /$regex{charset2}/;
 	$file_enc = $1;
 
 	$enc_tmp = find_encoding($file_enc);
