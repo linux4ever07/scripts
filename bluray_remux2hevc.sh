@@ -164,26 +164,7 @@ regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[zero]='^0+([0-9]+)$'
 regex[last3]='^[0-9]+([0-9]{3})$'
 
-# Creates some function-specific regexes.
 regex[lang]='^[[:alpha:]]{3}$'
-regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
-
-regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
-
-regex[stream1]='^ +Stream #.*$'
-regex[stream2]="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
-
-regex[kbps]=', ([0-9]+) kb\/s'
-regex[bps]='^ +BPS.*: ([0-9]+)$'
-
-regex[res1]=', ([0-9]+x[0-9]+)'
-regex[res2]='^1920x'
-
-regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
-
-regex[m2ts]='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
-
-regex[part]='\.part$'
 
 # Setting some variables that will be used to create a full HandBrake
 # command, with args.
@@ -261,6 +242,26 @@ done
 if [[ -z $of_dir ]]; then
 	usage
 fi
+
+# Creates some function-specific regexes.
+regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
+
+regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
+
+regex[stream1]='^ +Stream #.*$'
+regex[stream2]="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
+
+regex[kbps]=', ([0-9]+) kb\/s'
+regex[bps]='^ +BPS.*: ([0-9]+)$'
+
+regex[res1]=', ([0-9]+x[0-9]+)'
+regex[res2]='^1920x'
+
+regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
+
+regex[m2ts]='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
+
+regex[part]='\.part$'
 
 # Creates an array of the list of commands needed by this script.
 cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
