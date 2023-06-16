@@ -246,13 +246,13 @@ fi
 # Creates some function-specific regexes.
 regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
-regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
-
-regex[stream1]='^ +Stream #.*$'
-regex[stream2]="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
+regex[stream1]='^ +Stream #(0:[0-9]+).*$'
+regex[stream2]="^ +Stream #0:[0-9]+(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
 
 regex[kbps]=', ([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
+
+regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
 
 regex[res1]=', ([0-9]+x[0-9]+)'
 regex[res2]='^1920x'
@@ -614,31 +614,30 @@ dts_extract_remux () {
 				continue
 			fi
 
-			streams_tmp+=("$i")
-
 			if [[ -z $n ]]; then
 				n=0
 			else
 				(( n += 1 ))
 			fi
 
+			streams_tmp["${n}"]="$i"
+			maps["${n}"]="${BASH_REMATCH[1]}"
+
 			if [[ ! $line =~ ${regex[stream2]} ]]; then
 				continue
 			fi
 
-			case "${BASH_REMATCH[3]}" in
+			case "${BASH_REMATCH[2]}" in
 				'Video')
-					streams["${n},v"]="${BASH_REMATCH[4]}"
+					streams["${n},v"]="${BASH_REMATCH[3]}"
 				;;
 				'Audio')
-					streams["${n},a"]="${BASH_REMATCH[4]}"
+					streams["${n},a"]="${BASH_REMATCH[3]}"
 				;;
 				*)
 					continue
 				;;
 			esac
-
-			maps["${n}"]="${BASH_REMATCH[1]}"
 
 # If stream line contains bitrate, use that.
 			if [[ $line =~ ${regex[kbps]} ]]; then
