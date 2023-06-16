@@ -598,8 +598,6 @@ dts_extract_remux () {
 	parse_ffmpeg () {
 		declare n
 
-		n=0
-
 		streams=()
 		maps=()
 		bitrates=()
@@ -609,6 +607,12 @@ dts_extract_remux () {
 
 # If line is a stream...
 			if [[ $line =~ ${regex[stream]} ]]; then
+				if [[ -z $n ]]; then
+					n=0
+				else
+					n=$(( n + 1 ))
+				fi
+
 				case "${BASH_REMATCH[3]}" in
 					'Video')
 						streams["${n},v"]="${BASH_REMATCH[4]}"
@@ -622,8 +626,6 @@ dts_extract_remux () {
 				esac
 
 				maps["${n}"]="${BASH_REMATCH[1]}"
-
-				n=$(( n + 1 ))
 
 # If stream line contains bitrate, use that.
 				if [[ $line =~ ${regex[kbps]} ]]; then
