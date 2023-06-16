@@ -175,20 +175,20 @@ sub albumartist {
 # to be able to properly match the words.
 sub check_log {
 	my $fn = shift;
-	my($file_output, $file_enc, $enc, $enc_tmp, $line1);
+	my($file_enc, $tmp_enc, $enc, $line1);
 
 	open(my $info, '-|', 'file', '-bi', $fn) or die "Can't run file: $!";
-	chomp($file_output = <$info>);
+	chomp($file_enc = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_output =~ /$regex{charset1}/;
+	$file_enc =~ /$regex{charset1}/;
 	$file_enc = $1;
 	$file_enc =~ /$regex{charset2}/;
 	$file_enc = $1;
 
-	$enc_tmp = find_encoding($file_enc);
+	$tmp_enc = find_encoding($file_enc);
 
-	if (length($enc_tmp)) { $enc = $enc_tmp->name; }
+	if (length($tmp_enc)) { $enc = $tmp_enc->name; }
 
 	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	$line1 = <$text>;
