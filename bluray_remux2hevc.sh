@@ -609,7 +609,7 @@ dts_extract_remux () {
 			line="${if_info_tmp[${i}]}"
 
 # If line is a stream...
-			if [[ ! $line =~ ${regex[stream2]} ]]; then
+			if [[ ! $line =~ ${regex[stream1]} ]]; then
 				continue
 			fi
 
@@ -619,6 +619,10 @@ dts_extract_remux () {
 				n=0
 			else
 				(( n += 1 ))
+			fi
+
+			if [[ ! $line =~ ${regex[stream2]} ]]; then
+				continue
 			fi
 
 			case "${BASH_REMATCH[3]}" in
