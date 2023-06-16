@@ -174,8 +174,8 @@ regex[kbps]=', ([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
 regex[last3]='^[0-9]+([0-9]{3})$'
 
-regex[video]=', ([0-9]+x[0-9]+)'
-regex[res]='^1920x'
+regex[res1]=', ([0-9]+x[0-9]+)'
+regex[res2]='^1920x'
 
 regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 
@@ -1041,6 +1041,8 @@ run_or_quit () {
 # of the input file, to see if it's 1080p, which is the resolution we
 # want when using this script.
 check_res () {
+	declare switch if_res
+
 	switch=0
 
 # Go through the information about the input file, and see if any of the
@@ -1054,7 +1056,13 @@ check_res () {
 			continue
 		fi
 
-		if [[ ! $stream =~ ${regex[res]} ]]; then
+		if [[ ! $stream =~ ${regex[res1]} ]]; then
+			continue
+		fi
+
+		if_res="${BASH_REMATCH[1]}"
+
+		if [[ ! $if_res =~ ${regex[res2]} ]]; then
 			switch=1
 		fi
 
