@@ -162,6 +162,7 @@ declare -A regex streams
 # Creates some global regexes.
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[zero]='^0+([0-9]+)$'
+regex[last3]='^[0-9]+([0-9]{3})$'
 
 # Creates some function-specific regexes.
 regex[lang]='^[[:alpha:]]{3}$'
@@ -169,10 +170,11 @@ regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){
 
 regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
 
-regex[stream]="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
+regex[stream1]='^ +Stream #.*$'
+regex[stream2]="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
+
 regex[kbps]=', ([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
-regex[last3]='^[0-9]+([0-9]{3})$'
 
 regex[res1]=', ([0-9]+x[0-9]+)'
 regex[res2]='^1920x'
@@ -596,7 +598,7 @@ dts_extract_remux () {
 # Creates a function called 'parse_ffmpeg', which will parse the output
 # from ffmpeg, get all the streams and bitrates.
 	parse_ffmpeg () {
-		declare n
+		declare -a streams_tmp
 
 		streams=()
 		maps=()
@@ -606,62 +608,88 @@ dts_extract_remux () {
 			line="${if_info_tmp[${i}]}"
 
 # If line is a stream...
-			if [[ $line =~ ${regex[stream]} ]]; then
-				if [[ -z $n ]]; then
-					n=0
-				else
-					n=$(( n + 1 ))
-				fi
-
-				case "${BASH_REMATCH[3]}" in
-					'Video')
-						streams["${n},v"]="${BASH_REMATCH[4]}"
-					;;
-					'Audio')
-						streams["${n},a"]="${BASH_REMATCH[4]}"
-					;;
-					*)
-						continue
-					;;
-				esac
-
-				maps["${n}"]="${BASH_REMATCH[1]}"
-
-# If stream line contains bitrate, use that.
-				if [[ $line =~ ${regex[kbps]} ]]; then
-					bps=$(( ${BASH_REMATCH[1]} * 1000 ))
-					bitrates["${n}"]="$bps"
-				fi
+			if [[ ! $line =~ ${regex[stream1]} ]]; then
+				continue
 			fi
 
-# If line is a bitrate...
-			if [[ $line =~ ${regex[bps]} ]]; then
-				bps="${BASH_REMATCH[1]}"
+			streams_tmp+=("$i")
 
-# If bitrate has already been set, skip this line.
-				if [[ -n ${bitrates[${n}]} ]]; then
+			if [[ ! $line =~ ${regex[stream2]} ]]; then
+				continue
+			fi
+
+			case "${BASH_REMATCH[3]}" in
+				'Video')
+					streams["${i},v"]="${BASH_REMATCH[4]}"
+				;;
+				'Audio')
+					streams["${i},a"]="${BASH_REMATCH[4]}"
+				;;
+				*)
 					continue
+				;;
+			esac
+
+			maps["${i}"]="${BASH_REMATCH[1]}"
+
+# If stream line contains bitrate, use that.
+			if [[ $line =~ ${regex[kbps]} ]]; then
+				bps=$(( ${BASH_REMATCH[1]} * 1000 ))
+				bitrates["${i}"]="$bps"
+			fi
+		done
+
+		for (( i = 0; i < ${#streams_tmp[@]}; i++ )); do
+			(( j = i + 1 ))
+
+			this="${streams_tmp[${i}]}"
+			next="${streams_tmp[${j}]}"
+
+			declare bps
+
+			if [[ -z $next ]]; then
+				(( next = ${#if_info_tmp[@]} - 1 ))
+			fi
+
+			if [[ -n ${bitrates[${i}]} ]]; then
+				continue
+			fi
+
+			while [[ $this -lt $next ]]; do
+				(( this += 1 ))
+
+				line="${if_info_tmp[${this}]}"
+
+				if [[ $line =~ ${regex[bps]} ]]; then
+					bps="${BASH_REMATCH[1]}"
+					break
 				fi
+			done
+
+			if [[ -z $bps ]]; then
+				continue
+			fi
 
 # If input bitrate consists of at least 4 digits, get the last 3 digits.
-				if [[ $bps =~ ${regex[last3]} ]]; then
+			if [[ $bps =~ ${regex[last3]} ]]; then
+				bps_last="${BASH_REMATCH[1]}"
+
+				if [[ $bps_last =~ ${regex[zero]} ]]; then
 					bps_last="${BASH_REMATCH[1]}"
+				fi
 
-					if [[ $bps_last =~ ${regex[zero]} ]]; then
-						bps_last="${BASH_REMATCH[1]}"
-					fi
-
-					bps=$(( bps - bps_last ))
+				(( bps = bps - bps_last ))
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
-					if [[ $bps_last -ge 500 ]]; then
-						bps=$(( bps + 1000 ))
-					fi
+				if [[ $bps_last -ge 500 ]]; then
+					(( bps = bps + 1000 ))
 				fi
-
-				bitrates["${n}"]="$bps"
 			fi
+
+			bitrates["${i}"]="$bps"
+
+			unset -v bps
 		done
 	}
 
