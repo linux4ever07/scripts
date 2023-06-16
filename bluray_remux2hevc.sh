@@ -156,7 +156,8 @@ lang='eng'
 # if any.
 declare tune
 
-declare -A regex
+declare -a maps bitrates
+declare -A regex streams
 
 # Creates some global regexes.
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -166,15 +167,14 @@ regex[zero]='^0+([0-9]+)$'
 regex[lang]='^[[:alpha:]]{3}$'
 regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
-regex[audio]="^ +Stream #0:[0-9]+(\(${lang}\)){0,1}: Audio: .*$"
 regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
 
-regex[stream]='^ +Stream #(0:[0-9]+)'
+regex[stream]="^ +Stream #(0:[0-9]+)(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
 regex[kbps]=', ([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
 regex[last3]='^[0-9]+([0-9]{3})$'
 
-regex[video]='^ +Stream #.*: Video: .*, ([0-9]+x[0-9]+).*$'
+regex[video]=', ([0-9]+x[0-9]+)'
 regex[res]='^1920x'
 
 regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
@@ -587,7 +587,7 @@ dts_extract_remux () {
 	elements[dts]=0
 	elements[ac3]=0
 
-	declare -a audio_types if_info_tmp streams maps bitrates
+	declare -a audio_types if_info_tmp
 
 	audio_types=('dts_hdma' 'truehd' 'pcm' 'flac' 'dts' 'ac3')
 
@@ -598,6 +598,8 @@ dts_extract_remux () {
 	parse_ffmpeg () {
 		declare n
 
+		n=0
+
 		streams=()
 		maps=()
 		bitrates=()
@@ -607,14 +609,21 @@ dts_extract_remux () {
 
 # If line is a stream...
 			if [[ $line =~ ${regex[stream]} ]]; then
-				if [[ -z $n ]]; then
-					n=0
-				else
-					n=$(( n + 1 ))
-				fi
+				case "${BASH_REMATCH[3]}" in
+					'Video')
+						streams["${n},v"]="${BASH_REMATCH[4]}"
+					;;
+					'Audio')
+						streams["${n},a"]="${BASH_REMATCH[4]}"
+					;;
+					*)
+						continue
+					;;
+				esac
 
-				streams["${n}"]="$line"
 				maps["${n}"]="${BASH_REMATCH[1]}"
+
+				n=$(( n + 1 ))
 
 # If stream line contains bitrate, use that.
 				if [[ $line =~ ${regex[kbps]} ]]; then
@@ -681,25 +690,30 @@ dts_extract_remux () {
 
 			parse_ffmpeg
 
-			for (( i = 0; i < ${#streams[@]}; i++ )); do
-				stream="${streams[${i}]}"
+			for (( i = 0; i < ${#maps[@]}; i++ )); do
+				stream="${streams[${i},a]}"
 
-# See if the current line is an audio track. If so, save the bitrate.
-				if [[ $stream =~ ${regex[audio]} ]]; then
-					bps_if="${bitrates[${i}]}"
-					break
+# See if the current line is an audio track.
+				if [[ -z $stream ]]; then
+					continue
 				fi
+
+# Save the bitrate.
+				bps_if="${bitrates[${i}]}"
+				break
 			done
 		else
-			for (( i = 0; i < ${#streams[@]}; i++ )); do
+			for (( i = 0; i < ${#maps[@]}; i++ )); do
 				map="${maps[${i}]}"
 
 # See if the current line matches the chosen audio track. If so, save
 # the bitrate.
-				if [[ $map == "${!map_ref}" ]]; then
-					bps_if="${bitrates[${i}]}"
-					break
+				if [[ $map != "${!map_ref}" ]]; then
+					continue
 				fi
+
+				bps_if="${bitrates[${i}]}"
+				break
 			done
 		fi
 
@@ -724,16 +738,15 @@ dts_extract_remux () {
 
 	parse_ffmpeg
 
-# Go through the information about the input file, and see if any of the
-# lines are audio, and if they match the types of audio we're looking
+# Go through the audio streams in the input file information about the
+# input file, and see if they match the types of audio we're looking
 # for.
-	for (( i = 0; i < ${#streams[@]}; i++ )); do
-		stream="${streams[${i}]}"
+	for (( i = 0; i < ${#maps[@]}; i++ )); do
+		stream="${streams[${i},a]}"
 		map="${maps[${i}]}"
 
-# See if the current line is an audio track, and the same language as
-# $lang.
-		if [[ ! $stream =~ ${regex[audio]} ]]; then
+# See if the current line is an audio track.
+		if [[ -z $stream ]]; then
 			continue
 		fi
 
@@ -818,8 +831,16 @@ specifying the correct language code as argument to the script.
 Listing all streams found in input file:
 
 NO_MATCH
+		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
+			line="${if_info_tmp[${i}]}"
 
-		printf '%s\n' "${streams[@]}"
+			if [[ ! $line =~ ${regex[stream]} ]]; then
+				continue
+			fi
+
+			printf '%s\n' "$line"
+		done
+
 		printf '\n'
 
 		exit
@@ -1025,15 +1046,15 @@ check_res () {
 # Go through the information about the input file, and see if any of the
 # lines are video, and if they match the type of video we're looking
 # for.
-	for (( i = 0; i < ${#if_info[@]}; i++ )); do
+	for (( i = 0; i < ${#maps[@]}; i++ )); do
+		stream="${streams[${i},v]}"
+
 # See if the current line is a video track.
-		if [[ ! ${if_info[${i}]} =~ ${regex[video]} ]]; then
+		if [[ -z $stream ]]; then
 			continue
 		fi
 
-		if_res="${BASH_REMATCH[1]}"
-
-		if [[ ! $if_res =~ ${regex[res]} ]]; then
+		if [[ ! $stream =~ ${regex[res]} ]]; then
 			switch=1
 		fi
 
