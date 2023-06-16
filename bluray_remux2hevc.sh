@@ -456,7 +456,7 @@ imdb () {
 
 		lists=(['genre']=1 ['actor']=1 ['director']=1)
 
-		z=$(( z + 1 ))
+		(( z += 1 ))
 
 # If current JSON type is not a list, match the regex and return from
 # this function.
@@ -472,12 +472,12 @@ imdb () {
 		while [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; do
 			list+=("${BASH_REMATCH[1]}")
 
-			z=$(( z + 1 ))
+			(( z += 1 ))
 
 			if [[ ${tmp_array[${z}]} =~ ${regex[list]} ]]; then
-				z=$(( z + 1 ))
+				(( z += 1 ))
 			else
-				z=$(( z - 1 ))
+				(( z -= 1 ))
 				break
 			fi
 		done
@@ -634,7 +634,7 @@ dts_extract_remux () {
 
 # If stream line contains bitrate, use that.
 			if [[ $line =~ ${regex[kbps]} ]]; then
-				bps=$(( ${BASH_REMATCH[1]} * 1000 ))
+				(( bps = ${BASH_REMATCH[1]} * 1000 ))
 				bitrates["${i}"]="$bps"
 			fi
 		done
@@ -756,7 +756,7 @@ dts_extract_remux () {
 # then...
 		if [[ $high_bps -gt $bps_if ]]; then
 # Gets the exact difference between max DTS bitrate and input bitrate.
-			bps_diff=$(( high_bps - bps_if ))
+			(( bps_diff = high_bps - bps_if ))
 
 # If the difference is greater than $bps_limit, then set the $use_kbps
 # variable to $low_kbps.
@@ -1153,7 +1153,7 @@ if_m2ts () {
 	fi
 
 	mapfile -d'/' -t path_parts <<<"$if"
-	field=$(( ${#path_parts[@]} - 4 ))
+	(( field = ${#path_parts[@]} - 4 ))
 	bd_title="${path_parts[${field}]}"
 
 	printf '%s' "$bd_title"
