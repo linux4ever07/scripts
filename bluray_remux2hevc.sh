@@ -609,15 +609,11 @@ dts_extract_remux () {
 			line="${if_info_tmp[${i}]}"
 
 # If line is a stream...
-			if [[ ! $line =~ ${regex[stream1]} ]]; then
+			if [[ ! $line =~ ${regex[stream2]} ]]; then
 				continue
 			fi
 
 			streams_tmp+=("$i")
-
-			if [[ ! $line =~ ${regex[stream2]} ]]; then
-				continue
-			fi
 
 			if [[ -z $n ]]; then
 				n=0
