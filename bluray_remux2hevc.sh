@@ -738,9 +738,8 @@ dts_extract_remux () {
 
 	parse_ffmpeg
 
-# Go through the audio streams in the input file information about the
-# input file, and see if they match the types of audio we're looking
-# for.
+# Go through the audio streams in the input file information, and see if
+# they match the types of audio we're looking for.
 	for (( i = 0; i < ${#maps[@]}; i++ )); do
 		stream="${streams[${i},a]}"
 		map="${maps[${i}]}"
