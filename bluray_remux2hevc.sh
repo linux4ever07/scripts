@@ -598,6 +598,7 @@ dts_extract_remux () {
 # Creates a function called 'parse_ffmpeg', which will parse the output
 # from ffmpeg, get all the streams and bitrates.
 	parse_ffmpeg () {
+		declare n
 		declare -a streams_tmp
 
 		streams=()
@@ -618,24 +619,30 @@ dts_extract_remux () {
 				continue
 			fi
 
+			if [[ -z $n ]]; then
+				n=0
+			else
+				(( n += 1 ))
+			fi
+
 			case "${BASH_REMATCH[3]}" in
 				'Video')
-					streams["${i},v"]="${BASH_REMATCH[4]}"
+					streams["${n},v"]="${BASH_REMATCH[4]}"
 				;;
 				'Audio')
-					streams["${i},a"]="${BASH_REMATCH[4]}"
+					streams["${n},a"]="${BASH_REMATCH[4]}"
 				;;
 				*)
 					continue
 				;;
 			esac
 
-			maps["${i}"]="${BASH_REMATCH[1]}"
+			maps["${n}"]="${BASH_REMATCH[1]}"
 
 # If stream line contains bitrate, use that.
 			if [[ $line =~ ${regex[kbps]} ]]; then
 				(( bps = ${BASH_REMATCH[1]} * 1000 ))
-				bitrates["${i}"]="$bps"
+				bitrates["${n}"]="$bps"
 			fi
 		done
 
@@ -863,7 +870,7 @@ NO_MATCH
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
 			line="${if_info_tmp[${i}]}"
 
-			if [[ ! $line =~ ${regex[stream]} ]]; then
+			if [[ ! $line =~ ${regex[stream1]} ]]; then
 				continue
 			fi
 

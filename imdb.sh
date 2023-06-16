@@ -95,7 +95,7 @@ imdb () {
 
 		lists=(['genre']=1 ['actor']=1 ['director']=1)
 
-		z=$(( z + 1 ))
+		(( z += 1 ))
 
 # If current JSON type is not a list, match the regex and return from
 # this function.
@@ -111,12 +111,12 @@ imdb () {
 		while [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; do
 			list+=("${BASH_REMATCH[1]}")
 
-			z=$(( z + 1 ))
+			(( z += 1 ))
 
 			if [[ ${tmp_array[${z}]} =~ ${regex[list]} ]]; then
-				z=$(( z + 1 ))
+				(( z += 1 ))
 			else
-				z=$(( z - 1 ))
+				(( z -= 1 ))
 				break
 			fi
 		done
