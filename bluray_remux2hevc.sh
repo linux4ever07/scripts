@@ -1148,15 +1148,16 @@ check_res () {
 	switch=0
 
 # Go through the video streams in the input file information, and see if
-# they match the types of video we're looking for.
+# they match the type of video we're looking for.
 	for (( i = 0; i < ${#maps[@]}; i++ )); do
 		stream_ref="streams[${i},v]"
 
-# See if the current line is a video track.
+# See if the current stream is a video track.
 		if [[ -z ${!stream_ref} ]]; then
 			continue
 		fi
 
+# See if the current stream has the correct resolution.
 		if_res=$(check_regex "${!stream_ref}" "${regex[res]}")
 
 		if [[ $? -ne 0 ]]; then
