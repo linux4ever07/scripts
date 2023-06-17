@@ -762,7 +762,7 @@ dts_extract_remux () {
 			wav_tmp="${of_dir}/FLAC.TMP-${session}.wav"
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
-			args=("${cmd[1]}" -i \""${if}"\" -map "${map}" -c:a copy \""${flac_tmp}"\")
+			args=("${cmd[1]}" -i \""${if}"\" -map "${!map_use_ref}" -c:a copy \""${flac_tmp}"\")
 			run_or_quit
 			args=("${cmd[4]}" -d \""${flac_tmp}"\")
 			run_or_quit
@@ -779,7 +779,7 @@ dts_extract_remux () {
 			for (( i = 0; i < ${#maps[@]}; i++ )); do
 				stream_ref="streams[${i},a]"
 
-# See if the current line is an audio track.
+# Check if the current stream is an audio track.
 				if [[ -z ${!stream_ref} ]]; then
 					continue
 				fi
@@ -793,7 +793,7 @@ dts_extract_remux () {
 				map_ref="maps[${i}]"
 				bitrate_ref="bitrates[${i}]"
 
-# See if the current line matches the chosen audio track. If so, save
+# Check if the current stream matches the chosen audio track. If so, save
 # the bitrate.
 				if [[ ${!map_ref} != "${!map_use_ref}" ]]; then
 					continue
@@ -835,16 +835,17 @@ dts_extract_remux () {
 		map_ref="maps[${i}]"
 		lang_ref="langs[${i}]"
 
-# See if the current stream is an audio track.
+# Check if the current stream is an audio track.
 		if [[ -z ${!stream_ref} ]]; then
 			continue
 		fi
 
-# See if the current stream has the right language (or no language).
+# Check if the current stream has the right language (or no language).
 		if [[ ! ${!lang_ref} =~ ${regex[lang2]} ]]; then
 			continue
 		fi
 
+# Check if the current stream has the right format. If so, save it.
 		for tmp_type in "${audio_types[@]}"; do
 			n="elements[${tmp_type}]"
 
@@ -1153,12 +1154,12 @@ check_res () {
 	for (( i = 0; i < ${#maps[@]}; i++ )); do
 		stream_ref="streams[${i},v]"
 
-# See if the current stream is a video track.
+# Check if the current stream is a video track.
 		if [[ -z ${!stream_ref} ]]; then
 			continue
 		fi
 
-# See if the current stream has the correct resolution.
+# Check if the current stream has the correct resolution.
 		if_res=$(check_regex "${!stream_ref}" "${regex[res]}")
 
 		if [[ $? -ne 0 ]]; then
