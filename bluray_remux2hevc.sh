@@ -256,8 +256,7 @@ regex[bps]='^ +BPS.*: ([0-9]+)$'
 
 regex[surround]='^([2-9])\.1(\(.*\)){0,1}$'
 
-regex[res1]='^([0-9]+x[0-9]+)$'
-regex[res2]='^1920x'
+regex[res]='^([0-9]+)x[0-9]+$'
 
 regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 
@@ -1165,7 +1164,7 @@ check_res () {
 			continue
 		fi
 
-		if [[ ! $if_res =~ ${regex[res2]} ]]; then
+		if [[ $if_res -ne 1920 ]]; then
 			switch=1
 		fi
 
@@ -1173,7 +1172,7 @@ check_res () {
 	done
 
 	if [[ $switch -eq 1 ]]; then
-		printf '\n%s\n\n' "Wrong resolution (${if_res}) in input file!"
+		printf '\n%s\n\n' "Wrong horizontal resolution (${if_res}) in input file!"
 		printf '%s\n\n' "Resolution needs to be 1080p (1920x1080)!"
 		exit
 	fi
