@@ -791,6 +791,7 @@ dts_extract_remux () {
 		else
 			for (( i = 0; i < ${#maps[@]}; i++ )); do
 				map_ref="maps[${i}]"
+				bitrate_ref="bitrates[${i}]"
 
 # See if the current line matches the chosen audio track. If so, save
 # the bitrate.
@@ -798,7 +799,7 @@ dts_extract_remux () {
 					continue
 				fi
 
-				bps_if="${bitrates[${i}]}"
+				bps_if="${!bitrate_ref}"
 				break
 			done
 		fi
