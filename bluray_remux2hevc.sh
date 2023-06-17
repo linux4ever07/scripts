@@ -1158,7 +1158,7 @@ check_res () {
 			continue
 		fi
 
-		if_res=$(check_regex "${!stream_ref}" "${regex[res1]}")
+		if_res=$(check_regex "${!stream_ref}" "${regex[res]}")
 
 		if [[ $? -ne 0 ]]; then
 			continue
