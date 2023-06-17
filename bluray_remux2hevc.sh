@@ -251,12 +251,12 @@ regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){
 regex[stream1]='^ +Stream #(0:[0-9]+).*$'
 regex[stream2]="^ +Stream #0:[0-9]+(\([[:alpha:]]+\)){0,1}: ([[:alpha:]]+): (.*)$"
 
-regex[kbps]=', ([0-9]+) kb\/s'
+regex[kbps]='^([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
 
-regex[surround]=', ([2-9])\.1(\(.*\)){0,1},'
+regex[surround]='^([2-9])\.1(\(.*\)){0,1}$'
 
-regex[res1]=', ([0-9]+x[0-9]+)'
+regex[res1]='^([0-9]+x[0-9]+)$'
 regex[res2]='^1920x'
 
 regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
@@ -558,6 +558,37 @@ imdb () {
 	printf '%s\n' "$year"
 }
 
+# Creates a function called 'check_regex', which will split lines based
+# on a delimiter, and check each word against a regex.
+check_regex () {
+	declare -a words match
+
+	regex[tmp]="$2"
+
+	mapfile -d',' -t words <<<"$1"
+	words[-1]="${words[-1]%$'\n'}"
+
+	for (( z = 0; z < ${#words[@]}; z++ )); do
+		word="${words[${z}]}"
+
+		if [[ $word =~ ${regex[blank]} ]]; then
+			word="${BASH_REMATCH[1]}"
+		fi
+
+		if [[ $word =~ ${regex[tmp]} ]]; then
+			match=("${BASH_REMATCH[@]:1}")
+
+			if [[ ${#match[@]} -gt 0 ]]; then
+				printf '%s\n' "${match[@]}"
+			fi
+
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 # Creates a function called 'dts_extract_remux', which will find a
 # DTS-HD MA track (if it exists), with the same language code as in
 # $lang. If this track is found, extract the core DTS track from it.
@@ -612,6 +643,8 @@ dts_extract_remux () {
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
 			line="${if_info_tmp[${i}]}"
 
+			declare bps
+
 # If line is a stream...
 			if [[ ! $line =~ ${regex[stream1]} ]]; then
 				continue
@@ -653,9 +686,13 @@ dts_extract_remux () {
 			esac
 
 # If stream line contains bitrate, use that.
-			if [[ $line =~ ${regex[kbps]} ]]; then
-				(( bps = ${BASH_REMATCH[1]} * 1000 ))
+			bps=$(check_regex "${BASH_REMATCH[3]}" "${regex[kbps]}")
+
+			if [[ $? -eq 0 ]]; then
+				(( bps *= 1000 ))
 				bitrates["${n}"]="$bps"
+
+				unset -v bps
 			fi
 		done
 
@@ -698,12 +735,12 @@ dts_extract_remux () {
 					bps_last="${BASH_REMATCH[1]}"
 				fi
 
-				(( bps = bps - bps_last ))
+				(( bps -= bps_last ))
 
 # If the last 3 digits are equal to (or higher than) 500, then round up
 # that number, otherwise round it down.
 				if [[ $bps_last -ge 500 ]]; then
-					(( bps = bps + 1000 ))
+					(( bps += 1000 ))
 				fi
 			fi
 
@@ -811,7 +848,9 @@ dts_extract_remux () {
 		for tmp_type in "${audio_types[@]}"; do
 			n="elements[${tmp_type}]"
 
-			if [[ ! ${!stream_ref} =~ ${type[${tmp_type}]} ]]; then
+			check_regex "${!stream_ref}" "${type[${tmp_type}]}"
+
+			if [[ $? -ne 0 ]]; then
 				continue
 			fi
 
@@ -828,13 +867,19 @@ dts_extract_remux () {
 		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
 			track_ref="audio_tracks[${tmp_type},${i}]"
 
+			declare channel
+
 			audio_channels["${tmp_type},${i}"]=0
 
-			if [[ ! ${!track_ref} =~ ${regex[surround]} ]]; then
+			channel=$(check_regex "${!track_ref}" "${regex[surround]}")
+
+			if [[ $? -ne 0 ]]; then
 				continue
 			fi
 
-			audio_channels["${tmp_type},${i}"]="${BASH_REMATCH[1]}"
+			audio_channels["${tmp_type},${i}"]="$channel"
+
+			unset -v channel
 		done
 	done
 
@@ -1107,18 +1152,18 @@ check_res () {
 # lines are video, and if they match the type of video we're looking
 # for.
 	for (( i = 0; i < ${#maps[@]}; i++ )); do
-		stream="${streams[${i},v]}"
+		stream_ref="streams[${i},v]"
 
 # See if the current line is a video track.
-		if [[ -z $stream ]]; then
+		if [[ -z ${!stream_ref} ]]; then
 			continue
 		fi
 
-		if [[ ! $stream =~ ${regex[res1]} ]]; then
+		if_res=$(check_regex "${!stream_ref}" "${regex[res1]}")
+
+		if [[ $? -ne 0 ]]; then
 			continue
 		fi
-
-		if_res="${BASH_REMATCH[1]}"
 
 		if [[ ! $if_res =~ ${regex[res2]} ]]; then
 			switch=1
