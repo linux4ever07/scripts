@@ -156,7 +156,7 @@ lang='eng'
 # if any.
 declare tune
 
-declare -a maps bitrates
+declare -a maps langs bitrates
 declare -A regex streams
 
 # Creates some global regexes.
@@ -164,7 +164,7 @@ regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[zero]='^0+([0-9]+)$'
 regex[last3]='^[0-9]+([0-9]{3})$'
 
-regex[lang]='^[[:alpha:]]{3}$'
+regex[lang1]='^[[:alpha:]]{3}$'
 
 # Setting some variables that will be used to create a full HandBrake
 # command, with args.
@@ -197,7 +197,7 @@ while [[ $# -gt 0 ]]; do
 		'-lang')
 			shift
 
-			if [[ ! $1 =~ ${regex[lang]} ]]; then
+			if [[ ! $1 =~ ${regex[lang1]} ]]; then
 				usage
 			else
 				lang="${1,,}"
@@ -244,10 +244,12 @@ if [[ -z $of_dir ]]; then
 fi
 
 # Creates some function-specific regexes.
+regex[lang2]="^(${lang}|und)$"
+
 regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
 regex[stream1]='^ +Stream #(0:[0-9]+).*$'
-regex[stream2]="^ +Stream #0:[0-9]+(\(${lang}\)){0,1}: ([[:alpha:]]+): (.*)$"
+regex[stream2]="^ +Stream #0:[0-9]+(\([[:alpha:]]+\)){0,1}: ([[:alpha:]]+): (.*)$"
 
 regex[kbps]=', ([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
@@ -599,11 +601,12 @@ dts_extract_remux () {
 # Creates a function called 'parse_ffmpeg', which will parse the output
 # from ffmpeg, get all the streams and bitrates.
 	parse_ffmpeg () {
-		declare n
+		declare n lang_tmp
 		declare -a streams_tmp
 
 		streams=()
 		maps=()
+		langs=()
 		bitrates=()
 
 		for (( i = 0; i < ${#if_info_tmp[@]}; i++ )); do
@@ -622,9 +625,16 @@ dts_extract_remux () {
 
 			streams_tmp["${n}"]="$i"
 			maps["${n}"]="${BASH_REMATCH[1]}"
+			langs["${n}"]='und'
 
 			if [[ ! $line =~ ${regex[stream2]} ]]; then
 				continue
+			fi
+
+			lang_tmp=$(sed -E 's/[[:punct:]]//g' <<<"${BASH_REMATCH[1],,}")
+
+			if [[ -n $lang_tmp ]]; then
+				langs["${n}"]="$lang_tmp"
 			fi
 
 			case "${BASH_REMATCH[2]}" in
@@ -633,6 +643,9 @@ dts_extract_remux () {
 				;;
 				'Audio')
 					streams["${n},a"]="${BASH_REMATCH[3]}"
+				;;
+				'Subtitle')
+					streams["${n},s"]="${BASH_REMATCH[3]}"
 				;;
 				*)
 					continue
@@ -728,10 +741,10 @@ dts_extract_remux () {
 			parse_ffmpeg
 
 			for (( i = 0; i < ${#maps[@]}; i++ )); do
-				stream="${streams[${i},a]}"
+				stream_ref="streams[${i},a]"
 
 # See if the current line is an audio track.
-				if [[ -z $stream ]]; then
+				if [[ -z ${!stream_ref} ]]; then
 					continue
 				fi
 
@@ -741,11 +754,11 @@ dts_extract_remux () {
 			done
 		else
 			for (( i = 0; i < ${#maps[@]}; i++ )); do
-				map="${maps[${i}]}"
+				map_ref="maps[${i}]"
 
 # See if the current line matches the chosen audio track. If so, save
 # the bitrate.
-				if [[ $map != "${!map_ref}" ]]; then
+				if [[ ${!map_ref} != "${!map_use_ref}" ]]; then
 					continue
 				fi
 
@@ -771,6 +784,9 @@ dts_extract_remux () {
 				use_kbps="${low_kbps}k"
 			fi
 		fi
+
+		if_info_tmp=("${if_info[@]}")
+		parse_ffmpeg
 	}
 
 	parse_ffmpeg
@@ -778,23 +794,29 @@ dts_extract_remux () {
 # Go through the audio streams in the input file information, and see if
 # they match the types of audio we're looking for.
 	for (( i = 0; i < ${#maps[@]}; i++ )); do
-		stream="${streams[${i},a]}"
-		map="${maps[${i}]}"
+		stream_ref="streams[${i},a]"
+		map_ref="maps[${i}]"
+		lang_ref="langs[${i}]"
 
-# See if the current line is an audio track.
-		if [[ -z $stream ]]; then
+# See if the current stream is an audio track.
+		if [[ -z ${!stream_ref} ]]; then
+			continue
+		fi
+
+# See if the current stream has the right language (or no language).
+		if [[ ! ${!lang_ref} =~ ${regex[lang2]} ]]; then
 			continue
 		fi
 
 		for tmp_type in "${audio_types[@]}"; do
 			n="elements[${tmp_type}]"
 
-			if [[ ! $stream =~ ${type[${tmp_type}]} ]]; then
+			if [[ ! ${!stream_ref} =~ ${type[${tmp_type}]} ]]; then
 				continue
 			fi
 
-			audio_tracks["${tmp_type},${!n}"]="$stream"
-			audio_maps["${tmp_type},${!n}"]="$map"
+			audio_tracks["${tmp_type},${!n}"]="${!stream_ref}"
+			audio_maps["${tmp_type},${!n}"]="${!map_ref}"
 			elements["${tmp_type}"]=$(( ${!n} + 1 ))
 			break
 		done
@@ -834,27 +856,27 @@ dts_extract_remux () {
 		done
 
 		if [[ $channel -ge 5 ]]; then
-			map_ref="$map"
+			map_use_ref="$map"
 			audio_format="$tmp_type"
 			break
 		fi
 
-		unset -v map map_ref channel
+		unset -v map channel
 	done
 
 # Pick the first audio track in the list, in the preferred available
-# format, if $map_ref is still empty.
-	if [[ -z $map_ref ]]; then
+# format, if $map_use_ref is still empty.
+	if [[ -z $map_use_ref ]]; then
 		for tmp_type in "${audio_types[@]}"; do
 			if [[ ${elements[${tmp_type}]} -gt 0 ]]; then
-				map_ref="audio_maps[${tmp_type},0]"
+				map_use_ref="audio_maps[${tmp_type},0]"
 				audio_format="$tmp_type"
 				break
 			fi
 		done
 	fi
 
-	if [[ -z $map_ref ]]; then
+	if [[ -z $map_use_ref ]]; then
 		cat <<NO_MATCH
 
 ${if}
@@ -883,7 +905,7 @@ NO_MATCH
 	fi
 
 # Creates first part of ffmpeg command.
-	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${!map_ref}" -map 0:s?)
+	args1=("${cmd[1]}" -i \""${if}"\" -metadata title=\"\" -map 0:v -map "${!map_use_ref}" -map 0:s?)
 
 # Creates ffmpeg command.
 	case "$audio_format" in
