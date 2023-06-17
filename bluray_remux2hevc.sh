@@ -1147,9 +1147,8 @@ check_res () {
 
 	switch=0
 
-# Go through the information about the input file, and see if any of the
-# lines are video, and if they match the type of video we're looking
-# for.
+# Go through the video streams in the input file information, and see if
+# they match the types of video we're looking for.
 	for (( i = 0; i < ${#maps[@]}; i++ )); do
 		stream_ref="streams[${i},v]"
 
