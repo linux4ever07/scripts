@@ -778,6 +778,7 @@ dts_extract_remux () {
 
 			for (( i = 0; i < ${#maps[@]}; i++ )); do
 				stream_ref="streams[${i},a]"
+				bitrate_ref="bitrates[${i}]"
 
 # Check if the current stream is an audio track.
 				if [[ -z ${!stream_ref} ]]; then
@@ -785,7 +786,7 @@ dts_extract_remux () {
 				fi
 
 # Save the bitrate.
-				bps_if="${bitrates[${i}]}"
+				bps_if="${!bitrate_ref}"
 				break
 			done
 		else
@@ -793,12 +794,12 @@ dts_extract_remux () {
 				map_ref="maps[${i}]"
 				bitrate_ref="bitrates[${i}]"
 
-# Check if the current stream matches the chosen audio track. If so, save
-# the bitrate.
+# Check if the current stream matches the chosen audio track.
 				if [[ ${!map_ref} != "${!map_use_ref}" ]]; then
 					continue
 				fi
 
+# Save the bitrate.
 				bps_if="${!bitrate_ref}"
 				break
 			done
