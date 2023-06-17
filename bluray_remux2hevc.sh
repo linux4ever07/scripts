@@ -644,7 +644,7 @@ dts_extract_remux () {
 
 			declare bps
 
-# If line is a stream...
+# Check if line is a stream.
 			if [[ ! $line =~ ${regex[stream1]} ]]; then
 				continue
 			fi
@@ -659,11 +659,12 @@ dts_extract_remux () {
 			maps["${n}"]="${BASH_REMATCH[1]}"
 			langs["${n}"]='und'
 
+# Parse line again to get additional information.
 			if [[ ! $line =~ ${regex[stream2]} ]]; then
 				continue
 			fi
 
-			lang_tmp=$(sed -E 's/[[:punct:]]//g' <<<"${BASH_REMATCH[1],,}")
+			lang_tmp=$(tr -d '[:punct:]' <<<"${BASH_REMATCH[1],,}")
 
 			if [[ -n $lang_tmp ]]; then
 				langs["${n}"]="$lang_tmp"
