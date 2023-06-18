@@ -22,19 +22,19 @@ files_n=0
 sub_tracks_n=0
 declare default
 declare -a files files_tmp args full_args range1 range2
-declare -A sub_tracks
+declare -A regex sub_tracks
 
-regex_start='^\|\+ Tracks$'
-regex_stop='^\|\+ '
-regex_strip='^\| +\+ (.*)$'
-regex_track="^Track$"
-regex_num="^Track number: [0-9]+ \(track ID for mkvmerge & mkvextract: ([0-9]+)\)$"
-regex_sub="^Track type: subtitles$"
-regex_lang="^Language( \(.*\)){0,1}: (.*)$"
-regex_name="^Name: (.*)$"
+regex[start]='^\|\+ Tracks$'
+regex[stop]='^\|\+ '
+regex[strip]='^\| +\+ (.*)$'
+regex[track]="^Track$"
+regex[num]="^Track number: [0-9]+ \(track ID for mkvmerge & mkvextract: ([0-9]+)\)$"
+regex[sub]="^Track type: subtitles$"
+regex[lang]="^Language( \(.*\)){0,1}: (.*)$"
+regex[name]="^Name: (.*)$"
 
-regex_fn='^(.*)\.([^.]*)$'
-regex_lang_arg='^[[:alpha:]]{3}$'
+regex[fn]='^(.*)\.([^.]*)$'
+regex[lang_arg]='^[[:alpha:]]{3}$'
 
 mapfile -t cmd < <(command -v mkvinfo mkvmerge)
 
@@ -101,7 +101,7 @@ get_tracks () {
 
 # Parses the input file name, and separates basename from extension.
 # If this fails, return from the function.
-	if [[ ${bn_tmp,,} =~ $regex_fn ]]; then
+	if [[ ${bn_tmp,,} =~ ${regex[fn]} ]]; then
 		match=("${BASH_REMATCH[@]:1}")
 		ext_tmp="${match[1]}"
 		session_tmp="${RANDOM}-${RANDOM}"
@@ -135,18 +135,18 @@ get_tracks () {
 	for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
 		line="${mkvinfo_lines[${i}]}"
 
-		if [[ $line =~ $regex_start ]]; then
+		if [[ $line =~ ${regex[start]} ]]; then
 			switch=1
 			continue
 		fi
 
 		if [[ $switch -eq 1 ]]; then
-			if [[ $line =~ $regex_stop ]]; then
+			if [[ $line =~ ${regex[stop]} ]]; then
 				switch=0
 				break
 			fi
 
-			if [[ $line =~ $regex_strip ]]; then
+			if [[ $line =~ ${regex[strip]} ]]; then
 				line="${BASH_REMATCH[1]}"
 			fi
 
@@ -162,29 +162,29 @@ get_tracks () {
 	for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 		line="${mkvinfo_tracks[${i}]}"
 
-		if [[ $line =~ $regex_track ]]; then
+		if [[ $line =~ ${regex[track]} ]]; then
 			tracks_n=$(( tracks_n + 1 ))
 			tracks["${tracks_n},sub"]=0
 		fi
 
-		if [[ $line =~ $regex_num ]]; then
+		if [[ $line =~ ${regex[num]} ]]; then
 			tracks["${tracks_n},num"]="${BASH_REMATCH[1]}"
 		fi
 
-		if [[ $line =~ $regex_sub ]]; then
+		if [[ $line =~ ${regex[sub]} ]]; then
 			tracks["${tracks_n},sub"]=1
 		fi
 
 # For some tracks, the language can be listed twice. First with a
 # three-letter code, and then with a two-letter code. The first code is
 # preferred by this script.
-		if [[ $line =~ $regex_lang ]]; then
+		if [[ $line =~ ${regex[lang]} ]]; then
 			if [[ -z ${tracks[${tracks_n},lang]} ]]; then
 				tracks["${tracks_n},lang"]="${BASH_REMATCH[2]}"
 			fi
 		fi
 
-		if [[ $line =~ $regex_name ]]; then
+		if [[ $line =~ ${regex[name]} ]]; then
 			tracks["${tracks_n},name"]="${BASH_REMATCH[1]}"
 		fi
 	done
@@ -230,7 +230,7 @@ while [[ $# -gt 0 ]]; do
 		'-lang')
 			shift
 
-			if [[ $1 =~ $regex_lang_arg ]]; then
+			if [[ $1 =~ ${regex[lang_arg]} ]]; then
 				sub_tracks["${sub_tracks_n},lang"]="${1,,}"
 			else
 				usage

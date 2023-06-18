@@ -9,15 +9,15 @@ if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
 declare -a mkvinfo_tracks
-declare -A tracks
+declare -A regex tracks
 
-regex_start='^\|\+ Tracks$'
-regex_stop='^\|\+ '
-regex_strip='^\| +\+ (.*)$'
-regex_track="^Track$"
-regex_sub="^Track type: subtitles$"
-regex_lang="^Language( \(.*\)){0,1}: (.*)$"
-regex_name="^Name: (.*)$"
+regex[start]='^\|\+ Tracks$'
+regex[stop]='^\|\+ '
+regex[strip]='^\| +\+ (.*)$'
+regex[track]="^Track$"
+regex[sub]="^Track type: subtitles$"
+regex[lang]="^Language( \(.*\)){0,1}: (.*)$"
+regex[name]="^Name: (.*)$"
 
 # Creates a function called 'usage', which prints usage and then quits.
 usage () {
@@ -45,18 +45,18 @@ switch=0
 for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
 	line="${mkvinfo_lines[${i}]}"
 
-	if [[ $line =~ $regex_start ]]; then
+	if [[ $line =~ ${regex[start]} ]]; then
 		switch=1
 		continue
 	fi
 
 	if [[ $switch -eq 1 ]]; then
-		if [[ $line =~ $regex_stop ]]; then
+		if [[ $line =~ ${regex[stop]} ]]; then
 			switch=0
 			break
 		fi
 
-		if [[ $line =~ $regex_strip ]]; then
+		if [[ $line =~ ${regex[strip]} ]]; then
 			line="${BASH_REMATCH[1]}"
 		fi
 
@@ -72,7 +72,7 @@ declare n
 for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 	line="${mkvinfo_tracks[${i}]}"
 
-	if [[ $line =~ $regex_track ]]; then
+	if [[ $line =~ ${regex[track]} ]]; then
 		if [[ -z $n ]]; then
 			n=0
 		else
@@ -82,20 +82,20 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 		tracks["${n},sub"]=0
 	fi
 
-	if [[ $line =~ $regex_sub ]]; then
+	if [[ $line =~ ${regex[sub]} ]]; then
 		tracks["${n},sub"]=1
 	fi
 
 # For some tracks, the language can be listed twice. First with a
 # three-letter code, and then with a two-letter code. The first code is
 # preferred by this script.
-	if [[ $line =~ $regex_lang ]]; then
+	if [[ $line =~ ${regex[lang]} ]]; then
 		if [[ -z ${tracks[${n},lang]} ]]; then
 			tracks["${n},lang"]="${BASH_REMATCH[2]}"
 		fi
 	fi
 
-	if [[ $line =~ $regex_name ]]; then
+	if [[ $line =~ ${regex[name]} ]]; then
 		tracks["${n},name"]="${BASH_REMATCH[1]}"
 	fi
 done
