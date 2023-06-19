@@ -212,7 +212,7 @@ extract_remux () {
 
 	full_args=(mkvextract \""${if}"\" tracks "${args_srt[@]}")
 
-# Runs mkvextract, and prints the mkvmerge command.
+# Runs mkvextract, and prints the command.
 	eval "${full_args[@]}"
 
 	if [[ $? -ne 0 ]]; then
@@ -234,7 +234,7 @@ extract_remux () {
 
 	full_args=(mkvmerge -o \""${of_mkv}"\" '--subtitle-tracks' \""${args_string}"\" \""${if}"\")
 
-# Runs mkvmerge, and prints the mkvmerge command.
+# Runs mkvmerge, and prints the command.
 	if [[ $switch -eq 1 ]]; then
 		eval "${full_args[@]}"
 
