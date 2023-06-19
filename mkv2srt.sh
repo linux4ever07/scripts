@@ -164,7 +164,7 @@ extract_remux () {
 		usage
 	fi
 
-# Puts together the mkvmerge command. The loops below deal with
+# Puts together the mkvmerge command. The loop below deals with
 # subtitles that are in the Matroska file.
 	for (( i = 1; i < tracks_n; i++ )); do
 			num_tmp="${tracks[${i},num]}"
