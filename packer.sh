@@ -33,8 +33,11 @@ session="${RANDOM}-${RANDOM}"
 stdout_f="/dev/shm/packer_stdout-${session}.txt"
 c_tty=$(tty)
 
-regex_ext='(\.tar){0,1}(\.[^.]*)$'
-regex_dar='(\.[0-9]+){0,1}(\.dar)$'
+declare -A regex
+
+regex[dev]='^\/dev'
+regex[ext]='(\.tar){0,1}(\.[^.]*)$'
+regex[dar]='(\.[0-9]+){0,1}(\.dar)$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
@@ -53,9 +56,7 @@ ctrl_c () {
 # Creates a function called 'restore_n_quit', which will restore STDOUT
 # to the shell, and then quit.
 restore_n_quit () {
-	regex_dev='^\/dev'
-
-	if [[ $c_tty =~ $regex_dev ]]; then
+	if [[ $c_tty =~ ${regex[dev]} ]]; then
 		exec 1>"$c_tty"
 	fi
 
@@ -260,7 +261,7 @@ arch_pack () {
 # copy files from, and unmount an ISO file. This in effect means
 # extracting the ISO.
 iso_unpack () {
-	iso_bn="${f_bn%.[^.]*}"
+	iso_bn="${f_bn%.*}"
 	iso_mnt="/dev/shm/${iso_bn}-${session}"
 	iso_of="${PWD}/${iso_bn}-${session}"
 
@@ -291,7 +292,7 @@ arch_unpack () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
+			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$f")
 
 			dar -x "$f_tmp"
 			output "$?" 1>&2
@@ -373,7 +374,7 @@ arch_test () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
+			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$f")
 
 			dar -t "$f_tmp"
 			output "$?" 1>&2
@@ -447,7 +448,7 @@ arch_list () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex_dar}//" <<<"$f")
+			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$f")
 
 			dar -l "$f_tmp" | less 1>&2
 			output "$?" 1>&2
@@ -529,7 +530,7 @@ arch_list () {
 case "$mode" in
 	'pack')
 		create_names "$1"
-		of=$(sed -E "s/${regex_ext}//" <<<"$f")
+		of=$(sed -E "s/${regex[ext]}//" <<<"$f")
 
 		shift
 

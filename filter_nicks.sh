@@ -18,7 +18,7 @@ fi
 
 if=$(readlink -f "$1")
 if_bn=$(basename "$if")
-of="${if_bn%.[^.]*}-${RANDOM}-${RANDOM}.txt"
+of="${if_bn%.*}-${RANDOM}-${RANDOM}.txt"
 
 declare time line nick nick_utf8
 declare -a times lines words clients

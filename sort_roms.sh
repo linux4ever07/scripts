@@ -40,13 +40,13 @@ dn=$(readlink -f "$1")
 session="${RANDOM}-${RANDOM}"
 sorted_dn="sorted-${session}"
 
-declare -A titles
+declare -A regex titles
 global_vars=(fn bn region region_n)
 
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_ext='\.([^.]*)$'
-regex1="\(([A-Z]{1,3}|[0-9]{1})\).*${regex_ext}"
-regex2="^.*(\[\!\]).*${regex_ext}"
+regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex[ext]='\.([^.]*)$'
+regex[1]="\(([A-Z]{1,3}|[0-9]{1})\).*${regex[ext]}"
+regex[2]="^.*(\[\!\]).*${regex[ext]}"
 
 priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$' '^5$')
 
@@ -83,13 +83,13 @@ loop_intro () {
 	fn="${files[${i}]}"
 	bn=$(basename "$fn")
 
-	if [[ ! $bn =~ $regex1 ]]; then
+	if [[ ! $bn =~ ${regex[1]} ]]; then
 		return
 	fi
 
 	region="${BASH_REMATCH[1]}"
 
-	if [[ ! $bn =~ $regex2 ]]; then
+	if [[ ! $bn =~ ${regex[2]} ]]; then
 		unset -v region
 	fi
 }
@@ -99,11 +99,11 @@ get_games () {
 		fn="${files[${i}]}"
 		bn=$(basename "$fn")
 
-		if [[ ! $bn =~ $regex1 ]]; then
+		if [[ ! $bn =~ ${regex[1]} ]]; then
 			continue
 		fi
 
-		title=$(sed -E "s/${regex1}//" <<<"$bn")
+		title=$(sed -E "s/${regex[1]}//" <<<"$bn")
 
 		if [[ -n $title ]]; then
 			titles["${title}"]='undef'

@@ -16,7 +16,7 @@
 if=$(readlink -f "$1")
 
 session="${RANDOM}-${RANDOM}"
-of="${if%.[^.]*}-${session}.mkv"
+of="${if%.*}-${session}.mkv"
 
 files_n=0
 sub_tracks_n=0
