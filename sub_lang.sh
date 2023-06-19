@@ -96,7 +96,9 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 	fi
 
 	if [[ $line =~ ${regex[name]} ]]; then
-		tracks["${n},name"]="${BASH_REMATCH[1]}"
+		if [[ -z ${tracks[${n},name]} ]]; then
+			tracks["${n},name"]="${BASH_REMATCH[1]}"
+		fi
 	fi
 done
 
