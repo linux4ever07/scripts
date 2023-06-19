@@ -91,7 +91,7 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 # preferred by this script.
 	if [[ $line =~ ${regex[lang]} ]]; then
 		if [[ -z ${tracks[${n},lang]} ]]; then
-			tracks["${n},lang"]="${BASH_REMATCH[2]}"
+			tracks["${n},lang"]="${BASH_REMATCH[2],,}"
 		fi
 	fi
 
