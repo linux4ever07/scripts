@@ -75,7 +75,7 @@ for (( i = depth_max; i > 0; i-- )); do
 
 		new_fn="${dn}/${new_bn}"
 
-		if [[ $new_bn != $bn ]]; then
+		if [[ $new_bn != "$bn" ]]; then
 			printf '%s\n' "$new_fn"
 			mv -n "$fn" "$new_fn"
 		fi
