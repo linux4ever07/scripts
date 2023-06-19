@@ -180,7 +180,7 @@ get_tracks () {
 # preferred by this script.
 		if [[ $line =~ ${regex[lang]} ]]; then
 			if [[ -z ${tracks[${tracks_n},lang]} ]]; then
-				tracks["${tracks_n},lang"]="${BASH_REMATCH[2]}"
+				tracks["${tracks_n},lang"]="${BASH_REMATCH[2],,}"
 			fi
 		fi
 
@@ -354,7 +354,7 @@ eval "${full_args[@]}"
 
 # Removes temporary MKV files.
 if [[ ${#files_tmp[@]} -gt 0 ]]; then
-	rm -f "${files_tmp[@]}"
+	rm "${files_tmp[@]}"
 fi
 
 # Prints the mkvmerge command.
