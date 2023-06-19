@@ -87,6 +87,22 @@ run_cmd () {
 	fi
 }
 
+# Creates a function called 'clean_up', which will remove temporary
+# files, if they exist.
+clean_up () {
+	if [[ ${#files_tmp[@]} -eq 0 ]]; then
+		return
+	fi
+
+	for (( i = 0; i < ${#files_tmp[@]}; i++ )); do
+		fn_tmp="${files_tmp[${i}]}"
+
+		if [[ -f $fn_tmp ]]; then
+			rm "$fn_tmp"
+		fi
+	done
+}
+
 # Creates a function called 'get_tracks', which will read the metadata
 # of media files, and if they contain subtitle tracks, store those in
 # the 'sub_tracks' hash.
@@ -353,9 +369,7 @@ full_args=(mkvmerge -o \""${of}"\" "${args[@]}")
 eval "${full_args[@]}"
 
 # Removes temporary MKV files.
-if [[ ${#files_tmp[@]} -gt 0 ]]; then
-	rm "${files_tmp[@]}"
-fi
+clean_up
 
 # Prints the mkvmerge command.
 string="${full_args[@]}"
