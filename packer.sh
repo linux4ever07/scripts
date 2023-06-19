@@ -208,9 +208,9 @@ CMD
 	fi
 }
 
-# Creates a function called 'create_names', which will create variables
-# for file names.
-create_names () {
+# Creates a function called 'set_names', which will create variables for
+# file names.
+set_names () {
 	f=$(readlink -f "$1")
 	f_bn=$(basename "$f")
 	f_bn_lc="${f_bn,,}"
@@ -529,7 +529,7 @@ arch_list () {
 
 case "$mode" in
 	'pack')
-		create_names "$1"
+		set_names "$1"
 		of=$(sed -E "s/${regex[ext]}//" <<<"$f")
 
 		shift
@@ -550,7 +550,7 @@ case "$mode" in
 	;;
 	'unpack')
 		while [[ $# -gt 0 ]]; do
-			create_names "$1"
+			set_names "$1"
 
 			if [[ ! -f $f || ! -r $f ]]; then
 				usage 1>&2
@@ -563,7 +563,7 @@ case "$mode" in
 	;;
 	'test')
 		while [[ $# -gt 0 ]]; do
-			create_names "$1"
+			set_names "$1"
 
 			if [[ ! -f $f || ! -r $f ]]; then
 				usage 1>&2
@@ -576,7 +576,7 @@ case "$mode" in
 	;;
 	'list')
 		while [[ $# -gt 0 ]]; do
-			create_names "$1"
+			set_names "$1"
 
 			if [[ ! -f $f || ! -r $f ]]; then
 				usage 1>&2

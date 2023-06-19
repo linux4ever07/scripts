@@ -95,8 +95,8 @@ get_tracks () {
 	bn_tmp=$(basename "$if_tmp")
 	dn_tmp=$(dirname "$if_tmp")
 
-	declare ext_tmp of_tmp
-	declare -a mkvinfo_tracks
+	declare ext_tmp of_tmp switch tracks_n
+	declare -a mkvinfo_lines mkvinfo_tracks
 	declare -A tracks
 
 # Parses the input file name, and separates basename from extension.
@@ -185,7 +185,9 @@ get_tracks () {
 		fi
 
 		if [[ $line =~ ${regex[name]} ]]; then
-			tracks["${tracks_n},name"]="${BASH_REMATCH[1]}"
+			if [[ -z ${tracks[${tracks_n},name]} ]]; then
+				tracks["${tracks_n},name"]="${BASH_REMATCH[1]}"
+			fi
 		fi
 	done
 
@@ -345,7 +347,7 @@ for (( i = 1; i < files_n; i++ )); do
 	unset -v args_tmp
 done
 
-full_args=(mkvmerge -o \""$of"\" "${args[@]}")
+full_args=(mkvmerge -o \""${of}"\" "${args[@]}")
 
 # Runs mkvmerge.
 eval "${full_args[@]}"
