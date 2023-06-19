@@ -24,9 +24,11 @@ targets=('Android' 'LOST.DIR' 'System Volume Information' '.Trash*')
 
 pause_msg='Are you sure? [y/n]: '
 
-regex_num='^[0-9]+$'
-regex_size='^[0-9]+M'
-regex_date='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}'
+declare -A regex
+
+regex[num]='^[0-9]+$'
+regex[size]='^[0-9]+M'
+regex[date]='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}'
 
 # Creates a function called 'menu'. It displays 2 menus. First it
 # displays the directories found, and once a directory is selected it
@@ -39,7 +41,7 @@ menu () {
 
 	for (( i = 0; i < ${#dirs[@]}; i++ )); do
 		dn="${dirs[${i}]}"
-		size=$(du -BM -s "$dn" | grep -Eo "$regex_size")
+		size=$(du -BM -s "$dn" | grep -Eo "${regex[size]}")
 
 		printf '%s) %s (%s)\n' "$i" "$dn" "$size"
 	done
@@ -47,7 +49,7 @@ menu () {
 	printf '\n'
 	read -p '>'
 
-	if [[ ! $REPLY =~ $regex_num ]]; then
+	if [[ ! $REPLY =~ ${regex[num]} ]]; then
 		return
 	fi
 
@@ -74,7 +76,7 @@ menu () {
 
 			for (( i = 0; i < ${#files[@]}; i++ )); do
 				fn="${files[${i}]}"
-				date=$(stat -c '%y' "$fn" | grep -Eo "$regex_date")
+				date=$(stat -c '%y' "$fn" | grep -Eo "${regex[date]}")
 
 				printf '%s (%s)\n' "$fn" "$date"
 			done | less
