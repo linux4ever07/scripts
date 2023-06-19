@@ -50,12 +50,12 @@ session="${RANDOM}-${RANDOM}"
 in_dir=$(readlink -f "$1")
 out_dir=$(readlink -f "$2")
 
-declare -A md5s
+declare -A regex md5s
 
 cp_log="${out_dir}/hdd_dump_copied-${session}.txt"
 error_log="${out_dir}/hdd_dump_errors-${session}.txt"
 
-regex_du='^([0-9]+)([[:blank:]]+)(.*)$'
+regex[du]='^([0-9]+)([[:blank:]]+)(.*)$'
 
 mkdir -p "$out_dir" || exit
 
@@ -146,7 +146,7 @@ mapfile -d'/' -t dn_parts <<<"$in_dir"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 start="${#dn_parts[@]}"
 
-mapfile -t files < <(find "$in_dir" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex_du}/\3/")
+mapfile -t files < <(find "$in_dir" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
