@@ -30,10 +30,10 @@ regex[fn]='^(.*)\.([^.]*)$'
 
 depth_max=0
 
-mapfile -d'/' -t path_parts <<<"$dir"
+mapfile -d'/' -t path_parts <<<"$if_dn"
 depth_og=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$dir" -exec printf '%q\n' {} + 2>&-)
+mapfile -t files < <(find "$if_dn" -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	eval fn="${files[${i}]}"
