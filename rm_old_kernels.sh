@@ -96,20 +96,24 @@ for (( i = 0; i < dnf_pkgs_n; i++ )); do
 	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
 	for type in "${types[@]}"; do
-		if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
-			if [[ ${match[1]} =~ ${regex[version]} ]]; then
-				hash_ref="latest[${match[0]}]"
-
-				if [[ -z ${!hash_ref} ]]; then
-					latest["${match[0]}"]="${match[1]}"
-				else
-					version=$(version_compare "${!hash_ref}" "${match[1]}")
-					latest["${match[0]}"]="$version"
-				fi
-			fi
-
-			break
+		if [[ ! ${match[0]} =~ ${regex[${type}]} ]]; then
+			continue
 		fi
+
+		if [[ ! ${match[1]} =~ ${regex[version]} ]]; then
+			continue
+		fi
+
+		hash_ref="latest[${match[0]}]"
+
+		if [[ -z ${!hash_ref} ]]; then
+			latest["${match[0]}"]="${match[1]}"
+		else
+			version=$(version_compare "${!hash_ref}" "${match[1]}")
+			latest["${match[0]}"]="$version"
+		fi
+
+		break
 	done
 done
 
@@ -121,17 +125,19 @@ for (( i = 0; i < dnf_pkgs_n; i++ )); do
 	dnf_pkg="${match[0]%.${arch}}-${match[1]}.${arch}"
 
 	for type in "${types[@]}"; do
-		if [[ ${match[0]} =~ ${regex[${type}]} ]]; then
-			hash_ref="latest[${match[0]}]"
-
-			if [[ ${match[1]} == "${!hash_ref}" ]]; then
-				keep+=("$dnf_pkg")
-			else
-				remove+=("$dnf_pkg")
-			fi
-
-			break
+		if [[ ! ${match[0]} =~ ${regex[${type}]} ]]; then
+			continue
 		fi
+
+		hash_ref="latest[${match[0]}]"
+
+		if [[ ${match[1]} == "${!hash_ref}" ]]; then
+			keep+=("$dnf_pkg")
+		else
+			remove+=("$dnf_pkg")
+		fi
+
+		break
 	done
 done
 
