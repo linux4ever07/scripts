@@ -79,13 +79,15 @@ mapfile -t lines < <(dnf list --installed | grep -E '^kernel' | sed -E 's/[[:bla
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
-	if [[ $line =~ ${regex[column]} ]]; then
-		match=("${BASH_REMATCH[@]:1}")
-
-		dnf_pkgs["${dnf_pkgs_n},pkg"]="${match[0]}"
-		dnf_pkgs["${dnf_pkgs_n},ver"]="${match[1]}"
-		dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
+	if [[ ! $line =~ ${regex[column]} ]]; then
+		continue
 	fi
+
+	match=("${BASH_REMATCH[@]:1}")
+
+	dnf_pkgs["${dnf_pkgs_n},pkg"]="${match[0]}"
+	dnf_pkgs["${dnf_pkgs_n},ver"]="${match[1]}"
+	dnf_pkgs_n=$(( dnf_pkgs_n + 1 ))
 done
 
 unset -v lines
