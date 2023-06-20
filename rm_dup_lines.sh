@@ -32,11 +32,14 @@ get_client () {
 		line="${lines[${z}]}"
 
 		for client in "${clients[@]}"; do
-			if [[ $line =~ ${regex[${client}]} ]]; then
-				regex[client]="${regex[${client}]}"
-				switch=1
-				break
+			if [[ ! $line =~ ${regex[${client}]} ]]; then
+				continue
 			fi
+
+			regex[client]="${regex[${client}]}"
+			switch=1
+
+			break
 		done
 
 		if [[ $switch -eq 1 ]]; then

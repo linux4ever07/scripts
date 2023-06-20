@@ -45,11 +45,14 @@ get_client () {
 		line="${lines[${z}]}"
 
 		for client in "${clients[@]}"; do
-			if [[ $line =~ ${regex[${client}]} ]]; then
-				regex[client]="${regex[${client}]}"
-				switch=1
-				break
+			if [[ ! $line =~ ${regex[${client}]} ]]; then
+				continue
 			fi
+
+			regex[client]="${regex[${client}]}"
+			switch=1
+
+			break
 		done
 
 		if [[ $switch -eq 1 ]]; then
@@ -147,12 +150,14 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		regex[nick_tmp]="^[[:punct:]]*${nick_tmp}[[:punct:]]*$"
 
 		for word in "${words[@]}"; do
-			if [[ $word =~ ${regex[nick_tmp]} ]]; then
-				nick_tmp_utf8=$(utf8_convert "$nick_tmp")
-				nicks["${nick_tmp_utf8}"]="${nick_tmp}"
-
-				break
+			if [[ ! $word =~ ${regex[nick_tmp]} ]]; then
+				continue
 			fi
+
+			nick_tmp_utf8=$(utf8_convert "$nick_tmp")
+			nicks["${nick_tmp_utf8}"]="${nick_tmp}"
+
+			break
 		done
 	done
 done
