@@ -100,17 +100,15 @@ for (( i = 0; i < dnf_pkgs_n; i++ )); do
 			continue
 		fi
 
-		if [[ ! ${match[1]} =~ ${regex[version]} ]]; then
-			continue
-		fi
+		if [[ ${match[1]} =~ ${regex[version]} ]]; then
+			hash_ref="latest[${match[0]}]"
 
-		hash_ref="latest[${match[0]}]"
-
-		if [[ -z ${!hash_ref} ]]; then
-			latest["${match[0]}"]="${match[1]}"
-		else
-			version=$(version_compare "${!hash_ref}" "${match[1]}")
-			latest["${match[0]}"]="$version"
+			if [[ -z ${!hash_ref} ]]; then
+				latest["${match[0]}"]="${match[1]}"
+			else
+				version=$(version_compare "${!hash_ref}" "${match[1]}")
+				latest["${match[0]}"]="$version"
+			fi
 		fi
 
 		break
