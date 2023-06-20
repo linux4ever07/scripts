@@ -3,6 +3,20 @@
 # This script is meant to extract SubRip (SRT) subtitles from an MKV
 # (Matroska) file, and remux the MKV without the SRT tracks.
 
+# I use this script in combination with 'extract_subs.sh', to backup
+# the subtitles when I replace old movie rips (like XviD, H264 etc.)
+# with better rips (HEVC / x265).
+
+# If there's still other track types (subtitle or not) besides SRT left
+# in the Matroska file after extraction, then it's remuxed. If there's
+# no other tracks left at all, it's deleted.
+
+# It's a good idea to keep SRT subtitles as regular text files, because
+# then the checksum can be compared against other files. Hence,
+# duplicates can be found and deleted. It also means the SRT subtitles
+# are more accessible in general, if they need to be edited, synced to
+# a different movie release etc.
+
 tracks_n=0
 declare if if_dn if_bn of_dn of_mkv
 declare -a files_tmp
@@ -201,7 +215,8 @@ extract_remux () {
 
 # If there's no SRT subtitles in the Matroska file, quit.
 	if [[ ${#args_srt[@]} -eq 0 ]]; then
-		usage
+		printf '\n%s\n\n' "There are no SRT subtitles in: ${if_bn}"
+		exit
 	fi
 
 	if [[ -d $of_dn ]]; then
@@ -222,6 +237,7 @@ extract_remux () {
 
 	printf '\n'
 
+# Change line-endings to make the files compatible with DOS/Windows.
 	unix2dos "${files_tmp[@]}"
 
 	files_tmp+=("$of_mkv")
