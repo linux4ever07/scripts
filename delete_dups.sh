@@ -57,11 +57,13 @@ for dn in "${dirs[@]}"; do
 		md5=$(md5sum -b "$fn")
 		md5="${md5%% *}"
 
-		if [[ -n ${md5s[${md5}]} ]]; then
-			if [[ ${md5s[${md5}]} == "$bn" ]]; then
-				printf '%s\n' "$fn"
-				rm -f "$fn"
-			fi
+		if [[ -z ${md5s[${md5}]} ]]; then
+			continue
+		fi
+
+		if [[ ${md5s[${md5}]} == "$bn" ]]; then
+			printf '%s\n' "$fn"
+			rm -f "$fn"
 		fi
 	done
 done
