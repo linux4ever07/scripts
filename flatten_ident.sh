@@ -23,7 +23,6 @@ if_dn=$(readlink -f "$1")
 
 session="${RANDOM}-${RANDOM}"
 
-declare -a files
 declare -A regex
 
 regex[fn]='^(.*)\.([^.]*)$'
@@ -33,10 +32,10 @@ depth_max=0
 mapfile -d'/' -t path_parts <<<"$if_dn"
 depth_og=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$if_dn" -type d -exec printf '%q\n' {} + 2>&-)
+mapfile -t dirs < <(find "$if_dn" -type d -exec printf '%q\n' {} + 2>&-)
 
-for (( i = 0; i < ${#files[@]}; i++ )); do
-	eval fn="${files[${i}]}"
+for (( i = 0; i < ${#dirs[@]}; i++ )); do
+	eval fn="${dirs[${i}]}"
 
 	mapfile -d'/' -t path_parts <<<"$fn"
 	depth_tmp=$(( ${#path_parts[@]} - 1 ))
@@ -47,7 +46,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-unset -v files path_parts depth_og depth_tmp depth_diff
+unset -v dirs path_parts depth_og depth_tmp depth_diff
 
 mv_print () {
 	declare if of
@@ -77,10 +76,10 @@ mv_print () {
 }
 
 for (( i = depth_max; i > 0; i-- )); do
-	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
+	mapfile -t dirs < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
-	for (( j = 0; j < ${#files[@]}; j++ )); do
-		eval dn="${files[${j}]}"
+	for (( j = 0; j < ${#dirs[@]}; j++ )); do
+		eval dn="${dirs[${j}]}"
 		dn_dn=$(dirname "$dn")
 		dn_bn=$(basename "$dn")
 
