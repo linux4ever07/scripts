@@ -6,6 +6,7 @@
 
 # Creates a function called 'usage', which will print usage instructions
 # and then quit.
+
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [dir]"
 	exit
@@ -23,9 +24,14 @@ if_dn=$(readlink -f "$1")
 
 session="${RANDOM}-${RANDOM}"
 
+declare -a vars1 vars2 vars3
 declare -A regex
 
 regex[fn]='^(.*)\.([^.]*)$'
+
+vars1=('depth_og' 'depth_tmp' 'depth_diff')
+vars2=('dirs' 'path_parts')
+vars3=('dn' 'dn_dn' 'dn_bn' 'fn' 'bn' 'ext')
 
 depth_max=0
 
@@ -46,7 +52,7 @@ for (( i = 0; i < ${#dirs[@]}; i++ )); do
 	fi
 done
 
-unset -v dirs path_parts depth_og depth_tmp depth_diff
+unset -v "${vars1[@]}" "${vars2[@]}"
 
 mv_print () {
 	declare if of
@@ -76,14 +82,14 @@ mv_print () {
 }
 
 for (( i = depth_max; i > 0; i-- )); do
-	mapfile -t dirs < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
+	mapfile -t dirs < <(find "$if_dn" -type d -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
 	for (( j = 0; j < ${#dirs[@]}; j++ )); do
+		declare "${vars3[@]}"
+
 		eval dn="${dirs[${j}]}"
 		dn_dn=$(dirname "$dn")
 		dn_bn=$(basename "$dn")
-
-		declare ext
 
 		mapfile -t files < <(compgen -G "${dn}/*")
 
@@ -96,7 +102,8 @@ for (( i = depth_max; i > 0; i-- )); do
 
 		if [[ $bn == "$dn_bn" ]]; then
 			mv_print
-		continue
+			unset -v "${vars3[@]}"
+			continue
 		fi
 
 		if [[ $bn =~ ${regex[fn]} ]]; then
@@ -106,9 +113,10 @@ for (( i = depth_max; i > 0; i-- )); do
 
 		if [[ $bn == "$dn_bn" ]]; then
 			mv_print
+			unset -v "${vars3[@]}"
 			continue
 		fi
 
-		unset -v dn dn_dn dn_bn fn bn ext
+		unset -v "${vars3[@]}"
 	done
 done

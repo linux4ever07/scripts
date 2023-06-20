@@ -23,7 +23,14 @@ elif [[ $2 != 'upper' && $2 != 'lower' ]]; then
 fi
 
 if_dn=$(readlink -f "$1")
+
 case="$2"
+
+declare -a vars1 vars2
+
+vars1=('depth_og' 'depth_tmp' 'depth_diff')
+vars2=('files' 'path_parts')
+
 depth_max=0
 
 pause_msg="
@@ -57,7 +64,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-unset -v files path_parts depth_og depth_tmp depth_diff
+unset -v "${vars1[@]}" "${vars2[@]}"
 
 for (( i = depth_max; i > 0; i-- )); do
 	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" 2>&-)

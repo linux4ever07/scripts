@@ -16,6 +16,12 @@ if [[ ! -d $1 ]]; then
 fi
 
 if_dn=$(readlink -f "$1")
+
+declare -a vars1 vars2
+
+vars1=('depth_og' 'depth_tmp' 'depth_diff')
+vars2=('files' 'path_parts')
+
 depth_max=0
 
 mapfile -d'/' -t path_parts <<<"$if_dn"
@@ -35,7 +41,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-unset -v files path_parts depth_og depth_tmp depth_diff
+unset -v "${vars1[@]}" "${vars2[@]}"
 
 for (( i = depth_max; i > 0; i-- )); do
 	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
