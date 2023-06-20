@@ -33,10 +33,10 @@ fi
 
 declare -A md5s
 
-dn_if="${dirs[0]}"
+if_dn="${dirs[0]}"
 unset -v dirs[0]
 
-mapfile -t files < <(find "$dn_if" -type f -exec printf '%q\n' {} + 2>&-)
+mapfile -t files < <(find "$if_dn" -type f -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	eval fn="${files[${i}]}"
