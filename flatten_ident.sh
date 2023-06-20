@@ -23,7 +23,7 @@ if_dn=$(readlink -f "$1")
 
 session="${RANDOM}-${RANDOM}"
 
-declare -a dirs files
+declare -a files
 declare -A regex
 
 regex[fn]='^(.*)\.([^.]*)$'
@@ -33,7 +33,7 @@ depth_max=0
 mapfile -d'/' -t path_parts <<<"$if_dn"
 depth_og=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$if_dn" -exec printf '%q\n' {} + 2>&-)
+mapfile -t files < <(find "$if_dn" -type d -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	eval fn="${files[${i}]}"
@@ -76,38 +76,40 @@ mv_print () {
 	mv -n "$of" "$if"
 }
 
-mapfile -t dirs < <(find "$if_dn" -type d 2>&-)
+for (( i = depth_max; i > 0; i-- )); do
+	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
-for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	dn="${dirs[${i}]}"
-	dn_dn=$(dirname "$dn")
-	dn_bn=$(basename "$dn")
+	for (( j = 0; j < ${#files[@]}; j++ )); do
+		eval dn="${files[${j}]}"
+		dn_dn=$(dirname "$dn")
+		dn_bn=$(basename "$dn")
 
-	declare ext
+		declare ext
 
-	mapfile -t files < <(compgen -G "${dn}/*")
+		mapfile -t files < <(compgen -G "${dn}/*")
 
-	if [[ ${#files[@]} -ne 1 ]]; then
+		if [[ ${#files[@]} -ne 1 ]]; then
+			continue
+		fi
+
+		fn="${files[0]}"
+		bn=$(basename "$fn")
+
+		if [[ $bn == "$dn_bn" ]]; then
+			mv_print
 		continue
-	fi
+		fi
 
-	fn="${files[0]}"
-	bn=$(basename "$fn")
+		if [[ $bn =~ ${regex[fn]} ]]; then
+			bn="${BASH_REMATCH[1]}"
+			ext="${BASH_REMATCH[2]}"
+		fi
 
-	if [[ $bn == "$dn_bn" ]]; then
-		mv_print
-		continue
-	fi
+		if [[ $bn == "$dn_bn" ]]; then
+			mv_print
+			continue
+		fi
 
-	if [[ $bn =~ ${regex[fn]} ]]; then
-		bn="${BASH_REMATCH[1]}"
-		ext="${BASH_REMATCH[2]}"
-	fi
-
-	if [[ $bn == "$dn_bn" ]]; then
-		mv_print
-		continue
-	fi
-
-	unset -v dn dn_dn dn_bn fn bn ext
+		unset -v dn dn_dn dn_bn fn bn ext
+	done
 done

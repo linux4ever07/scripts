@@ -21,10 +21,10 @@ depth_max=0
 mapfile -d'/' -t path_parts <<<"$if_dn"
 depth_og=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$if_dn" 2>&-)
+mapfile -t files < <(find "$if_dn" -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
+	eval fn="${files[${i}]}"
 
 	mapfile -d'/' -t path_parts <<<"$fn"
 	depth_tmp=$(( ${#path_parts[@]} - 1 ))
@@ -38,10 +38,10 @@ done
 unset -v files path_parts depth_og depth_tmp depth_diff
 
 for (( i = depth_max; i > 0; i-- )); do
-	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" 2>&-)
+	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
 	for (( j = 0; j < ${#files[@]}; j++ )); do
-		fn="${files[${j}]}"
+		eval fn="${files[${j}]}"
 		dn=$(dirname "$fn")
 		bn=$(basename "$fn")
 
