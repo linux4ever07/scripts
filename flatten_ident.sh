@@ -28,6 +28,27 @@ declare -A regex
 
 regex[fn]='^(.*)\.([^.]*)$'
 
+depth_max=0
+
+mapfile -d'/' -t path_parts <<<"$dir"
+depth_og=$(( ${#path_parts[@]} - 1 ))
+
+mapfile -t files < <(find "$dir" -exec printf '%q\n' {} + 2>&-)
+
+for (( i = 0; i < ${#files[@]}; i++ )); do
+	eval fn="${files[${i}]}"
+
+	mapfile -d'/' -t path_parts <<<"$fn"
+	depth_tmp=$(( ${#path_parts[@]} - 1 ))
+	depth_diff=$(( depth_tmp - depth_og ))
+
+	if [[ $depth_diff -gt $depth_max ]]; then
+		depth_max="$depth_diff"
+	fi
+done
+
+unset -v files path_parts depth_og depth_tmp depth_diff
+
 mv_print () {
 	declare if of
 

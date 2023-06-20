@@ -15,13 +15,13 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-dir=$(readlink -f "$1")
+if_dn=$(readlink -f "$1")
 depth_max=0
 
-mapfile -d'/' -t path_parts <<<"$dir"
+mapfile -d'/' -t path_parts <<<"$if_dn"
 depth_og=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$dir" 2>&-)
+mapfile -t files < <(find "$if_dn" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	fn="${files[${i}]}"
@@ -38,7 +38,7 @@ done
 unset -v files path_parts depth_og depth_tmp depth_diff
 
 for (( i = depth_max; i > 0; i-- )); do
-	mapfile -t files < <(find "$dir" -mindepth "$i" -maxdepth "$i" 2>&-)
+	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" 2>&-)
 
 	for (( j = 0; j < ${#files[@]}; j++ )); do
 		fn="${files[${j}]}"

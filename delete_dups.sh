@@ -39,28 +39,28 @@ unset -v dirs[0]
 mapfile -t files < <(find "$dn_if" -type f -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	eval f="${files[${i}]}"
-	f_bn=$(basename "$f")
+	eval fn="${files[${i}]}"
+	bn=$(basename "$fn")
 
-	md5=$(md5sum -b "$f")
+	md5=$(md5sum -b "$fn")
 	md5="${md5%% *}"
-	md5s["${md5}"]="$f_bn"
+	md5s["${md5}"]="$bn"
 done
 
 for dn in "${dirs[@]}"; do
 	mapfile -t files < <(find "$dn" -type f -exec printf '%q\n' {} + 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
-		eval f="${files[${i}]}"
-		f_bn=$(basename "$f")
+		eval fn="${files[${i}]}"
+		bn=$(basename "$fn")
 
-		md5=$(md5sum -b "$f")
+		md5=$(md5sum -b "$fn")
 		md5="${md5%% *}"
 
 		if [[ -n ${md5s[${md5}]} ]]; then
-			if [[ ${md5s[${md5}]} == "$f_bn" ]]; then
-				printf '%s\n' "$f"
-				rm -f "$f"
+			if [[ ${md5s[${md5}]} == "$bn" ]]; then
+				printf '%s\n' "$fn"
+				rm -f "$fn"
 			fi
 		fi
 	done
