@@ -104,18 +104,20 @@ get_tracks () {
 			continue
 		fi
 
-		if [[ $switch -eq 1 ]]; then
-			if [[ $line =~ ${regex[stop]} ]]; then
-				switch=0
-				break
-			fi
-
-			if [[ $line =~ ${regex[strip]} ]]; then
-				line="${BASH_REMATCH[1]}"
-			fi
-
-			mkvinfo_tracks+=("$line")
+		if [[ $switch -eq 0 ]]; then
+			continue
 		fi
+
+		if [[ $line =~ ${regex[stop]} ]]; then
+			switch=0
+			break
+		fi
+
+		if [[ $line =~ ${regex[strip]} ]]; then
+			line="${BASH_REMATCH[1]}"
+		fi
+
+		mkvinfo_tracks+=("$line")
 	done
 
 	unset -v mkvinfo_lines
@@ -181,36 +183,36 @@ extract_remux () {
 # Puts together the mkvmerge command. The loop below deals with
 # subtitles that are in the Matroska file.
 	for (( i = 1; i < tracks_n; i++ )); do
-			num_tmp="${tracks[${i},num]}"
-			sub_tmp="${tracks[${i},sub]}"
-			srt_tmp="${tracks[${i},srt]}"
-			lang_tmp="${tracks[${i},lang]}"
-			name_tmp="${tracks[${i},name]}"
+		num_tmp="${tracks[${i},num]}"
+		sub_tmp="${tracks[${i},sub]}"
+		srt_tmp="${tracks[${i},srt]}"
+		lang_tmp="${tracks[${i},lang]}"
+		name_tmp="${tracks[${i},name]}"
 
-			if [[ -z $lang_tmp ]]; then
-				lang_tmp='und'
-			fi
+		if [[ -z $lang_tmp ]]; then
+			lang_tmp='und'
+		fi
 
-			if [[ -z $name_tmp ]]; then
-				name_tmp='und'
-			fi
+		if [[ -z $name_tmp ]]; then
+			name_tmp='und'
+		fi
 
-			if [[ $sub_tmp -eq 0 ]]; then
-				switch=1
-				continue
-			fi
+		if [[ $sub_tmp -eq 0 ]]; then
+			switch=1
+			continue
+		fi
 
-			if [[ $srt_tmp -eq 1 ]]; then
-				of_srt="${of_dn}/${num_tmp}_${lang_tmp}_${name_tmp}.srt"
-				files_tmp+=("$of_srt")
+		if [[ $srt_tmp -eq 1 ]]; then
+			of_srt="${of_dn}/${num_tmp}_${lang_tmp}_${name_tmp}.srt"
+			files_tmp+=("$of_srt")
 
-				args_srt+=(\""${num_tmp}:${of_srt}"\")
-			fi
+			args_srt+=(\""${num_tmp}:${of_srt}"\")
+		fi
 
-			if [[ $srt_tmp -eq 0 ]]; then
-				switch=1
-				args_not+=("$num_tmp")
-			fi
+		if [[ $srt_tmp -eq 0 ]]; then
+			switch=1
+			args_not+=("$num_tmp")
+		fi
 	done
 
 # If there's no SRT subtitles in the Matroska file, quit.

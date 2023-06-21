@@ -156,18 +156,20 @@ get_tracks () {
 			continue
 		fi
 
-		if [[ $switch -eq 1 ]]; then
-			if [[ $line =~ ${regex[stop]} ]]; then
-				switch=0
-				break
-			fi
-
-			if [[ $line =~ ${regex[strip]} ]]; then
-				line="${BASH_REMATCH[1]}"
-			fi
-
-			mkvinfo_tracks+=("$line")
+		if [[ $switch -eq 0 ]]; then
+			continue
 		fi
+
+		if [[ $line =~ ${regex[stop]} ]]; then
+			switch=0
+			break
+		fi
+
+		if [[ $line =~ ${regex[strip]} ]]; then
+			line="${BASH_REMATCH[1]}"
+		fi
+
+		mkvinfo_tracks+=("$line")
 	done
 
 	unset -v mkvinfo_lines
