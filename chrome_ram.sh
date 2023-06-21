@@ -39,7 +39,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode
+declare mode restart script_pid chrome_pid run_status exit_status
 
 case "$1" in
 	'normal')
@@ -74,9 +74,25 @@ shm_dn="/dev/shm/google-chrome-${session}"
 shm_cfg="${shm_dn}/config"
 shm_cache="${shm_dn}/cache"
 
+restart="${shm_dn}/kill"
+
 tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
+
+script_pid="$BASHPID"
+
+start_chrome () {
+	printf '\n%s\n\n' 'Starting Chrome...'
+
+	google-chrome 1>&- 2>&- &
+	chrome_pid="$!"
+}
+
+check_status () {
+	run_status=$(ps -p "$chrome_pid" 2>&1)
+	exit_status="$?"
+}
 
 check_ram () {
 	mapfile -t free_ram < <(free | sed -E 's/[[:blank:]]+/ /g')
@@ -162,7 +178,7 @@ restore_chrome () {
 }
 
 kill_chrome () {
-	kill -9 "$pid"
+	kill -9 "$chrome_pid"
 
 	restore_chrome
 
@@ -201,10 +217,7 @@ if [[ $mode == 'normal' ]]; then
 	rm -r "$bak_cache" || exit
 fi
 
-printf '\n%s\n\n' 'Starting Chrome...'
-
-google-chrome 1>&- 2>&- &
-pid="$!"
+start_chrome
 
 if [[ $mode == 'normal' ]]; then
 	cd "$bak_cfg" || kill_chrome
@@ -220,7 +233,17 @@ fi
 
 cd "$shm_cfg" || kill_chrome
 
-while kill -0 "$pid" 1>&- 2>&-; do
+check_status
+
+while [[ $exit_status -eq 0 ]]; do
+	if [[ -f $restart ]]; then
+		rm "$restart"
+
+		kill -9 "$chrome_pid"
+
+		start_chrome
+	fi
+
 	n=$(( n + 1 ))
 
 	sleep 10
@@ -234,6 +257,8 @@ while kill -0 "$pid" 1>&- 2>&-; do
 			check_hdd "$shm_dn" && backup_chrome
 		fi
 	fi
+
+	check_status
 done
 
 restore_chrome

@@ -83,7 +83,15 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
-rm "$cfg" "$cache" || exit
+for dn in "$cfg" "$cache"; do
+	if [[ -L "$dn" ]]; then
+		rm "$dn" || exit
+	fi
+
+	if [[ -d "$dn" ]]; then
+		rm -r "$dn" || exit
+	fi
+done
 
 mkdir -p "$cfg" "$cache" || exit
 
