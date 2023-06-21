@@ -39,11 +39,13 @@ get_id () {
 		for pw_id_tmp in "${!nodes[@]}"; do
 			pw_node_tmp="${nodes[${pw_id_tmp}]}"
 
-			if [[ $pw_node_tmp == "$pw_node" ]]; then
-				pw_id="$pw_id_tmp"
-
-				break
+			if [[ $pw_node_tmp != "$pw_node" ]]; then
+				continue
 			fi
+
+			pw_id="$pw_id_tmp"
+
+			break
 		done
 	}
 
@@ -92,11 +94,13 @@ get_id () {
 		for (( i = 0; i < ${#lines[@]}; i++ )); do
 			line="${lines[${i}]}"
 
-			if [[ $line =~ ${regex[cfg_node]} ]]; then
-				pw_node="${BASH_REMATCH[1]}"
-
-				break
+			if [[ ! $line =~ ${regex[cfg_node]} ]]; then
+				continue
 			fi
+
+			pw_node="${BASH_REMATCH[1]}"
+
+			break
 		done
 
 		if [[ -n $pw_node ]]; then
@@ -141,15 +145,17 @@ get_volume () {
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
 		line="${pw_dump[${i}]}"
 
-		if [[ $line =~ ${regex[volume]} ]]; then
-			volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
-
-			if [[ $volume =~ ${regex[zero]} ]]; then
-				volume="${BASH_REMATCH[1]}"
-			fi
-
-			break
+		if [[ ! $line =~ ${regex[volume]} ]]; then
+			continue
 		fi
+
+		volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
+
+		if [[ $volume =~ ${regex[zero]} ]]; then
+			volume="${BASH_REMATCH[1]}"
+		fi
+
+		break
 	done
 
 	if [[ -z $volume ]]; then
