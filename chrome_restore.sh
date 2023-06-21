@@ -83,6 +83,19 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	fi
 done
 
+case "$mode" in
+	'ram')
+		if [[ -z $ram_fn ]]; then
+			exit
+		fi
+	;;
+	'backup')
+		if [[ -z $bak_fn ]]; then
+			exit
+		fi
+	;;
+esac
+
 for dn in "$cfg" "$cache"; do
 	if [[ -L "$dn" ]]; then
 		rm "$dn" || exit
@@ -97,10 +110,6 @@ done
 
 case "$mode" in
 	'ram')
-		if [[ -z $ram_fn ]]; then
-			exit
-		fi
-
 		ram_cfg="${ram_fn}/config"
 		ram_cache="${ram_fn}/cache"
 
@@ -121,10 +130,6 @@ case "$mode" in
 		rm -r "$ram_fn" || exit
 	;;
 	'backup')
-		if [[ -z $bak_fn ]]; then
-			exit
-		fi
-
 		cd "$cfg" || exit
 		tar -xf "$bak_fn" || exit
 

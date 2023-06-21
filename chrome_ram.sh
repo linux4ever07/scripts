@@ -39,7 +39,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode restart_fn chrome_pid run_status exit_status
+declare mode restart_fn pid_chrome run_status exit_status
 
 case "$1" in
 	'normal')
@@ -84,11 +84,11 @@ start_chrome () {
 	printf '\n%s\n\n' 'Starting Chrome...'
 
 	google-chrome 1>&- 2>&- &
-	chrome_pid="$!"
+	pid_chrome="$!"
 }
 
 check_status () {
-	run_status=$(ps -p "$chrome_pid" 2>&1)
+	run_status=$(ps -p "$pid_chrome" 2>&1)
 	exit_status="$?"
 }
 
@@ -176,7 +176,7 @@ restore_chrome () {
 }
 
 kill_chrome () {
-	kill -9 "$chrome_pid"
+	kill -9 "$pid_chrome"
 
 	restore_chrome
 
@@ -237,7 +237,7 @@ while [[ $exit_status -eq 0 ]]; do
 	if [[ -f $restart_fn ]]; then
 		rm "$restart_fn" || exit
 
-		kill -9 "$chrome_pid"
+		kill -9 "$pid_chrome"
 
 		start_chrome
 	fi
