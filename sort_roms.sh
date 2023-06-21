@@ -63,19 +63,21 @@ set_target () {
 	for (( j = 0; j < ${#priority[@]}; j++ )); do
 		target="${priority[${j}]}"
 
-		if [[ $region =~ $target ]]; then
-			region_n="$j"
+		if [[ ! $region =~ $target ]]; then
+			continue
+		fi
 
-			if [[ ${titles[${title}]} != 'undef' ]]; then
-				if [[ $region_n -lt ${titles[${title}]} ]]; then
-					set_vars
-				fi
-			else
+		region_n="$j"
+
+		if [[ ${titles[${title}]} != 'undef' ]]; then
+			if [[ $region_n -lt ${titles[${title}]} ]]; then
 				set_vars
 			fi
-
-			break
+		else
+			set_vars
 		fi
+
+		break
 	done
 }
 
@@ -145,10 +147,12 @@ for title in "${!titles[@]}"; do
 		for (( j = 0; j < ${#priority[@]}; j++ )); do
 			target="${priority[${j}]}"
 
-			if [[ $region =~ $target ]]; then
-				region_n="$j"
-				break
+			if [[ ! $region =~ $target ]]; then
+				continue
 			fi
+
+			region_n="$j"
+			break
 		done
 
 		if [[ $region_n == "${titles[${title}]}" ]]; then
