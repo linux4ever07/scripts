@@ -54,6 +54,8 @@ dir2_dirs_elements="${#dir2_dirs[@]}"
 
 # Declares some hashes that will be used to compare the two directories.
 var_list1=(dir1_files_hash dir1_dirs_hash dir2_files_hash dir2_dirs_hash dir1_md5s_hash dir2_md5s_hash)
+var_list2=(dn_parts fn_parts start bn bn_md5)
+
 declare -A "${var_list1[@]}"
 
 # Converts the basename of all the files (in both directories) into MD5
@@ -91,7 +93,7 @@ for dir in dir1 dir2; do
 	done
 done
 
-unset -v dn_parts fn_parts start bn bn_md5
+unset -v "${var_list2[@]}"
 
 # Generates an MD5 hash of all the basenames that exist in both
 # directories. This is faster than checking the MD5 hash of *all* the
@@ -112,8 +114,9 @@ done
 
 # Compares the two directories to see if files or directories are
 # missing.
-var_list2=(dir1_files_missing dir1_dirs_missing dir2_files_missing dir2_dirs_missing md5s_mismatch)
-declare -a "${var_list2[@]}"
+var_list3=(dir1_files_missing dir1_dirs_missing dir2_files_missing dir2_dirs_missing md5s_mismatch)
+
+declare -a "${var_list3[@]}"
 
 # Files
 for key in "${!dir1_files_hash[@]}"; do
@@ -163,7 +166,7 @@ print_list () {
 	printf '\n' 
 }
 
-for type in "${var_list2[@]}"; do
+for type in "${var_list3[@]}"; do
 	elements_ref="${type}_elements"
 
 	if [[ ${!elements_ref} -gt 0 ]]; then

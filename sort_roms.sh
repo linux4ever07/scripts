@@ -41,7 +41,7 @@ session="${RANDOM}-${RANDOM}"
 sorted_dn="sorted-${session}"
 
 declare -A regex titles
-global_vars=(fn bn region region_n)
+global_vars=('fn' 'bn' 'region' 'region_n')
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[ext]='\.([^.]*)$'
