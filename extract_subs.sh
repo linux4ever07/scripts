@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script is meant to extract all the subtitles from a Matroska
-# (.mkv) file. The output filename is the same as the input filename,
-# only a random number is added to the name.
+# This script is meant to extract all the subtitles from an MKV
+# (Matroska) file. The output filename is the same as the input
+# filename, only a random number is added to the name.
 
 usage () {
 	msg[0]="You need mkvtoolnix installed to run this script."
