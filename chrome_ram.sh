@@ -39,7 +39,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode restart script_pid chrome_pid run_status exit_status
+declare mode restart_fn chrome_pid run_status exit_status
 
 case "$1" in
 	'normal')
@@ -74,13 +74,11 @@ shm_dn="/dev/shm/google-chrome-${session}"
 shm_cfg="${shm_dn}/config"
 shm_cache="${shm_dn}/cache"
 
-restart="${shm_dn}/kill"
+restart_fn="${shm_dn}/kill"
 
 tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
-
-script_pid="$BASHPID"
 
 start_chrome () {
 	printf '\n%s\n\n' 'Starting Chrome...'
@@ -236,8 +234,8 @@ cd "$shm_cfg" || kill_chrome
 check_status
 
 while [[ $exit_status -eq 0 ]]; do
-	if [[ -f $restart ]]; then
-		rm "$restart"
+	if [[ -f $restart_fn ]]; then
+		rm "$restart_fn" || exit
 
 		kill -9 "$chrome_pid"
 

@@ -91,9 +91,9 @@ for dn in "$cfg" "$cache"; do
 	if [[ -d "$dn" ]]; then
 		rm -r "$dn" || exit
 	fi
-done
 
-mkdir -p "$cfg" "$cache" || exit
+	mkdir -p "$dn" || exit
+done
 
 case "$mode" in
 	'ram')
