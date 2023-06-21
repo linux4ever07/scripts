@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script is meant to extract SubRip (SRT) subtitles from an MKV
-# (Matroska) file, and remux the MKV without the SRT tracks.
+# This script is meant to extract SubRip (SRT) subtitles from MKV
+# (Matroska) files, and remux them without the SRT tracks.
 
 # I use this script in combination with 'extract_subs.sh', to backup
 # the subtitles when I replace old movie rips (like XviD, H264 etc.)
