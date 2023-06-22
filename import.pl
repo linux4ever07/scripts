@@ -255,14 +255,14 @@ while (my $dn = shift(@dirs)) {
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
 
 	sub action {
-		if (-d) {
-			my $dn = $File::Find::name;
-			getfiles($dn);
-			my $fc = keys(%files);
-			if ($fc > 0) {
-				say $dn . ': importing...' . "\n";
-				import($fc);
-			} else { say $dn . ': contains no FLAC files'; }
-		}
+		if (! -d) { next; }
+
+		my $dn = $File::Find::name;
+		getfiles($dn);
+		my $fc = keys(%files);
+		if ($fc > 0) {
+			say $dn . ': importing...' . "\n";
+			import($fc);
+		} else { say $dn . ': contains no FLAC files'; }
 	}
 }

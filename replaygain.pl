@@ -367,43 +367,43 @@ sub vendor {
 			}
 			close($stderr_fh) or die "Can't close '$newfn_stderr': $!";
 
-			if ($has_id3v2) {
-				print "\n" . $fn . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
+			if (! $has_id3v2) { last; }
+
+			print "\n" . $fn . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
 
 # Decode the FLAC file to WAV (in order to lose the ID3v2 tags).
-				system('flac', '--silent', '--decode', $fn, "--output-name=$newfn_wav");
-				or_warn("Can't decode file");
+			system('flac', '--silent', '--decode', $fn, "--output-name=$newfn_wav");
+			or_warn("Can't decode file");
 
-				if ($? == 2) { sigint($newfn_wav, $newfn_stderr); }
+			if ($? == 2) { sigint($newfn_wav, $newfn_stderr); }
 
 # Back up the album art, if it exists.
-				system("metaflac --export-picture-to=\"$newfn_art\" \"$fn\" 1>&- 2>&-");
+			system("metaflac --export-picture-to=\"$newfn_art\" \"$fn\" 1>&- 2>&-");
 
 # Encode the WAV file to FLAC.
-				if (-f $newfn_art) {
-					system('flac', '--silent', '-8', "--picture=$newfn_art", $newfn_wav, "--output-name=$newfn_flac");
-					or_warn("Can't encode file");
+			if (-f $newfn_art) {
+				system('flac', '--silent', '-8', "--picture=$newfn_art", $newfn_wav, "--output-name=$newfn_flac");
+				or_warn("Can't encode file");
 
-					unlink($newfn_art)
-					or die "Can't remove '$newfn_art': $!";
-				} else {
-					system('flac', '--silent', '-8', $newfn_wav, "--output-name=$newfn_flac");
-					or_warn("Can't encode file");
-				}
+				unlink($newfn_art)
+				or die "Can't remove '$newfn_art': $!";
+			} else {
+				system('flac', '--silent', '-8', $newfn_wav, "--output-name=$newfn_flac");
+				or_warn("Can't encode file");
+			}
 
-				unlink($newfn_wav)
-				or die "Can't remove '$newfn_wav': $!";
+			unlink($newfn_wav)
+			or die "Can't remove '$newfn_wav': $!";
 
-				if ($? == 0) {
-					move($newfn_flac, $fn)
-					or die "Can't move '$newfn_flac': $!";
-					say 'done';
+			if ($? == 0) {
+				move($newfn_flac, $fn)
+				or die "Can't move '$newfn_flac': $!";
+				say 'done';
 
 # Rewrite the tags. They were removed in the decoding process.
-					writetags($fn, 0);
-				} elsif ($? == 2) {
-					sigint($newfn_wav, $newfn_flac, $newfn_stderr);
-				}
+				writetags($fn, 0);
+			} elsif ($? == 2) {
+				sigint($newfn_wav, $newfn_flac, $newfn_stderr);
 			}
 		}
 	}
