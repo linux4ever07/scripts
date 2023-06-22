@@ -59,17 +59,19 @@ get_pids () {
 		for (( i = 0; i < ${#child[@]}; i++ )); do
 			line="${child[${i}]}"
 
-			if [[ $line =~ ${regex[pid_args]} ]]; then
-				match=("${BASH_REMATCH[@]:1}")
-				pid="${match[0]}"
-				args="${match[2]}"
+			if [[ ! $line =~ ${regex[pid_args]} ]]; then
+				continue
+			fi
 
-				bn=$(basename "$args")
+			match=("${BASH_REMATCH[@]:1}")
+			pid="${match[0]}"
+			args="${match[2]}"
 
-				if [[ $bn == "$comm" ]]; then
-					comm_path="$args"
-					break
-				fi
+			bn=$(basename "$args")
+
+			if [[ $bn == "$comm" ]]; then
+				comm_path="$args"
+				break
 			fi
 		done
 
@@ -80,22 +82,24 @@ get_pids () {
 		for (( i = 0; i < ${#child[@]}; i++ )); do
 			line="${child[${i}]}"
 
-			if [[ $line =~ ${regex[pid_args]} ]]; then
-				match=("${BASH_REMATCH[@]:1}")
-				pid="${match[0]}"
-				args="${match[2]}"
-
-				if [[ $pid -eq ${session[0]} ]]; then
-					continue
-				fi
-
-				if [[ $args != "$comm_path" ]]; then
-					continue
-				fi
-
-				args+="${match[3]}"
-				pids["${pid}"]="$args"
+			if [[ ! $line =~ ${regex[pid_args]} ]]; then
+				continue
 			fi
+
+			match=("${BASH_REMATCH[@]:1}")
+			pid="${match[0]}"
+			args="${match[2]}"
+
+			if [[ $pid -eq ${session[0]} ]]; then
+				continue
+			fi
+
+			if [[ $args != "$comm_path" ]]; then
+				continue
+			fi
+
+			args+="${match[3]}"
+			pids["${pid}"]="$args"
 		done
 	done
 }

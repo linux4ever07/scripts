@@ -47,18 +47,20 @@ get_pids () {
 		for (( i = 0; i < ${#child[@]}; i++ )); do
 			line="${child[${i}]}"
 
-			if [[ $line =~ ${regex[pid_args]} ]]; then
-				match=("${BASH_REMATCH[@]:1}")
-				pid="${match[0]}"
-				args="${match[2]}"
-
-				if [[ $pid -eq ${session[0]} ]]; then
-					continue
-				fi
-
-				args+="${match[3]}"
-				pids["${pid}"]="$args"
+			if [[ ! $line =~ ${regex[pid_args]} ]]; then
+				continue
 			fi
+
+			match=("${BASH_REMATCH[@]:1}")
+			pid="${match[0]}"
+			args="${match[2]}"
+
+			if [[ $pid -eq ${session[0]} ]]; then
+				continue
+			fi
+
+			args+="${match[3]}"
+			pids["${pid}"]="$args"
 		done
 	done
 }
