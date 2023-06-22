@@ -523,11 +523,11 @@ sub file2hash {
 # Loop to check that the format of the database file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if (! $line =~ /$format/) { next; }
-
+		if ($line =~ /$format/) {
 # Split the line into relative file name and MD5 hash.
-		$fn = $1;
-		$hash = $2;
+			$fn = $1;
+			$hash = $2;
+		} else { next; }
 
 # Add full path to file name, unless it's the current directory.
 		if ($dn ne '.') { $fn = $dn . '/' . $fn; }
@@ -626,12 +626,12 @@ sub md5import {
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if (! $line =~ /$format/) { next; }
-
+		if ($line =~ /$format/) {
 # Split the line into MD5 hash and relative file name.
-		$hash = lc($1);
-		$fn = $2;
-		$fn =~ s($regex{path})();
+			$hash = lc($1);
+			$fn = $2;
+			$fn =~ s($regex{path})();
+		} else { next; }
 
 # Add full path to file name, unless it's the current directory.
 		if ($dn ne '.') { $fn = $dn . '/' . $fn; }
