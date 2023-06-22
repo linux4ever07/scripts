@@ -233,13 +233,15 @@ sub files2queue {
 # then skip it.
 	if ($mode eq 'index') {
 		foreach my $fn (keys(%md5h)) {
-			if ($md5h{$fn} eq '1') {
-				if ($fn =~ /$regex{flac}/) {
-					if (scalar(@flac_req) != 2) { next; }
-				}
-
-				$files{$fn} = ();
+			if ($md5h{$fn} ne '1') {
+				next;
 			}
+
+			if ($fn =~ /$regex{flac}/) {
+				if (scalar(@flac_req) != 2) { next; }
+			}
+
+			$files{$fn} = ();
 		}
 	}
 
@@ -248,19 +250,21 @@ sub files2queue {
 # create a path for it in /dev/shm.
 	if ($mode eq 'test') {
 		foreach my $fn (keys(%md5h)) {
-			if ($md5h{$fn} ne '1') {
-				if ($fn =~ /$regex{flac}/) {
-					if (scalar(@flac_req) != 2) { next; }
-
-					$dn = dirname($fn);
-
-					if ($dn ne '.') {
-						$dn = $shm_dn . '/' . $dn;
-						$files{$fn}{dn} = $dn;
-						make_path($dn);
-					} else { $files{$fn}{dn} = $shm_dn; }
-				} else { $files{$fn} = (); }
+			if ($md5h{$fn} eq '1') {
+				next;
 			}
+
+			if ($fn =~ /$regex{flac}/) {
+				if (scalar(@flac_req) != 2) { next; }
+
+				$dn = dirname($fn);
+
+				if ($dn ne '.') {
+					$dn = $shm_dn . '/' . $dn;
+					$files{$fn}{dn} = $dn;
+					make_path($dn);
+				} else { $files{$fn}{dn} = $shm_dn; }
+			} else { $files{$fn} = (); }
 		}
 	}
 
