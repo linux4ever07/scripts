@@ -39,7 +39,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode restart_fn pid_chrome run_status exit_status
+declare mode restart_fn pid_chrome
 
 case "$1" in
 	'normal')
@@ -53,16 +53,16 @@ case "$1" in
 	;;
 esac
 
-mapfile -t is_chrome < <(ps -C chrome -o pid | tail -n +2 | tr -d '[:blank:]')
+is_chrome
 
-if [[ ${#is_chrome[@]} -gt 0 ]]; then
+if [[ $? -eq 0 ]]; then
 	printf '\n%s\n\n' 'Chrome is already running!'
 	exit
 fi
 
 session="${RANDOM}-${RANDOM}"
 ram_limit=1000000
-time_limit=360
+time_limit=3600
 
 og_cfg="${HOME}/.config/google-chrome"
 og_cache="${HOME}/.cache/google-chrome"
@@ -80,6 +80,21 @@ tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
 
+is_chrome () {
+	declare cmd_stdout
+
+	cmd_stdout=$(ps -C chrome -o pid 2>&1)
+
+	case in "$?"
+		'0')
+			return 0
+		;;
+		*)
+			return 1
+		;;
+	esac
+}
+
 start_chrome () {
 	printf '\n%s\n\n' 'Starting Chrome...'
 
@@ -88,8 +103,18 @@ start_chrome () {
 }
 
 check_status () {
-	run_status=$(ps -p "$pid_chrome" 2>&1)
-	exit_status="$?"
+	declare cmd_stdout
+
+	cmd_stdout=$(ps -p "$pid_chrome" 2>&1)
+
+	case in "$?"
+		'0')
+			return 0
+		;;
+		*)
+			return 1
+		;;
+	esac
 }
 
 check_ram () {
@@ -231,20 +256,24 @@ fi
 
 cd "$shm_cfg" || kill_chrome
 
-check_status
-
-while [[ $exit_status -eq 0 ]]; do
+while check_status; do
 	if [[ -f $restart_fn ]]; then
 		rm "$restart_fn" || exit
 
 		kill -9 "$pid_chrome"
+
+		while is_chrome; do
+			sleep 1
+		done
+
+		sync
 
 		start_chrome
 	fi
 
 	n=$(( n + 1 ))
 
-	sleep 10
+	sleep 1
 
 	check_ram || kill_chrome
 
@@ -255,8 +284,6 @@ while [[ $exit_status -eq 0 ]]; do
 			check_hdd "$shm_dn" && backup_chrome
 		fi
 	fi
-
-	check_status
 done
 
 restore_chrome
