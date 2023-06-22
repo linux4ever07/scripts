@@ -5,6 +5,8 @@
 # to access the hard drive, in case the intention was not to quit
 # Chrome.
 
+declare -A regex
+
 regex[bn]='google-chrome-[0-9]+-[0-9]+'
 regex[ram]="^${regex[bn]}$"
 
