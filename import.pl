@@ -255,7 +255,7 @@ while (my $dn = shift(@dirs)) {
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
 
 	sub action {
-		if (! -d) { next; }
+		if (! -d) { return; }
 
 		my $dn = $File::Find::name;
 		getfiles($dn);
