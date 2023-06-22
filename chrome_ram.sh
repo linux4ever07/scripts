@@ -53,9 +53,22 @@ case "$1" in
 	;;
 esac
 
-is_chrome
+is_chrome () {
+	declare cmd_stdout
 
-if [[ $? -eq 0 ]]; then
+	cmd_stdout=$(ps -C chrome -o pid 2>&1)
+
+	case in "$?"
+		'0')
+			return 0
+		;;
+		*)
+			return 1
+		;;
+	esac
+}
+
+if is_chrome; then
 	printf '\n%s\n\n' 'Chrome is already running!'
 	exit
 fi
@@ -79,21 +92,6 @@ restart_fn="${shm_dn}/kill"
 tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
-
-is_chrome () {
-	declare cmd_stdout
-
-	cmd_stdout=$(ps -C chrome -o pid 2>&1)
-
-	case in "$?"
-		'0')
-			return 0
-		;;
-		*)
-			return 1
-		;;
-	esac
-}
 
 start_chrome () {
 	printf '\n%s\n\n' 'Starting Chrome...'
