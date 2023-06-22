@@ -7,6 +7,7 @@
 # To get a list of available signals: kill -l
 
 declare comm
+declare -a hb_pids
 declare -A regex
 
 comm='HandBrakeCLI'
