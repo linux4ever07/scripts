@@ -5,7 +5,8 @@
 # highlight. The purpose is to highlight a specific conversation going
 # on between the nicks specified.
 
-# Creates a function called 'usage', which will print usage and quit.
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
 	exit

@@ -55,7 +55,8 @@ if=$(readlink -f "$1")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
-# Creates a function called 'usage', which will print usage and quit.
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	cat <<USAGE
 

@@ -24,7 +24,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-# If argument is not a real file, print usage and quit.
+# If argument is not a real file, print usage instructions and then
+# quit.
 if [[ ! -f $1 ]]; then
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
 	exit

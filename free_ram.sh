@@ -85,6 +85,10 @@ get_pids () {
 				pid="${match[0]}"
 				args="${match[2]}"
 
+				if [[ $pid -eq ${session[0]} ]]; then
+					continue
+				fi
+
 				if [[ $args != "$comm_path" ]]; then
 					continue
 				fi

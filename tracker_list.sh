@@ -26,7 +26,8 @@ declare -a files
 
 nocheck=0
 
-# Creates a function called 'usage', which prints usage and then quits.
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [tracker txt] [-nocheck]"
 	exit

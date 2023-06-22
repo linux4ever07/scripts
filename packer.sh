@@ -64,7 +64,8 @@ restore_n_quit () {
 	exit
 }
 
-# This function prints usage instructions and then quits.
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	cat <<USAGE
 
