@@ -523,30 +523,32 @@ sub file2hash {
 # Loop to check that the format of the database file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if ($line =~ /$format/) {
+		if (! $line =~ /$format/) {
+			next;
+		}
+
 # Split the line into relative file name and MD5 hash.
-			$fn = $1;
-			$hash = $2;
+		$fn = $1;
+		$hash = $2;
 
 # Add full path to file name, unless it's the current directory.
-			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
+		if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # If $fn is a real file.
-			if (-f $fn) {
+		if (-f $fn) {
 # If MD5 hash of file name is not already in database, add it and print
 # a message.
-				if ($md5h{$fn} eq '1') {
-					$md5h{$fn} = $hash;
-					say $fn . $delim . $hash;
+			if ($md5h{$fn} eq '1') {
+				$md5h{$fn} = $hash;
+				say $fn . $delim . $hash;
 # If file name is in database hash but the MD5 hash doesn't match, print
 # to the log. This will most likely only be the case for any extra
 # databases that are found in the search path given to the script.
-				} elsif ($md5h{$fn} ne $hash) {
-					$log_q->enqueue('diff', $fn);
-				}
+			} elsif ($md5h{$fn} ne $hash) {
+				$log_q->enqueue('diff', $fn);
+			}
 # If file name is not a real file, add $fn to %gone hash.
-			} elsif (! -f $fn) { $gone{${fn}} = $hash; }
-		}
+		} elsif (! -f $fn) { $gone{${fn}} = $hash; }
 	}
 }
 
@@ -626,30 +628,32 @@ sub md5import {
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if ($line =~ /$format/) {
+		if (! $line =~ /$format/) {
+			next;
+		}
+
 # Split the line into MD5 hash and relative file name.
-			$hash = lc($1);
-			$fn = $2;
-			$fn =~ s($regex{path})();
+		$hash = lc($1);
+		$fn = $2;
+		$fn =~ s($regex{path})();
 
 # Add full path to file name, unless it's the current directory.
-			if ($dn ne '.') { $fn = $dn . '/' . $fn; }
+		if ($dn ne '.') { $fn = $dn . '/' . $fn; }
 
 # If $fn is a real file.
-			if (-f $fn) {
+		if (-f $fn) {
 # If MD5 hash of file name is not already in database, add it and print
 # a message.
-				if ($md5h{$fn} eq '1') {
-					$md5h{$fn} = $hash;
-					say $fn . ': done indexing';
+			if ($md5h{$fn} eq '1') {
+				$md5h{$fn} = $hash;
+				say $fn . ': done indexing';
 # If file name is in database hash but the MD5 hash doesn't match, print
 # to the log.
-				} elsif ($md5h{$fn} ne $hash) {
-					$log_q->enqueue('diff', $fn);
-				}
+			} elsif ($md5h{$fn} ne $hash) {
+				$log_q->enqueue('diff', $fn);
+			}
 # If file name is not a real file, add $fn to %gone hash.
-			} elsif (! -f $fn) { $gone{${fn}} = $hash; }
-		}
+		} elsif (! -f $fn) { $gone{${fn}} = $hash; }
 	}
 }
 
