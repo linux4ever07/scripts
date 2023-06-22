@@ -233,9 +233,7 @@ sub files2queue {
 # then skip it.
 	if ($mode eq 'index') {
 		foreach my $fn (keys(%md5h)) {
-			if ($md5h{$fn} ne '1') {
-				next;
-			}
+			if ($md5h{$fn} ne '1') { next; }
 
 			if ($fn =~ /$regex{flac}/) {
 				if (scalar(@flac_req) != 2) { next; }
@@ -250,9 +248,7 @@ sub files2queue {
 # create a path for it in /dev/shm.
 	if ($mode eq 'test') {
 		foreach my $fn (keys(%md5h)) {
-			if ($md5h{$fn} eq '1') {
-				next;
-			}
+			if ($md5h{$fn} eq '1') { next; }
 
 			if ($fn =~ /$regex{flac}/) {
 				if (scalar(@flac_req) != 2) { next; }
@@ -490,18 +486,18 @@ sub getfiles {
 
 		$fn =~ s(^\./)();
 
-		if (-f $fn and -r $fn) {
-			my $bn = basename($fn);
+		if (! -f $fn or ! -r $fn) { next; }
+
+		my $bn = basename($fn);
 
 # If file name isn't a database file, add it to database hash.
 # Precreating elements in %md5h and %file_contents, to prevent threads
 # from stepping over each other later.
 # If file name is a database file, add it to @md5dbs.
-			if ($bn ne $db) {
-				$md5h{$fn} = 1;
-				$file_contents{$fn} = 1;
-			} elsif ($bn eq $db) { push(@md5dbs, $fn); }
-		}
+		if ($bn ne $db) {
+			$md5h{$fn} = 1;
+			$file_contents{$fn} = 1;
+		} elsif ($bn eq $db) { push(@md5dbs, $fn); }
 	}
 }
 
@@ -527,9 +523,7 @@ sub file2hash {
 # Loop to check that the format of the database file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if (! $line =~ /$format/) {
-			next;
-		}
+		if (! $line =~ /$format/) { next; }
 
 # Split the line into relative file name and MD5 hash.
 		$fn = $1;
@@ -632,9 +626,7 @@ sub md5import {
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if (! $line =~ /$format/) {
-			next;
-		}
+		if (! $line =~ /$format/) { next; }
 
 # Split the line into MD5 hash and relative file name.
 		$hash = lc($1);
