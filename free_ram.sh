@@ -17,12 +17,12 @@
 
 ram_limit=1000000
 
-regex_pid_args='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
-regex_rend='--type=renderer'
-regex_ext='--extension-process'
-regex_tab='^.*\-childID [0-9]+.* tab$'
+declare -A regex pids
 
-declare -A pids
+regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
+regex[rend]='--type=renderer'
+regex[ext]='--extension-process'
+regex[tab]='^.*\-childID [0-9]+.* tab$'
 
 # Creates a file name for the log.
 log_killed="${HOME}/browser_killed.log"
@@ -59,7 +59,7 @@ get_pids () {
 		for (( i = 0; i < ${#child[@]}; i++ )); do
 			line="${child[${i}]}"
 
-			if [[ $line =~ $regex_pid_args ]]; then
+			if [[ $line =~ ${regex[pid_args]} ]]; then
 				match=("${BASH_REMATCH[@]:1}")
 				pid="${match[0]}"
 				args="${match[2]}"
@@ -80,7 +80,7 @@ get_pids () {
 		for (( i = 0; i < ${#child[@]}; i++ )); do
 			line="${child[${i}]}"
 
-			if [[ $line =~ $regex_pid_args ]]; then
+			if [[ $line =~ ${regex[pid_args]} ]]; then
 				match=("${BASH_REMATCH[@]:1}")
 				pid="${match[0]}"
 				args="${match[2]}"
@@ -116,7 +116,7 @@ kill_firefox () {
 		args="${pids[${pid}]}"
 
 # Checks if $pid is a renderer process.
-		if [[ ! $args =~ $regex_tab ]]; then
+		if [[ ! $args =~ ${regex[tab]} ]]; then
 			continue
 		fi
 
@@ -149,9 +149,9 @@ kill_chrome () {
 # extensions and downloads running, even though the other Chrome child
 # processes are killed. Only renderer processes that are NOT extension
 # processes will get killed.
-		if [[ ! $args =~ $regex_rend ]]; then
+		if [[ ! $args =~ ${regex[rend]} ]]; then
 			continue
-		elif [[ $args =~ $regex_ext ]]; then
+		elif [[ $args =~ ${regex[ext]} ]]; then
 			continue
 		fi
 
