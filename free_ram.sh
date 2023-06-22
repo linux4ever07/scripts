@@ -38,8 +38,8 @@ now () { date '+%F %H:%M:%S'; }
 # Creates a function called 'get_pids', which gets all child process IDs
 # of the command names given to it as arguments.
 get_pids () {
-	declare pid args comm_path
-	declare -a match
+	declare pid args comm comm_path
+	declare -a session child match
 
 	for key in "${!pids[@]}"; do
 		unset -v pids["${key}"]

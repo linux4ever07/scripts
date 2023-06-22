@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# This script gets all the child processes of the command names
-# specified.
+# This script gets all the processes that share the same session ID as
+# the command names specified. Can be used to get all child processes
+# of a command, for example. Note that command names are case sensitive.
+# As an example, 'Xorg' will work, but 'xorg' will not.
 
 # Creates a function called 'usage', which will print usage instructions
 # and then quit.
@@ -14,6 +16,7 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
+declare -a session name
 declare -A regex pids
 
 regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
@@ -21,8 +24,8 @@ regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
 # Creates a function called 'get_pids', which gets all child process IDs
 # of the command names given to it as arguments.
 get_pids () {
-	declare pid args comm_path
-	declare -a match
+	declare pid args comm comm_path
+	declare -a child match
 
 	for key in "${!pids[@]}"; do
 		unset -v pids["${key}"]
@@ -36,6 +39,8 @@ get_pids () {
 		if [[ ${#session[@]} -eq 0 ]]; then
 			continue
 		fi
+
+		mapfile -t name < <(ps -p "${session[0]}" -o args=)
 
 		mapfile -t child < <(ps -H -s "${session[0]}" -o pid=,args=)
 
@@ -58,11 +63,22 @@ get_pids () {
 	done
 }
 
-get_pids "$@"
+for comm_tmp in "$@"; do
+	get_pids "$comm_tmp"
 
-printf '\n'
+	if [[ ${#pids[@]} -eq 0 ]]; then
+		continue
+	fi
 
-for pid in "${!pids[@]}"; do
-	printf 'PID: %s\n' "$pid"
-	printf 'ARGS: %s\n\n' "${pids[${pid}]}"
+	printf '\n***\n\n'
+
+	printf 'SID: %s\n' "${session[0]}"
+	printf 'ARGS: %s\n\n' "${name[0]}"
+
+	for pid in "${!pids[@]}"; do
+		printf 'PID: %s\n' "$pid"
+		printf 'ARGS: %s\n\n' "${pids[${pid}]}"
+	done
+
+	printf '***\n\n'
 done
