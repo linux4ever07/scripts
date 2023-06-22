@@ -3,16 +3,20 @@
 # This script gets all the child processes of the command names
 # specified.
 
-declare -A regex pids
-
-regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
-
 # Creates a function called 'usage', which will print usage instructions
 # and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [name]"
 	exit
 }
+
+if [[ $# -eq 0 ]]; then
+	usage
+fi
+
+declare -A regex pids
+
+regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
 
 # Creates a function called 'get_pids', which gets all child process IDs
 # of the command names given to it as arguments.
