@@ -58,7 +58,7 @@ is_chrome () {
 
 	cmd_stdout=$(ps -C chrome -o pid 2>&1)
 
-	case in "$?"
+	case "$?" in
 		'0')
 			return 0
 		;;
@@ -105,7 +105,7 @@ check_status () {
 
 	cmd_stdout=$(ps -p "$pid_chrome" 2>&1)
 
-	case in "$?"
+	case "$?" in
 		'0')
 			return 0
 		;;
