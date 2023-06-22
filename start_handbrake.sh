@@ -6,14 +6,17 @@
 # The script uses the SIGCONT (18) signal to resume the process.
 # To get a list of available signals: kill -l
 
+declare comm
+declare -A regex
+
 comm='HandBrakeCLI'
 
-regex_pid_comm='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
+regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 
 mapfile -t hb_pids < <(ps -C "$comm" -o pid,args | tail -n +2)
 
 for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
-	if [[ ! ${hb_pids[${i}]} =~ $regex_pid_comm ]]; then
+	if [[ ! ${hb_pids[${i}]} =~ ${regex[pid_comm]} ]]; then
 		continue
 	fi
 
