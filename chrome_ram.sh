@@ -88,7 +88,6 @@ shm_cfg="${shm_dn}/config"
 shm_cache="${shm_dn}/cache"
 
 restart_fn="${shm_dn}/kill"
-
 tar_fn="${HOME}/google-chrome-${session}.tar"
 
 cwd="$PWD"
@@ -289,11 +288,7 @@ while check_status; do
 
 	check_ram || kill_chrome
 
-	check_time
-
-	if [[ $? -ne 0 ]]; then
-		continue
-	fi
+	check_time || continue
 
 	if [[ $mode == 'normal' ]]; then
 		check_hdd "$shm_dn" && backup_chrome
