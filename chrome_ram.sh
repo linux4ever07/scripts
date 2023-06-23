@@ -291,10 +291,12 @@ while check_status; do
 
 	check_time
 
-	if [[ $? -eq 0 ]]; then
-		if [[ $mode == 'normal' ]]; then
-			check_hdd "$shm_dn" && backup_chrome
-		fi
+	if [[ $? -ne 0 ]]; then
+		continue
+	fi
+
+	if [[ $mode == 'normal' ]]; then
+		check_hdd "$shm_dn" && backup_chrome
 	fi
 done
 
