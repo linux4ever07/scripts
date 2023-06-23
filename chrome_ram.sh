@@ -180,6 +180,7 @@ restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
 	rm "$og_cfg" "$og_cache" || exit
+	sync
 
 	if [[ $mode == 'normal' ]]; then
 		mkdir -p "$og_cfg" "$og_cache" || exit

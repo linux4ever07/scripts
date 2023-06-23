@@ -108,6 +108,8 @@ for dn in "$cfg" "$cache"; do
 	mkdir -p "$dn" || exit
 done
 
+sync
+
 case "$mode" in
 	'ram')
 		ram_cfg="${ram_fn}/config"

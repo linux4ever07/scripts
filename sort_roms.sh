@@ -44,13 +44,13 @@ sorted_dn="sorted-${session}"
 
 declare -a global_vars priority
 declare -A regex titles
-global_vars=('fn' 'bn' 'region' 'region_n')
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[ext]='\.([^.]*)$'
 regex[1]="\(([A-Z]{1,3}|[0-9]{1})\).*${regex[ext]}"
 regex[2]="^.*(\[\!\]).*${regex[ext]}"
 
+global_vars=('fn' 'bn' 'region' 'region_n')
 priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$' '^5$')
 
 cd "$dn"
