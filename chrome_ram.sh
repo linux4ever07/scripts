@@ -39,7 +39,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode ram_limit time_limit time_start time_end restart_fn pid_chrome
+declare mode ram_limit time_limit time_start time_end restart_fn tar_fn pid_chrome
 
 case "$1" in
 	'normal')
