@@ -190,8 +190,8 @@ sub check_log {
 
 	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	$line1 = <$text>;
-	$line1 =~ s/(\r){0,}(\n){0,}$//g;
 	if (length($enc)) { $line1 = decode($enc, $line1); }
+	$line1 =~ s/(\r){0,}(\n){0,}$//g;
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@lacc) {
