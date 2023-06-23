@@ -14,6 +14,8 @@
 # adjusted so they don't overlap. They will all differ by at least 1
 # centisecond.
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [srt]"
 	exit
@@ -41,11 +43,12 @@ format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
 format[3]="^(${format[2]})${delim}(${format[2]})$"
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex[blank2]='[[:blank:]]+'
+regex[blank2]='^[[:blank:]]*$'
+regex[blank3]='[[:blank:]]+'
 regex[last2]='^[0-9]*([0-9]{2})$'
 regex[zero]='^0+([0-9]+)$'
 
-mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
+mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}//" -e "s/${regex[blank3]}/ /g")
 
 # Creates a function called 'time_convert', which converts the
 # 'time line' back and forth between the time (hh:mm:ss) format and
