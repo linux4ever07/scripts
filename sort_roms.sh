@@ -27,6 +27,8 @@
 # 1 = Japan
 # 5 = NTSC
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [ROM directory]"
 	exit
@@ -40,6 +42,7 @@ dn=$(readlink -f "$1")
 session="${RANDOM}-${RANDOM}"
 sorted_dn="sorted-${session}"
 
+declare -a global_vars priority
 declare -A regex titles
 global_vars=('fn' 'bn' 'region' 'region_n')
 
@@ -115,7 +118,7 @@ get_games () {
 
 get_games
 
-# Get the verified ROMs.
+# Gets the verified ROMs.
 for title in "${!titles[@]}"; do
 	mapfile -t files < <(find "$dn" -maxdepth 1 -type f -name "${title}*" 2>&-)
 
