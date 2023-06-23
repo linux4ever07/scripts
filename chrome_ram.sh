@@ -39,7 +39,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode restart_fn pid_chrome
+declare mode ram_limit time_limit time_start time_end restart_fn pid_chrome
 
 case "$1" in
 	'normal')
@@ -127,6 +127,18 @@ check_ram () {
 	fi
 
 	return 0
+}
+
+check_time () {
+	time_start=$(date '+%s')
+
+	if [[ $time_start -ge $time_end ]]; then
+		time_end=$(( time_start + time_limit ))
+
+		return 0
+	fi
+
+	return 1
 }
 
 check_hdd () {
@@ -255,6 +267,9 @@ fi
 
 cd "$shm_cfg" || kill_chrome
 
+time_start=$(date '+%s')
+time_end=$(( time_start + time_limit ))
+
 while check_status; do
 	if [[ -f $restart_fn ]]; then
 		rm "$restart_fn" || exit
@@ -270,15 +285,13 @@ while check_status; do
 		start_chrome
 	fi
 
-	n=$(( n + 1 ))
-
 	sleep 1
 
 	check_ram || kill_chrome
 
-	if [[ $n -eq $time_limit ]]; then
-		n=0
+	check_time
 
+	if [[ $? -eq 0 ]]; then
 		if [[ $mode == 'normal' ]]; then
 			check_hdd "$shm_dn" && backup_chrome
 		fi
