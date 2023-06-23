@@ -15,6 +15,8 @@ my(%regex, @lines, @format, $fn, $ext);
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
 $regex{charset2} = qr/^charset=(.*)$/;
+$regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
+$regex{blank2} = qr/[[:blank:]]+/;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -63,6 +65,10 @@ sub read_decode_fn {
 		}
 
 		$line =~ s/(\r){0,}(\n){0,}$//g;
+
+		$line =~ s/$regex{blank1}/$1/;
+		$line =~ s/$regex{blank2}/ /g;
+
 		push(@lines, $line);
 	}
 	close $text or die "Can't close file '$fn': $!";

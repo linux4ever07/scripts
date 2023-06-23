@@ -27,6 +27,9 @@ my(%regex, @files, @format, $delim);
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
 $regex{charset2} = qr/^charset=(.*)$/;
+$regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
+$regex{blank2} = qr/[[:blank:]]+/;
+$regex{last2} = qr/^[0-9]*([0-9]{2})$/;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -84,6 +87,10 @@ sub read_decode_fn {
 		}
 
 		$line =~ s/(\r){0,}(\n){0,}$//g;
+
+		$line =~ s/$regex{blank1}/$1/;
+		$line =~ s/$regex{blank2}/ /g;
+
 		push(@lines, $line);
 	}
 	close $text or die "Can't close file '$fn': $!";
@@ -102,8 +109,6 @@ sub time_convert {
 	my $cs = 0;
 
 	my $cs_last = 0;
-
-	my $regex_last2 = qr/^[0-9]*([0-9]{2})$/;
 
 # If argument is in the hh:mm:ss format...
 	if ($time =~ /$format[1]/) {
@@ -124,7 +129,7 @@ sub time_convert {
 		$s = $s * 1000;
 
 # Saves the last 2 (or 1) digits of $cs in $cs_last.
-		if ($cs =~ $regex_last2) {
+		if ($cs =~ $regex{last2}) {
 			$cs_last = $1;
 			$cs_last =~ s/^0//;
 		}
@@ -263,7 +268,7 @@ sub parse_srt {
 
 while (my $fn = shift(@files)) {
 	my $of = $fn;
-	$of =~ s/$regex_ext//;
+	$of =~ s/$regex{fn}/$1/;
 	$of = $of . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
 	my(@lines);

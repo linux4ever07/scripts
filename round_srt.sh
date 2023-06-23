@@ -31,6 +31,7 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'srt' ]]; then
 fi
 
 declare -a format
+declare -A regex
 
 delim=' --> '
 
@@ -39,10 +40,12 @@ format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})$'
 format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
 format[3]="^(${format[2]})${delim}(${format[2]})$"
 
-regex_blank='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex_zero='^0+([0-9]+)$'
+regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex[blank2]='[[:blank:]]+'
+regex[last2]='^[0-9]*([0-9]{2})$'
+regex[zero]='^0+([0-9]+)$'
 
-mapfile -t lines < <(tr -d '\r' <"$if")
+mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
 # Creates a function called 'time_convert', which converts the
 # 'time line' back and forth between the time (hh:mm:ss) format and
@@ -57,8 +60,6 @@ time_convert () {
 
 	cs_last=0
 
-	regex_last2='^[0-9]*([0-9]{2})$'
-
 # If argument is in the hh:mm:ss format...
 	if [[ $time =~ ${format[1]} ]]; then
 		h="${BASH_REMATCH[1]#0}"
@@ -66,7 +67,7 @@ time_convert () {
 		s="${BASH_REMATCH[3]#0}"
 		cs="${BASH_REMATCH[4]}"
 
-		if [[ $cs =~ $regex_zero ]]; then
+		if [[ $cs =~ ${regex[zero]} ]]; then
 			cs="${BASH_REMATCH[1]}"
 		fi
 
@@ -77,7 +78,7 @@ time_convert () {
 		s=$(( s * 1000 ))
 
 # Saves the last 2 (or 1) digits of $cs in $cs_last.
-		if [[ $cs =~ $regex_last2 ]]; then
+		if [[ $cs =~ ${regex[last2]} ]]; then
 			cs_last="${BASH_REMATCH[1]#0}"
 		fi
 
@@ -125,7 +126,7 @@ time_calc () {
 }
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
-	line=$(sed -E "s/${regex_blank}/\1/" <<<"${lines[${i}]}")
+	line="${lines[${i}]}"
 
 	if [[ ! $line =~ ${format[3]} ]]; then
 		continue
