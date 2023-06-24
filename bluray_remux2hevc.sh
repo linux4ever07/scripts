@@ -574,15 +574,17 @@ check_regex () {
 			word="${BASH_REMATCH[1]}"
 		fi
 
-		if [[ $word =~ ${regex[tmp]} ]]; then
-			match=("${BASH_REMATCH[@]:1}")
-
-			if [[ ${#match[@]} -gt 0 ]]; then
-				printf '%s\n' "${match[@]}"
-			fi
-
-			return 0
+		if [[ ! $word =~ ${regex[tmp]} ]]; then
+			continue
 		fi
+
+		match=("${BASH_REMATCH[@]:1}")
+
+		if [[ ${#match[@]} -gt 0 ]]; then
+			printf '%s\n' "${match[@]}"
+		fi
+
+		return 0
 	done
 
 	return 1
