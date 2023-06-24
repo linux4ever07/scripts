@@ -1290,21 +1290,23 @@ is_torrent () {
 		if_tmp="${if}.part"
 	fi
 
-	if [[ -f $if_tmp ]]; then
-		printf '\n%s\n' 'Waiting for this download to finish:'
-		printf '%s\n\n' "$if_tmp"
-
-		while [[ -f $if_tmp ]]; do
-			sleep 5
-		done
-
-		if="${if%.part}"
-
-		md5=$(md5sum -b "$if")
-		md5_f="${HOME}/${bname}_MD5-${session}.txt"
-
-		printf '%s\r\n' "$md5" | tee "$md5_f"
+	if [[ ! -f $if_tmp ]]; then
+		return
 	fi
+
+	printf '\n%s\n' 'Waiting for this download to finish:'
+	printf '%s\n\n' "$if_tmp"
+
+	while [[ -f $if_tmp ]]; do
+		sleep 5
+	done
+
+	if="${if%.part}"
+
+	md5=$(md5sum -b "$if")
+	md5_f="${HOME}/${bname}_MD5-${session}.txt"
+
+	printf '%s\r\n' "$md5" | tee "$md5_f"
 }
 
 check_cmd
