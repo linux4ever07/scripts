@@ -544,12 +544,14 @@ imdb () {
 			json_regex1_ref="regex[${json_type}1]"
 			json_regex2_ref="regex[${json_type}2]"
 
-			if [[ ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
-				get_list
-
-				unset -v json_types["${json_type}"]
-				break
+			if [[ ! ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
+				continue
 			fi
+
+			get_list
+
+			unset -v json_types["${json_type}"]
+			break
 		done
 	done
 
@@ -918,11 +920,13 @@ dts_extract_remux () {
 # format, if $map_use_ref is still empty.
 	if [[ -z $map_use_ref ]]; then
 		for tmp_type in "${audio_types[@]}"; do
-			if [[ ${elements[${tmp_type}]} -gt 0 ]]; then
-				map_use_ref="audio_maps[${tmp_type},0]"
-				audio_format="$tmp_type"
-				break
+			if [[ ${elements[${tmp_type}]} -eq 0 ]]; then
+				continue
 			fi
+
+			map_use_ref="audio_maps[${tmp_type},0]"
+			audio_format="$tmp_type"
+			break
 		done
 	fi
 

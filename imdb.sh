@@ -181,12 +181,14 @@ imdb () {
 			json_regex1_ref="regex[${json_type}1]"
 			json_regex2_ref="regex[${json_type}2]"
 
-			if [[ ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
-				get_list
-
-				unset -v json_types["${json_type}"]
-				break
+			if [[ ! ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
+				continue
 			fi
+
+			get_list
+
+			unset -v json_types["${json_type}"]
+			break
 		done
 	done
 
