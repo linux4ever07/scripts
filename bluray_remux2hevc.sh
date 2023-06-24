@@ -1185,7 +1185,7 @@ check_res () {
 # Creates a function called 'is_handbrake', which will check if there
 # are any running HandBrake processes, and if so, wait.
 is_handbrake () {
-	args=(ps -C "${cmd[0]}" -o pid,args \| tail -n +2)
+	args=(ps -C "${cmd[0]}" -o pid=,args=)
 
 # Checks if HandBrake is running.
 	mapfile -t hb_pids < <(eval "${args[@]}")

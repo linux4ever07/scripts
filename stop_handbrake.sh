@@ -15,7 +15,7 @@ comm='HandBrakeCLI'
 
 regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 
-mapfile -t hb_pids < <(ps -C "$comm" -o pid,args | tail -n +2)
+mapfile -t hb_pids < <(ps -C "$comm" -o pid=,args=)
 
 for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 	if [[ ! ${hb_pids[${i}]} =~ ${regex[pid_comm]} ]]; then
@@ -25,7 +25,7 @@ for (( i = 0; i < ${#hb_pids[@]}; i++ )); do
 	pid="${BASH_REMATCH[1]}"
 	args="${BASH_REMATCH[2]}"
 
-	state=$(ps -p "$pid" -o state | tail -n +2)
+	state=$(ps -p "$pid" -o state=)
 
 	if [[ $state == 'T' ]]; then
 		continue
