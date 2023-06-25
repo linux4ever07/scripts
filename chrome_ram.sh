@@ -185,6 +185,7 @@ BACKUP
 	fi
 
 	sync
+
 	tar -cf "$tar_fn" *
 
 	if [[ -f $tar_fn_old ]]; then
@@ -195,8 +196,9 @@ BACKUP
 restore_chrome () {
 	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
 
-	rm "$og_cfg" "$og_cache" || exit
 	sync
+
+	rm "$og_cfg" "$og_cache" || exit
 
 	if [[ $mode == 'normal' ]]; then
 		mkdir -p "$og_cfg" "$og_cache" || exit
@@ -212,6 +214,7 @@ restore_chrome () {
 	rm -r "$shm_dn"
 
 	sync
+
 	cd "$cwd"
 }
 
