@@ -56,16 +56,9 @@ esac
 is_chrome () {
 	declare cmd_stdout
 
-	cmd_stdout=$(ps -C chrome -o pid 2>&1)
+	cmd_stdout=$(ps -C chrome -o pid= 2>&1)
 
-	case "$?" in
-		'0')
-			return 0
-		;;
-		*)
-			return 1
-		;;
-	esac
+	return "$?"
 }
 
 if is_chrome; then
@@ -99,19 +92,30 @@ start_chrome () {
 	pid_chrome="$!"
 }
 
+restart_chrome () {
+	if [[ ! -f $restart_fn ]]; then
+		return
+	fi
+
+	rm "$restart_fn" || exit
+
+	kill -9 "$pid_chrome"
+
+	while is_chrome; do
+		sleep 1
+	done
+
+	sync
+
+	start_chrome
+}
+
 check_status () {
 	declare cmd_stdout
 
 	cmd_stdout=$(ps -p "$pid_chrome" 2>&1)
 
-	case "$?" in
-		'0')
-			return 0
-		;;
-		*)
-			return 1
-		;;
-	esac
+	return "$?"
 }
 
 check_ram () {
@@ -180,6 +184,7 @@ BACKUP
 		mv "$tar_fn" "$tar_fn_old"
 	fi
 
+	sync
 	tar -cf "$tar_fn" *
 
 	if [[ -f $tar_fn_old ]]; then
@@ -270,19 +275,7 @@ time_start=$(date '+%s')
 time_end=$(( time_start + time_limit ))
 
 while check_status; do
-	if [[ -f $restart_fn ]]; then
-		rm "$restart_fn" || exit
-
-		kill -9 "$pid_chrome"
-
-		while is_chrome; do
-			sleep 1
-		done
-
-		sync
-
-		start_chrome
-	fi
+	restart_chrome
 
 	sleep 1
 
