@@ -86,6 +86,8 @@ tar_fn="${HOME}/google-chrome-${session}.tar"
 cwd="$PWD"
 
 start_chrome () {
+	sync
+
 	printf '\n%s\n\n' 'Starting Chrome...'
 
 	google-chrome 1>&- 2>&- &
@@ -104,8 +106,6 @@ restart_chrome () {
 	while is_chrome; do
 		sleep 1
 	done
-
-	sync
 
 	start_chrome
 }
@@ -217,6 +217,10 @@ restore_chrome () {
 
 kill_chrome () {
 	kill -9 "$pid_chrome"
+
+	while is_chrome; do
+		sleep 1
+	done
 
 	restore_chrome
 
