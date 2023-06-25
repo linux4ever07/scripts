@@ -113,7 +113,7 @@ restart_chrome () {
 check_status () {
 	declare cmd_stdout
 
-	cmd_stdout=$(ps -p "$pid_chrome" 2>&1)
+	cmd_stdout=$(ps -p "$pid_chrome" -o pid= 2>&1)
 
 	return "$?"
 }
