@@ -10,14 +10,15 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-regex_hd='^\/dev\/hd[[:alpha:]]+$'
-regex_sd='^\/dev\/sd[[:alpha:]]+$'
-regex_nvme='^\/dev\/nvme[0-9]+n[0-9]+$'
+declare -a types sources devices
+declare -A regex
 
-regexes=("$regex_hd" "$regex_sd" "$regex_nvme")
+regex[hd]='^\/dev\/hd[[:alpha:]]+$'
+regex[sd]='^\/dev\/sd[[:alpha:]]+$'
+regex[nvme]='^\/dev\/nvme[0-9]+n[0-9]+$'
+
+types=('hd' 'sd' 'nvme')
 sources=('/dev/zero' '/dev/urandom')
-
-declare -a devices
 
 erase_devices () {
 	for (( i = 0; i < ${#devices[@]}; i++ )); do
@@ -42,8 +43,8 @@ mapfile -t devices_tmp < <(find /dev -maxdepth 1 -type b \( -iname "hd*" -o -ina
 for (( i = 0; i < ${#devices_tmp[@]}; i++ )); do
 	device="${devices_tmp[${i}]}"
 
-	for regex in "${regexes[@]}"; do
-		if [[ $device =~ $regex ]]; then
+	for type in "${types[@]}"; do
+		if [[ $device =~ ${regex[${type}]} ]]; then
 			devices+=("$device")
 			break
 		fi

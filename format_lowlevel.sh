@@ -19,9 +19,11 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 declare -a types args
+declare -A regex
+
 types=('quick' 'full')
 
-regex_part="^(.*)[0-9]+$"
+regex[part]="^(.*)[0-9]+$"
 
 while [[ $# -gt 0 ]]; do
 	device=$(readlink -f "$1")
@@ -34,7 +36,7 @@ while [[ $# -gt 0 ]]; do
 
 # If argument is a partition instead of the device itself, strip the
 # partition number from the path.
-	if [[ $device =~ $regex_part ]]; then
+	if [[ $device =~ ${regex[part]} ]]; then
 		device="${BASH_REMATCH[1]}"
 	fi
 

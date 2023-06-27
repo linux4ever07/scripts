@@ -23,8 +23,9 @@ fi
 image=$(readlink -f "$1")
 
 declare device
+declare -A regex
 
-regex_part='\-part[0-9]+$'
+regex[part]='\-part[0-9]+$'
 
 # Creates a function called 'glob_test', which will print file names in
 # the current directory, but only if the glob pattern matches actual
@@ -40,7 +41,7 @@ glob_test () {
 # menu.
 device_menu () {
 	cd '/dev/disk/by-id'
-	mapfile -t devices < <(glob_test "usb-*" | grep -Ev "$regex_part")
+	mapfile -t devices < <(glob_test "usb-*" | grep -Ev "${regex[part]}")
 
 	if [[ ${#devices[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' 'No USB storage devices found!'

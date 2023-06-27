@@ -21,8 +21,9 @@ if [[ ${#files[@]} -eq 0 ]]; then
 fi
 
 declare track
+declare -A regex
 
-regex_num='^[0-9]+$'
+regex[num]='^[0-9]+$'
 
 gettags () {
 	if="$1"
@@ -75,7 +76,7 @@ options () {
 		;;
 	esac
 
-	if [[ ! $REPLY =~ $regex_num ]]; then
+	if [[ ! $REPLY =~ ${regex[num]} ]]; then
 		return
 	fi
 
