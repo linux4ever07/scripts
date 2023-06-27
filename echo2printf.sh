@@ -17,18 +17,18 @@
 
 # The output script file replaces the input file.
 
-if=$(readlink -f "$1")
-
-regex1='^([[:blank:]]*)#'
-regex2='echo( \-[[:alpha:]]+){0,} *'
-regex3='printf '\''%s\\n'\'' '
-
-if [[ ! -f $if ]]; then
+if [[ ! -f $1 ]]; then
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
 	exit
 fi
 
-mapfile -t lines <"$if"
+if=$(readlink -f "$1")
+
+regex1='^([[:blank:]]*)#'
+regex2='echo( \-[[:alpha:]]+){0,}[[:blank:]]*'
+regex3='printf '\''%s\\n'\'' '
+
+mapfile -t lines < <(tr -d '\r' <"$if")
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
