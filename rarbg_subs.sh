@@ -19,7 +19,7 @@ set -eo pipefail
 declare -a dirs files vars1
 declare -A regex
 
-regex[srt]='\/([0-9]+_)*(E|e)ng(lish)*.srt$'
+regex[srt]='\/([0-9]+_)*eng(lish)*.srt$'
 
 vars1=('size' 'dn' 'bn' 'if' 'of')
 dirs=("$HOME" "/run/media/${USER}")
@@ -66,7 +66,7 @@ get_files () {
 		for (( j = 0; j < ${#sub_tmp[@]}; j++ )); do
 			srt_tmp="${sub_tmp[${j}]}"
 
-			if [[ ! $srt_tmp =~ ${regex[srt]} ]]; then
+			if [[ ! ${srt_tmp,,} =~ ${regex[srt]} ]]; then
 				continue
 			fi
 
