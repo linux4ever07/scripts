@@ -111,17 +111,16 @@ get_tracks () {
 	bn_tmp=$(basename "$if_tmp")
 	dn_tmp=$(dirname "$if_tmp")
 
-	declare ext_tmp of_tmp switch tracks_n
+	declare ext_tmp session_tmp of_tmp switch tracks_n
 	declare -a mkvinfo_lines mkvinfo_tracks
 	declare -A tracks
 
 # Parses the input file name, and separates basename from extension.
 # If this fails, return from the function.
 	if [[ ${bn_tmp,,} =~ ${regex[fn]} ]]; then
-		match=("${BASH_REMATCH[@]:1}")
-		ext_tmp="${match[1]}"
+		ext_tmp="${BASH_REMATCH[2]}"
 		session_tmp="${RANDOM}-${RANDOM}"
-		of_tmp="${dn_tmp}/${match[0]}-tmp-${session_tmp}.mkv"
+		of_tmp="${dn_tmp}/${BASH_REMATCH[1]}-tmp-${session_tmp}.mkv"
 	else
 		return
 	fi

@@ -1102,11 +1102,11 @@ info_txt () {
 	for txt_f in "${info_list_1[@]}"; do
 		txt_ref="${txt_f}_f"
 
-		if [[ -f ${!txt_ref} ]]; then
-			txt_tmp="${!txt_ref%.txt}"
-
-			eval "${txt_f}"_f="${txt_tmp}-${session}.txt"
+		if [[ ! -f ${!txt_ref} ]]; then
+			continue
 		fi
+
+		eval "${txt_f}"_f="${!txt_ref%.*}-${session}.txt"
 	done
 
 # Gets information about output file.
