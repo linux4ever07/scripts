@@ -14,6 +14,8 @@ cfg_fn="${HOME}/lower_volume_pw.cfg"
 
 declare -A regex
 
+regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
+regex[blank2]='[[:blank:]]+'
 regex[id]='^id ([0-9]+),'
 regex[node]='^node\.description = \"(.*)\"'
 regex[class]='^media\.class = \"(.*)\"'
@@ -51,7 +53,7 @@ get_id () {
 
 	declare n
 
-	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]+/ /g')
+	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
 # Parse the output from 'pw-cli'...
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
@@ -140,7 +142,7 @@ get_id () {
 
 # Creates a function called 'get_volume', which gets the current volume.
 get_volume () {
-	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]+/ /g')
+	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
 		line="${pw_dump[${i}]}"
