@@ -32,6 +32,7 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'srt' ]]; then
 	usage
 fi
 
+declare delim start_time stop_time previous
 declare -a format
 declare -A regex
 
@@ -114,18 +115,24 @@ time_convert () {
 
 # Creates a function called 'time_calc', which makes sure the current
 # 'time line' is at least 1 centisecond greater than previous
-# 'time line'.
+# 'time line'. It also makes sure each line has a length of at least 1
+# centisecond.
 time_calc () {
-	start_time_tmp="$1"
-	stop_time_tmp="$2"
+# If the stop time of the current 'time line' is less than the start
+# time, then set it to the start time plus 1 centisecond.
+	if [[ $stop_time -lt $start_time ]]; then
+		stop_time=$(( start_time + 100 ))
+	fi
+
+	if [[ -z $previous ]]; then
+		return
+	fi
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
-	if [[ $stop_time_tmp -ge $start_time_tmp ]]; then
-		start_time_tmp=$(( stop_time_tmp + 100 ))
+	if [[ $previous -gt $start_time ]]; then
+		start_time=$(( previous + 100 ))
 	fi
-
-	printf '%s' "$start_time_tmp"
 }
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
@@ -138,9 +145,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	start_time=$(time_convert "${BASH_REMATCH[1]}")
 	stop_time=$(time_convert "${BASH_REMATCH[2]}")
 
-	if [[ -n $previous ]]; then
-		start_time=$(time_calc "$start_time" "$previous")
-	fi
+	time_calc
 
 	previous="$stop_time"
 

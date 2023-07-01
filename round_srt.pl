@@ -159,18 +159,30 @@ sub time_convert {
 }
 
 # The 'time_calc' subroutine makes sure the current 'time line' is at
-# least 1 centisecond greater than previous 'time line'.
+# least 1 centisecond greater than previous 'time line'. It also makes
+# sure each line has a length of at least 1 centisecond.
 sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
+	my $previous = shift;
+
+# If the stop time of the current 'time line' is less than the start
+# time, then set it to the start time plus 1 centisecond.
+	if ($stop_time < $start_time) {
+		stop_time = start_time + 100;
+	}
+
+	if (! length($previous)) {
+		return($start_time, $stop_time);
+	}
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
-	if ($stop_time >= $start_time) {
-		$start_time = $stop_time + 100;
+	if ($previous > $start_time) {
+		$start_time = $previous + 100;
 	}
 
-	return($start_time);
+	return($start_time, $stop_time);
 }
 
 # The 'parse_srt' subroutine reads the SRT subtitle file passed to it,
@@ -204,9 +216,7 @@ sub parse_srt {
 				$start_time = time_convert($start_time);
 				$stop_time = time_convert($stop_time);
 
-				if (length($previous)) {
-					$start_time = time_calc($start_time, $previous);
-				}
+				($start_time, $stop_time) = time_calc($start_time, $stop_time, $previous);
 
 				$previous = $stop_time;
 
