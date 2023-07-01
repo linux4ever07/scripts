@@ -11,7 +11,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 declare date of
-declare -a dirs depth files
+declare -a dirs depths files
 
 date=$(date '+%F')
 of="${PWD}/md5db_backup_${date}.tar.xz"
