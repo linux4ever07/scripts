@@ -118,20 +118,18 @@ time_convert () {
 # 'time line'. It also makes sure each line has a length of at least 1
 # centisecond.
 time_calc () {
+# If the previous 'time line' is greater than the current one, make the
+# current 'time line' 1 centisecond greater than that.
+	if [[ -n $previous ]]; then
+		if [[ $previous -gt $start_time ]]; then
+			start_time=$(( previous + 100 ))
+		fi
+	fi
+
 # If the stop time of the current 'time line' is less than the start
 # time, then set it to the start time plus 1 centisecond.
 	if [[ $stop_time -lt $start_time ]]; then
 		stop_time=$(( start_time + 100 ))
-	fi
-
-	if [[ -z $previous ]]; then
-		return
-	fi
-
-# If the previous 'time line' is greater than the current one, make the
-# current 'time line' 1 centisecond greater than that.
-	if [[ $previous -gt $start_time ]]; then
-		start_time=$(( previous + 100 ))
 	fi
 }
 
