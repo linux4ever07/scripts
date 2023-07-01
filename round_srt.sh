@@ -121,7 +121,7 @@ time_calc () {
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
-	if [[ $stop_time_tmp -gt $start_time_tmp ]]; then
+	if [[ $stop_time_tmp -ge $start_time_tmp ]]; then
 		start_time_tmp=$(( stop_time_tmp + 100 ))
 	fi
 

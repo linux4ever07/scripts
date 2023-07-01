@@ -166,7 +166,7 @@ sub time_calc {
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
-	if ($stop_time > $start_time) {
+	if ($stop_time >= $start_time) {
 		$start_time = $stop_time + 100;
 	}
 
