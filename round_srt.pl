@@ -169,7 +169,7 @@ sub time_calc {
 # If the stop time of the current 'time line' is less than the start
 # time, then set it to the start time plus 1 centisecond.
 	if ($stop_time < $start_time) {
-		stop_time = start_time + 100;
+		$stop_time = $start_time + 100;
 	}
 
 	if (! length($previous)) {
