@@ -46,7 +46,7 @@ format[3]="^(${format[2]})${delim}(${format[2]})$"
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[blank2]='^[[:blank:]]*$'
 regex[blank3]='[[:blank:]]+'
-regex[last2]='^[0-9]*([0-9]{2})$'
+regex[last2]='([0-9]{1,2})$'
 regex[zero]='^0+([0-9]+)$'
 
 mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}//" -e "s/${regex[blank3]}/ /g")

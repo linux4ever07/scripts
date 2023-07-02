@@ -30,7 +30,7 @@ $regex{charset2} = qr/^charset=(.*)$/;
 $regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
 $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/[[:blank:]]+/;
-$regex{last2} = qr/^[0-9]*([0-9]{2})$/;
+$regex{last2} = qr/([0-9]{1,2})$/;
 
 if (! scalar(@ARGV)) { usage(); }
 
