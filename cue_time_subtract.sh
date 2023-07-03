@@ -329,7 +329,7 @@ get_length () {
 # current track from the position of the next track.
 		if [[ ${!file_n_this_ref} -eq ${!file_n_next_ref} ]]; then
 			frames=$(( ${!index1_next_ref} - ${!index1_this_ref} ))
-			frames=$(( frames - ${!pregap_next_ref} ))
+			(( frames -= ${!pregap_next_ref} ))
 
 			bytes_track=$(( frames * ${!sector_ref} ))
 			(( bytes_total += (bytes_track + bytes_pregap) ))
