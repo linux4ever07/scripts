@@ -13,7 +13,8 @@ use File::Path qw(make_path);
 use File::Copy qw(copy);
 use Encode qw(decode find_encoding);
 
-my @lacc = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
+my @required_tags = qw(artist album tracknumber title);
+my @log_accepted = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
 my(%regex, %tags, %files, @dirs, @log, $library);
 my($discnumber_ref, $tracknumber_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
@@ -129,19 +130,28 @@ sub mk_refs {
 	$title_ref = \$tags{$fn}{title};
 }
 
-# The 'existstag' subroutine checks for the existence of the chosen tags
-# passed to it. If it doesn't find the tag, it quits.
+# The 'existstag' subroutine checks for the existence of required tags.
+# If it doesn't find them, it quits.
 sub existstag {
 	my $fn = shift;
 
-	my @tags = ('artist', 'album', 'tracknumber', 'title');
+	my(@missing_tags);
 
-	foreach my $field (@tags) {
+	foreach my $field (@required_tags) {
 		if (! length($tags{$fn}{$field})) {
-			say $fn . ': doesn\'t have ' . $field . ' tag';
-			exit;
+			push(@missing_tags, $field);
 		}
 	}
+
+	if (! scalar(@missing_tags)) {
+		return;
+	}
+
+	foreach my $field (@missing_tags) {
+		say $fn . ': missing ' . $field . ' tag';
+	}
+
+	exit;
 }
 
 # The 'albumartist' subroutine creates the ALBUMARTIST tag, if it
@@ -170,9 +180,9 @@ sub albumartist {
 }
 
 # The 'check_log' subroutine checks the log file to see if it contains
-# any of the words in @lacc. Most of the code here is to deal with
-# correctly decoding the character encoding in the log file. We do this
-# to be able to properly match the words.
+# any of the words in @log_accepted. Most of the code here is to deal
+# with correctly decoding the character encoding in the log file. We do
+# this to be able to properly match the words.
 sub check_log {
 	my $fn = shift;
 	my($file_enc, $tmp_enc, $enc, $line1);
@@ -181,8 +191,10 @@ sub check_log {
 	chomp($file_enc = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_enc =~ s/$regex{charset1}/$1/;
-	$file_enc =~ s/$regex{charset2}/$1/;
+	$file_enc =~ /$regex{charset1}/;
+	$file_enc = $1;
+	$file_enc =~ /$regex{charset2}/;
+	$file_enc = $1;
 
 	$tmp_enc = find_encoding($file_enc);
 
@@ -194,7 +206,7 @@ sub check_log {
 	$line1 =~ s/(\r){0,}(\n){0,}$//g;
 	close $text or die "Can't close file '$fn': $!";
 
-	foreach my $req (@lacc) {
+	foreach my $req (@log_accepted) {
 		if ($line1 =~ /$req/) { push(@log, $fn); last; }
 	}
 }

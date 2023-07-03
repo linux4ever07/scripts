@@ -279,17 +279,28 @@ sub mk_refs {
 	$title_ref = \$tags_of{$fn}{title};
 }
 
-# The 'existstag' subroutine checks for the existence of the chosen tags
-# passed to it. If it doesn't find the tag, it quits.
+# The 'existstag' subroutine checks for the existence of required tags.
+# If it doesn't find them, it quits.
 sub existstag {
 	my $fn = shift;
 
+	my(@missing_tags);
+
 	while (my $field = shift(@_)) {
 		if (! length($tags_of{$fn}{$field})) {
-			say $fn . ': doesn\'t have ' . $field . ' tag';
-			exit;
+			push(@missing_tags, $field);
 		}
 	}
+
+	if (! scalar(@missing_tags)) {
+		return;
+	}
+
+	foreach my $field (@missing_tags) {
+		say $fn . ': missing ' . $field . ' tag';
+	}
+
+	exit;
 }
 
 # The 'vendor' subroutine re-encodes the FLAC file, if it was encoded

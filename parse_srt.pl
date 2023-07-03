@@ -49,8 +49,10 @@ sub read_decode_fn {
 	chomp($file_enc = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_enc =~ s/$regex{charset1}/$1/;
-	$file_enc =~ s/$regex{charset2}/$1/;
+	$file_enc =~ /$regex{charset1}/;
+	$file_enc = $1;
+	$file_enc =~ /$regex{charset2}/;
+	$file_enc = $1;
 
 	$tmp_enc = find_encoding($file_enc);
 
