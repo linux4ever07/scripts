@@ -37,6 +37,7 @@ session="${RANDOM}-${RANDOM}"
 of="/dev/shm/${bn%.*}-${session}.txt"
 
 limit=72
+
 regex1='^[[:blank:]]*#+[[:blank:]]*'
 regex2='^[[:blank:]]+'
 regex3='[[:blank:]]+$'

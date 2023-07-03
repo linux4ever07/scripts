@@ -89,7 +89,7 @@ sub read_decode_fn {
 	foreach my $line (<$text>) {
 		if (length($enc)) {
 			$line = decode($enc, $line);
-			$line = encode("utf8", $line);
+			$line = encode('utf8', $line);
 		}
 
 		$line =~ s/(\r){0,}(\n){0,}$//g;
