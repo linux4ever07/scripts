@@ -61,7 +61,7 @@ chomp(my @flac_req = (`command -v flac metaflac`));
 
 if (scalar(@flac_req) != 2) {
 	say "\n" . 'This script needs \'flac\' and \'metaflac\' installed!' . "\n";
-	exit
+	exit;
 }
 
 # Check the installed version of 'flac'.
@@ -328,7 +328,7 @@ sub vendor {
 	}
 
 	unless (! length($$vendor_ref) or $$vendor_ref ne $flac_version[1]) {
-		return();
+		return;
 	}
 
 	$newfn = $fn;

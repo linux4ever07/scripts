@@ -31,7 +31,7 @@ my $flac_req = `command -v metaflac`;
 
 if (! length($flac_req)) {
 	say "\n" . 'This script needs \'metaflac\' installed!' . "\n";
-	exit
+	exit;
 }
 
 while (my $arg = shift(@ARGV)) {
