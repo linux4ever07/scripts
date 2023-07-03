@@ -137,7 +137,7 @@ sub existstag {
 
 	my(@missing_tags);
 
-	foreach my $field (@required_tags) {
+	while (my $field = shift(@_)) {
 		if (! length($tags{$fn}{$field})) {
 			push(@missing_tags, $field);
 		}
@@ -220,7 +220,7 @@ sub import {
 
 	foreach my $sf (sort(keys(%files))) {
 		mk_refs($sf);
-		existstag($sf);
+		existstag($sf, @required_tags);
 		albumartist($sf, $fc);
 
 		$path = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
