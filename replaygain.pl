@@ -700,7 +700,7 @@ sub writetags {
 # input files, based on the changes that have been made to the tags.
 sub tags2fn {
 	my $if = shift;
-	my($of_bn, $of_dn, $of);
+	my($of_dn, $of_bn, $of);
 	my($discnumber, $albumartist, $album, $tracknumber, $title);
 
 	sub rm_special_chars {
@@ -720,8 +720,9 @@ sub tags2fn {
 	$tracknumber = sprintf("%02d", ${$tags_ref{tracknumber}});
 	$title = rm_special_chars(${$tags_ref{title}});
 	$title =~ s/ +/ /g;
-	$of_bn = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
+
 	$of_dn = $library . '/' . $albumartist . '/' . $album;
+	$of_bn = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
 	$of = $of_dn . '/' . $of_bn;
 
 	if (! -d $of_dn) {
