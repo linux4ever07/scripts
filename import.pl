@@ -16,8 +16,6 @@ use Encode qw(decode find_encoding);
 my @required_tags = qw(artist album tracknumber title);
 my @log_accepted = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
 my(%regex, %files, %tags_ref, @dirs, @logs, $library, $tracks);
-my($discnumber_ref, $tracknumber_ref);
-my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
 $regex{charset1} = qr/([^; ]+)$/;
 $regex{charset2} = qr/^charset=(.*)$/;
