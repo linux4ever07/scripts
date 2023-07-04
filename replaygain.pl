@@ -44,10 +44,7 @@ use File::Path qw(make_path);
 use Cwd qw(abs_path);
 
 my @required_tags = qw(artist album tracknumber title);
-my(%regex, %tags_if, %tags_of, %files, @dirs, $library, $depth_og);
-my($discnumber_ref, $totaldiscs_ref, $disctotal_ref);
-my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
-my($tracknumber_ref, $totaltracks_ref, $tracktotal_ref);
+my(%regex, %files, %tags_if, %tags_of, %tags_ref, @dirs, $library, $depth_og);
 
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
@@ -294,16 +291,17 @@ sub existstag {
 sub mk_refs {
 	my $fn = shift;
 
-	$discnumber_ref = \$tags_of{$fn}{discnumber};
-	$totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
-	$disctotal_ref = \$tags_of{$fn}{disctotal};
-	$tracknumber_ref = \$tags_of{$fn}{tracknumber};
-	$totaltracks_ref = \$tags_of{$fn}{totaltracks};
-	$tracktotal_ref = \$tags_of{$fn}{tracktotal};
-	$artist_ref = \$tags_of{$fn}{artist};
-	$albumartist_ref = \$tags_of{$fn}{albumartist};
-	$album_ref = \$tags_of{$fn}{album};
-	$title_ref = \$tags_of{$fn}{title};
+	$tags_ref{discnumber} = \$tags_of{$fn}{discnumber};
+	$tags_ref{totaldiscs} = \$tags_of{$fn}{totaldiscs};
+	$tags_ref{disctotal} = \$tags_of{$fn}{disctotal};
+	$tags_ref{tracknumber} = \$tags_of{$fn}{tracknumber};
+	$tags_ref{totaltracks} = \$tags_of{$fn}{totaltracks};
+	$tags_ref{tracktotal} = \$tags_of{$fn}{tracktotal};
+	$tags_ref{artist} = \$tags_of{$fn}{artist};
+	$tags_ref{albumartist} = \$tags_of{$fn}{albumartist};
+	$tags_ref{album} = \$tags_of{$fn}{album};
+	$tags_ref{title} = \$tags_of{$fn}{title};
+	$tags_ref{vendor} = \$tags_of{$fn}{vendor_ref};
 }
 
 # The 'vendor' subroutine re-encodes the FLAC file, if it was encoded
@@ -315,8 +313,6 @@ sub vendor {
 
 	my($newfn, $newfn_flac, $newfn_wav, $newfn_stderr, $newfn_art);
 	my $has_id3v2 = 0;
-
-	my $vendor_ref = \$tags_of{$fn}{vendor_ref};
 
 	sub sigint {
 		say "Interrupted by user!";
@@ -330,7 +326,7 @@ sub vendor {
 		exit;
 	}
 
-	unless (! length($$vendor_ref) or $$vendor_ref ne $flac_version[1]) {
+	unless (! length(${$tags_ref{vendor}}) or ${$tags_ref{vendor}} ne $flac_version[1]) {
 		return;
 	}
 
@@ -342,7 +338,7 @@ sub vendor {
 	$newfn_art = $newfn . '.albumart';
 	$newfn_stderr = $newfn . '.stderr';
 
-	print $fn . ': old encoder (' . $$vendor_ref . '), re-encoding... ';
+	print $fn . ': old encoder (' . ${$tags_ref{vendor}} . '), re-encoding... ';
 
 # Duplicate STDERR (for restoration later).
 # Redirect STDERR to a file ($newfn_stderr).
@@ -444,41 +440,41 @@ sub discnumber {
 	my $fn = shift;
 	my $dn = shift;
 
-	if (length($$discnumber_ref)) {
-		if ($$discnumber_ref =~ m/$regex{fraction}/) {
-			$$discnumber_ref = $1;
+	if (length(${$tags_ref{discnumber}})) {
+		if (${$tags_ref{discnumber}} =~ m/$regex{fraction}/) {
+			${$tags_ref{discnumber}} = $1;
 
-			if (! length($$totaldiscs_ref)) {
-				$$totaldiscs_ref = $2;
+			if (! length(${$tags_ref{totaldiscs}})) {
+				${$tags_ref{totaldiscs}} = $2;
 			}
 		}
 	}
 
-	if (! length($$discnumber_ref)) {
-		if ($$album_ref =~ m/$regex{disc}/) {
-			$$discnumber_ref = $2;
+	if (! length(${$tags_ref{discnumber}})) {
+		if (${$tags_ref{album}} =~ m/$regex{disc}/) {
+			${$tags_ref{discnumber}} = $2;
 
-			if (! length($$totaldiscs_ref) and length($4)) {
-				$$totaldiscs_ref = $4;
+			if (! length(${$tags_ref{totaldiscs}}) and length($4)) {
+				${$tags_ref{totaldiscs}} = $4;
 			}
 
-			$$album_ref =~ s/$regex{disc}//;
+			${$tags_ref{album}} =~ s/$regex{disc}//;
 		}
 	}
 
-	if (! length($$discnumber_ref)) {
+	if (! length(${$tags_ref{discnumber}})) {
 		if ($dn =~ m/$regex{disc}/) {
-			$$discnumber_ref = $2;
+			${$tags_ref{discnumber}} = $2;
 
-			if (! length($$totaldiscs_ref) and length($4)) {
-				$$totaldiscs_ref = $4;
+			if (! length(${$tags_ref{totaldiscs}}) and length($4)) {
+				${$tags_ref{totaldiscs}} = $4;
 			}
-		} else { $$discnumber_ref = 1; }
+		} else { ${$tags_ref{totaldiscs}} = 1; }
 	}
 
-	if (! length($$totaldiscs_ref)) {
-		if (length($$disctotal_ref)) {
-			$$totaldiscs_ref = $$disctotal_ref;
+	if (! length(${$tags_ref{totaldiscs}})) {
+		if (length(${$tags_ref{disctotal}})) {
+			$tags_ref{totaldiscs} = $tags_ref{disctotal};
 		}
 	}
 }
@@ -490,32 +486,32 @@ sub albumartist {
 
 	my(%tracks, $tracks);
 
-	if (length($$discnumber_ref)) {
+	if (length(${$tags_ref{discnumber}})) {
 		foreach my $fn (keys(%tags_of)) {
-			my $discnumber_ref = \$tags_of{$fn}{discnumber};
+			$tags_ref{tmp} = \$tags_of{$fn}{discnumber};
 
-			if (length($$discnumber_ref)) {
-				${tracks}{$$discnumber_ref}++;
+			if (length(${$tags_ref{tmp}})) {
+				${tracks}{${$tags_ref{tmp}}}++;
 			}
 		}
 
-		$tracks = ${tracks}{$$discnumber_ref};
+		$tracks = ${tracks}{${$tags_ref{discnumber}}};
 
-		if (! length($$albumartist_ref)) {
+		if (! length(${$tags_ref{albumartist}})) {
 			my(%artist, $max);
 
 			if ($tracks == 1) { $max = $tracks; }
 			else { $max = $tracks / 2; }
 
 			foreach my $fn (keys(%tags_of)) {
-				my $artist_ref = \$tags_of{$fn}{artist};
+				$tags_ref{tmp} = \$tags_of{$fn}{artist};
 
-				$artist{$$artist_ref} = 1;
+				$artist{${$tags_ref{tmp}}} = 1;
 			}
 
 			if (keys(%artist) > $max) {
-				$$albumartist_ref = 'Various Artists';
-			} else { $$albumartist_ref = $$artist_ref; }
+				${$tags_ref{albumartist}} = 'Various Artists';
+			} else { $tags_ref{albumartist} = $tags_ref{artist}; }
 		}
 	}
 }
@@ -579,28 +575,28 @@ sub changed {
 sub rm_zeropad {
 	my $fn = shift;
 
-	if (length($$tracknumber_ref)) {
-		$$tracknumber_ref =~ s/$regex{zero}/$1/;
+	if (length(${$tags_ref{tracknumber}})) {
+		${$tags_ref{tracknumber}} =~ s/$regex{zero}/$1/;
 	}
 
-	if (length($$totaltracks_ref)) {
-		$$totaltracks_ref =~ s/$regex{zero}/$1/;
+	if (length(${$tags_ref{totaltracks}})) {
+		${$tags_ref{totaltracks}} =~ s/$regex{zero}/$1/;
 	}
 
-	if (length($$tracktotal_ref)) {
-		$$tracktotal_ref =~ s/$regex{zero}/$1/;
+	if (length(${$tags_ref{tracktotal}})) {
+		${$tags_ref{tracktotal}} =~ s/$regex{zero}/$1/;
 	}
 
-	if (length($$discnumber_ref)) {
-		$$discnumber_ref =~ s/$regex{zero}/$1/;
+	if (length(${$tags_ref{discnumber}})) {
+		${$tags_ref{discnumber}} =~ s/$regex{zero}/$1/;
 	}
 
-	if (length($$totaldiscs_ref)) {
-		$$totaldiscs_ref =~ s/$regex{zero}/$1/;
+	if (length(${$tags_ref{totaldiscs}})) {
+		${$tags_ref{totaldiscs}} =~ s/$regex{zero}/$1/;
 	}
 
-	if (length($$disctotal_ref)) {
-		$$disctotal_ref =~ s/$regex{zero}/$1/;
+	if (length(${$tags_ref{disctotal}})) {
+		${$tags_ref{disctotal}} =~ s/$regex{zero}/$1/;
 	}
 }
 
@@ -616,10 +612,10 @@ sub replaygain {
 	}
 
 	foreach my $fn (keys(%tags_of)) {
-		my $replaygain_ref = \$tags_of{$fn}{replaygain_album_gain};
+		$tags_ref{tmp} = \$tags_of{$fn}{replaygain_album_gain};
 
-		if (length($$replaygain_ref)) {
-			$replaygain{$$replaygain_ref}++;
+		if (length(${$tags_ref{tmp}})) {
+			$replaygain{${$tags_ref{tmp}}}++;
 		}
 	}
 
@@ -653,10 +649,10 @@ sub writetags {
 # Push the input tags to the @mflac_if array.
 	foreach my $field (sort(keys(%{$$tags_if_ref}))) {
 		for (my $i = 0; $i < scalar(@{$$tags_if_ref->{$field}}); $i++) {
-			my $tag_ref = \$$tags_if_ref->{$field}[$i];
+			my $tags_ref{tmp} = \$$tags_if_ref->{$field}[$i];
 
 			unless ($field eq 'vendor_ref') {
-				push(@mflac_if, uc($field) . '=' . $$tag_ref);
+				push(@mflac_if, uc($field) . '=' . ${$tags_ref{tmp}});
 			}
 		}
 	}
@@ -665,12 +661,12 @@ sub writetags {
 # with empty values, ignore those hash elements. They get
 # unintentionally created, when using references in other subroutines.
 	foreach my $field (sort(keys(%{$$tags_of_ref}))) {
-		my $tag_ref = \$$tags_of_ref->{$field};
+		my $tags_ref{tmp} = \$$tags_of_ref->{$field};
 
-		if (! length($$tag_ref)) { next; }
+		if (! length(${$tags_ref{tmp}})) { next; }
 
 		unless ($field eq 'vendor_ref') {
-			push(@mflac_of, uc($field) . '=' . $$tag_ref);
+			push(@mflac_of, uc($field) . '=' . ${$tags_ref{tmp}});
 		}
 	}
 
@@ -711,15 +707,15 @@ sub tags2fn {
 		return($string);
 	}
 
-	$discnumber = $$discnumber_ref;
-	$albumartist = rm_special_chars($$albumartist_ref);
+	$discnumber = ${$tags_ref{discnumber}};
+	$albumartist = rm_special_chars(${$tags_ref{albumartist}});
 	$albumartist =~ s/ +/ /g;
 	$albumartist =~ s/^\.+//g;
-	$album = rm_special_chars($$album_ref);
+	$album = rm_special_chars(${$tags_ref{album}});
 	$album =~ s/ +/ /g;
 	$album =~ s/^\.+//g;
-	$tracknumber = sprintf("%02d", $$tracknumber_ref);
-	$title = rm_special_chars($$title_ref);
+	$tracknumber = sprintf("%02d", ${$tags_ref{tracknumber}});
+	$title = rm_special_chars(${$tags_ref{title}});
 	$title =~ s/ +/ /g;
 	$newbn = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
 	$newdn = $library . '/' . $albumartist . '/' . $album;
@@ -756,32 +752,32 @@ sub totaltracks {
 
 	my(%tracks, $tracks);
 
-	if ($$tracknumber_ref =~ m/$regex{fraction}/) {
-		$$tracknumber_ref = $1;
+	if (${$tags_ref{tracknumber}} =~ m/$regex{fraction}/) {
+		${$tags_ref{tracknumber}} = $1;
 
-		if (! length($$totaltracks_ref)) {
-			$$totaltracks_ref = $2;
+		if (! length(${$tags_ref{totaltracks}})) {
+			${$tags_ref{totaltracks}} = $2;
 		}
 	}
 
-	if (length($$discnumber_ref)) {
+	if (length(${$tags_ref{discnumber}})) {
 		foreach my $fn (keys(%tags_of)) {
-			my $discnumber_ref = \$tags_of{$fn}{discnumber};
+			$tags_ref{tmp} = \$tags_of{$fn}{discnumber};
 
-			if (length($$discnumber_ref)) {
-				${tracks}{$$discnumber_ref}++;
+			if (length(${$tags_ref{tmp}})) {
+				${tracks}{${$tags_ref{tmp}}}++;
 			}
 		}
 
-		$tracks = ${tracks}{$$discnumber_ref};
+		$tracks = ${tracks}{${$tags_ref{discnumber}}};
 
-		if (! length($$totaltracks_ref) and ! length($$tracktotal_ref)) {
-			$$totaltracks_ref = $tracks;
+		if (! length(${$tags_ref{totaltracks}}) and ! length(${$tags_ref{tracktotal}})) {
+			${$tags_ref{totaltracks}} = $tracks;
 		}
 	}
 
-	if (length($$tracktotal_ref) and ! length($$totaltracks_ref)) {
-		$$totaltracks_ref = $$tracktotal_ref;
+	if (length(${$tags_ref{tracktotal}}) and ! length(${$tags_ref{totaltracks}})) {
+		$tags_ref{totaltracks} = $tags_ref{tracktotal};
 	}
 }
 

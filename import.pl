@@ -15,7 +15,7 @@ use Encode qw(decode find_encoding);
 
 my @required_tags = qw(artist album tracknumber title);
 my @log_accepted = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my(%regex, %files, @dirs, @logs, $library, $tracks);
+my(%regex, %files, %tags_ref, @dirs, @logs, $library, $tracks);
 my($discnumber_ref, $tracknumber_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
@@ -184,12 +184,12 @@ sub check_log {
 sub mk_refs {
 	my $fn = shift;
 
-	$discnumber_ref = \$files{$fn}{discnumber};
-	$tracknumber_ref = \$files{$fn}{tracknumber};
-	$artist_ref = \$files{$fn}{artist};
-	$albumartist_ref = \$files{$fn}{albumartist};
-	$album_ref = \$files{$fn}{album};
-	$title_ref = \$files{$fn}{title};
+	$tags_ref{discnumber} = \$files{$fn}{discnumber};
+	$tags_ref{tracknumber} = \$files{$fn}{tracknumber};
+	$tags_ref{artist} = \$files{$fn}{artist};
+	$tags_ref{albumartist} = \$files{$fn}{albumartist};
+	$tags_ref{album} = \$files{$fn}{album};
+	$tags_ref{title} = \$files{$fn}{title};
 }
 
 # The 'albumartist' subroutine creates the ALBUMARTIST tag, if it
@@ -197,21 +197,21 @@ sub mk_refs {
 sub albumartist {
 	my $fn = shift;
 
-	if (! length($$albumartist_ref)) {
+	if (! length(${$tags_ref{albumartist}})) {
 		my(%artist, $max);
 
 		if ($tracks == 1) { $max = $tracks; }
 		else { $max = $tracks / 2; }
 
 		foreach my $fn (keys(%files)) {
-			my $artist_ref = \$files{$fn}{artist};
+			$tags_ref{tmp} = \$files{$fn}{artist};
 
-			$artist{$$artist_ref} = 1;
+			$artist{${$tags_ref{tmp}}} = 1;
 		}
 
 		if (keys(%artist) > $max) {
-			$$albumartist_ref = 'Various Artists';
-		} else { $$albumartist_ref = $$artist_ref; }
+			${$tags_ref{albumartist}} = 'Various Artists';
+		} else { $tags_ref{albumartist} = $tags_ref{artist}; }
 	}
 }
 
@@ -228,7 +228,7 @@ sub import {
 		mk_refs($if);
 		albumartist($if);
 
-		$of_dn = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
+		$of_dn = $library . '/' . ${$tags_ref{albumartist}} . '/' . ${$tags_ref{album}};
 
 		if ($flac_n == 0 and -d $of_dn) {
 			say $of_dn . ': already exists';
@@ -236,10 +236,10 @@ sub import {
 			return;
 		} else { make_path($of_dn); }
 
-		if (length($$discnumber_ref)) {
-			$of_bn = sprintf('%s-%02s. %s.flac', $$discnumber_ref, $$tracknumber_ref, $$title_ref);
+		if (length(${$tags_ref{discnumber}})) {
+			$of_bn = sprintf('%s-%02s. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
 		} else {
-			$of_bn = sprintf('%02s. %s.flac', $$tracknumber_ref, $$title_ref);
+			$of_bn = sprintf('%02s. %s.flac', ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
 		}
 
 		$of = $of_dn . '/' . $of_bn;
@@ -249,15 +249,15 @@ sub import {
 		$flac_n++
 	}
 
-	say 'Copied ' . $flac_n . ' / ' . $tracks . ' files from \'' . $$album_ref . '\'.' . "\n";
+	say 'Copied ' . $flac_n . ' / ' . $tracks . ' files from \'' . ${$tags_ref{album}} . '\'.' . "\n";
 
 	foreach my $if (@logs) {
 		my($of_bn, $of);
 
 		if (scalar(@logs) > 1) {
-			$of_bn = $log_n . '-' . $$album_ref . '.log';
+			$of_bn = $log_n . '-' . ${$tags_ref{album}} . '.log';
 		} else {
-			$of_bn = $$album_ref . '.log';
+			$of_bn = ${$tags_ref{album}} . '.log';
 		}
 
 		$of = $of_dn . '/' . $of_bn;
