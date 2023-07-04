@@ -332,7 +332,7 @@ sub vendor {
 	}
 
 	$of = $if;
-	$of =~ /$regex{fn}/;
+	$of =~ m/$regex{fn}/;
 	$of =~ $1;
 	$of = $of . '-' . int(rand(10000));
 
@@ -701,7 +701,7 @@ sub writetags {
 sub tags2fn {
 	my $if = shift;
 	my($of_dn, $of_bn, $of);
-	my($discnumber, $albumartist, $album, $tracknumber, $title);
+	my($discnumber, $tracknumber, $albumartist, $album, $title);
 
 	sub rm_special_chars {
 		my $string = shift;
@@ -711,13 +711,24 @@ sub tags2fn {
 	}
 
 	$discnumber = ${$tags_ref{discnumber}};
+	$tracknumber = ${$tags_ref{tracknumber}};
+
+	if ($discnumber =~ m/$regex{fraction}/) {
+		$discnumber = $1;
+	}
+
+	if ($tracknumber =~ m/$regex{fraction}/) {
+		$tracknumber = $1;
+	}
+
+	$tracknumber = sprintf('%02d', $tracknumber);
+
 	$albumartist = rm_special_chars(${$tags_ref{albumartist}});
 	$albumartist =~ s/ +/ /g;
 	$albumartist =~ s/^\.+//g;
 	$album = rm_special_chars(${$tags_ref{album}});
 	$album =~ s/ +/ /g;
 	$album =~ s/^\.+//g;
-	$tracknumber = sprintf('%02d', ${$tags_ref{tracknumber}});
 	$title = rm_special_chars(${$tags_ref{title}});
 	$title =~ s/ +/ /g;
 
