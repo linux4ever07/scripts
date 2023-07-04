@@ -264,23 +264,6 @@ sub gettags {
 	return(%alltags);
 }
 
-# The 'mk_refs' subroutine creates references for other subroutines to
-# have easier access to tags.
-sub mk_refs {
-	my $fn = shift;
-
-	$discnumber_ref = \$tags_of{$fn}{discnumber};
-	$totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
-	$disctotal_ref = \$tags_of{$fn}{disctotal};
-	$tracknumber_ref = \$tags_of{$fn}{tracknumber};
-	$totaltracks_ref = \$tags_of{$fn}{totaltracks};
-	$tracktotal_ref = \$tags_of{$fn}{tracktotal};
-	$artist_ref = \$tags_of{$fn}{artist};
-	$albumartist_ref = \$tags_of{$fn}{albumartist};
-	$album_ref = \$tags_of{$fn}{album};
-	$title_ref = \$tags_of{$fn}{title};
-}
-
 # The 'existstag' subroutine checks for the existence of required tags.
 # If it doesn't find them, it quits.
 sub existstag {
@@ -304,6 +287,23 @@ sub existstag {
 	}
 
 	exit;
+}
+
+# The 'mk_refs' subroutine creates references for other subroutines to
+# have easier access to tags.
+sub mk_refs {
+	my $fn = shift;
+
+	$discnumber_ref = \$tags_of{$fn}{discnumber};
+	$totaldiscs_ref = \$tags_of{$fn}{totaldiscs};
+	$disctotal_ref = \$tags_of{$fn}{disctotal};
+	$tracknumber_ref = \$tags_of{$fn}{tracknumber};
+	$totaltracks_ref = \$tags_of{$fn}{totaltracks};
+	$tracktotal_ref = \$tags_of{$fn}{tracktotal};
+	$artist_ref = \$tags_of{$fn}{artist};
+	$albumartist_ref = \$tags_of{$fn}{albumartist};
+	$album_ref = \$tags_of{$fn}{album};
+	$title_ref = \$tags_of{$fn}{title};
 }
 
 # The 'vendor' subroutine re-encodes the FLAC file, if it was encoded

@@ -122,19 +122,6 @@ sub gettags {
 	return(%alltags);
 }
 
-# The 'mk_refs' subroutine creates references for other subroutines to
-# have easier access to tags.
-sub mk_refs {
-	my $fn = shift;
-
-	$discnumber_ref = \$files{$fn}{discnumber};
-	$tracknumber_ref = \$files{$fn}{tracknumber};
-	$artist_ref = \$files{$fn}{artist};
-	$albumartist_ref = \$files{$fn}{albumartist};
-	$album_ref = \$files{$fn}{album};
-	$title_ref = \$files{$fn}{title};
-}
-
 # The 'existstag' subroutine checks for the existence of required tags.
 # If it doesn't find them, it quits.
 sub existstag {
@@ -158,29 +145,6 @@ sub existstag {
 	}
 
 	exit;
-}
-
-# The 'albumartist' subroutine creates the ALBUMARTIST tag, if it
-# doesn't exist already.
-sub albumartist {
-	my $fn = shift;
-
-	if (! length($$albumartist_ref)) {
-		my(%artist, $max);
-
-		if ($tracks == 1) { $max = $tracks; }
-		else { $max = $tracks / 2; }
-
-		foreach my $fn (keys(%files)) {
-			my $artist_ref = \$files{$fn}{artist};
-
-			$artist{$$artist_ref} = 1;
-		}
-
-		if (keys(%artist) > $max) {
-			$$albumartist_ref = 'Various Artists';
-		} else { $$albumartist_ref = $$artist_ref; }
-	}
 }
 
 # The 'check_log' subroutine checks the log file to see if it contains
@@ -212,6 +176,42 @@ sub check_log {
 
 	foreach my $req (@log_accepted) {
 		if ($line1 =~ /$req/) { push(@logs, $fn); last; }
+	}
+}
+
+# The 'mk_refs' subroutine creates references for other subroutines to
+# have easier access to tags.
+sub mk_refs {
+	my $fn = shift;
+
+	$discnumber_ref = \$files{$fn}{discnumber};
+	$tracknumber_ref = \$files{$fn}{tracknumber};
+	$artist_ref = \$files{$fn}{artist};
+	$albumartist_ref = \$files{$fn}{albumartist};
+	$album_ref = \$files{$fn}{album};
+	$title_ref = \$files{$fn}{title};
+}
+
+# The 'albumartist' subroutine creates the ALBUMARTIST tag, if it
+# doesn't exist already.
+sub albumartist {
+	my $fn = shift;
+
+	if (! length($$albumartist_ref)) {
+		my(%artist, $max);
+
+		if ($tracks == 1) { $max = $tracks; }
+		else { $max = $tracks / 2; }
+
+		foreach my $fn (keys(%files)) {
+			my $artist_ref = \$files{$fn}{artist};
+
+			$artist{$$artist_ref} = 1;
+		}
+
+		if (keys(%artist) > $max) {
+			$$albumartist_ref = 'Various Artists';
+		} else { $$albumartist_ref = $$artist_ref; }
 	}
 }
 
