@@ -469,7 +469,7 @@ sub discnumber {
 			if (! length(${$tags_ref{totaldiscs}}) and length($4)) {
 				${$tags_ref{totaldiscs}} = $4;
 			}
-		} else { ${$tags_ref{totaldiscs}} = 1; }
+		} else { ${$tags_ref{discnumber}} = 1; }
 	}
 
 	if (! length(${$tags_ref{totaldiscs}})) {
