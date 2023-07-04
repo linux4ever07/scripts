@@ -20,6 +20,7 @@ my(%regex, %files, %tags_ref, @dirs, @logs, $library, $tracks);
 $regex{charset1} = qr/([^; ]+)$/;
 $regex{charset2} = qr/^charset=(.*)$/;
 
+$regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{tag} = qr/^([^=]+)=(.*)$/;
@@ -170,7 +171,7 @@ sub check_log {
 	open(my $text, '< :raw', $fn) or die "Can't open file '$fn': $!";
 	$line1 = <$text>;
 	if (length($enc)) { $line1 = decode($enc, $line1); }
-	$line1 =~ s/(\r){0,}(\n){0,}$//g;
+	$line1 =~ s/$regex{newline}//g;
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@log_accepted) {

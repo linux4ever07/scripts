@@ -15,6 +15,7 @@ my(%regex, @lines, @format, $fn, $ext);
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
 $regex{charset2} = qr/^charset=(.*)$/;
+$regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
 $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/[[:blank:]]+/;
@@ -65,7 +66,7 @@ sub read_decode_fn {
 			$line = encode('utf8', $line);
 		}
 
-		$line =~ s/(\r){0,}(\n){0,}$//g;
+		$line =~ s/$regex{newline}//g;
 
 		$line =~ s/$regex{blank1}/$1/;
 		$line =~ s/$regex{blank2}//;

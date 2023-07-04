@@ -47,6 +47,7 @@ my @required_tags = qw(artist album tracknumber title);
 my(%regex, %files, %tags_if, %tags_of, %tags_ref, @dirs, $library, $depth_og);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
+$regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{zero} = qr/^0+([0-9]+)$/;

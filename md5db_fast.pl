@@ -64,6 +64,9 @@ my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 # Regex for skipping dotfiles in home directories.
 $regex{dotfile} = qr(^/home/[^/]+/\.);
 
+# Regex for stripping line breaks from lines.
+$regex{newline} = qr/(\r){0,}(\n){0,}$/;
+
 # Regex for separating basename from extension.
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 
@@ -515,7 +518,7 @@ sub file2hash {
 # Open database file and read it into the @lines array.
 	open(my $md5db_in, '<', $db) or die "Can't open '$db': $!";
 	foreach my $line (<$md5db_in>) {
-		$line =~ s/(\r){0,}(\n){0,}$//g;
+		$line =~ s/$regex{newline}//g;
 		push(@lines, $line);
 	}
 	close($md5db_in) or die "Can't close '$db': $!";
@@ -618,7 +621,7 @@ sub md5import {
 # Open *.MD5 file and read it into the @lines array.
 	open(my $md5_in, '<', $md5fn) or die "Can't open '$md5fn': $!";
 	foreach my $line (<$md5_in>) {
-		$line =~ s/(\r){0,}(\n){0,}$//g;
+		$line =~ s/$regex{newline}//g;
 		push(@lines, $line);
 	}
 	close($md5_in) or die "Can't close '$md5fn': $!";
