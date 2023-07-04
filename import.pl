@@ -235,9 +235,9 @@ sub import {
 		} else { make_path($of_dn); }
 
 		if (length(${$tags_ref{discnumber}})) {
-			$of_bn = sprintf('%s-%02s. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
+			$of_bn = sprintf('%d-%02d. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
 		} else {
-			$of_bn = sprintf('%02s. %s.flac', ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
+			$of_bn = sprintf('%02d. %s.flac', ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
 		}
 
 		$of = $of_dn . '/' . $of_bn;

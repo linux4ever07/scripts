@@ -717,7 +717,7 @@ sub tags2fn {
 	$album = rm_special_chars(${$tags_ref{album}});
 	$album =~ s/ +/ /g;
 	$album =~ s/^\.+//g;
-	$tracknumber = sprintf("%02d", ${$tags_ref{tracknumber}});
+	$tracknumber = sprintf('%02d', ${$tags_ref{tracknumber}});
 	$title = rm_special_chars(${$tags_ref{title}});
 	$title =~ s/ +/ /g;
 
