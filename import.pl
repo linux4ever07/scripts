@@ -211,7 +211,7 @@ sub albumartist {
 
 		if (keys(%artist) > $max) {
 			${$tags_ref{albumartist}} = 'Various Artists';
-		} else { $tags_ref{albumartist} = $tags_ref{artist}; }
+		} else { ${$tags_ref{albumartist}} = ${$tags_ref{artist}}; }
 	}
 }
 

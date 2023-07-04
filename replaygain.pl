@@ -474,7 +474,7 @@ sub discnumber {
 
 	if (! length(${$tags_ref{totaldiscs}})) {
 		if (length(${$tags_ref{disctotal}})) {
-			$tags_ref{totaldiscs} = $tags_ref{disctotal};
+			${$tags_ref{totaldiscs}} = ${$tags_ref{disctotal}};
 		}
 	}
 }
@@ -511,7 +511,7 @@ sub albumartist {
 
 			if (keys(%artist) > $max) {
 				${$tags_ref{albumartist}} = 'Various Artists';
-			} else { $tags_ref{albumartist} = $tags_ref{artist}; }
+			} else { ${$tags_ref{albumartist}} = ${$tags_ref{artist}}; }
 		}
 	}
 }
@@ -777,7 +777,7 @@ sub totaltracks {
 	}
 
 	if (length(${$tags_ref{tracktotal}}) and ! length(${$tags_ref{totaltracks}})) {
-		$tags_ref{totaltracks} = $tags_ref{tracktotal};
+		${$tags_ref{totaltracks}} = ${$tags_ref{tracktotal}};
 	}
 }
 
