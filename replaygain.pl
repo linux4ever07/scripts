@@ -312,8 +312,8 @@ sub mk_refs {
 sub vendor {
 	my $if = shift;
 
-	my($of, $of_flac, $of_wav, $of_stderr, $of_art);
-	my $has_id3v2 = 0;
+	my($of, $of_flac, $of_wav, $of_stderr, $of_art, $has_id3v2);
+	$has_id3v2 = 0;
 
 	sub sigint {
 		say "Interrupted by user!";
@@ -700,6 +700,7 @@ sub writetags {
 # input files, based on the changes that have been made to the tags.
 sub tags2fn {
 	my $if = shift;
+
 	my($of_dn, $of_bn, $of);
 	my($discnumber, $tracknumber, $albumartist, $album, $title);
 

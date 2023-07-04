@@ -151,6 +151,7 @@ sub existstag {
 # this to be able to properly match the words.
 sub check_log {
 	my $fn = shift;
+
 	my($file_enc, $tmp_enc, $enc, $line1);
 
 	open(my $info, '-|', 'file', '-bi', $fn) or die "Can't run file: $!";
