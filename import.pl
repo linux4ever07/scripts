@@ -95,7 +95,7 @@ sub gettags {
 	close($output) or die "Can't close metaflac: $!";
 
 	while (my $line = shift(@lines)) {
-		my(@tag, $field, $value);
+		my($field, $value);
 
 		$line =~ s/$regex{quote}//g;
 
