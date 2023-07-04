@@ -43,6 +43,7 @@ use File::Basename qw(basename dirname);
 use File::Path qw(make_path);
 use Cwd qw(abs_path);
 
+my @required_tags = qw(artist album tracknumber title);
 my(%regex, %tags_if, %tags_of, %files, @dirs, $library, $depth_og);
 my($discnumber_ref, $totaldiscs_ref, $disctotal_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
@@ -81,7 +82,6 @@ foreach my $dn (@dirs) {
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
 		mk_refs($fn);
-		existstag($fn, 'artist', 'album', 'tracknumber', 'title');
 		vendor($fn);
 		rm_tag($fn, 'rating');
 		discnumber($fn, $dn);
@@ -212,6 +212,8 @@ sub getfiles {
 	foreach my $fn (keys(%{$files{flac}})) {
 		my $tags_ref = \$files{flac}{$fn};
 
+		existstag($fn, $tags_ref, @required_tags);
+
 		foreach my $field (keys(%{$$tags_ref})) {
 			$tags_if{$fn}{$field} = $$tags_ref->{$field}[0];
 			$tags_of{$fn}{$field} = $$tags_ref->{$field}[0];
@@ -283,11 +285,12 @@ sub mk_refs {
 # If it doesn't find them, it quits.
 sub existstag {
 	my $fn = shift;
+	my $tags_ref = shift;
 
 	my(@missing_tags);
 
 	while (my $field = shift(@_)) {
-		if (! length($tags_of{$fn}{$field})) {
+		if (! length($$tags_ref->{$field}[0])) {
 			push(@missing_tags, $field);
 		}
 	}

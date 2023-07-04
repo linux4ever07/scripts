@@ -15,7 +15,7 @@ use Encode qw(decode find_encoding);
 
 my @required_tags = qw(artist album tracknumber title);
 my @log_accepted = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my(%regex, %tags, %files, @dirs, @log, $library);
+my(%regex, %files, @dirs, @log, $library);
 my($discnumber_ref, $tracknumber_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
@@ -55,8 +55,9 @@ sub usage {
 sub getfiles {
 	my $dn = shift;
 
+	my(%tags);
+
 	undef(%files);
-	undef(%tags);
 	undef(@log);
 
 	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
@@ -65,16 +66,18 @@ sub getfiles {
 
 		if (! -f $fn) { next; }
 
-		if ($bn =~ /\.flac$/i) { $files{$fn} = { gettags($fn) }; }
+		if ($bn =~ /\.flac$/i) { $tags{$fn} = { gettags($fn) }; }
 		if ($bn =~ /\.log$/i) { check_log($fn); }
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
 
-	foreach my $fn (keys(%files)) {
-		my $tags_ref = \$files{$fn};
+	foreach my $fn (keys(%tags)) {
+		my $tags_ref = \$tags{$fn};
 
-		foreach my $field (keys(%{$files{$fn}})) {
-			$tags{$fn}{$field} = $$tags_ref->{$field}[0];
+		existstag($fn, $tags_ref, @required_tags);
+
+		foreach my $field (keys(%{$$tags_ref})) {
+			$files{$fn}{$field} = $$tags_ref->{$field}[0];
 		}
 	}
 }
@@ -122,23 +125,24 @@ sub gettags {
 sub mk_refs {
 	my $fn = shift;
 
-	$discnumber_ref = \$tags{$fn}{discnumber};
-	$tracknumber_ref = \$tags{$fn}{tracknumber};
-	$artist_ref = \$tags{$fn}{artist};
-	$albumartist_ref = \$tags{$fn}{albumartist};
-	$album_ref = \$tags{$fn}{album};
-	$title_ref = \$tags{$fn}{title};
+	$discnumber_ref = \$files{$fn}{discnumber};
+	$tracknumber_ref = \$files{$fn}{tracknumber};
+	$artist_ref = \$files{$fn}{artist};
+	$albumartist_ref = \$files{$fn}{albumartist};
+	$album_ref = \$files{$fn}{album};
+	$title_ref = \$files{$fn}{title};
 }
 
 # The 'existstag' subroutine checks for the existence of required tags.
 # If it doesn't find them, it quits.
 sub existstag {
 	my $fn = shift;
+	my $tags_ref = shift;
 
 	my(@missing_tags);
 
 	while (my $field = shift(@_)) {
-		if (! length($tags{$fn}{$field})) {
+		if (! length($$tags_ref->{$field}[0])) {
 			push(@missing_tags, $field);
 		}
 	}
@@ -159,9 +163,6 @@ sub existstag {
 sub albumartist {
 	my $fn = shift;
 	my $tracks = shift;
-
-	my $artist_ref = \$tags{$fn}{artist};
-	my $albumartist_ref = \$tags{$fn}{albumartist};
 
 	if (! length($$albumartist_ref)) {
 		my(%artist, $max);
@@ -220,7 +221,6 @@ sub import {
 
 	foreach my $sf (sort(keys(%files))) {
 		mk_refs($sf);
-		existstag($sf, @required_tags);
 		albumartist($sf, $fc);
 
 		$path = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
