@@ -171,6 +171,8 @@ sub albumartist {
 		else { $max = $tracks / 2; }
 
 		foreach my $fn (keys(%files)) {
+			my $artist_ref = \$files{$fn}{artist};
+
 			$artist{$$artist_ref} = 1;
 		}
 
