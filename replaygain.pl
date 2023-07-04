@@ -649,7 +649,7 @@ sub writetags {
 # Push the input tags to the @mflac_if array.
 	foreach my $field (sort(keys(%{$$tags_if_ref}))) {
 		for (my $i = 0; $i < scalar(@{$$tags_if_ref->{$field}}); $i++) {
-			my $tags_ref{tmp} = \$$tags_if_ref->{$field}[$i];
+			$tags_ref{tmp} = \$$tags_if_ref->{$field}[$i];
 
 			unless ($field eq 'vendor_ref') {
 				push(@mflac_if, uc($field) . '=' . ${$tags_ref{tmp}});
@@ -661,7 +661,7 @@ sub writetags {
 # with empty values, ignore those hash elements. They get
 # unintentionally created, when using references in other subroutines.
 	foreach my $field (sort(keys(%{$$tags_of_ref}))) {
-		my $tags_ref{tmp} = \$$tags_of_ref->{$field};
+		$tags_ref{tmp} = \$$tags_of_ref->{$field};
 
 		if (! length(${$tags_ref{tmp}})) { next; }
 
