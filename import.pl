@@ -15,7 +15,7 @@ use Encode qw(decode find_encoding);
 
 my @required_tags = qw(artist album tracknumber title);
 my @log_accepted = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my(%regex, %files, @dirs, @log, $library);
+my(%regex, %files, @dirs, @logs, $library, $tracks);
 my($discnumber_ref, $tracknumber_ref);
 my($artist_ref, $albumartist_ref, $album_ref, $title_ref);
 
@@ -58,7 +58,7 @@ sub getfiles {
 	my(%tags);
 
 	undef(%files);
-	undef(@log);
+	undef(@logs);
 
 	opendir(my $dh, $dn) or die "Can't open directory '$dn': $!";
 	foreach my $bn (readdir($dh)) {
@@ -80,6 +80,8 @@ sub getfiles {
 			$files{$fn}{$field} = $$tags_ref->{$field}[0];
 		}
 	}
+
+	$tracks = keys(%files);
 }
 
 # The 'gettags' subroutine reads the tags from a FLAC file.
@@ -162,7 +164,6 @@ sub existstag {
 # doesn't exist already.
 sub albumartist {
 	my $fn = shift;
-	my $tracks = shift;
 
 	if (! length($$albumartist_ref)) {
 		my(%artist, $max);
@@ -210,56 +211,60 @@ sub check_log {
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@log_accepted) {
-		if ($line1 =~ /$req/) { push(@log, $fn); last; }
+		if ($line1 =~ /$req/) { push(@logs, $fn); last; }
 	}
 }
 
 # The 'import' subroutine imports a FLAC album to the FLAC library.
 sub import {
-	my $fc = shift;
-	my $cp = 0;
-	my $cplog = 1;
-	my($newfn, $path);
+	my $flac_n = 0;
+	my $log_n = 1;
 
-	foreach my $sf (sort(keys(%files))) {
-		mk_refs($sf);
-		albumartist($sf, $fc);
+	my($of_dn);
 
-		$path = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
+	foreach my $if (sort(keys(%files))) {
+		my($of_bn, $of);
 
-		if ($cp == 0 and -d $path) {
-			say $path . ': already exists';
+		mk_refs($if);
+		albumartist($if);
+
+		$of_dn = $library . '/' . $$albumartist_ref . '/' . $$album_ref;
+
+		if ($flac_n == 0 and -d $of_dn) {
+			say $of_dn . ': already exists';
 			say 'Skipping...' . "\n";
 			return;
-		} else { make_path($path); }
+		} else { make_path($of_dn); }
 
 		if (length($$discnumber_ref)) {
-			$newfn = sprintf('%s-%02s. %s.flac', $$discnumber_ref, $$tracknumber_ref, $$title_ref);
+			$of_bn = sprintf('%s-%02s. %s.flac', $$discnumber_ref, $$tracknumber_ref, $$title_ref);
 		} else {
-			$newfn = sprintf('%02s. %s.flac', $$tracknumber_ref, $$title_ref);
+			$of_bn = sprintf('%02s. %s.flac', $$tracknumber_ref, $$title_ref);
 		}
 
-		my $tf = $path . '/' . $newfn;
+		$of = $of_dn . '/' . $of_bn;
 
-		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...';
-		copy($sf, $tf) or die "Copy failed: $!";
-		$cp++
+		say 'Copying \'' . $if . '\'' . "\n\t" . 'to \'' . $of . '\'...';
+		copy($if, $of) or die "Copy failed: $!";
+		$flac_n++
 	}
 
-	say 'Copied ' . $cp . ' / ' . $fc . ' files from \'' . $$album_ref . '\'.' . "\n";
+	say 'Copied ' . $flac_n . ' / ' . $tracks . ' files from \'' . $$album_ref . '\'.' . "\n";
 
-	foreach my $sf (@log) {
-		my($tf);
+	foreach my $if (@logs) {
+		my($of_bn, $of);
 
-		if (scalar(@log) > 1) {
-			$tf = $path . '/' . $cplog . '-' . $$album_ref . '.log';
+		if (scalar(@logs) > 1) {
+			$of_bn = $log_n . '-' . $$album_ref . '.log';
 		} else {
-			$tf = $path . '/' . $$album_ref . '.log';
+			$of_bn = $$album_ref . '.log';
 		}
 
-		say 'Copying \'' . $sf . '\'' . "\n\t" . 'to \'' . $tf . '\'...' . "\n";
-		copy($sf, $tf) or die "Copy failed: $!";
-		$cplog++
+		$of = $of_dn . '/' . $of_bn;
+
+		say 'Copying \'' . $if . '\'' . "\n\t" . 'to \'' . $of . '\'...' . "\n";
+		copy($if, $of) or die "Copy failed: $!";
+		$log_n++
 	}
 }
 
@@ -271,10 +276,10 @@ while (my $dn = shift(@dirs)) {
 
 		my $dn = $File::Find::name;
 		getfiles($dn);
-		my $fc = keys(%files);
-		if ($fc > 0) {
+
+		if ($tracks > 0) {
 			say $dn . ': importing...' . "\n";
-			import($fc);
+			import();
 		} else { say $dn . ': contains no FLAC files'; }
 	}
 }
