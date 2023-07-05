@@ -186,16 +186,16 @@ sub check_log {
 sub mk_refs {
 	my $fn = shift;
 
-	$tags_ref{discnumber} = \$tags_of{$fn}{discnumber};
-	$tags_ref{totaldiscs} = \$tags_of{$fn}{totaldiscs};
-	$tags_ref{disctotal} = \$tags_of{$fn}{disctotal};
-	$tags_ref{tracknumber} = \$tags_of{$fn}{tracknumber};
-	$tags_ref{totaltracks} = \$tags_of{$fn}{totaltracks};
-	$tags_ref{tracktotal} = \$tags_of{$fn}{tracktotal};
-	$tags_ref{artist} = \$tags_of{$fn}{artist};
-	$tags_ref{albumartist} = \$tags_of{$fn}{albumartist};
-	$tags_ref{album} = \$tags_of{$fn}{album};
-	$tags_ref{title} = \$tags_of{$fn}{title};
+	$tags_ref{discnumber} = \$files{$fn}{discnumber};
+	$tags_ref{totaldiscs} = \$files{$fn}{totaldiscs};
+	$tags_ref{disctotal} = \$files{$fn}{disctotal};
+	$tags_ref{tracknumber} = \$files{$fn}{tracknumber};
+	$tags_ref{totaltracks} = \$files{$fn}{totaltracks};
+	$tags_ref{tracktotal} = \$files{$fn}{tracktotal};
+	$tags_ref{artist} = \$files{$fn}{artist};
+	$tags_ref{albumartist} = \$files{$fn}{albumartist};
+	$tags_ref{album} = \$files{$fn}{album};
+	$tags_ref{title} = \$files{$fn}{title};
 }
 
 # The 'discnumber' subroutine creates the DISCNUMBER tag, if it doesn't
