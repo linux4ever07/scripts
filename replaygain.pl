@@ -224,7 +224,7 @@ sub getfiles {
 sub gettags {
 	my $fn = shift;
 
-	my(%alltags, @lines, @tag);
+	my(%alltags, @lines);
 
 	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--show-vendor-tag', '--export-tags-to=-', $fn)
 	or die "Can't open 'metaflac': $!";
@@ -232,7 +232,7 @@ sub gettags {
 	close($output) or die "Can't close 'metaflac': $!";
 
 	while (my $line = shift(@lines)) {
-		my($field, $value);
+		my(@tag, $field, $value);
 
 		$line =~ s/$regex{quote}//g;
 
