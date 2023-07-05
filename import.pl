@@ -278,11 +278,8 @@ sub import {
 		my($of_bn, $of);
 
 		mk_refs($if);
+		discnumber($if);
 		albumartist($if);
-
-		if (! length(${$tags_ref{discnumber}})) {
-			${$tags_ref{discnumber}} = 1;
-		}
 
 		$imported_ref = \$imported{${$tags_ref{albumartist}}}{${$tags_ref{album}}};
 
