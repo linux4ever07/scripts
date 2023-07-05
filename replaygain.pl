@@ -313,7 +313,7 @@ sub mk_refs {
 sub vendor {
 	my $if = shift;
 
-	my($of, $of_flac, $of_wav, $of_stderr, $of_art, $has_id3v2);
+	my($of, $of_flac, $of_wav, $of_art, $of_stderr, $has_id3v2);
 	$has_id3v2 = 0;
 
 	sub sigint {
@@ -547,7 +547,9 @@ sub changed {
 # with empty values, ignore those hash elements. They get
 # unintentionally created, when using references in other subroutines.
 	foreach my $field (keys(%{$tags_of{$fn}})) {
-		if (! length($tags_of{$fn}{$field})) { next; }
+		$tags_ref{tmp} = \$tags_of{$fn}{$field};
+
+		if (! length(${$tags_ref{tmp}})) { next; }
 
 		$fields{$field} = 1;
 	}
