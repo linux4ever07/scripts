@@ -224,7 +224,7 @@ sub getfiles {
 sub gettags {
 	my $fn = shift;
 
-	my(%alltags, @lines);
+	my(%alltags, @lines, @tag);
 
 	open(my $output, '-|', 'metaflac', '--no-utf8-convert', '--show-vendor-tag', '--export-tags-to=-', $fn)
 	or die "Can't open 'metaflac': $!";
