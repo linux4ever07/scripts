@@ -269,6 +269,8 @@ sub albumartist {
 
 # The 'import' subroutine imports a FLAC album to the FLAC library.
 sub import {
+	my $if_dn = shift;
+
 	my $flac_n = 0;
 	my $log_n = 0;
 
@@ -278,7 +280,7 @@ sub import {
 		my($of_bn, $of);
 
 		mk_refs($if);
-		discnumber($if);
+		discnumber($if, $if_dn);
 		albumartist($if);
 
 		$imported_ref = \$imported{${$tags_ref{albumartist}}}{${$tags_ref{album}}};
@@ -347,7 +349,7 @@ while (my $dn = shift(@dirs)) {
 
 		if ($tracks > 0) {
 			say $dn . ': importing...' . "\n";
-			import();
+			import($dn);
 		} else { say $dn . ': contains no FLAC files'; }
 	}
 }
