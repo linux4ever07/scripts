@@ -24,6 +24,8 @@ $regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{tag} = qr/^([^=]+)=(.*)$/;
+$regex{fraction} = qr/^([0-9]+)\s*\/\s*([0-9]+)$/;
+$regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
 
 # Check if the necessary commands are installed to test FLAC files.
 my $flac_req = `command -v metaflac`;
@@ -184,12 +186,62 @@ sub check_log {
 sub mk_refs {
 	my $fn = shift;
 
-	$tags_ref{discnumber} = \$files{$fn}{discnumber};
-	$tags_ref{tracknumber} = \$files{$fn}{tracknumber};
-	$tags_ref{artist} = \$files{$fn}{artist};
-	$tags_ref{albumartist} = \$files{$fn}{albumartist};
-	$tags_ref{album} = \$files{$fn}{album};
-	$tags_ref{title} = \$files{$fn}{title};
+	$tags_ref{discnumber} = \$tags_of{$fn}{discnumber};
+	$tags_ref{totaldiscs} = \$tags_of{$fn}{totaldiscs};
+	$tags_ref{disctotal} = \$tags_of{$fn}{disctotal};
+	$tags_ref{tracknumber} = \$tags_of{$fn}{tracknumber};
+	$tags_ref{totaltracks} = \$tags_of{$fn}{totaltracks};
+	$tags_ref{tracktotal} = \$tags_of{$fn}{tracktotal};
+	$tags_ref{artist} = \$tags_of{$fn}{artist};
+	$tags_ref{albumartist} = \$tags_of{$fn}{albumartist};
+	$tags_ref{album} = \$tags_of{$fn}{album};
+	$tags_ref{title} = \$tags_of{$fn}{title};
+}
+
+# The 'discnumber' subroutine creates the DISCNUMBER tag, if it doesn't
+# exist already. DISCTOTAL is also added, if possible. This subroutine
+# needs to be run before 'albumartist', and 'totaltracks'.
+sub discnumber {
+	my $fn = shift;
+	my $dn = shift;
+
+	if (length(${$tags_ref{discnumber}})) {
+		if (${$tags_ref{discnumber}} =~ m/$regex{fraction}/) {
+			${$tags_ref{discnumber}} = $1;
+
+			if (! length(${$tags_ref{totaldiscs}})) {
+				${$tags_ref{totaldiscs}} = $2;
+			}
+		}
+	}
+
+	if (! length(${$tags_ref{discnumber}})) {
+		if (${$tags_ref{album}} =~ m/$regex{disc}/) {
+			${$tags_ref{discnumber}} = $2;
+
+			if (! length(${$tags_ref{totaldiscs}}) and length($4)) {
+				${$tags_ref{totaldiscs}} = $4;
+			}
+
+			${$tags_ref{album}} =~ s/$regex{disc}//;
+		}
+	}
+
+	if (! length(${$tags_ref{discnumber}})) {
+		if ($dn =~ m/$regex{disc}/) {
+			${$tags_ref{discnumber}} = $2;
+
+			if (! length(${$tags_ref{totaldiscs}}) and length($4)) {
+				${$tags_ref{totaldiscs}} = $4;
+			}
+		} else { ${$tags_ref{discnumber}} = 1; }
+	}
+
+	if (! length(${$tags_ref{totaldiscs}})) {
+		if (length(${$tags_ref{disctotal}})) {
+			${$tags_ref{totaldiscs}} = ${$tags_ref{disctotal}};
+		}
+	}
 }
 
 # The 'albumartist' subroutine creates the ALBUMARTIST tag, if it

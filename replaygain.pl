@@ -51,8 +51,8 @@ $regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{quote} = qr/^(\")|(\")$/;
 $regex{space} = qr/(^\s*)|(\s*$)/;
 $regex{zero} = qr/^0+([0-9]+)$/;
-$regex{fraction} = qr/^([0-9]+)\s*\/\s*([0-9]+)$/;
 $regex{tag} = qr/^([^=]+)=(.*)$/;
+$regex{fraction} = qr/^([0-9]+)\s*\/\s*([0-9]+)$/;
 $regex{disc} = qr/\s*[[:punct:]]?(cd|disc)\s*([0-9]+)(\s*of\s*([0-9]+))?[[:punct:]]?\s*$/i;
 $regex{id3v2} = qr/has an ID3v2 tag/;
 
