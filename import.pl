@@ -15,7 +15,7 @@ use Encode qw(decode find_encoding);
 
 my @required_tags = qw(artist album tracknumber title);
 my @log_accepted = qw(EAC 'Exact Audio Copy' 'XLD X Lossless Decoder' cdparanoia Rubyripper whipper);
-my(%regex, %files, %tags_ref, @dirs, @logs, $library, $tracks);
+my(%regex, %files, %tags_ref, %imported, @dirs, @logs, $library, $tracks);
 
 $regex{charset1} = qr/([^; ]+)$/;
 $regex{charset2} = qr/^charset=(.*)$/;
@@ -218,9 +218,9 @@ sub albumartist {
 # The 'import' subroutine imports a FLAC album to the FLAC library.
 sub import {
 	my $flac_n = 0;
-	my $log_n = 1;
+	my $log_n = 0;
 
-	my($of_dn);
+	my($of_dn, $imported_ref);
 
 	foreach my $if (sort(keys(%files))) {
 		my($of_bn, $of);
@@ -228,25 +228,35 @@ sub import {
 		mk_refs($if);
 		albumartist($if);
 
+		if (! length(${$tags_ref{discnumber}})) {
+			${$tags_ref{discnumber}} = 1;
+		}
+
+		$imported_ref = \$imported{${$tags_ref{albumartist}}}{${$tags_ref{album}}};
+
 		$of_dn = $library . '/' . ${$tags_ref{albumartist}} . '/' . ${$tags_ref{album}};
 
-		if ($flac_n == 0 and -d $of_dn) {
-			say $of_dn . ': already exists';
-			say 'Skipping...' . "\n";
-			return;
-		} else { make_path($of_dn); }
-
-		if (length(${$tags_ref{discnumber}})) {
-			$of_bn = sprintf('%d-%02d. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
-		} else {
-			$of_bn = sprintf('%02d. %s.flac', ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
-		}
+		$of_bn = sprintf('%d-%02d. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
 
 		$of = $of_dn . '/' . $of_bn;
 
+		if (length($$imported_ref->{${$tags_ref{discnumber}}})) {
+			say $of_dn . ': already exists';
+			say 'Skipping...' . "\n";
+			return;
+		}
+
+		if (-f $of) {
+			say $of . ': already exists';
+			say 'Skipping...' . "\n";
+			return;
+		}
+
+		make_path($of_dn);
+
 		say 'Copying \'' . $if . '\'' . "\n\t" . 'to \'' . $of . '\'...';
 		copy($if, $of) or die "Copy failed: $!";
-		$flac_n++
+		$flac_n++;
 	}
 
 	say 'Copied ' . $flac_n . ' / ' . $tracks . ' files from \'' . ${$tags_ref{album}} . '\'.' . "\n";
@@ -254,18 +264,27 @@ sub import {
 	foreach my $if (@logs) {
 		my($of_bn, $of);
 
-		if (scalar(@logs) > 1) {
-			$of_bn = $log_n . '-' . ${$tags_ref{album}} . '.log';
-		} else {
-			$of_bn = ${$tags_ref{album}} . '.log';
-		}
+		$of_bn = ${$tags_ref{discnumber}} . '-' . ${$tags_ref{album}} . '.log';
 
 		$of = $of_dn . '/' . $of_bn;
 
+		if (-f $of) {
+			say $of . ': already exists';
+			say 'Skipping...' . "\n";
+			return;
+		}
+
 		say 'Copying \'' . $if . '\'' . "\n\t" . 'to \'' . $of . '\'...' . "\n";
 		copy($if, $of) or die "Copy failed: $!";
-		$log_n++
+		$log_n++;
 	}
+
+# Saves ALBUMARTIST, ALBUM and DISCNUMBER tags, to remember what albums
+# have been copied over. This is to allow multi-disc albums to be
+# imported, as long as it's done in the same session of the script.
+# The reason it works is because different disc directories of an album
+# usually have the DISCNUMBER tag set.
+	$$imported_ref->{${$tags_ref{discnumber}}} = 1;
 }
 
 while (my $dn = shift(@dirs)) {
