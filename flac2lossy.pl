@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
-# This script is a multithreaded batch encoder. It encodes FLAC files to
-# lossy codecs / formats.
+# This script is a multithreaded audio batch encoder. It encodes FLAC
+# albums to lossy codecs / formats.
 
 # Currently supported codecs are:
 
@@ -16,9 +16,20 @@
 # in $disk_size. The $file_stack variable is used to count the total
 # amount of data decoded and stored in RAM at any time.
 
+# The output files are stored here:
+# ${HOME}/${ext}/${albumartist}/${album}/
+
 # The script looks for the CPU core count in /proc/cpuinfo and starts
 # as many threads as it finds cores. The threads are left
 # waiting for files to be enqueued.
+
+# I've done my best to choose sane default settings for the various
+# codecs, generating high quality while maintaining a low file size.
+# I've attempted to make the settings somewhat compliant with scene
+# rules (with bitrates between 160 and 192 kbps).
+
+# It's not possible to choose bitrate or quality when running the
+# script. It's only possible to choose audio format.
 
 use 5.34.0;
 use strict;
@@ -77,7 +88,7 @@ given (my $arg = shift(@ARGV)) {
 	when ('-mp3') {
 		$mode = 'mp3';
 
-		@opts = ('lame', '-q 0', '-V 2', '--silent', '--id3v2-only');
+		@opts = ('lame', '--silent', '-q', '0', '-V', '2', '--id3v2-only');
 	}
 	when ('-aac') {
 		$mode = 'aac';
@@ -87,7 +98,7 @@ given (my $arg = shift(@ARGV)) {
 	when ('-ogg') {
 		$mode = 'ogg';
 
-		@opts = ('oggenc', '--quiet', '-q 6');
+		@opts = ('oggenc', '--quiet', '--quality=6');
 	}
 	when ('-opus') {
 		$mode = 'opus';
