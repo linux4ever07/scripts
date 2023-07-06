@@ -357,44 +357,43 @@ sub decode {
 # The 'lame' subroutine encodes FLAC files to MP3.
 sub lame {
 	my $tid = threads->tid();
-	my @old_opts = @opts;
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
 		my(%tags_ref, $tag_tmp);
+		my @opts_tmp = @opts;
+
 		mk_refs($if, \%tags_ref);
 
 		my $of = name($if, 'mp3', \%tags_ref);
 
 		$tag_tmp = ${$tags_ref{artist}};
-		push(@opts, ('--ta', $tag_tmp));
+		push(@opts_tmp, ('--ta', $tag_tmp));
 
 		$tag_tmp = ${$tags_ref{album}};
-		push(@opts, ('--tl', $tag_tmp));
+		push(@opts_tmp, ('--tl', $tag_tmp));
 
 		$tag_tmp = ${$tags_ref{tracknumber}};
-		push(@opts, ('--tn', $tag_tmp));
+		push(@opts_tmp, ('--tn', $tag_tmp));
 
 		$tag_tmp = ${$tags_ref{title}};
-		push(@opts, ('--tt', $tag_tmp));
+		push(@opts_tmp, ('--tt', $tag_tmp));
 
 		${$tags_ref{date}} =~ /$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = $1;
-			push(@opts, ('--ty', $tag_tmp));
+			push(@opts_tmp, ('--ty', $tag_tmp));
 		}
 
-		push(@opts, '-');
-		push(@opts, $of);
+		push(@opts_tmp, '-');
+		push(@opts_tmp, $of);
 
 		say $tid . ' ' . $of . ': encoding...';
 
-		open(my $lame, '|-:raw', @opts)
+		open(my $lame, '|-:raw', @opts_tmp)
 		or die "can't run 'lame': $!";
 		print $lame $pcm{$if};
 		close($lame) || die "couldn't close 'lame': $!";
-
-		@opts = @old_opts;
 
 		{ lock(%pcm);
 		lock($file_stack);
@@ -406,43 +405,42 @@ sub lame {
 # The 'aac' subroutine encodes FLAC files to AAC.
 sub aac {
 	my $tid = threads->tid();
-	my @old_opts = @opts;
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
 		my(%tags_ref, $tag_tmp);
+		my @opts_tmp = @opts;
+
 		mk_refs($if, \%tags_ref);
 
 		my $of = name($if, 'm4a', \%tags_ref);
 
 		$tag_tmp = 'artist' . '=' . ${$tags_ref{artist}};
-		push(@opts, ('-metadata', $tag_tmp));
+		push(@opts_tmp, ('-metadata', $tag_tmp));
 
 		$tag_tmp = 'album' . '=' . ${$tags_ref{album}};
-		push(@opts, ('-metadata', $tag_tmp));
+		push(@opts_tmp, ('-metadata', $tag_tmp));
 
 		$tag_tmp = 'tracknumber' . '=' . ${$tags_ref{tracknumber}};
-		push(@opts, ('-metadata', $tag_tmp));
+		push(@opts_tmp, ('-metadata', $tag_tmp));
 
 		$tag_tmp = 'title' . '=' . ${$tags_ref{title}};
-		push(@opts, ('-metadata', $tag_tmp));
+		push(@opts_tmp, ('-metadata', $tag_tmp));
 
 		${$tags_ref{date}} =~ /$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = 'date' . '=' . $1;
-			push(@opts, ('-metadata', $tag_tmp));
+			push(@opts_tmp, ('-metadata', $tag_tmp));
 		}
 
-		push(@opts, $of);
+		push(@opts_tmp, $of);
 
 		say $tid . ' ' . $of . ': encoding...';
 
-		open(my $ffmpeg, '|-:raw', @opts)
+		open(my $ffmpeg, '|-:raw', @opts_tmp)
 		or die "can't run 'ffmpeg': $!";
 		print $ffmpeg $pcm{$if};
 		close($ffmpeg) || die "couldn't close 'ffmpeg': $!";
-
-		@opts = @old_opts;
 
 		{ lock(%pcm);
 		lock($file_stack);
@@ -454,45 +452,44 @@ sub aac {
 # The 'vorbis' subroutine encodes FLAC files to Ogg Vorbis.
 sub vorbis {
 	my $tid = threads->tid();
-	my @old_opts = @opts;
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
 		my(%tags_ref, $tag_tmp);
+		my @opts_tmp = @opts;
+
 		mk_refs($if, \%tags_ref);
 
 		my $of = name($if, 'ogg', \%tags_ref);
 
-		push(@opts, ('-o', $of));
+		push(@opts_tmp, ('-o', $of));
 
 		$tag_tmp = 'artist' . '=' . ${$tags_ref{artist}};
-		push(@opts, ('-c', $tag_tmp));
+		push(@opts_tmp, ('-c', $tag_tmp));
 
 		$tag_tmp = 'album' . '=' . ${$tags_ref{album}};
-		push(@opts, ('-c', $tag_tmp));
+		push(@opts_tmp, ('-c', $tag_tmp));
 
 		$tag_tmp = 'tracknumber' . '=' . ${$tags_ref{tracknumber}};
-		push(@opts, ('-c', $tag_tmp));
+		push(@opts_tmp, ('-c', $tag_tmp));
 
 		$tag_tmp = 'title' . '=' . ${$tags_ref{title}};
-		push(@opts, ('-c', $tag_tmp));
+		push(@opts_tmp, ('-c', $tag_tmp));
 
 		${$tags_ref{date}} =~ /$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = 'date' . '=' . $1;
-			push(@opts, ('-c', $tag_tmp));
+			push(@opts_tmp, ('-c', $tag_tmp));
 		}
 
-		push(@opts, '-');
+		push(@opts_tmp, '-');
 
 		say $tid . ' ' . $of . ': encoding...';
 
-		open(my $oggenc, '|-:raw', @opts)
+		open(my $oggenc, '|-:raw', @opts_tmp)
 		or die "can't run 'oggenc': $!";
 		print $oggenc $pcm{$if};
 		close($oggenc) || die "couldn't close 'oggenc': $!";
-
-		@opts = @old_opts;
 
 		{ lock(%pcm);
 		lock($file_stack);
@@ -504,44 +501,43 @@ sub vorbis {
 # The 'opus' subroutine encodes FLAC files to Opus.
 sub opus {
 	my $tid = threads->tid();
-	my @old_opts = @opts;
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
 		my(%tags_ref, $tag_tmp);
+		my @opts_tmp = @opts;
+
 		mk_refs($if, \%tags_ref);
 
 		my $of = name($if, 'opus', \%tags_ref);
 
 		$tag_tmp = 'artist' . '=' . ${$tags_ref{artist}};
-		push(@opts, ('--comment', $tag_tmp));
+		push(@opts_tmp, ('--comment', $tag_tmp));
 
 		$tag_tmp = 'album' . '=' . ${$tags_ref{album}};
-		push(@opts, ('--comment', $tag_tmp));
+		push(@opts_tmp, ('--comment', $tag_tmp));
 
 		$tag_tmp = 'tracknumber' . '=' . ${$tags_ref{tracknumber}};
-		push(@opts, ('--comment', $tag_tmp));
+		push(@opts_tmp, ('--comment', $tag_tmp));
 
 		$tag_tmp = 'title' . '=' . ${$tags_ref{title}};
-		push(@opts, ('--comment', $tag_tmp));
+		push(@opts_tmp, ('--comment', $tag_tmp));
 
 		${$tags_ref{date}} =~ /$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = 'date' . '=' . $1;
-			push(@opts, ('--comment', $tag_tmp));
+			push(@opts_tmp, ('--comment', $tag_tmp));
 		}
 
-		push(@opts, '-');
-		push(@opts, $of);
+		push(@opts_tmp, '-');
+		push(@opts_tmp, $of);
 
 		say $tid . ' ' . $of . ': encoding...';
 
-		open(my $opusenc, '|-:raw', @opts)
+		open(my $opusenc, '|-:raw', @opts_tmp)
 		or die "can't run 'opusenc': $!";
 		print $opusenc $pcm{$if};
 		close($opusenc) || die "couldn't close 'opusenc': $!";
-
-		@opts = @old_opts;
 
 		{ lock(%pcm);
 		lock($file_stack);
