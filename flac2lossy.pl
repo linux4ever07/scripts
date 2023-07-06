@@ -359,8 +359,9 @@ sub lame {
 	my $tid = threads->tid();
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
-		my(%tags_ref, $tag_tmp);
 		my @opts_tmp = @opts;
+
+		my(%tags_ref, $tag_tmp);
 
 		mk_refs($if, \%tags_ref);
 
@@ -407,8 +408,9 @@ sub aac {
 	my $tid = threads->tid();
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
-		my(%tags_ref, $tag_tmp);
 		my @opts_tmp = @opts;
+
+		my(%tags_ref, $tag_tmp);
 
 		mk_refs($if, \%tags_ref);
 
@@ -454,8 +456,9 @@ sub vorbis {
 	my $tid = threads->tid();
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
-		my(%tags_ref, $tag_tmp);
 		my @opts_tmp = @opts;
+
+		my(%tags_ref, $tag_tmp);
 
 		mk_refs($if, \%tags_ref);
 
@@ -503,8 +506,9 @@ sub opus {
 	my $tid = threads->tid();
 
 	while (my($if, $size) = $files_q->dequeue(2)) {
-		my(%tags_ref, $tag_tmp);
 		my @opts_tmp = @opts;
+
+		my(%tags_ref, $tag_tmp);
 
 		mk_refs($if, \%tags_ref);
 
