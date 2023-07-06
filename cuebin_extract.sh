@@ -188,6 +188,7 @@ check_cmd () {
 		printf '\n%s\n\n' 'You need to install the following through your package manager:'
 		printf '%s\n' "${missing_pkg[@]}"
 		printf '\n'
+
 		exit
 	fi
 }
@@ -209,6 +210,7 @@ run_cmd () {
 	if [[ $exit_status != '0' ]]; then
 		printf '%s\n' "${cmd_stdout[@]}"
 		printf '\n'
+
 		exit
 	fi
 }
@@ -394,6 +396,7 @@ read_cue () {
 # If errors were found, print them and quit.
 	if [[ ${#files[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' "${error_msgs[no_files]}"
+
 		exit
 	fi
 
