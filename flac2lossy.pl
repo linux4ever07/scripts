@@ -274,7 +274,7 @@ sub mk_refs {
 sub files2queue {
 	my($size, $free);
 
-	foreach my $fn (keys(%files)) {
+	foreach my $fn (sort(keys(%files))) {
 		$size = (stat($fn))[7];
 
 		$free = $disk_size - $file_stack;
