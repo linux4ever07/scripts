@@ -141,6 +141,7 @@ sub check_cmd {
 		say "\n" . 'You need to install the following through your package manager:' . "\n";
 		print(join("\n", @missing_pkg));
 		say "\n";
+
 		exit;
 	}
 }
