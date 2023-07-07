@@ -295,7 +295,7 @@ arch_unpack () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
+			if_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
 			dar -x "$if_tmp"
 			output "$?" 1>&2
@@ -377,7 +377,7 @@ arch_test () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
+			if_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
 			dar -t "$if_tmp"
 			output "$?" 1>&2
@@ -451,7 +451,7 @@ arch_list () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
+			if_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
 			dar -l "$if_tmp" | less 1>&2
 			output "$?" 1>&2
