@@ -40,7 +40,7 @@ while (my $arg = shift(@ARGV)) {
 
 	if (length($arg)) {
 		$fn = abs_path($arg);
-		$fn =~ /$regex{fn}/;
+		$fn =~ m/$regex{fn}/;
 		$ext = lc($2);
 	}
 
@@ -72,9 +72,9 @@ sub read_decode_fn {
 	chomp($file_enc = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_enc =~ /$regex{charset1}/;
+	$file_enc =~ m/$regex{charset1}/;
 	$file_enc = $1;
-	$file_enc =~ /$regex{charset2}/;
+	$file_enc =~ m/$regex{charset2}/;
 	$file_enc = $1;
 
 	$tmp_enc = find_encoding($file_enc);
@@ -114,7 +114,7 @@ sub time_convert {
 	my $cs_last = 0;
 
 # If argument is in the hh:mm:ss format...
-	if ($time =~ /$format[1]/) {
+	if ($time =~ m/$format[1]/) {
 		$h = $1;
 		$m = $2;
 		$s = $3;
@@ -132,7 +132,7 @@ sub time_convert {
 		$s = $s * 1000;
 
 # Saves the last 2 (or 1) digits of $cs in $cs_last.
-		if ($cs =~ $regex{last2}) {
+		if ($cs =~ m/$regex{last2}/) {
 			$cs_last = $1;
 			$cs_last =~ s/^0//;
 		}
@@ -144,7 +144,7 @@ sub time_convert {
 		$time = $h + $m + $s + $cs;
 
 # If argument is in the centisecond format...
-	} elsif ($time =~ /$format[0]/) {
+	} elsif ($time =~ m/$format[0]/) {
 		$cs = $time;
 
 		$s = floor($cs / 1000);
@@ -207,8 +207,8 @@ sub parse_srt {
 		$this = $lines_tmp[$i];
 		$next = $lines_tmp[$j];
 
-		if (length($this) and $this =~ /$format[0]/) {
-			if (length($next) and $next =~ /$format[3]/) {
+		if (length($this) and $this =~ m/$format[0]/) {
+			if (length($next) and $next =~ m/$format[3]/) {
 				$start_time = $1;
 				$stop_time = $2;
 
@@ -243,8 +243,8 @@ sub parse_srt {
 					$this = $lines_tmp[$i];
 					$next = $lines_tmp[$j];
 
-					if (length($this) and $this =~ /$format[0]/) {
-						if (length($next) and $next =~ /$format[3]/) {
+					if (length($this) and $this =~ m/$format[0]/) {
+						if (length($next) and $next =~ m/$format[3]/) {
 							$switch = 1;
 							last;
 						}

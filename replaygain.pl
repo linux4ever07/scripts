@@ -334,7 +334,7 @@ sub vendor {
 
 	$of = $if;
 	$of =~ m/$regex{fn}/;
-	$of =~ $1;
+	$of = $1;
 	$of = $of . '-' . int(rand(10000));
 
 	$of_flac = $of . '.flac';

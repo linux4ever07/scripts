@@ -24,7 +24,7 @@ if (! scalar(@ARGV)) { usage(); }
 
 if (length($ARGV[0])) {
 	$fn = abs_path($ARGV[0]);
-	$fn =~ /$regex{fn}/;
+	$fn =~ m/$regex{fn}/;
 	$ext = lc($2);
 }
 
@@ -50,9 +50,9 @@ sub read_decode_fn {
 	chomp($file_enc = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_enc =~ /$regex{charset1}/;
+	$file_enc =~ m/$regex{charset1}/;
 	$file_enc = $1;
-	$file_enc =~ /$regex{charset2}/;
+	$file_enc =~ m/$regex{charset2}/;
 	$file_enc = $1;
 
 	$tmp_enc = find_encoding($file_enc);
@@ -102,8 +102,8 @@ sub parse_srt {
 		$this = $lines_tmp[$i];
 		$next = $lines_tmp[$j];
 
-		if (length($this) and $this =~ /$format[0]/) {
-			if (length($next) and $next =~ /$format[2]/) {
+		if (length($this) and $this =~ m/$format[0]/) {
+			if (length($next) and $next =~ m/$format[2]/) {
 				my(@tmp);
 
 				$i = $i + 2;
@@ -121,8 +121,8 @@ sub parse_srt {
 					$this = $lines_tmp[$i];
 					$next = $lines_tmp[$j];
 
-					if (length($this) and $this =~ /$format[0]/) {
-						if (length($next) and $next =~ /$format[2]/) {
+					if (length($this) and $this =~ m/$format[0]/) {
+						if (length($next) and $next =~ m/$format[2]/) {
 							$switch = 1;
 							last;
 						}

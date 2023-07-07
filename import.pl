@@ -67,8 +67,8 @@ sub getfiles {
 
 		if (! -f $fn) { next; }
 
-		if ($bn =~ /\.flac$/i) { $tags{$fn} = { gettags($fn) }; }
-		if ($bn =~ /\.log$/i) { check_log($fn); }
+		if ($bn =~ m/\.flac$/i) { $tags{$fn} = { gettags($fn) }; }
+		if ($bn =~ m/\.log$/i) { check_log($fn); }
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
 
@@ -161,9 +161,9 @@ sub check_log {
 	chomp($file_enc = <$info>);
 	close($info) or die "Can't close file: $!";
 
-	$file_enc =~ /$regex{charset1}/;
+	$file_enc =~ m/$regex{charset1}/;
 	$file_enc = $1;
-	$file_enc =~ /$regex{charset2}/;
+	$file_enc =~ m/$regex{charset2}/;
 	$file_enc = $1;
 
 	$tmp_enc = find_encoding($file_enc);
@@ -177,7 +177,7 @@ sub check_log {
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@log_accepted) {
-		if ($line1 =~ /$req/) { push(@logs, $fn); last; }
+		if ($line1 =~ m/$req/) { push(@logs, $fn); last; }
 	}
 }
 

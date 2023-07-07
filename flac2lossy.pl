@@ -212,7 +212,7 @@ sub getfiles {
 
 		if (! -f $fn) { next; }
 
-		if ($bn =~ /\.flac$/i) { $tags{$fn} = { gettags($fn) }; }
+		if ($bn =~ m/\.flac$/i) { $tags{$fn} = { gettags($fn) }; }
 	}
 	closedir $dh or die "Can't close directory '$dn': $!";
 
@@ -380,7 +380,7 @@ sub lame {
 		$tag_tmp = ${$tags_ref{title}};
 		push(@opts_tmp, ('--tt', $tag_tmp));
 
-		${$tags_ref{date}} =~ /$regex{date}/;
+		${$tags_ref{date}} =~ m/$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = $1;
@@ -429,7 +429,7 @@ sub aac {
 		$tag_tmp = 'title' . '=' . ${$tags_ref{title}};
 		push(@opts_tmp, ('-metadata', $tag_tmp));
 
-		${$tags_ref{date}} =~ /$regex{date}/;
+		${$tags_ref{date}} =~ m/$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = 'date' . '=' . $1;
@@ -479,7 +479,7 @@ sub vorbis {
 		$tag_tmp = 'title' . '=' . ${$tags_ref{title}};
 		push(@opts_tmp, ('-c', $tag_tmp));
 
-		${$tags_ref{date}} =~ /$regex{date}/;
+		${$tags_ref{date}} =~ m/$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = 'date' . '=' . $1;
@@ -527,7 +527,7 @@ sub opus {
 		$tag_tmp = 'title' . '=' . ${$tags_ref{title}};
 		push(@opts_tmp, ('--comment', $tag_tmp));
 
-		${$tags_ref{date}} =~ /$regex{date}/;
+		${$tags_ref{date}} =~ m/$regex{date}/;
 
 		if (length($1)) {
 			$tag_tmp = 'date' . '=' . $1;
