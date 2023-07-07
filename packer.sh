@@ -28,9 +28,9 @@
 
 set -o pipefail
 
-declare f f_bn f_bn_lc of
+declare if if_bn if_bn_lc of
 session="${RANDOM}-${RANDOM}"
-stdout_f="/dev/shm/packer_stdout-${session}.txt"
+stdout_fn="/dev/shm/packer_stdout-${session}.txt"
 c_tty=$(tty)
 
 declare -A regex
@@ -42,8 +42,8 @@ regex[dar]='(\.[0-9]+){0,1}(\.dar)$'
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
 # visible in real-time.
-touch "$stdout_f"
-exec 1>>"$stdout_f"
+touch "$stdout_fn"
+exec 1>>"$stdout_fn"
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -60,7 +60,7 @@ restore_n_quit () {
 		exec 1>"$c_tty"
 	fi
 
-	rm -f "$stdout_f"
+	rm -f "$stdout_fn"
 	exit
 }
 
@@ -134,11 +134,11 @@ fi
 
 # Creates a function called 'print_stdout', which will print STDOUT.
 print_stdout () {
-	mapfile -t lines <"$stdout_f"
+	mapfile -t lines <"$stdout_fn"
 
 	printf '%s\n' "${lines[@]}"
 
-	truncate -s 0 "$stdout_f"
+	truncate -s 0 "$stdout_fn"
 }
 
 # Creates a function, called 'output', which will let the user know if
@@ -152,9 +152,9 @@ output () {
 	mapfile -t stdout_lines < <(print_stdout)
 
 	if [[ $exit_status -eq 0 ]]; then
-		printf '\n%s: %s\n' "$f" 'Everything is Ok'
+		printf '\n%s: %s\n' "$if" 'Everything is Ok'
 	else
-		printf '\n%s: %s\n' "$f" 'Something went wrong'
+		printf '\n%s: %s\n' "$if" 'Something went wrong'
 	fi
 }
 
@@ -212,14 +212,16 @@ CMD
 # Creates a function called 'set_names', which will create variables for
 # file names.
 set_names () {
-	f=$(readlink -f "$1")
-	f_bn=$(basename "$f")
-	f_bn_lc="${f_bn,,}"
+	if=$(readlink -f "$1")
+	if_bn=$(basename "$if")
+	if_bn_lc="${if_bn,,}"
+
+	of=$(sed -E "s/${regex[ext]}//" <<<"$if")
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
 arch_pack () {
-	case "$f_bn_lc" in
+	case "$if_bn_lc" in
 		*.tar)
 			tar -cf "${of}.tar" "$@"
 			output "$?" 1>&2
@@ -237,19 +239,19 @@ arch_pack () {
 			output "$?" 1>&2
 		;;
 		*.zip)
-			zip -r -9 "$f" "$@"
+			zip -r -9 "$if" "$@"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$f" "$@"
+			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$if" "$@"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar a -m5 "$f" "$@"
+			rar a -m5 "$if" "$@"
 			output "$?" 1>&2
 		;;
 		*)
@@ -262,24 +264,24 @@ arch_pack () {
 # copy files from, and unmount an ISO file. This in effect means
 # extracting the ISO.
 iso_unpack () {
-	iso_bn="${f_bn%.*}"
+	iso_bn="${if_bn%.*}"
 	iso_mnt="/dev/shm/${iso_bn}-${session}"
 	iso_of="${PWD}/${iso_bn}-${session}"
 
 	printf '\n%s: %s\n' "$iso_of" 'Creating output directory...'
 	mkdir "$iso_mnt" "$iso_of"
 
-	printf '\n%s: %s\n' "$f" 'Mounting...'
-	sudo mount "$f" "$iso_mnt" -o loop
+	printf '\n%s: %s\n' "$if" 'Mounting...'
+	sudo mount "$if" "$iso_mnt" -o loop
 
-	printf '\n%s: %s\n' "$f" 'Extracting files...'
+	printf '\n%s: %s\n' "$if" 'Extracting files...'
 	cp -rp "$iso_mnt"/* "$iso_of"
 
 	printf '\n%s: %s %s...\n' "$iso_of" 'Changing owner to' "$USER"
 	sudo chown -R "${USER}:${USER}" "$iso_of"
 	sudo chmod -R +rw "$iso_of"
 
-	printf '\n%s: %s\n' "$f" 'Unmounting...'
+	printf '\n%s: %s\n' "$if" 'Unmounting...'
 	sudo umount "$iso_mnt"
 
 	printf '\n%s: %s\n' "$iso_mnt" 'Removing mountpoint...'
@@ -289,75 +291,75 @@ iso_unpack () {
 # Creates a function called 'arch_unpack', which will extract an
 # archive.
 arch_unpack () {
-	case "$f_bn_lc" in
+	case "$if_bn_lc" in
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$f")
+			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
-			dar -x "$f_tmp"
+			dar -x "$if_tmp"
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar -xf "$f"
+			tar -xf "$if"
 			output "$?" 1>&2
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			tar -xzf "$f"
+			tar -xzf "$if"
 			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			tar -xjf "$f"
+			tar -xjf "$if"
 			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			tar -xJf "$f"
+			tar -xJf "$if"
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			gunzip "$f"
+			gunzip "$if"
 			output "$?" 1>&2
 		;;
 		*.bz2)
-			bunzip2 "$f"
+			bunzip2 "$if"
 			output "$?" 1>&2
 		;;
 		*.xz)
-			unxz "$f"
+			unxz "$if"
 			output "$?" 1>&2
 		;;
 		*.zip)
-			unzip "$f"
+			unzip "$if"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za x "$f"
+			7za x "$if"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar x "$f"
+			rar x "$if"
 			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
 			check_cmd lzh 1>&2
 
-			7z x "$f"
+			7z x "$if"
 			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
 			check_cmd cab 1>&2
 
-			cabextract "$f"
+			cabextract "$if"
 			output "$?" 1>&2
 		;;
 		*.arj)
 			check_cmd arj 1>&2
 
-			7z x "$f"
+			7z x "$if"
 			output "$?" 1>&2
 		;;
 		*.iso)
@@ -371,69 +373,69 @@ arch_unpack () {
 
 # Creates a function called 'arch_test', which will test an archive.
 arch_test () {
-	case "$f_bn_lc" in
+	case "$if_bn_lc" in
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$f")
+			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
-			dar -t "$f_tmp"
+			dar -t "$if_tmp"
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar -tf "$f"
+			tar -tf "$if"
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			gunzip -t "$f"
+			gunzip -t "$if"
 			output "$?" 1>&2
 		;;
 		*.bz2)
-			bunzip2 -t "$f"
+			bunzip2 -t "$if"
 			output "$?" 1>&2
 		;;
 		*.xz)
-			xz -t "$f"
+			xz -t "$if"
 			output "$?" 1>&2
 		;;
 		*.zip)
-			unzip -t "$f"
+			unzip -t "$if"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za t "$f"
+			7za t "$if"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar t "$f"
+			rar t "$if"
 			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
 			check_cmd lzh 1>&2
 
-			7z t "$f"
+			7z t "$if"
 			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
 			check_cmd cab 1>&2
 
-			cabextract -t "$f"
+			cabextract -t "$if"
 			output "$?" 1>&2
 		;;
 		*.arj)
 			check_cmd arj 1>&2
 
-			7z t "$f"
+			7z t "$if"
 			output "$?" 1>&2
 		;;
 		*.iso)
 			check_cmd iso 1>&2
 
-			7z t "$f"
+			7z t "$if"
 			output "$?" 1>&2
 		;;
 		*)
@@ -445,81 +447,81 @@ arch_test () {
 # Creates a function called 'arch_list', which will list the content of
 # an archive.
 arch_list () {
-	case "$f_bn_lc" in
+	case "$if_bn_lc" in
 		*.dar)
 			check_cmd dar 1>&2
 
-			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$f")
+			f_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
-			dar -l "$f_tmp" | less 1>&2
+			dar -l "$if_tmp" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar -tvf "$f" | less 1>&2
+			tar -tvf "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			tar -ztvf "$f" | less 1>&2
+			tar -ztvf "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			tar -jtvf "$f" | less 1>&2
+			tar -jtvf "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			tar -Jtvf "$f" | less 1>&2
+			tar -Jtvf "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			gunzip -l "$f" | less 1>&2
+			gunzip -l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.bz2)
-			bunzip2 -t "$f" | less 1>&2
+			bunzip2 -t "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.xz)
-			unxz -l "$f" | less 1>&2
+			unxz -l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.zip)
-			unzip -l "$f" | less 1>&2
+			unzip -l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za l "$f" | less 1>&2
+			7za l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar vb "$f" | less 1>&2
+			rar vb "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
 			check_cmd lzh 1>&2
 
-			7z l "$f" | less 1>&2
+			7z l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
 			check_cmd cab 1>&2
 
-			cabextract -l "$f" | less 1>&2
+			cabextract -l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.arj)
 			check_cmd arj 1>&2
 
-			7z l "$f" | less 1>&2
+			7z l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.iso)
 			check_cmd iso 1>&2
 
-			7z l "$f" | less 1>&2
+			7z l "$if" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*)
@@ -531,19 +533,18 @@ arch_list () {
 case "$mode" in
 	'pack')
 		set_names "$1"
-		of=$(sed -E "s/${regex[ext]}//" <<<"$f")
 
 		shift
 
 # If the archive file name already exists, quit.
-		if [[ -f $f ]]; then
-			printf '\n%s: %s\n\n' "$f" 'File already exists' 1>&2
+		if [[ -f $if ]]; then
+			printf '\n%s: %s\n\n' "$if" 'File already exists' 1>&2
 			restore_n_quit
 		fi
 
 # If no files / directories to be compressed were given as arguments,
 # quit.
-		if [[ -z $1 ]]; then
+		if [[ $# -eq 0 ]]; then
 			usage 1>&2
 		fi
 
@@ -553,7 +554,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f $f || ! -r $f ]]; then
+			if [[ ! -f $if || ! -r $if ]]; then
 				usage 1>&2
 			fi
 
@@ -566,7 +567,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f $f || ! -r $f ]]; then
+			if [[ ! -f $if || ! -r $if ]]; then
 				usage 1>&2
 			fi
 
@@ -579,7 +580,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f $f || ! -r $f ]]; then
+			if [[ ! -f $if || ! -r $if ]]; then
 				usage 1>&2
 			fi
 
