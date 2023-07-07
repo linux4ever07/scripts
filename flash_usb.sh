@@ -27,10 +27,10 @@ declare -A regex
 
 regex[part]='\-part[0-9]+$'
 
-# Creates a function called 'glob_test', which will print file names in
+# Creates a function called 'get_files', which will print file names in
 # the current directory, but only if the glob pattern matches actual
 # files. This is to prevent errors for when a pattern has no matches.
-glob_test () {
+get_files () {
 	for glob in "$@"; do
 		compgen -G "$glob"
 	done
@@ -41,7 +41,7 @@ glob_test () {
 # menu.
 device_menu () {
 	cd '/dev/disk/by-id'
-	mapfile -t devices < <(glob_test "usb-*" | grep -Ev "${regex[part]}")
+	mapfile -t devices < <(get_files "usb-*" | grep -Ev "${regex[part]}")
 
 	if [[ ${#devices[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' 'No USB storage devices found!'
