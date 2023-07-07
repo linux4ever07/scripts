@@ -28,7 +28,7 @@
 
 set -o pipefail
 
-declare if if_bn if_bn_lc of
+declare if if_bn if_bn_lc if_tmp of
 session="${RANDOM}-${RANDOM}"
 stdout_fn="/dev/shm/packer_stdout-${session}.txt"
 c_tty=$(tty)
@@ -36,8 +36,8 @@ c_tty=$(tty)
 declare -A regex
 
 regex[dev]='^\/dev'
-regex[ext]='(\.tar){0,1}(\.[^.]*)$'
-regex[dar]='(\.[0-9]+){0,1}(\.dar)$'
+regex[ext]='^(.*)(\.tar){0,1}(\.[^.]*)$'
+regex[dar]='^(.*)(\.[0-9]+){0,1}(\.dar)$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
@@ -216,7 +216,17 @@ set_names () {
 	if_bn=$(basename "$if")
 	if_bn_lc="${if_bn,,}"
 
-	of=$(sed -E "s/${regex[ext]}//" <<<"$if")
+	if_tmp="$if"
+
+	if [[ $if_tmp =~ ${regex[dar]} ]]; then
+		if_tmp="${BASH_REMATCH[1]}"
+	fi
+
+	of="$if"
+
+	if [[ $of =~ ${regex[ext]} ]]; then
+		of="${BASH_REMATCH[1]}"
+	fi
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
@@ -294,8 +304,6 @@ arch_unpack () {
 	case "$if_bn_lc" in
 		*.dar)
 			check_cmd dar 1>&2
-
-			if_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
 			dar -x "$if_tmp"
 			output "$?" 1>&2
@@ -377,8 +385,6 @@ arch_test () {
 		*.dar)
 			check_cmd dar 1>&2
 
-			if_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
-
 			dar -t "$if_tmp"
 			output "$?" 1>&2
 		;;
@@ -450,8 +456,6 @@ arch_list () {
 	case "$if_bn_lc" in
 		*.dar)
 			check_cmd dar 1>&2
-
-			if_tmp=$(sed -E "s/${regex[dar]}//" <<<"$if")
 
 			dar -l "$if_tmp" | less 1>&2
 			output "$?" 1>&2
