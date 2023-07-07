@@ -345,7 +345,7 @@ sub decode {
 	open(my $flac, '-|:raw', 'flac', '--silent', '--stdout',
 	'--decode', $fn) or die "can't run 'flac': $!";
 	$pcm{$fn} = (<$flac>);
-	close($flac) || die "couldn't close 'flac': $!";
+	close($flac) or die "couldn't close 'flac': $!";
 
 	$size = length($pcm{$fn});
 
@@ -395,7 +395,7 @@ sub lame {
 		open(my $lame, '|-:raw', @opts_tmp)
 		or die "can't run 'lame': $!";
 		print $lame $pcm{$if};
-		close($lame) || die "couldn't close 'lame': $!";
+		close($lame) or die "couldn't close 'lame': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
@@ -443,7 +443,7 @@ sub aac {
 		open(my $ffmpeg, '|-:raw', @opts_tmp)
 		or die "can't run 'ffmpeg': $!";
 		print $ffmpeg $pcm{$if};
-		close($ffmpeg) || die "couldn't close 'ffmpeg': $!";
+		close($ffmpeg) or die "couldn't close 'ffmpeg': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
@@ -493,7 +493,7 @@ sub vorbis {
 		open(my $oggenc, '|-:raw', @opts_tmp)
 		or die "can't run 'oggenc': $!";
 		print $oggenc $pcm{$if};
-		close($oggenc) || die "couldn't close 'oggenc': $!";
+		close($oggenc) or die "couldn't close 'oggenc': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
@@ -542,7 +542,7 @@ sub opus {
 		open(my $opusenc, '|-:raw', @opts_tmp)
 		or die "can't run 'opusenc': $!";
 		print $opusenc $pcm{$if};
-		close($opusenc) || die "couldn't close 'opusenc': $!";
+		close($opusenc) or die "couldn't close 'opusenc': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
