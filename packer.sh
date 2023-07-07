@@ -36,8 +36,8 @@ c_tty=$(tty)
 declare -A regex
 
 regex[dev]='^\/dev'
-regex[ext]='^(.*)(\.tar){0,1}(\.[^.]*)$'
-regex[dar]='^(.*)(\.[0-9]+){0,1}(\.dar)$'
+regex[ext]='(\.tar){0,1}(\.[^.]*)$'
+regex[dar]='(\.[0-9]+){0,1}(\.dar)$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
@@ -216,17 +216,9 @@ set_names () {
 	if_bn=$(basename "$if")
 	if_bn_lc="${if_bn,,}"
 
-	if_tmp="$if"
+	if_tmp=$(sed -E "s/${regex[dar]}//i" <<<"$if")
 
-	if [[ $if_tmp =~ ${regex[dar]} ]]; then
-		if_tmp="${BASH_REMATCH[1]}"
-	fi
-
-	of="$if"
-
-	if [[ $of =~ ${regex[ext]} ]]; then
-		of="${BASH_REMATCH[1]}"
-	fi
+	of=$(sed -E "s/${regex[ext]}//i" <<<"$if")
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
