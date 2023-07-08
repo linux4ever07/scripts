@@ -21,7 +21,7 @@
 # The output files are stored here:
 # ${HOME}/${ext}/${albumartist}/${album}/
 
-# The script looks for the CPU core count in /proc/cpuinfo and starts
+# The script looks for the CPU core count in /proc/cpuinfo, and starts
 # as many threads as it finds cores. The threads are left waiting for
 # files to be enqueued. If a single FLAC file is greater than or equal
 # to 1 GB, then the script will get stuck. However, that's unlikely to
@@ -41,7 +41,8 @@
 # The reason for not choosing insanely high bitrates, like 320 kbps (in
 # the case of MP3), is that the whole point of transcoding lossless to
 # lossy is to save space. It's mostly done to put music on portable
-# audio players, such as phones or iPods.
+# audio players, such as phones or iPods (and other devices that have
+# limited memory).
 
 # It's not possible to choose bitrate or quality when running the
 # script. It's only possible to choose audio format. This is to keep
