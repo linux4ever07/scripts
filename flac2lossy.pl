@@ -33,6 +33,11 @@
 # I've attempted to make the settings somewhat compliant with scene
 # rules (with bitrates around 192 kbps).
 
+# Modern codecs don't need as many bits as MP3 does to sound good.
+# That's why Opus uses only 160 kbps, cause it's a newer codec than the
+# others. MP3 is the oldest one out of the bunch, hence the least
+# effective.
+
 # The reason for not choosing insanely high bitrates, like 320 kbps (in
 # the case of MP3), is that the whole point of transcoding lossless to
 # lossy is to save space. It's mostly done to put music on portable
