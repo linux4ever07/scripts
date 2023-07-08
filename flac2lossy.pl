@@ -10,7 +10,9 @@
 # * Ogg Vorbis (oggenc)
 # * Opus (opusenc)
 
-# The script assumes the input is Stereo, 44.1 kHz.
+# The script assumes the input is Stereo, 44.1 kHz. At least in the case
+# of AAC, as ffmpeg needs to know the nature of the input when using
+# pipes.
 
 # The FLAC files are decoded, and stored in RAM up to the limit defined
 # in $disk_size. The $file_stack variable is used to count the total
@@ -20,16 +22,25 @@
 # ${HOME}/${ext}/${albumartist}/${album}/
 
 # The script looks for the CPU core count in /proc/cpuinfo and starts
-# as many threads as it finds cores. The threads are left
-# waiting for files to be enqueued.
+# as many threads as it finds cores. The threads are left waiting for
+# files to be enqueued. If a single FLAC file is greater than or equal
+# to 1 GB, then the script will get stuck. However, that's unlikely to
+# happen, but if for some reason you need to encode larger files, just
+# raise the limit in $disk_size.
 
 # I've done my best to choose sane default settings for the various
 # codecs, generating high quality while maintaining a low file size.
 # I've attempted to make the settings somewhat compliant with scene
-# rules (with bitrates between 160 and 192 kbps).
+# rules (with bitrates around 192 kbps).
+
+# The reason for not choosing insanely high bitrates, like 320 kbps (in
+# the case of MP3), is that the whole point of transcoding lossless to
+# lossy is to save space. It's mostly done to put music on portable
+# audio players, such as phones or iPods.
 
 # It's not possible to choose bitrate or quality when running the
-# script. It's only possible to choose audio format.
+# script. It's only possible to choose audio format. This is to keep
+# things simple.
 
 use 5.34.0;
 use strict;
