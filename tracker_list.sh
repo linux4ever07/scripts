@@ -57,8 +57,10 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-regex1='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
-regex2='^(.*):([0-9]+)(.*)$'
+declare -A regex
+
+regex[url]='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
+regex[end]='^(.*):([0-9]+)(.*)$'
 
 declare -a lines_out protocols addresses ends ports
 
@@ -94,7 +96,7 @@ for (( i = 0; i < ${#lines_out[@]}; i++ )); do
 
 # Checks if the current line matches the URL regex, and if not continue
 # the next iteration of the loop.
-	if [[ ! $line =~ $regex1 ]]; then
+	if [[ ! $line =~ ${regex[url]} ]]; then
 		continue
 	fi
 
@@ -106,7 +108,7 @@ for (( i = 0; i < ${#lines_out[@]}; i++ )); do
 # the one in the URL.
 	port=80
 
-	if [[ $end =~ $regex2 ]]; then
+	if [[ $end =~ ${regex[end]} ]]; then
 		end="${BASH_REMATCH[1]}${BASH_REMATCH[3]}"
 		port="${BASH_REMATCH[2]}"
 	fi

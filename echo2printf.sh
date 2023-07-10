@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# This script is meant to replace echo commands in Bash scripts, with
-# printf. 'echo' is an external command, while 'printf' is a Bash
-# built-in. Hence this can have a performance impact, especially if
-# the script is printing lots of text to the terminal or to files.
+# This script is meant to replace 'echo' commands in Bash scripts, with
+# 'printf'. Both echo and printf exist as Bash built-ins (as well as
+# external commands). When they are run, the built-in takes precedence.
+
+# I prefer to use printf over echo, as it's more flexible in my opinion.
 
 # There's still a need to go through the output script file manually
 # after having run it through this script. Because the string that was
