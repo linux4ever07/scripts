@@ -38,12 +38,14 @@ of="/dev/shm/${bn%.*}-${session}.txt"
 
 limit=72
 
-regex1='^[[:blank:]]*#+[[:blank:]]*'
-regex2='^[[:blank:]]+'
-regex3='[[:blank:]]+$'
-regex4='[[:blank:]]+'
-regex5='^ {4}'
-regex6='^#!'
+declare -A regex
+
+regex[comment]='^[[:blank:]]*#+[[:blank:]]*'
+regex[blank1]='^[[:blank:]]+'
+regex[blank2]='[[:blank:]]+$'
+regex[blank3]='[[:blank:]]+'
+regex[tab]='^ {4}'
+regex[shebang]='^#!'
 
 declare -a lines_in lines_out
 
@@ -65,7 +67,7 @@ next_line () {
 # Creates a function called 'if_shebang', which will check if the
 # current line is a shebang, and add an empty line after if needed.
 if_shebang () {
-	if [[ $line_this =~ $regex6 ]]; then
+	if [[ $line_this =~ ${regex[shebang]} ]]; then
 		lines_out+=("$line_this")
 
 		if [[ -n $line_next ]]; then
@@ -86,14 +88,14 @@ reformat_comments () {
 
 	switch=0
 
-	if [[ ! $line_this =~ $regex1 ]]; then
+	if [[ ! $line_this =~ ${regex[comment]} ]]; then
 		lines_out+=("$line_this")
 
 		return
 	fi
 
-	while [[ $line_this =~ $regex1 ]]; do
-		mapfile -t words < <(sed -E -e "s/${regex1}//" -e "s/${regex3}//" -e "s/${regex4}/\n/g" <<<"$line_this")
+	while [[ $line_this =~ ${regex[comment]} ]]; do
+		mapfile -t words < <(sed -E -e "s/${regex[comment]}//" -e "s/${regex[blank2]}//" -e "s/${regex[blank3]}/\n/g" <<<"$line_this")
 		string="# ${words[@]}"
 		chars="${#string}"
 
@@ -142,19 +144,19 @@ reformat_comments () {
 reformat_lines () {
 	declare indent
 
-	if [[ $line_this =~ $regex1 ]]; then
-		line_this=$(sed -E -e "s/${regex1}/# /" -e "s/${regex4}/ /g" <<<"$line_this")
+	if [[ $line_this =~ ${regex[comment]} ]]; then
+		line_this=$(sed -E -e "s/${regex[comment]}/# /" -e "s/${regex[blank3]}/ /g" <<<"$line_this")
 	fi
 
-	while [[ $line_this =~ $regex5 ]]; do
-		line_this=$(sed -E "s/${regex5}//" <<<"$line_this")
+	while [[ $line_this =~ ${regex[tab]} ]]; do
+		line_this=$(sed -E "s/${regex[tab]}//" <<<"$line_this")
 		indent+="$tab"
 	done
 
 	line_this="${indent}${line_this}"
 
-	if [[ $line_this =~ $regex3 ]]; then
-		line_this=$(sed -E "s/${regex3}//" <<<"$line_this")
+	if [[ $line_this =~ ${regex[blank2]} ]]; then
+		line_this=$(sed -E "s/${regex[blank2]}//" <<<"$line_this")
 	fi
 
 	lines_out+=("$line_this")

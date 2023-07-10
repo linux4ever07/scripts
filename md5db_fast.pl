@@ -589,10 +589,10 @@ sub md5double {
 	my(%dups);
 
 	foreach my $fn (keys(%md5h)) {
-		if ($md5h{$fn} ne '1') {
-			my $hash = $md5h{$fn};
-			push(@{$dups{$hash}}, $fn);
-		}
+		if ($md5h{$fn} eq '1') { next; }
+
+		my $hash = $md5h{$fn};
+		push(@{$dups{$hash}}, $fn);
 	}
 
 # Loop through the %dups hash and print files that are identical, if
