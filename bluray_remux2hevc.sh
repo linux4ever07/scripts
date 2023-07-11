@@ -1259,8 +1259,8 @@ if_m2ts () {
 # Creates a function called 'get_name', which will get the movie title
 # and year, based on the input file name.
 get_name () {
-	declare if_m2ts title year
-	declare -a imdb_tmp
+	declare if_m2ts
+	declare -a bname_tmp imdb_tmp
 
 # If the input file name is an M2TS, get the movie title and year from
 # the surrounding directory structure.
@@ -1293,9 +1293,6 @@ get_name () {
 # Deletes special characters from the title, and translates spaces to
 # dots.
 	title=$(fsencode "$title" | tr ' ' '.')
-
-	printf '%s\n' "$title"
-	printf '%s\n' "$year"
 }
 
 # Creates a function called 'is_torrent', which checks if the file name
@@ -1340,9 +1337,7 @@ is_torrent
 mapfile -t if_info < <(eval "${cmd[1]}" -hide_banner -i \""${if}"\" 2>&1)
 
 # Gets the movie title and year.
-mapfile -t get_name_tmp < <(get_name)
-title="${get_name_tmp[0]}"
-year="${get_name_tmp[1]}"
+get_name
 
 # Creates a directory structure in the current user's home directory:
 # "${title}.${year}.${rls_type}/Info"
