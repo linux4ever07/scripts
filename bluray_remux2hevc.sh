@@ -130,32 +130,17 @@ fi
 if=$(readlink -f "$1")
 bname=$(basename "$if")
 
-# Generates a random number, which can be used for these file names:
-# output, output remux, input info txt, output info txt, output remux
-# info txt.
-session="${RANDOM}-${RANDOM}"
-
-# Creates a variable that will work as a switch. If this variable is set
-# to '1', it will skip running the 'dts_extract_remux' and 'remux_mkv'
-# functions. This is handy if that file has already been created in
-# a previous session of this script.
-exist=0
-
-# Creates a variable that will work as a switch. If this variable is set
-# to '1', it will pass the subtitles from the input file to HandBrake.
-# This is to prevent the subtitles from going out of sync with the audio
-# and video, when dealing with input files that have been merged from
-# multiple Blu-Ray discs.
-hb_subs=0
-
-# Sets the default language to English. This language code is what
-# the script till look for when extracting the core DTS track.
-lang='eng'
-
-# Creates a variable that will decide what kind of x265 tuning to use,
-# if any.
-declare tune
-
+# Creates some global variables:
+# * 'tune' will decide what kind of x265 tuning to use, if any.
+# * 'title' is the name of the movie.
+# * 'year' is the year of the movie.
+# * 'lang' is the language to be used for the audio track.
+# * 'session' is a random number to be used in some file names.
+# * 'exist' is a switch that tells the script to skip creating the
+# output remux file.
+# * 'hb_subs' is a switch that tells the script to pass the subs
+# directly to HandBrake.
+declare tune title year lang session exist hb_subs
 declare -a maps langs bitrates
 declare -A regex streams
 
@@ -165,6 +150,27 @@ regex[zero]='^0+([0-9]+)$'
 regex[last3]='^[0-9]+([0-9]{3})$'
 
 regex[lang1]='^[[:alpha:]]{3}$'
+
+# Sets the default language to English.
+lang='eng'
+
+# Generates a random number, which can be used for these file names:
+# output, output remux, input info txt, output info txt, output remux
+# info txt.
+session="${RANDOM}-${RANDOM}"
+
+# Creates a variable that will work as a switch. If this variable is set
+# to '1', it will skip running the 'dts_extract_remux' function. This is
+# handy if that file has already been created in a previous session of
+# this script.
+exist=0
+
+# Creates a variable that will work as a switch. If this variable is set
+# to '1', it will pass the subtitles from the input file to HandBrake.
+# This is to prevent the subtitles from going out of sync with the audio
+# and video, when dealing with input files that have been merged from
+# multiple Blu-Ray discs.
+hb_subs=0
 
 # Setting some variables that will be used to create a full HandBrake
 # command, with args.
