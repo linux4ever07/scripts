@@ -25,21 +25,24 @@ fi
 
 if=$(readlink -f "$1")
 
-regex1='^([[:blank:]]*)#'
-regex2='echo( \-[[:alpha:]]+){0,}[[:blank:]]*'
-regex3='printf '\''%s\\n'\'' '
+declare -A regex
+
+regex[comment]='^([[:blank:]]*)#'
+regex[echo]='echo( \-[[:alpha:]]+){0,}[[:blank:]]*'
+
+printf_cmd='printf '\''%s\\n'\'' '
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 
-	if [[ $line =~ $regex1 ]]; then
+	if [[ $line =~ ${regex[comment]} ]]; then
 		continue
 	fi
 
-	if [[ $line =~ $regex2 ]]; then
-		lines["${i}"]=$(sed -E "s/${regex2}/${regex3}/g" <<<"$line")
+	if [[ $line =~ ${regex[echo]} ]]; then
+		lines["${i}"]=$(sed -E "s/${regex[echo]}/${printf_cmd}/g" <<<"$line")
 	fi
 done
 

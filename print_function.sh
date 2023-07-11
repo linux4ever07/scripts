@@ -3,6 +3,8 @@
 # This script is meant to print a specific function in a Bash script
 # given to it as argument.
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file] [function name]"
 	exit
@@ -14,11 +16,13 @@ fi
 
 if=$(readlink -f "$1")
 
-switch=0
-
+declare switch
+declare -a lines
 declare -A regex
 
 regex[start]="^([[:blank:]]*)${2}[[:blank:]]*\(\) \{"
+
+switch=0
 
 mapfile -t lines < <(tr -d '\r' <"$if")
 
@@ -32,12 +36,14 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		regex[stop]="^${BASH_REMATCH[1]}\}"
 	fi
 
-	if [[ $switch -eq 1 ]]; then
-		printf '%s\n' "$line"
+	if [[ $switch -eq 0 ]]; then
+		continue
+	fi
 
-		if [[ $line =~ ${regex[stop]} ]]; then
-			switch=0
-			printf '\n'
-		fi
+	printf '%s\n' "$line"
+
+	if [[ $line =~ ${regex[stop]} ]]; then
+		switch=0
+		printf '\n'
 	fi
 done
