@@ -131,6 +131,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 			printf '\n'
 		fi
 
-		unset -v declared undeclared func_name
+		unset -v func_name declared undeclared
 	fi
 done
