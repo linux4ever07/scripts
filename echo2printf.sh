@@ -25,6 +25,7 @@ fi
 
 if=$(readlink -f "$1")
 
+declare printf_cmd
 declare -A regex
 
 regex[comment]='^([[:blank:]]*)#'
