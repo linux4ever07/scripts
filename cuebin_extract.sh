@@ -459,6 +459,7 @@ get_gaps () {
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
 get_length () {
+	declare this next
 	declare bytes_pregap bytes_track bytes_total frames
 	declare pregap_this_ref pregap_next_ref
 	declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
@@ -615,7 +616,7 @@ copy_track () {
 	track_type="$2"
 
 	declare file_n_ref file_ref start_ref length_ref
-	declare ext block_size skip count
+	declare of_bin ext block_size skip count
 	declare -a args
 
 	file_n_ref="tracks_file[${track_n}]"
@@ -714,7 +715,7 @@ copy_track_type () {
 cdr2wav () {
 	type="$1"
 
-	declare type_tmp
+	declare type_tmp if_cdr of_wav
 	declare -a files
 
 	type_tmp="${audio_types[${type}]}"
@@ -728,17 +729,17 @@ cdr2wav () {
 	mapfile -t files < <(get_files "*.cdr")
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
-		cdr_if="${files[${i}]}"
-		wav_of="${cdr_if%.*}.wav"
+		if_cdr="${files[${i}]}"
+		of_wav="${if_cdr%.*}.wav"
 
 		declare args_ref
 		declare -a args_ffmpeg args_sox
 
 # Creates the command arguments for 'ffmpeg' and 'sox'.
 		args_ffmpeg=(-ar 44.1k -ac 2)
-		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${cdr_if}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${wav_of}"\")
+		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${if_cdr}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${of_wav}"\")
 
-		args_sox=(sox -L \""${cdr_if}"\" \""${wav_of}"\")
+		args_sox=(sox -L \""${if_cdr}"\" \""${of_wav}"\")
 
 # Depending on what the mode is, run 'ffmpeg' or 'sox' on the CDR file,
 # specifying 'little-endian' for the input.
@@ -748,7 +749,7 @@ cdr2wav () {
 
 # If 'cdr' is not among the chosen audio types, delete the CDR file.
 		if [[ -z ${audio_types_run[cdr]} ]]; then
-			rm "$cdr_if" || exit
+			rm "$if_cdr" || exit
 		fi
 
 		unset -v args_ref args_ffmpeg args_sox
@@ -793,7 +794,7 @@ encode_audio () {
 create_cue () {
 	type="$1"
 
-	declare index_string elements type_tmp
+	declare index_string elements line_ref track_n type_tmp
 	declare -a offset
 	declare -A ext_format
 

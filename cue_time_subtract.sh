@@ -254,6 +254,7 @@ read_cue () {
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
 get_length () {
+	declare this next
 	declare bytes_pregap bytes_track bytes_total frames
 	declare pregap_this_ref pregap_next_ref
 	declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref

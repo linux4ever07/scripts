@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # This script is meant to read a Bash script, and show variables that
-# are used within functions, but haven't been formally declared.
+# are used within functions, but haven't been formally declared within
+# that same function. However, the script only goes 1 level deep, hence
+# functions within functions will all be considered as 1 entity.
 
 # Creates a function called 'usage', which will print usage instructions
 # and then quit.
