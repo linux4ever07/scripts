@@ -325,6 +325,10 @@ uriencode () {
 break_name () {
 	bname=$(sed -E 's/[[:blank:]]+/ /g' <<<"$1")
 
+	declare -a types
+	declare -a bname_dots bname_hyphens bname_underscores bname_spaces
+	declare -A bname_elements
+
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
 # Breaks the name up in a list of words, and stores those words in
@@ -341,10 +345,8 @@ break_name () {
 	bname_underscores[-1]="${bname_underscores[-1]%$'\n'}"
 	bname_spaces[-1]="${bname_spaces[-1]%$'\n'}"
 
-# Declares a hash that stores the total element numbers.
+# Stores the total element numbers in the 'bname_elements' hash.
 # This will be used to figure out the correct word separator.
-	declare -A bname_elements
-
 	bname_elements[dots]="${#bname_dots[@]}"
 	bname_elements[hyphens]="${#bname_hyphens[@]}"
 	bname_elements[underscores]="${#bname_underscores[@]}"
@@ -604,14 +606,17 @@ check_regex () {
 # the input file, without all its audio tracks but with the video and
 # subtitle tracks, and with the core DTS track.
 dts_extract_remux () {
+	declare high_kbps low_kbps high_bps low_bps bps_limit use_kbps
+	declare map_use_ref audio_format args_string
+	declare -a audio_types if_info_tmp args1
+	declare -A type elements audio_tracks audio_maps audio_channels
+
 	high_kbps='1536'
 	low_kbps='768'
 	high_bps='1537000'
 	low_bps='769000'
 	bps_limit=$(( (high_bps - low_bps) / 2 ))
 	use_kbps="${high_kbps}k"
-
-	declare -A type elements audio_tracks audio_maps audio_channels
 
 	type[dts_hdma]='dts \(DTS-HD MA\)'
 	type[truehd]='truehd'
@@ -625,8 +630,6 @@ dts_extract_remux () {
 	elements[flac]=0
 	elements[dts]=0
 	elements[ac3]=0
-
-	declare -a audio_types if_info_tmp
 
 	audio_types=('dts_hdma' 'truehd' 'pcm' 'flac' 'dts' 'ac3')
 
@@ -757,26 +760,26 @@ dts_extract_remux () {
 # Creates a function called 'get_bitrate', which will decide what DTS
 # bitrate to use for the output file.
 	get_bitrate () {
-		declare bps_if
+		declare of_flac of_wav bps_if
 
 # If $audio_format is 'flac', we will decode the FLAC audio track in
 # order to get the correct (uncompressed) bitrate, which will later be
 # used to calculate the output bitrate.
 		if [[ $audio_format == 'flac' ]]; then
-			flac_tmp="${of_dir}/FLAC.TMP-${session}.flac"
-			wav_tmp="${of_dir}/FLAC.TMP-${session}.wav"
+			of_flac="${of_dir}/FLAC.TMP-${session}.flac"
+			of_wav="${of_dir}/FLAC.TMP-${session}.wav"
 
 # Extracts the FLAC track from $if, and decodes it to WAV.
-			args=("${cmd[1]}" -i \""${if}"\" -map "${!map_use_ref}" -c:a copy \""${flac_tmp}"\")
+			args=("${cmd[1]}" -i \""${if}"\" -map "${!map_use_ref}" -c:a copy \""${of_flac}"\")
 			run_or_quit
-			args=("${cmd[4]}" -d \""${flac_tmp}"\")
+			args=("${cmd[4]}" -d \""${of_flac}"\")
 			run_or_quit
-			args=(rm -f \""${flac_tmp}"\")
+			args=(rm -f \""${of_flac}"\")
 			run_or_quit
 
 # Gets information about the WAV file.
-			mapfile -t if_info_tmp < <(eval "${cmd[1]}" -hide_banner -i \""${wav_tmp}"\" 2>&1)
-			args=(rm -f \""${wav_tmp}"\")
+			mapfile -t if_info_tmp < <(eval "${cmd[1]}" -hide_banner -i \""${of_wav}"\" 2>&1)
+			args=(rm -f \""${of_wav}"\")
 			run_or_quit
 
 			parse_ffmpeg
@@ -1000,6 +1003,9 @@ NO_MATCH
 # Creates a function called 'hb_encode', which will generate a full
 # HandBrake command (with args), and then execute it.
 hb_encode () {
+	declare args_string
+	declare -a args1 args2 args3
+
 	args1=("${cmd[0]}" --format "${format}" --markers --encoder "${v_encoder}" --encoder-preset "${preset}")
 
 	if [[ $hb_subs -eq 1 ]]; then
@@ -1040,6 +1046,9 @@ hb_encode () {
 # Creates a function called 'sub_mux', which will remux the finished
 # encode with the subtitles from $of_remux.
 sub_mux () {
+	declare args_string
+	declare -a if_subs
+
 	mapfile -t if_subs < <(mkvinfo "${of_remux}" 2>&- | grep 'Track type: subtitles')
 
 	if [[ ${#if_subs[@]} -eq 0 ]]; then
@@ -1068,6 +1077,8 @@ sub_mux () {
 # command is installed, a text file containing information from that
 # will also be created.
 info_txt () {
+	declare -a info_list1 info_list2 info_list3
+
 # Creates the basename of $of and $of_remux.
 	of_bname=$(basename "$of")
 	of_remux_bname=$(basename "$of_remux")
@@ -1231,6 +1242,9 @@ is_handbrake () {
 # name doesn't match the regex, return from this function, hence leaving
 # the $if_m2ts variable empty.
 if_m2ts () {
+	declare bd_title
+	declare -a path_parts
+
 	if [[ ! $if =~ ${regex[m2ts]} ]]; then
 		return
 	fi
@@ -1245,6 +1259,9 @@ if_m2ts () {
 # Creates a function called 'get_name', which will get the movie title
 # and year, based on the input file name.
 get_name () {
+	declare if_m2ts title year
+	declare -a imdb_tmp
+
 # If the input file name is an M2TS, get the movie title and year from
 # the surrounding directory structure.
 	if_m2ts=$(if_m2ts)
@@ -1288,6 +1305,8 @@ get_name () {
 # input file is an unfinished download, and waits for the file to fully
 # download before processing it.
 is_torrent () {
+	declare if_tmp of_md5
+
 	if [[ $if =~ ${regex[part]} ]]; then
 		if_tmp="$if"
 	else
@@ -1308,9 +1327,9 @@ is_torrent () {
 	if="${if%.part}"
 
 	md5=$(md5sum -b "$if")
-	md5_f="${HOME}/${bname}_MD5-${session}.txt"
+	of_md5="${HOME}/${bname}_MD5-${session}.txt"
 
-	printf '%s\r\n' "$md5" | tee "$md5_f"
+	printf '%s\r\n' "$md5" | tee "$of_md5"
 }
 
 check_cmd
