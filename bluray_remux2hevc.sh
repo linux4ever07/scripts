@@ -1302,7 +1302,7 @@ get_name () {
 # input file is an unfinished download, and waits for the file to fully
 # download before processing it.
 is_torrent () {
-	declare if_tmp of_md5
+	declare if_tmp md5 of_md5
 
 	if [[ $if =~ ${regex[part]} ]]; then
 		if_tmp="$if"
