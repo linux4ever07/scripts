@@ -131,16 +131,16 @@ if=$(readlink -f "$1")
 bname=$(basename "$if")
 
 # Creates some global variables:
-# * 'tune' will decide what kind of x265 tuning to use, if any.
 # * 'title' is the name of the movie.
 # * 'year' is the year of the movie.
+# * 'tune' will decide what kind of x265 tuning to use, if any.
 # * 'lang' is the language to be used for the audio track.
 # * 'session' is a random number to be used in some file names.
 # * 'exist' is a switch that tells the script to skip creating the
 # output remux file.
 # * 'hb_subs' is a switch that tells the script to pass the subs
 # directly to HandBrake.
-declare tune title year lang session exist hb_subs
+declare title year tune lang session exist hb_subs
 declare -a maps langs bitrates
 declare -A regex streams
 
