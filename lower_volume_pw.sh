@@ -13,6 +13,7 @@
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
 declare pw_id full_volume no_volume target_volume interval unit
+declare volume og_volume
 declare -a count
 declare -A regex
 
@@ -290,7 +291,7 @@ get_id
 
 # Gets the volume.
 volume=$(get_volume)
-volume_og="$volume"
+og_volume="$volume"
 
 # We (re)set the original volume as full volume, cause otherwise the
 # first lowering of volume is going to be much lower to the ears than
