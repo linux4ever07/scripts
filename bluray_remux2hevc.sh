@@ -130,7 +130,7 @@ fi
 if=$(readlink -f "$1")
 bname=$(basename "$if")
 
-# Creates some global variables:
+# Declares some global variables:
 # * 'title' is the name of the movie.
 # * 'year' is the year of the movie.
 # * 'tune' will decide what kind of x265 tuning to use, if any.
@@ -174,7 +174,7 @@ exist=0
 # multiple Blu-Ray discs.
 hb_subs=0
 
-# Setting some variables that will be used to create a full HandBrake
+# Creates some variables that will be used to create a full HandBrake
 # command, with args.
 format='av_mkv'
 v_encoder='x265_10bit'
