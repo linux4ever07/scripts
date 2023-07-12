@@ -12,6 +12,8 @@
 
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
+declare pw_id full_volume no_volume target_volume interval unit
+declare -a count
 declare -A regex
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -29,12 +31,15 @@ full_volume=1000000
 no_volume=0
 target_volume=0
 interval=10
+unit=354
 
-declare pw_id
+count=(0 0 0)
 
 # Creates a function called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
 get_id () {
+	declare pw_node pw_node_tmp
+	declare -a pw_info
 	declare -A pw_parsed nodes
 
 	match_node () {
@@ -142,6 +147,8 @@ get_id () {
 
 # Creates a function called 'get_volume', which gets the current volume.
 get_volume () {
+	declare -a pw_dump
+
 	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
@@ -237,8 +244,7 @@ sleep_low () {
 get_count () {
 	volume_tmp="$1"
 
-	unit=354
-	count=(0 0 0)
+	declare diff rem
 
 # Calculates the difference between current volume and target volume.
 	diff=$(( volume_tmp - target_volume ))
@@ -264,8 +270,6 @@ get_count () {
 	else
 		count[2]="$diff"
 	fi
-
-	printf '%s\n' "${count[@]}"
 }
 
 # Creates a function called 'spin', which will show a simple animation,
