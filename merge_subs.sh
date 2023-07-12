@@ -18,9 +18,7 @@ if=$(readlink -f "$1")
 session="${RANDOM}-${RANDOM}"
 of="${if%.*}-${session}.mkv"
 
-files_n=0
-sub_tracks_n=0
-declare default
+declare default files_n sub_tracks_n
 declare -a files files_tmp args full_args range1 range2
 declare -A regex sub_tracks
 
@@ -35,6 +33,9 @@ regex[name]="^Name: (.*)$"
 
 regex[fn]='^(.*)\.([^.]*)$'
 regex[lang_arg]='^[[:alpha:]]{3}$'
+
+files_n=0
+sub_tracks_n=0
 
 mapfile -t cmd < <(command -v mkvinfo mkvmerge)
 

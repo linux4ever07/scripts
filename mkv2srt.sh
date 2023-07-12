@@ -17,7 +17,7 @@
 # are more accessible in general, if they need to be edited, synced to
 # a different movie release etc.
 
-tracks_n=0
+declare tracks_n
 declare if if_dn if_bn of_dn of_mkv
 declare -a files_tmp
 declare -A regex tracks
@@ -35,6 +35,8 @@ regex[name]="^Name: (.*)$"
 
 regex[fn]='^(.*)\.([^.]*)$'
 regex[lang_arg]='^[[:alpha:]]{3}$'
+
+tracks_n=0
 
 mapfile -t cmd < <(command -v mkvinfo mkvmerge)
 

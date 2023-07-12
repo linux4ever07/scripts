@@ -141,6 +141,8 @@ bname=$(basename "$if")
 # * 'hb_subs' is a switch that tells the script to pass the subs
 # directly to HandBrake.
 declare title year tune lang session exist hb_subs
+declare format v_encoder preset v_bitrate a_encoder rls_type
+declare of_bname of_dir info_dir of of_tmp of_remux
 declare -a maps langs bitrates
 declare -A regex streams
 
@@ -425,12 +427,12 @@ imdb () {
 		return 1
 	fi
 
-	mapfile -d' ' -t term < <(sed -E 's/[[:blank:]]+/ /g' <<<"$@")
-	term[-1]="${term[-1]%$'\n'}"
+	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
 	regex[y]='^\(([0-9]{4})\)$'
-
 	regex[id]='^.*\/title\/(tt[0-9]+).*$'
+	regex[list]='^,$'
+
 	regex[title1]='\,\"originalTitleText\":'
 	regex[title2]='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	regex[year1]='\,\"releaseYear\":'
@@ -447,8 +449,6 @@ imdb () {
 	regex[director2]='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
 	regex[runtime1]='\,\"runtime\":'
 	regex[runtime2]='\"seconds\":(.*)\,\"displayableProperty\":'
-
-	regex[list]='^,$'
 
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 

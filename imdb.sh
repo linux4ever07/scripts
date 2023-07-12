@@ -9,6 +9,8 @@
 # results. The paranthesis around (year) are required for proper
 # parsing.)
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") \"movie title (year)\""
 	exit
@@ -54,12 +56,12 @@ imdb () {
 		return 1
 	fi
 
-	mapfile -d' ' -t term < <(sed -E 's/[[:blank:]]+/ /g' <<<"$@")
-	term[-1]="${term[-1]%$'\n'}"
+	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
 	regex[y]='^\(([0-9]{4})\)$'
-
 	regex[id]='^.*\/title\/(tt[0-9]+).*$'
+	regex[list]='^,$'
+
 	regex[title1]='\,\"originalTitleText\":'
 	regex[title2]='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	regex[year1]='\,\"releaseYear\":'
@@ -76,8 +78,6 @@ imdb () {
 	regex[director2]='\"@type\":\"Person\",\"url\":\".*\"\,\"name\":\"(.*)\"'
 	regex[runtime1]='\,\"runtime\":'
 	regex[runtime2]='\"seconds\":(.*)\,\"displayableProperty\":'
-
-	regex[list]='^,$'
 
 	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 
