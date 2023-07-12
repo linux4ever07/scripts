@@ -39,7 +39,8 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode ram_limit time_limit time_start time_end restart_fn tar_fn pid_chrome
+declare mode ram_limit time_limit time_start time_end
+declare cwd restart_fn tar_fn pid_chrome
 
 case "$1" in
 	'normal')
@@ -119,6 +120,8 @@ check_status () {
 }
 
 check_ram () {
+	declare -a free_ram ram
+
 	mapfile -t free_ram < <(free | sed -E 's/[[:blank:]]+/ /g')
 	mapfile -d' ' -t ram <<<"${free_ram[1]}"
 	ram[-1]="${ram[-1]%$'\n'}"
@@ -145,6 +148,8 @@ check_time () {
 }
 
 check_hdd () {
+	declare cfg_size hdd_free
+
 	cfg_size=$(du --summarize --total --block-size=1 "$@" | tail -n 1 | grep -Eo '^[0-9]+')
 	hdd_free=$(df --output=avail --block-size=1 "$HOME" | tail -n +2 | tr -d '[:blank:]')
 
@@ -166,6 +171,8 @@ NOT_ENOUGH
 }
 
 backup_chrome () {
+	declare tar_fn_old
+
 	tar_fn_old="${tar_fn}.old"
 
 	cat <<BACKUP
