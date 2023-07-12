@@ -177,10 +177,9 @@ get_volume () {
 
 # Creates a function called 'set_volume', which sets the volume.
 set_volume () {
-	volume_tmp="$1"
-	mute_tmp="$2"
+	mute_tmp="$1"
 
-	if [[ $volume_tmp =~ ${regex[split]} ]]; then
+	if [[ $volume =~ ${regex[split]} ]]; then
 		volume_1="${BASH_REMATCH[1]}"
 		volume_2="${BASH_REMATCH[2]}"
 
@@ -189,7 +188,7 @@ set_volume () {
 		fi
 	else
 		volume_1=0
-		volume_2="$volume_tmp"
+		volume_2="$volume"
 	fi
 
 	volume_dec=$(printf '%d.%06d' "$volume_1" "$volume_2")
@@ -201,7 +200,7 @@ set_volume () {
 reset_volume () {
 	volume="$no_volume"
 
-	set_volume "$volume" 'false'
+	set_volume 'false'
 
 	until [[ $volume -eq $full_volume ]]; do
 		volume=$(( volume + 100000 ))
@@ -212,7 +211,7 @@ reset_volume () {
 
 		sleep 0.1
 
-		set_volume "$volume" 'false'
+		set_volume 'false'
 	done
 }
 
@@ -229,7 +228,7 @@ sleep_low () {
 		volume=$(( volume - diff ))
 	fi
 
-	set_volume "$volume" 'false'
+	set_volume 'false'
 
 	printf '%s\n' "$volume"
 }
