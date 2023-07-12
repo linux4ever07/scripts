@@ -143,7 +143,7 @@ bname=$(basename "$if")
 declare title year tune lang session exist hb_subs
 declare format v_encoder preset v_bitrate a_encoder rls_type
 declare of_bname of_dn of_dn_info of of_tmp of_remux
-declare -a maps langs bitrates
+declare -a cmd maps langs bitrates
 declare -A regex streams
 
 # Creates some global regexes.
@@ -173,18 +173,6 @@ exist=0
 # and video, when dealing with input files that have been merged from
 # multiple Blu-Ray discs.
 hb_subs=0
-
-# Creates some variables that will be used to create a full HandBrake
-# command, with args.
-format='av_mkv'
-v_encoder='x265_10bit'
-preset='slow'
-v_bitrate=5000
-a_encoder='copy:dts'
-
-# Creates a variable which contains the last part of the output
-# file name.
-rls_type='1080p.BluRay.x265.DTS'
 
 # The loop below handles the arguments to the script.
 shift
@@ -271,6 +259,18 @@ regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
 regex[m2ts]='\/BDMV\/STREAM\/[0-9]+\.m2ts$'
 
 regex[part]='\.part$'
+
+# Creates some variables that will be used to create a full HandBrake
+# command, with args.
+format='av_mkv'
+v_encoder='x265_10bit'
+preset='slow'
+v_bitrate=5000
+a_encoder='copy:dts'
+
+# Creates a variable which contains the last part of the output
+# file name.
+rls_type='1080p.BluRay.x265.DTS'
 
 # Creates an array of the list of commands needed by this script.
 cmd=('HandBrakeCLI' 'ffmpeg' 'mkvmerge' 'curl' 'flac')
