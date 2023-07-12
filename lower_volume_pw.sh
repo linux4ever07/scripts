@@ -39,7 +39,7 @@ count=(0 0 0)
 # Creates a function called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
 get_id () {
-	declare pw_node pw_node_tmp
+	declare pw_node pw_node_tmp n
 	declare -a pw_info
 	declare -A pw_parsed nodes
 
@@ -56,8 +56,6 @@ get_id () {
 			break
 		done
 	}
-
-	declare n
 
 	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
