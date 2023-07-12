@@ -172,7 +172,7 @@ get_volume () {
 		exit
 	fi
 
-	printf '%s' "$volume"
+	og_volume="$volume"
 }
 
 # Creates a function called 'set_volume', which sets the volume.
@@ -199,23 +199,21 @@ set_volume () {
 
 # Creates a function called 'reset_volume', which resets the volume.
 reset_volume () {
-	volume_tmp="$no_volume"
+	volume="$no_volume"
 
-	set_volume "$volume_tmp" 'false'
+	set_volume "$volume" 'false'
 
-	until [[ $volume_tmp -eq $full_volume ]]; do
-		volume_tmp=$(( volume_tmp + 100000 ))
+	until [[ $volume -eq $full_volume ]]; do
+		volume=$(( volume + 100000 ))
 
-		if [[ $volume_tmp -gt $full_volume ]]; then
-			volume_tmp="$full_volume"
+		if [[ $volume -gt $full_volume ]]; then
+			volume="$full_volume"
 		fi
 
 		sleep 0.1
 
-		set_volume "$volume_tmp" 'false'
+		set_volume "$volume" 'false'
 	done
-
-	printf '%s' "$volume_tmp"
 }
 
 # Creates a function called 'sleep_low', which sleeps and then lowers
@@ -233,7 +231,7 @@ sleep_low () {
 
 	set_volume "$volume" 'false'
 
-	printf '%s' "$volume"
+	printf '%s\n' "$volume"
 }
 
 # Creates a function called 'get_count', which will get the exact number
@@ -243,12 +241,10 @@ sleep_low () {
 # because then it'll be exactly 1 minute left to take care of potential
 # remaining value.
 get_count () {
-	volume_tmp="$1"
-
 	declare diff rem
 
 # Calculates the difference between current volume and target volume.
-	diff=$(( volume_tmp - target_volume ))
+	diff=$(( volume - target_volume ))
 
 # If the difference is greater than (or equal to) 354, do some
 # calculations. Otherwise just decrease by 0 until the very last second,
@@ -290,19 +286,18 @@ spin () {
 get_id
 
 # Gets the volume.
-volume=$(get_volume)
-og_volume="$volume"
+get_volume
 
 # We (re)set the original volume as full volume, cause otherwise the
 # first lowering of volume is going to be much lower to the ears than
 # the value set in PipeWire. The volume set in the desktop environment
 # seems to be indpendent of the volume set in PipeWire, which might be
 # what's causing this.
-volume=$(reset_volume)
+reset_volume
 
 # If volume is greater than target volume, then...
 if [[ $volume -gt $target_volume ]]; then
-	mapfile -t count < <(get_count "$volume")
+	get_count
 
 # Starts the spinner animation...
 	spin &
@@ -313,19 +308,16 @@ if [[ $volume -gt $target_volume ]]; then
 # For the first 354 10-second intervals, lower the volume by the value
 # in ${count[0]}
 	for n in {1..354}; do
-		volume=$(sleep_low "${count[0]}")
-		printf '%s\n' "$volume"
+		sleep_low "${count[0]}"
 	done
 
 # For 354-359, lower the volume by the value in ${count[1]}
 	for n in {1..5}; do
-		volume=$(sleep_low "${count[1]}")
-		printf '%s\n' "$volume"
+		sleep_low "${count[1]}"
 	done
 
 # Finally lower the volume by the value in ${count[2]}
-	volume=$(sleep_low "${count[2]}")
-	printf '%s\n' "$volume"
+	sleep_low "${count[2]}"
 
 	kill "$spin_pid"
 	printf '\n'
