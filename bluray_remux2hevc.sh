@@ -1106,17 +1106,17 @@ info_txt () {
 	mediainfo_info_f="${of_dn_info}/${bname}_mediainfo.txt"
 
 	if [[ -n ${cmd[5]} ]]; then
-		info_list_1=('if_info' 'of_info' 'of_remux_info' 'mediainfo_info')
+		info_list1=('if_info' 'of_info' 'of_remux_info' 'mediainfo_info')
 	else
-		info_list_1=('if_info' 'of_info' 'of_remux_info')
+		info_list1=('if_info' 'of_info' 'of_remux_info')
 	fi
 
-	info_list_2=('hb_version_info' 'hb_opts_info' 'ff_version_info' 'ff_opts_info' 'size_info')
-	info_list_3=("${info_list_1[@]}" "${info_list_2[@]}")
+	info_list2=('hb_version_info' 'hb_opts_info' 'ff_version_info' 'ff_opts_info' 'size_info')
+	info_list3=("${info_list1[@]}" "${info_list2[@]}")
 
 # If the info txt file names (in list 1) already exist, add a random
 # number to the end of the file name.
-	for txt_f in "${info_list_1[@]}"; do
+	for txt_f in "${info_list1[@]}"; do
 		txt_ref="${txt_f}_f"
 
 		if [[ ! -f ${!txt_ref} ]]; then
@@ -1151,7 +1151,7 @@ info_txt () {
 # Prints file size information.
 # Prints the information gathered from the output file, by mediainfo
 # (if that command is installed).
-	for type in "${info_list_3[@]}"; do
+	for type in "${info_list3[@]}"; do
 		info_f_ref="${type}_f"
 		info_ref="${type}[@]"
 
@@ -1170,7 +1170,7 @@ run_or_quit () {
 # of the input file, to see if it's 1080p, which is the resolution we
 # want when using this script.
 check_res () {
-	declare switch if_res
+	declare switch stream_ref if_res
 
 	switch=0
 
@@ -1208,6 +1208,9 @@ check_res () {
 # Creates a function called 'is_handbrake', which will check if there
 # are any running HandBrake processes, and if so, wait.
 is_handbrake () {
+	declare pid comm
+	declare -a hb_pids
+
 	args=(ps -C "${cmd[0]}" -o pid=,args=)
 
 # Checks if HandBrake is running.
