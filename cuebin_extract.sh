@@ -91,7 +91,7 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare mode byteswap of_name session of_dn
+declare mode byteswap session of_name of_dn
 declare -A audio_types audio_types_run
 
 audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
