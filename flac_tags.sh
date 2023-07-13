@@ -28,6 +28,8 @@ regex[num]='^[0-9]+$'
 gettags () {
 	if="$1"
 
+	declare field
+	declare -a lines
 	declare -A alltags
 
 	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
@@ -59,6 +61,8 @@ gettags () {
 }
 
 options () {
+	declare ref
+
 	unset -v track
 
 	printf '\n%s\n%s\n\n' '*** BACK (b)' '*** QUIT (q)'

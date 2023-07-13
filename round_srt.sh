@@ -57,6 +57,8 @@ mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "
 time_convert () {
 	time="$1"
 
+	declare h m s cs cs_last
+
 	h=0
 	m=0
 	s=0

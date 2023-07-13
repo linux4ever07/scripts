@@ -48,6 +48,8 @@ declare -A if_cue gaps
 time_convert () {
 	time="$1"
 
+	declare m s f
+
 	m=0
 	s=0
 	f=0

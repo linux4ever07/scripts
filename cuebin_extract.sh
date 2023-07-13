@@ -52,6 +52,7 @@
 # it.
 
 if=$(readlink -f "$1")
+if_dn=$(dirname "$if")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
@@ -90,6 +91,7 @@ if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
 	usage
 fi
 
+declare mode byteswap of_name session of_dn
 declare -A audio_types audio_types_run
 
 audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
@@ -144,7 +146,6 @@ session="${RANDOM}-${RANDOM}"
 of_name="${if_bn_lc%.*}"
 of_name=$(sed -E 's/[[:blank:]]+/_/g' <<<"$of_name")
 
-if_dn=$(dirname "$if")
 of_dn="${PWD}/${of_name}-${session}"
 
 declare -a format
@@ -228,6 +229,8 @@ get_files () {
 # frames / sectors.
 time_convert () {
 	time="$1"
+
+	declare m s f
 
 	m=0
 	s=0

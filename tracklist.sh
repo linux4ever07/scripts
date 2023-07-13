@@ -7,6 +7,9 @@ declare total_length total_time
 declare -A alltags
 
 gettags () {
+	declare field
+	declare -a lines
+
 	for field in "${!alltags[@]}"; do
 		unset -v alltags["${field}"]
 	done
@@ -49,7 +52,9 @@ fi
 
 # Gets the ARTIST, ALBUM and DATE tags.
 if="${files[0]}"
+
 gettags
+
 artist="${alltags[albumartist]}"
 album="${alltags[album]}"
 year="${alltags[date]}"
@@ -57,6 +62,8 @@ year="${alltags[date]}"
 # Function to calculate seconds for a track.
 # Usage: time_seconds <file>
 time_seconds () {
+	declare samples rate
+
 	samples=$(metaflac --show-total-samples "$1")
 	rate=$(metaflac --show-sample-rate "$1")
 	printf '%d' "$(( samples / rate ))"
@@ -67,6 +74,8 @@ time_seconds () {
 # Since the positional parameter is an integer we have to put a $ in
 # front of it so it doesn't get interpreted as a regular integer.
 time_readable () {
+	declare minutes seconds
+
 	minutes=$(( $1 / 60 ))
 	seconds=$(( $1 % 60 ))
 	printf '%d:%02d' "$minutes" "$seconds"
@@ -97,7 +106,9 @@ INFO
 # Prints the track names and their duration.
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
+
 	gettags
+
 	artist="${alltags[artist]}"
 	track="${alltags[tracknumber]}"
 	title="${alltags[title]}"
