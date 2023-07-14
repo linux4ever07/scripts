@@ -153,7 +153,7 @@ regex[last3]='^[0-9]+([0-9]{3})$'
 
 regex[lang1]='^[[:alpha:]]{3}$'
 
-# Sets the default language to English.
+# Sets the default audio language to English.
 lang='eng'
 
 # Generates a random number, which can be used for these file names:
@@ -427,6 +427,10 @@ imdb () {
 		return 1
 	fi
 
+	declare agent y t type url_tmp url id
+	declare -a term id_array tmp_array
+	declare -A json_types imdb_info
+
 	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
 	regex[y]='^\(([0-9]{4})\)$'
@@ -471,15 +475,15 @@ imdb () {
 # If current JSON type is not a list, match the regex and return from
 # this function.
 		if [[ -z ${lists[${json_type}]} ]]; then
-			if [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; then
-				eval "${json_type}"=\""${BASH_REMATCH[1]}"\"
+			if [[ ${tmp_array[${z}]} =~ ${regex[${json_type}2]} ]]; then
+				imdb_info["${json_type}"]="${BASH_REMATCH[1]}"
 			fi
 
 			return
 		fi
 
 # This loop parses JSON lists.
-		while [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; do
+		while [[ ${tmp_array[${z}]} =~ ${regex[${json_type}2]} ]]; do
 			list+=("${BASH_REMATCH[1]}")
 
 			(( z += 1 ))
@@ -495,7 +499,7 @@ imdb () {
 		string=$(printf '%s, ' "${list[@]}")
 		string="${string%, }"
 
-		eval "${json_type}"=\""${string}"\"
+		imdb_info["${json_type}"]="$string"
 	}
 
 	if [[ ${term[-1]} =~ ${regex[y]} ]]; then
@@ -539,8 +543,6 @@ imdb () {
 # slightly faster.
 	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^[[:blank:]]*$')
 
-	declare -A json_types
-
 	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['genre']=1 ['actor']=1 ['director']=1 ['runtime']=1)
 
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
@@ -549,10 +551,7 @@ imdb () {
 		fi
 
 		for json_type in "${!json_types[@]}"; do
-			json_regex1_ref="regex[${json_type}1]"
-			json_regex2_ref="regex[${json_type}2]"
-
-			if [[ ! ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
+			if [[ ! ${tmp_array[${z}]} =~ ${regex[${json_type}1]} ]]; then
 				continue
 			fi
 
@@ -563,8 +562,8 @@ imdb () {
 		done
 	done
 
-	printf '%s\n' "$title"
-	printf '%s\n' "$year"
+	printf '%s\n' "${imdb_info[title]}"
+	printf '%s\n' "${imdb_info[year]}"
 }
 
 # Creates a function called 'check_regex', which will split lines based

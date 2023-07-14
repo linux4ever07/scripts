@@ -56,6 +56,10 @@ imdb () {
 		return 1
 	fi
 
+	declare agent y t type url_tmp url id
+	declare -a term id_array tmp_array
+	declare -A json_types imdb_info
+
 	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
 	regex[y]='^\(([0-9]{4})\)$'
@@ -100,15 +104,15 @@ imdb () {
 # If current JSON type is not a list, match the regex and return from
 # this function.
 		if [[ -z ${lists[${json_type}]} ]]; then
-			if [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; then
-				eval "${json_type}"=\""${BASH_REMATCH[1]}"\"
+			if [[ ${tmp_array[${z}]} =~ ${regex[${json_type}2]} ]]; then
+				imdb_info["${json_type}"]="${BASH_REMATCH[1]}"
 			fi
 
 			return
 		fi
 
 # This loop parses JSON lists.
-		while [[ ${tmp_array[${z}]} =~ ${!json_regex2_ref} ]]; do
+		while [[ ${tmp_array[${z}]} =~ ${regex[${json_type}2]} ]]; do
 			list+=("${BASH_REMATCH[1]}")
 
 			(( z += 1 ))
@@ -124,7 +128,7 @@ imdb () {
 		string=$(printf '%s, ' "${list[@]}")
 		string="${string%, }"
 
-		eval "${json_type}"=\""${string}"\"
+		imdb_info["${json_type}"]="$string"
 	}
 
 	if [[ ${term[-1]} =~ ${regex[y]} ]]; then
@@ -168,8 +172,6 @@ imdb () {
 # slightly faster.
 	mapfile -t tmp_array < <(get_page "$url" | tr '{}' '\n' | grep -Ev -e '.{500}' -e '^[[:blank:]]*$')
 
-	declare -A json_types
-
 	json_types=(['title']=1 ['year']=1 ['plot']=1 ['rating']=1 ['genre']=1 ['actor']=1 ['director']=1 ['runtime']=1)
 
 	for (( z = 0; z < ${#tmp_array[@]}; z++ )); do
@@ -178,10 +180,7 @@ imdb () {
 		fi
 
 		for json_type in "${!json_types[@]}"; do
-			json_regex1_ref="regex[${json_type}1]"
-			json_regex2_ref="regex[${json_type}2]"
-
-			if [[ ! ${tmp_array[${z}]} =~ ${!json_regex1_ref} ]]; then
+			if [[ ! ${tmp_array[${z}]} =~ ${regex[${json_type}1]} ]]; then
 				continue
 			fi
 
@@ -192,25 +191,25 @@ imdb () {
 		done
 	done
 
-	runtime=$(time_calc "$runtime")
+	imdb_info[runtime]=$(time_calc "${imdb_info[runtime]}")
 
 	cat <<IMDB
 
-${title} (${year})
+${imdb_info[title]} (${imdb_info[year]})
 ${url}
 
-Rating: ${rating}
+Rating: ${imdb_info[rating]}
 
-Genre(s): ${genre}
+Genre(s): ${imdb_info[genre]}
 
-Runtime: ${runtime}
+Runtime: ${imdb_info[runtime]}
 
 Plot summary:
-${plot}
+${imdb_info[plot]}
 
-Actor(s): ${actor}
+Actor(s): ${imdb_info[actor]}
 
-Director(s): ${director}
+Director(s): ${imdb_info[director]}
 
 IMDB
 }
