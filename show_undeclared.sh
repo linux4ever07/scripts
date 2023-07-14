@@ -18,7 +18,7 @@ fi
 
 if=$(readlink -f "$1")
 
-declare switch_func
+declare switch_func switch_var
 declare -a lines
 declare -A regex
 

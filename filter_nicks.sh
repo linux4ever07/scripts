@@ -65,6 +65,8 @@ get_client () {
 # Creates a function called 'get_nick', which will print the nick this
 # line belongs to.
 get_nick () {
+	declare word
+
 	word="${words[1]}"
 
 	if [[ $word =~ ${regex[nick]} ]]; then
@@ -78,6 +80,7 @@ get_nick () {
 # characters.
 utf8_convert () {
 	string_in="$@"
+
 	declare string_out
 
 	for (( z = 0; z < ${#string_in}; z++ )); do
