@@ -26,8 +26,15 @@
 # Permissions and modification dates of the input files are preserved in
 # the output files by the script.
 
+# PS: It's probably a better idea to use 'ddrescue' than this script, to
+# make a complete file system image of the failing drive (using multiple
+# passes). But in case there's not enough free space on the destination
+# drive, maybe the script could still be useful.
+
 set -o pipefail
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
 	exit
@@ -85,7 +92,7 @@ md5copy () {
 	if_tmp="$1"
 	of_tmp="$2"
 
-	declare md5_if
+	declare md5_if exit_status
 
 	for n in {1..5}; do
 		md5_if=$(md5sum -b "$if_tmp" 2>&-)

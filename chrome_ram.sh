@@ -41,6 +41,7 @@ fi
 
 declare mode ram_limit time_limit time_start time_end
 declare cwd restart_fn tar_fn pid_chrome
+declare -a files
 
 case "$1" in
 	'normal')
@@ -193,7 +194,11 @@ BACKUP
 
 	sync
 
-	tar -cf "$tar_fn" *
+	mapfile -t files < <(compgen -G "*")
+
+	if [[ ${#files[@]} -gt 0 ]]; then
+		tar -cf "$tar_fn" "${files[@]}"
+	fi
 
 	if [[ -f $tar_fn_old ]]; then
 		rm "$tar_fn_old"
@@ -209,8 +214,18 @@ restore_chrome () {
 
 	if [[ $mode == 'normal' ]]; then
 		mkdir -p "$og_cfg" "$og_cache" || exit
-		cp -rp "$shm_cfg"/* "$og_cfg" || exit
-		cp -rp "$shm_cache"/* "$og_cache" || exit
+
+		mapfile -t files < <(compgen -G "${shm_cfg}/*")
+
+		if [[ ${#files[@]} -gt 0 ]]; then
+			cp -rp "${files[@]}" "$og_cfg" || exit
+		fi
+
+		mapfile -t files < <(compgen -G "${shm_cache}/*")
+
+		if [[ ${#files[@]} -gt 0 ]]; then
+			cp -rp "${files[@]}" "$og_cache" || exit
+		fi
 	fi
 
 	if [[ $mode == 'clean' ]]; then
@@ -277,7 +292,7 @@ if [[ $mode == 'normal' ]]; then
 	mapfile -t files < <(compgen -G "*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		tar -cf "$tar_fn" * || kill_chrome
+		tar -cf "$tar_fn" "${files[@]}" || kill_chrome
 	fi
 
 	rm -r "$bak_cfg" || kill_chrome
