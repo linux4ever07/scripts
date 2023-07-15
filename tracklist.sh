@@ -6,6 +6,8 @@
 declare total_length total_time
 declare -A alltags
 
+# Creates a function called 'gettags', which gets all the tags present
+# in a FLAC file.
 gettags () {
 	declare field
 	declare -a lines

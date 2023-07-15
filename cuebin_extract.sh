@@ -443,6 +443,8 @@ read_cue () {
 get_gaps () {
 	track_n="$1"
 
+	declare pregap_ref postgap_ref
+
 # If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
 # 'gaps' hash. Add it to the value that might already be there, cause of
 # pregaps specified by INDEX commands.
@@ -450,11 +452,11 @@ get_gaps () {
 	postgap_ref="if_cue[${track_n},postgap]"
 
 	if [[ -n ${!pregap_ref} ]]; then
-		(( ${gaps[${track_n},pre]} += ${!pregap_ref} ))
+		(( gaps[${track_n},pre] += ${!pregap_ref} ))
 	fi
 
 	if [[ -n ${!postgap_ref} ]]; then
-		(( ${gaps[${track_n},post]} += ${!postgap_ref} ))
+		(( gaps[${track_n},post] += ${!postgap_ref} ))
 	fi
 }
 
