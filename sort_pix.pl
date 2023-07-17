@@ -55,11 +55,11 @@ sub get_type {
 
 	$type =~ s/$regex{file}/$1/;
 
-	if (! length($type)) { return(1); }
+	if (! length($type)) { return; }
 
 	$ext =~ s/$regex{file}/$1/;
 
-	if (! length($ext)) { return(1); }
+	if (! length($ext)) { return; }
 
 	if ($ext eq 'jpeg') { $ext = 'jpg'; }
 	
@@ -101,7 +101,7 @@ sub get_res {
 		}
 	}
 
-	if (! length($res)) { return(1); }
+	if (! length($res)) { return; }
 
 	return(split('x', $res));
 }
