@@ -66,6 +66,75 @@ sub get_type {
 	return($type, $ext);
 }
 
+# The 'md5sum' subroutine gets the MD5 hash, as well as last
+# modification date, of the image.
+sub md5sum {
+	my $if = shift;
+
+	my $date = (stat($if))[9];
+
+	my($hash);
+
+	open(my $mf, '< :raw', $if) or die "can't open '$if': $!";
+	$hash = Digest::MD5->new->addfile($mf)->hexdigest;
+	close($mf) or die "can't close '$if': $!";
+
+	$md5h{$hash}{$if} = $date;
+}
+
+# The 'get_res' subroutine gets the resolution of the image, using
+# ImageMagick.
+sub get_res {
+	my $fn = shift;
+
+	my(@lines, $res, $ratio);
+
+	open(my $output, '-|', 'identify', '-quiet', '-verbose', $fn)
+	or die "can't open 'identify': $!";
+	chomp(@lines = (<$output>));
+	close($output) or die "can't close 'identify': $!";
+
+	foreach my $line (@lines) {
+		if ($line =~ m/$regex{magick}/) {
+			$res = $1;
+			last;
+		}
+	}
+
+	if (! length($res)) { return(1); }
+
+	return(split('x', $res));
+}
+
+# The 'get_ratio' subroutine gets the aspect ratio of a resolution, by
+# figuring out the 'greatest common factor' of the 2 numbers.
+sub get_ratio {
+	my $x_res = shift;
+	my $y_res = shift;
+
+	my($x_rem, $y_rem, $ratio);
+
+	my $gcf = $y_res;
+
+	if ($y_res > $x_res) {
+		$gcf = $x_res;
+	}
+
+	$x_rem = $x_res % $gcf;
+	$y_rem = $y_res % $gcf;
+
+	while ($x_rem > 0 or $y_rem > 0) {
+		$gcf -= 1;
+
+		$x_rem = $x_res % $gcf;
+		$y_rem = $y_res % $gcf;
+	}
+
+	$ratio = $x_res / $gcf . ':' . $y_res / $gcf;
+
+	return($ratio);
+}
+
 # The 'mv_res' subroutine moves the image to the proper directory, named
 # after resolution and aspect ratio.
 sub mvres {
@@ -105,75 +174,6 @@ sub mvres {
 	}
 
 	say $if_bn . ': ' . $res . ' (' . $ratio . ')';
-}
-
-# The 'get_ratio' subroutine gets the aspect ratio of a resolution, by
-# figuring out the 'greatest common factor' of the 2 numbers.
-sub get_ratio {
-	my $x_res = shift;
-	my $y_res = shift;
-
-	my($x_rem, $y_rem, $ratio);
-
-	my $gcf = $y_res;
-
-	if ($y_res > $x_res) {
-		$gcf = $x_res;
-	}
-
-	$x_rem = $x_res % $gcf;
-	$y_rem = $y_res % $gcf;
-
-	while ($x_rem > 0 or $y_rem > 0) {
-		$gcf -= 1;
-
-		$x_rem = $x_res % $gcf;
-		$y_rem = $y_res % $gcf;
-	}
-
-	$ratio = $x_res / $gcf . ':' . $y_res / $gcf;
-
-	return($ratio);
-}
-
-# The 'get_res' subroutine gets the resolution of the image, using
-# ImageMagick.
-sub get_res {
-	my $fn = shift;
-
-	my(@lines, $res, $ratio);
-
-	open(my $output, '-|', 'identify', '-quiet', '-verbose', $fn)
-	or die "can't open 'identify': $!";
-	chomp(@lines = (<$output>));
-	close($output) or die "can't close 'identify': $!";
-
-	foreach my $line (@lines) {
-		if ($line =~ m/$regex{magick}/) {
-			$res = $1;
-			last;
-		}
-	}
-
-	if (! length($res)) { return(1); }
-
-	return(split('x', $res));
-}
-
-# The 'md5sum' subroutine gets the MD5 hash, as well as last
-# modification date, of the image.
-sub md5sum {
-	my $if = shift;
-
-	my $date = (stat($if))[9];
-
-	my($hash);
-
-	open(my $mf, '< :raw', $if) or die "can't open '$if': $!";
-	$hash = Digest::MD5->new->addfile($mf)->hexdigest;
-	close($mf) or die "can't close '$if': $!";
-
-	$md5h{$hash}{$if} = $date;
 }
 
 foreach my $if_dn (@dirs) {
