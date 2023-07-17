@@ -137,7 +137,7 @@ sub get_ratio {
 
 # The 'mv_res' subroutine moves the image to the proper directory, named
 # after resolution and aspect ratio.
-sub mvres {
+sub mv_res {
 	my $if = shift;
 	my $if_dn = shift;
 	my $if_bn = shift;
@@ -271,6 +271,6 @@ foreach my $if_dn (@dirs) {
 
 		if (! length($ratio)) { next; }
 
-		mvres($if, $if_dn, $if_bn, $x_res, $y_res, $ratio);
+		mv_res($if, $if_dn, $if_bn, $x_res, $y_res, $ratio);
 	}
 }
