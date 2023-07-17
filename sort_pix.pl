@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # This script checks the file type, MD5 hash, resolution and aspect
-# ratio of each image file in the directories given an argumnets and
+# ratio of each image file in the directories given as argumnets and
 # acts accordingly. If it finds an image that has an identical MD5 hash
 # to another image, the second image will be deleted. Only the match
 # with the oldest modification date will be kept. For each aspect ratio
