@@ -5,7 +5,7 @@
 # acts accordingly. If it finds an image that has an identical MD5 hash
 # to another image, the second image will be deleted. Only the match
 # with the oldest modification date will be kept. For each aspect ratio
-# defined in the @accepted_ratios array, the script will create a
+# defined in the %accepted_ratios hash, the script will create a
 # directory and move matching images there. If the horizontal resolution
 # is less than 1024, the script will create a directory called 'low_res'
 # and move those files there. The remaining images matching neither of
