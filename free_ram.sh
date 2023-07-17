@@ -15,14 +15,16 @@
 # (i.e. video encoding). To prevent that from happening, I created
 # this script.
 
-ram_limit=1000000
-
+declare ram_limit log_killed
 declare -A regex pids
 
 regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
 regex[rend]='--type=renderer'
 regex[ext]='--extension-process'
 regex[tab]='^.*\-childID [0-9]+.* tab$'
+
+# Creates a limit for the amount of free RAM required.
+ram_limit=1000000
 
 # Creates a file name for the log.
 log_killed="${HOME}/browser_killed.log"
@@ -107,6 +109,7 @@ get_pids () {
 # Creates a function called 'kill_firefox', which kills all child
 # processes belonging to either Firefox or Tor Browser.
 kill_firefox () {
+	declare time
 	declare -a pids_tmp
 
 	get_pids 'firefox' 'firefox.real'
@@ -136,6 +139,7 @@ kill_firefox () {
 # Creates a function called 'kill_chrome', which kills all child
 # processes belonging to either Chrome or Chromium.
 kill_chrome () {
+	declare time
 	declare -a pids_tmp
 
 	get_pids 'chrome' 'chromium'

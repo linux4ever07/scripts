@@ -19,9 +19,9 @@ use strict;
 use warnings;
 use File::Basename qw(basename);
 use Digest::MD5;
-use File::Copy qw(copy move);
+use File::Copy qw(move);
 use File::Path qw(make_path);
-use Cwd qw(cwd abs_path);
+use Cwd qw(abs_path);
 
 my(@dirs, %md5h, %files, %regex);
 
