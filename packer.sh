@@ -135,6 +135,8 @@ fi
 
 # Creates a function called 'print_stdout', which will print STDOUT.
 print_stdout () {
+	declare -a lines
+
 	mapfile -t lines <"$stdout_fn"
 
 	printf '%s\n' "${lines[@]}"
@@ -148,6 +150,9 @@ print_stdout () {
 # already have been printed by default, due to STDERR effectively
 # replacing STDOUT in this script.
 output () {
+	declare exit_status
+	declare -a stdout_lines
+
 	exit_status="$1"
 
 	mapfile -t stdout_lines < <(print_stdout)
