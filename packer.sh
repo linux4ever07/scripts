@@ -272,6 +272,8 @@ arch_pack () {
 # copy files from, and unmount an ISO file. This in effect means
 # extracting the ISO.
 iso_unpack () {
+	declare iso_bn iso_mnt iso_of
+
 	iso_bn="${if_bn%.*}"
 	iso_mnt="/dev/shm/${iso_bn}-${session}"
 	iso_of="${PWD}/${iso_bn}-${session}"
