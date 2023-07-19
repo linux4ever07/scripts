@@ -29,7 +29,7 @@
 set -o pipefail
 
 declare mode session stdout_fn c_tty
-declare if if_bn if_bn_lc no_ext ext
+declare if if_dn if_bn no_ext ext
 
 session="${RANDOM}-${RANDOM}"
 stdout_fn="/dev/shm/packer_stdout-${session}.txt"
@@ -244,10 +244,10 @@ set_names () {
 	switch=0
 
 	if=$(readlink -f "$1")
+	if_dn=$(dirname "$if")
 	if_bn=$(basename "$if")
-	if_bn_lc="${if_bn,,}"
 
-	get_ext "$if" 2
+	get_ext "$if_bn" 2
 
 	if [[ $ext =~ ${regex[tar]} ]]; then
 		switch=1
@@ -258,8 +258,10 @@ set_names () {
 	fi
 
 	if [[ $switch -eq 0 ]]; then
-		get_ext "$if" 1
+		get_ext "$if_bn" 1
 	fi
+
+	no_ext="${if_dn}/${no_ext}"
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
