@@ -255,7 +255,7 @@ set_names () {
 
 		if [[ $no_ext =~ ${regex[fn]} ]]; then
 			no_ext="${BASH_REMATCH[1]}"
-			ext=".${BASH_REMATCH[2]}"
+			ext=".${BASH_REMATCH[2],,}"
 		fi
 	fi
 }
