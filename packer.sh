@@ -39,8 +39,8 @@ declare -A regex
 
 regex[dev]='^\/dev'
 regex[fn]='^(.*)\.([^.]*)$'
-regex[tar]='^(\.tar)(\.[^.]*)$'
-regex[dar]='^(\.[0-9]+)(\.dar)$'
+regex[tar]='^\.tar\.[^.]*$'
+regex[dar]='^\.[0-9]+\.dar$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
