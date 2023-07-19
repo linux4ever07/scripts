@@ -175,7 +175,10 @@ sub check_log {
 	close $text or die "Can't close file '$fn': $!";
 
 	foreach my $req (@log_accepted) {
-		if ($line1 =~ m/$req/) { push(@logs, $fn); last; }
+		if ($line1 =~ m/$req/) {
+			push(@logs, $fn);
+			last;
+		}
 	}
 }
 
