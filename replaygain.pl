@@ -277,9 +277,7 @@ sub existstag {
 		push(@missing_tags, $field);
 	}
 
-	if (! scalar(@missing_tags)) {
-		return;
-	}
+	if (! scalar(@missing_tags)) { return; }
 
 	foreach my $field (@missing_tags) {
 		say $fn . ': missing ' . $field . ' tag';
