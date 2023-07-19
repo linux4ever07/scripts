@@ -320,9 +320,9 @@ sub vendor {
 		say "Interrupted by user!";
 
 		while (my $fn = shift(@_)) {
-			if (-f $fn) {
-				unlink($fn) or die "Can't remove '$fn': $!";
-			}
+			if (! -f $fn) { next; }
+
+			unlink($fn) or die "Can't remove '$fn': $!";
 		}
 
 		exit;
