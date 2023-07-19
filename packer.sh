@@ -217,6 +217,25 @@ CMD
 	fi
 }
 
+# Creates a function called 'get_ext', which will separate file names
+# and extensions.
+get_ext () {
+	declare -a ext_list
+
+	no_ext="$1"
+
+	while [[ $no_ext =~ ${regex[fn]} ]]; do
+		no_ext="${BASH_REMATCH[1]}"
+		ext_list=("${BASH_REMATCH[2],,}" "${ext_list[@]}")
+
+		if [[ ${#ext_list[@]} -eq $2 ]]; then
+			break
+		fi
+	done
+
+	ext=$(printf '.%s' "${ext_list[@]}")
+}
+
 # Creates a function called 'set_names', which will create variables for
 # file names.
 set_names () {
@@ -228,24 +247,7 @@ set_names () {
 	if_bn=$(basename "$if")
 	if_bn_lc="${if_bn,,}"
 
-	get_ext () {
-		declare -a ext_list
-
-		while [[ $no_ext =~ ${regex[fn]} ]]; do
-			no_ext="${BASH_REMATCH[1]}"
-			ext_list=("${BASH_REMATCH[2],,}" "${ext_list[@]}")
-
-			if [[ ${#ext_list[@]} -eq $1 ]]; then
-				break
-			fi
-		done
-
-		ext=$(printf '.%s' "${ext_list[@]}")
-	}
-
-	no_ext="$if"
-
-	get_ext 2
+	get_ext "$if" 2
 
 	if [[ $ext =~ ${regex[tar]} ]]; then
 		switch=1
@@ -256,9 +258,7 @@ set_names () {
 	fi
 
 	if [[ $switch -eq 0 ]]; then
-		no_ext="$if"
-
-		get_ext 1
+		get_ext "$if" 1
 	fi
 }
 
