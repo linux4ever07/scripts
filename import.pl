@@ -132,9 +132,9 @@ sub existstag {
 	my(@missing_tags);
 
 	while (my $field = shift(@_)) {
-		if (! length($$tags_ref->{$field}[0])) {
-			push(@missing_tags, $field);
-		}
+		if (length($$tags_ref->{$field}[0])) { next; }
+
+		push(@missing_tags, $field);
 	}
 
 	if (! scalar(@missing_tags)) {
