@@ -221,7 +221,6 @@ CMD
 # file names.
 set_names () {
 	declare switch
-	declare -a ext_list
 
 	switch=0
 
@@ -229,18 +228,24 @@ set_names () {
 	if_bn=$(basename "$if")
 	if_bn_lc="${if_bn,,}"
 
+	get_ext () {
+		declare -a ext_list
+
+		while [[ $no_ext =~ ${regex[fn]} ]]; do
+			no_ext="${BASH_REMATCH[1]}"
+			ext_list=("${BASH_REMATCH[2],,}" "${ext_list[@]}")
+
+			if [[ ${#ext_list[@]} -eq $1 ]]; then
+				break
+			fi
+		done
+
+		ext=$(printf '.%s' "${ext_list[@]}")
+	}
+
 	no_ext="$if"
 
-	while [[ $no_ext =~ ${regex[fn]} ]]; do
-		no_ext="${BASH_REMATCH[1]}"
-		ext_list=("${BASH_REMATCH[2],,}" "${ext_list[@]}")
-
-		if [[ ${#ext_list[@]} -eq 2 ]]; then
-			break
-		fi
-	done
-
-	ext=$(printf '.%s' "${ext_list[@]}")
+	get_ext 2
 
 	if [[ $ext =~ ${regex[tar]} ]]; then
 		switch=1
@@ -253,10 +258,7 @@ set_names () {
 	if [[ $switch -eq 0 ]]; then
 		no_ext="$if"
 
-		if [[ $no_ext =~ ${regex[fn]} ]]; then
-			no_ext="${BASH_REMATCH[1]}"
-			ext=".${BASH_REMATCH[2],,}"
-		fi
+		get_ext 1
 	fi
 }
 
