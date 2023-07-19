@@ -29,7 +29,7 @@
 set -o pipefail
 
 declare mode session stdout_fn c_tty
-declare if if_bn if_bn_lc if_tmp of
+declare if if_bn if_bn_lc no_ext ext
 
 session="${RANDOM}-${RANDOM}"
 stdout_fn="/dev/shm/packer_stdout-${session}.txt"
@@ -38,8 +38,9 @@ c_tty=$(tty)
 declare -A regex
 
 regex[dev]='^\/dev'
-regex[ext]='(\.tar){0,1}(\.[^.]*)$'
-regex[dar]='(\.[0-9]+){0,1}(\.dar)$'
+regex[fn]='^(.*)\.([^.]*)$'
+regex[tar]='^(\.tar)(\.[^.]*)$'
+regex[dar]='^(\.[0-9]+)(\.dar)$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
@@ -219,32 +220,63 @@ CMD
 # Creates a function called 'set_names', which will create variables for
 # file names.
 set_names () {
+	declare switch
+	declare -a ext_list
+
+	switch=0
+
 	if=$(readlink -f "$1")
 	if_bn=$(basename "$if")
 	if_bn_lc="${if_bn,,}"
 
-	if_tmp=$(sed -E "s/${regex[dar]}//i" <<<"$if")
+	no_ext="$if"
 
-	of=$(sed -E "s/${regex[ext]}//i" <<<"$if")
+	while [[ $no_ext =~ ${regex[fn]} ]]; do
+		no_ext="${BASH_REMATCH[1]}"
+		ext_list=("${BASH_REMATCH[2],,}" "${ext_list[@]}")
+
+		if [[ ${#ext_list[@]} -eq 2 ]]; then
+			break
+		fi
+	done
+
+	ext=$(printf '.%s' "${ext_list[@]}")
+
+	if [[ $ext =~ ${regex[tar]} ]]; then
+		switch=1
+	fi
+
+	if [[ $ext =~ ${regex[dar]} ]]; then
+		switch=1
+	fi
+
+	if [[ $switch -eq 0 ]]; then
+		no_ext="$if"
+
+		if [[ $no_ext =~ ${regex[fn]} ]]; then
+			no_ext="${BASH_REMATCH[1]}"
+			ext=".${BASH_REMATCH[2]}"
+		fi
+	fi
 }
 
 # Creates a function called 'arch_pack', which will create an archive.
 arch_pack () {
-	case "$if_bn_lc" in
+	case "$ext" in
 		*.tar)
-			tar -cf "${of}.tar" "$@"
+			tar -cf "${no_ext}.tar" "$@"
 			output "$?" 1>&2
 		;;
 		*.tar.gz|*.tgz)
-			tar -c "$@" | gzip -9 > "${of}.tar.gz"
+			tar -c "$@" | gzip -9 > "${no_ext}.tar.gz"
 			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			tar -c "$@" | bzip2 --compress -9 > "${of}.tar.bz2"
+			tar -c "$@" | bzip2 --compress -9 > "${no_ext}.tar.bz2"
 			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			tar -c "$@" | xz --compress -9 > "${of}.tar.xz"
+			tar -c "$@" | xz --compress -9 > "${no_ext}.tar.xz"
 			output "$?" 1>&2
 		;;
 		*.zip)
@@ -302,11 +334,11 @@ iso_unpack () {
 # Creates a function called 'arch_unpack', which will extract an
 # archive.
 arch_unpack () {
-	case "$if_bn_lc" in
+	case "$ext" in
 		*.dar)
 			check_cmd dar 1>&2
 
-			dar -x "$if_tmp"
+			dar -x "$no_ext"
 			output "$?" 1>&2
 		;;
 		*.tar)
@@ -382,11 +414,11 @@ arch_unpack () {
 
 # Creates a function called 'arch_test', which will test an archive.
 arch_test () {
-	case "$if_bn_lc" in
+	case "$ext" in
 		*.dar)
 			check_cmd dar 1>&2
 
-			dar -t "$if_tmp"
+			dar -t "$no_ext"
 			output "$?" 1>&2
 		;;
 		*.tar)
@@ -454,11 +486,11 @@ arch_test () {
 # Creates a function called 'arch_list', which will list the content of
 # an archive.
 arch_list () {
-	case "$if_bn_lc" in
+	case "$ext" in
 		*.dar)
 			check_cmd dar 1>&2
 
-			dar -l "$if_tmp" | less 1>&2
+			dar -l "$no_ext" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar)
