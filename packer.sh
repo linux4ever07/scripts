@@ -28,6 +28,7 @@
 
 set -o pipefail
 
+declare mode session stdout_fn c_tty
 declare if if_bn if_bn_lc if_tmp of
 
 session="${RANDOM}-${RANDOM}"
