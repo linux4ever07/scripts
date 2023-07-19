@@ -431,9 +431,9 @@ sub rm_tag {
 	my $fn = shift;
 
 	while (my $field = shift(@_)) {
-		if (length($tags_of{$fn}{$field})) {
-			delete($tags_of{$fn}{$field});
-		}
+		if (! length($tags_of{$fn}{$field})) { next; }
+
+		delete($tags_of{$fn}{$field});
 	}
 }
 
