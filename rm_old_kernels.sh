@@ -10,10 +10,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-arch='x86_64'
-pause_msg='Does this look OK? [y/n]: '
-
-declare dnf_pkgs_n
+declare dnf_pkgs_n arch pause_msg
 declare -a types keep remove
 declare -A dnf_pkgs latest regex
 
@@ -31,6 +28,9 @@ regex[modules]="^kernel\-modules\.${arch}$"
 regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
 
 dnf_pkgs_n=0
+
+arch='x86_64'
+pause_msg='Does this look OK? [y/n]: '
 
 # Creates a function called 'version_compare'. It finds out which
 # version number passed to it is the most recent.
