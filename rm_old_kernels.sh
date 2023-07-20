@@ -10,7 +10,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare dnf_pkgs_n arch pause_msg
+declare dnf_pkgs_n arch pause_msg version current latest_tmp
 declare -a types keep remove
 declare -A dnf_pkgs latest regex
 
