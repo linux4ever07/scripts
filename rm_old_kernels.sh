@@ -13,7 +13,7 @@ fi
 arch='x86_64'
 pause_msg='Does this look OK? [y/n]: '
 
-declare dnf_pkgs_n=0
+declare dnf_pkgs_n
 declare -a types keep remove
 declare -A dnf_pkgs latest regex
 
@@ -29,6 +29,8 @@ regex[headers]="^kernel\-headers\.${arch}$"
 regex[kernel]="^kernel\.${arch}$"
 regex[modules]="^kernel\-modules\.${arch}$"
 regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
+
+dnf_pkgs_n=0
 
 # Creates a function called 'version_compare'. It finds out which
 # version number passed to it is the most recent.
