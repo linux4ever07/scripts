@@ -167,6 +167,7 @@ regex[fn]='^(.*)\.([^.]*)$'
 regex[data]='^MODE([0-9])\/([0-9]{4})$'
 regex[audio]='^AUDIO$'
 
+declare type block_size
 declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 declare -A if_cue gaps
@@ -597,7 +598,7 @@ block_calc () {
 	bytes1="$1"
 	bytes2="$2"
 
-	declare block_size block_diff1 block_diff2
+	declare block_diff1 block_diff2
 
 	block_size=16384
 
@@ -610,8 +611,6 @@ block_calc () {
 		block_diff1=$(( bytes1 % block_size ))
 		block_diff2=$(( bytes2 % block_size ))
 	done
-
-	printf '%s' "$block_size"
 }
 
 # Creates a function called 'copy_track', which will extract the raw
@@ -654,7 +653,7 @@ copy_track () {
 	length_ref="tracks_length[${track_n}]"
 
 # Gets the optimal block size to use with 'dd'.
-	block_size=$(block_calc "${!start_ref}" "${!length_ref}")
+	block_calc "${!start_ref}" "${!length_ref}"
 
 	args+=(bs=\""${block_size}"\")
 
@@ -718,8 +717,6 @@ copy_track_type () {
 # Creates a function called 'cdr2wav', which will convert the extracted
 # CDR files to WAV (using 'ffmpeg' or 'sox').
 cdr2wav () {
-	type="$1"
-
 	declare type_tmp if_cdr of_wav
 	declare -a files
 
@@ -767,8 +764,6 @@ cdr2wav () {
 # Creates a function called 'encode_audio', which will encode the WAVs
 # created by previously run functions.
 encode_audio () {
-	type="$1"
-
 	declare type_tmp
 	declare -a files
 
@@ -797,8 +792,6 @@ encode_audio () {
 # sheet, based on the file lists created by the 'copy_track_type' and
 # 'cdr2wav' functions.
 create_cue () {
-	type="$1"
-
 	declare index_string elements line_ref track_n type_tmp
 	declare -a offset
 	declare -A ext_format
@@ -898,9 +891,9 @@ loop_set
 copy_track_type 'all'
 
 for type in "${!audio_types_run[@]}"; do
-	cdr2wav "$type"
-	encode_audio "$type"
-	create_cue "$type"
+	cdr2wav
+	encode_audio
+	create_cue
 done
 
 # Prints the created CUE sheet to the terminal, and to the output file.

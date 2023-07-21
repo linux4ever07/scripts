@@ -38,7 +38,7 @@ block_calc () {
 	bytes1="$1"
 	bytes2="$2"
 
-	declare block_size block_diff1 block_diff2
+	declare block_diff1 block_diff2
 
 	block_size=1048576
 
@@ -55,8 +55,6 @@ block_calc () {
 		block_diff1=$(( bytes1 % block_size ))
 		block_diff2=$(( bytes2 % block_size ))
 	done
-
-	printf '%s' "$block_size"
 }
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
@@ -65,7 +63,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	size_in=$(stat -c '%s' "$fn")
 	size_out=$(( size_in / 10 ))
 
-	block_size=$(block_calc "$size_in" "$size_out")
+	block_calc "$size_in" "$size_out"
 
 	seek=$(( (size_in - size_out) / block_size ))
 	count=$(( size_out / block_size ))
