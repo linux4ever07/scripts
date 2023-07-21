@@ -71,5 +71,5 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	printf '\n*** %s\n' "$fn"
 	printf 'size: %s , block: %s , seek: %s , count: %s\n\n' "$size_in" "$block_size" "$seek" "$count"
 
-	dd if='/dev/zero' of="$fn" bs="$block_size" seek="$seek" count="$count" 1>&- 2>&-
+	dd if='/dev/zero' of="$fn" bs="$block_size" seek="$seek" count="$count" &>/dev/null
 done
