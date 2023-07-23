@@ -70,12 +70,12 @@ while [[ 1 ]]; do
 	fi
 
 # Adds 1 to the track number.
-	track_n=$(( track_n + 1 ))
+	(( track_n += 1 ))
 
 # Converts time to frames, and adds that number to the total time.
 # Converts that number back to the mm:ss:ff format.
 	in=$(time_convert "$in")
-	frames=$(( frames + in ))
+	(( frames += in ))
 	time=$(time_convert "$frames")
 
 # Prints the current total time in the mm:ss:ff format.
