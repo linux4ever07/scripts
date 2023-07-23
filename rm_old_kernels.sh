@@ -14,9 +14,14 @@ declare dnf_pkgs_n arch pause_msg version current latest_tmp
 declare -a types keep remove
 declare -A dnf_pkgs latest regex
 
+dnf_pkgs_n=0
+
+arch='x86_64'
+pause_msg='Does this look OK? [y/n]: '
+
 types=('core' 'devel' 'devel_matched' 'headers' 'kernel' 'modules' 'modules_extra')
 
-regex[column]="^(.*${arch}) (.*) (@.*) *$"
+regex[column]="^(.+${arch}) ([^ ]+) ([^ ]+)"
 regex[version]='^([0-9]+)\.([0-9]+)\.([0-9]+)\-([0-9]+)\.fc[0-9]+'
 
 regex[core]="^kernel\-core\.${arch}$"
@@ -26,11 +31,6 @@ regex[headers]="^kernel\-headers\.${arch}$"
 regex[kernel]="^kernel\.${arch}$"
 regex[modules]="^kernel\-modules\.${arch}$"
 regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
-
-dnf_pkgs_n=0
-
-arch='x86_64'
-pause_msg='Does this look OK? [y/n]: '
 
 # Creates a function called 'version_compare'. It finds out which
 # version number passed to it is the most recent.
