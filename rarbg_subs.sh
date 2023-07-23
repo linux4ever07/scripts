@@ -85,7 +85,7 @@ get_files () {
 			continue
 		fi
 
-		if [[ -f $of || -L $of ]]; then
+		if [[ -e $of ]]; then
 			unset -v "${vars1[@]}"
 			continue
 		fi

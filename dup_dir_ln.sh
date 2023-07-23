@@ -34,7 +34,7 @@ fi
 
 if [[ ! -d $1 || -z $2 ]]; then
 	usage
-elif [[ -d $2 || -f $2 ]]; then
+elif [[ -e $2 ]]; then
 	printf '\n%s\n\n' "\"${2}\" already exists!"
 	exit
 fi
