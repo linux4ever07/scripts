@@ -67,7 +67,7 @@ get_id () {
 			if [[ -z $n ]]; then
 				n=0
 			else
-				n=$(( n + 1 ))
+				(( n += 1 ))
 			fi
 
 			pw_parsed["${n},id"]="${BASH_REMATCH[1]}"
@@ -82,7 +82,7 @@ get_id () {
 		fi
 	done
 
-	n=$(( n + 1 ))
+	(( n += 1 ))
 
 # Save the ids and node names of every node that's an audio sink.
 	for (( i = 0; i < n; i++ )); do
@@ -201,7 +201,7 @@ reset_volume () {
 	set_volume 'false'
 
 	until [[ $volume -eq $full_volume ]]; do
-		volume=$(( volume + 100000 ))
+		(( volume += 100000 ))
 
 		if [[ $volume -gt $full_volume ]]; then
 			volume="$full_volume"
@@ -223,7 +223,7 @@ sleep_low () {
 	if [[ $diff -ge $volume ]]; then
 		volume=0
 	else
-		volume=$(( volume - diff ))
+		(( volume -= diff ))
 	fi
 
 	set_volume 'false'

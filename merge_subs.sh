@@ -181,7 +181,7 @@ get_tracks () {
 		line="${mkvinfo_tracks[${i}]}"
 
 		if [[ $line =~ ${regex[track]} ]]; then
-			tracks_n=$(( tracks_n + 1 ))
+			(( tracks_n += 1 ))
 			tracks["${tracks_n},sub"]=0
 		fi
 
@@ -209,7 +209,7 @@ get_tracks () {
 		fi
 	done
 
-	tracks_n=$(( tracks_n + 1 ))
+	(( tracks_n += 1 ))
 
 	unset -v mkvinfo_tracks
 
@@ -221,7 +221,7 @@ get_tracks () {
 		name_tmp="${tracks[${i},name]}"
 
 		if [[ $sub_tmp -eq 1 ]]; then
-			sub_tracks_n=$(( sub_tracks_n + 1 ))
+			(( sub_tracks_n += 1 ))
 		else
 			continue
 		fi
@@ -267,7 +267,7 @@ while [[ $# -gt 0 ]]; do
 		;;
 		*)
 			if [[ -f $1 ]]; then
-				files_n=$(( files_n + 1 ))
+				(( files_n += 1 ))
 
 				range1["${files_n}"]=$(( sub_tracks_n + 1 ))
 				get_tracks "$1"
@@ -288,8 +288,8 @@ fi
 
 # Adds 1 to $files_n and $sub_tracks_n, so we can loop through all the
 # elements. Otherwise, the last element will be skipped.
-files_n=$(( files_n + 1 ))
-sub_tracks_n=$(( sub_tracks_n + 1 ))
+(( files_n += 1 ))
+(( sub_tracks_n += 1 ))
 
 # Prints all the subtitle tracks, and asks the user to choose the
 # default track, saves that choice in the $default variable.

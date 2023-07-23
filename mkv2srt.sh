@@ -128,7 +128,7 @@ get_tracks () {
 		line="${mkvinfo_tracks[${i}]}"
 
 		if [[ $line =~ ${regex[track]} ]]; then
-			tracks_n=$(( tracks_n + 1 ))
+			(( tracks_n += 1 ))
 			tracks["${tracks_n},sub"]=0
 			tracks["${tracks_n},srt"]=0
 		fi
@@ -163,7 +163,7 @@ get_tracks () {
 		fi
 	done
 
-	tracks_n=$(( tracks_n + 1 ))
+	(( tracks_n += 1 ))
 
 	unset -v mkvinfo_tracks
 }

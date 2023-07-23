@@ -871,7 +871,7 @@ dts_extract_remux () {
 
 			audio_tracks["${tmp_type},${!n}"]="${!stream_ref}"
 			audio_maps["${tmp_type},${!n}"]="${!map_ref}"
-			elements["${tmp_type}"]=$(( ${!n} + 1 ))
+			(( elements[${tmp_type}] += 1 ))
 			break
 		done
 	done

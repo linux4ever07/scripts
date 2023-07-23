@@ -79,7 +79,7 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 		if [[ -z $n ]]; then
 			n=0
 		else
-			n=$(( n + 1 ))
+			(( n += 1 ))
 		fi
 
 		tracks["${n},sub"]=0
@@ -105,7 +105,7 @@ for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 	fi
 done
 
-n=$(( n + 1 ))
+(( n += 1 ))
 
 unset -v mkvinfo_tracks
 
