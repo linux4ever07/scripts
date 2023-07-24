@@ -14,6 +14,7 @@
 use 5.34.0;
 use strict;
 use warnings;
+use diagnostics;
 use Cwd qw(abs_path);
 use File::Basename qw(basename);
 use File::Find qw(find);

@@ -38,6 +38,7 @@
 use v5.34;
 use strict;
 use warnings;
+use diagnostics;
 use File::Copy qw(move);
 use File::Basename qw(basename dirname);
 use File::Path qw(make_path);

@@ -17,6 +17,7 @@
 use 5.34.0;
 use strict;
 use warnings;
+use diagnostics;
 use File::Basename qw(basename);
 use Digest::MD5;
 use File::Copy qw(move);

@@ -6,6 +6,7 @@
 use 5.34.0;
 use strict;
 use warnings;
+use diagnostics;
 use File::Basename qw(basename);
 use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
