@@ -4,10 +4,14 @@
 # verifies all RPMs to see which ones are broken, and reinstalls those.
 # Run with either 'full' or 'verify' as an argument.
 
+declare mode date txt
+declare -A regex
+
 date=$(date '+%F')
 txt="${HOME}/dnf_reinstall_${date}.txt"
 
-declare mode
+regex[dnf]='^([^ ]+).*$'
+regex[rpm]='^[^/]+(.*)$'
 
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [full|verify]"
@@ -48,11 +52,11 @@ dnf_install () {
 
 case "$mode" in
 	'full')
-		mapfile -t dnf_pkgs < <(dnf list --installed | sed -E 's/^([^ ]+).*$/\1/')
+		mapfile -t dnf_pkgs < <(dnf list --installed | sed -E "s/${regex[dnf]}/\1/")
 		dnf_install
 	;;
 	'verify')
-		mapfile -t dnf_pkgs < <(rpm -qf $(rpm -Va | sed -E 's/^[^/]+(.*)$/\1/') | sort -u)
+		mapfile -t dnf_pkgs < <(rpm -qf $(rpm -Va | sed -E "s/${regex[rpm]}/\1/") | sort -u)
 		dnf_install
 	;;
 esac
