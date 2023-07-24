@@ -13,6 +13,8 @@ txt="${HOME}/dnf_reinstall_${date}.txt"
 regex[dnf]='^([^ ]+).*$'
 regex[rpm]='^[^/]+(.*)$'
 
+# Creates a function called 'usage', which will print usage instructions
+# and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [full|verify]"
 	exit
@@ -36,6 +38,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
+# Creates a function called 'dnf_install', which will reinstall
+# packages.
 dnf_install () {
 	touch "$txt"
 
