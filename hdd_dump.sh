@@ -171,10 +171,10 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	dn="${dn:1}"
 	bn="${fn_parts[-1]}"
 
-	of_dn="${of_dn}/${dn}"
-	of="${of_dn}/${bn}"
+	dn="${of_dn}/${dn}"
+	of="${dn}/${bn}"
 
-	mkdir -p "$of_dn" || exit
+	mkdir -p "$dn" || exit
 
 	if [[ ! -f $of ]]; then
 		md5copy "$if" "$of"

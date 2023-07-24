@@ -39,15 +39,18 @@ elif [[ -e $2 ]]; then
 	exit
 fi
 
-in_dir=$(readlink -f "$1")
-out_dir=$(readlink -f "$2")
+if_dn=$(readlink -f "$1")
+of_dn=$(readlink -f "$2")
+
+declare pause_msg start stop
+declare -a dn_parts fn_parts
 
 pause_msg="
 You're about to recursively symlink:
-  \"${in_dir}\"
+  \"${if_dn}\"
 
 To:
-  \"${out_dir}\"
+  \"${of_dn}\"
 
 Are you sure? [y/n]: "
 
@@ -57,11 +60,11 @@ if [[ $REPLY != 'y' ]]; then
 	exit
 fi
 
-mapfile -d'/' -t dn_parts <<<"$in_dir"
+mapfile -d'/' -t dn_parts <<<"$if_dn"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 start="${#dn_parts[@]}"
 
-mapfile -t files < <(find "$in_dir" -type f 2>&-)
+mapfile -t files < <(find "$if_dn" -type f 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
@@ -77,13 +80,13 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	dn="${dn:1}"
 	bn="${fn_parts[-1]}"
 
-	of_dn="${out_dir}/${dn}"
-	of="${of_dn}/${bn}"
+	dn="${of_dn}/${dn}"
+	of="${dn}/${bn}"
 
-	mkdir -p "$of_dn"
+	mkdir -p "$dn"
 	ln -s "$if" "$of"
 done
 
 # Changes the owner and permissions of the output directory.
-chown -R root:root "$out_dir"
-chmod -R +r "$out_dir"
+chown -R root:root "$of_dn"
+chmod -R +r "$of_dn"
