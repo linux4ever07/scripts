@@ -22,6 +22,7 @@
 
 # tracker_list.sh 'trackers.txt' | tee 'trackers_checked.txt'
 
+declare nocheck
 declare -a files
 
 nocheck=0
@@ -62,6 +63,8 @@ declare -A regex
 regex[url]='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
 regex[end]='^(.*):([0-9]+)(.*)$'
 
+declare protocol address end port tracker
+declare protocol_tmp address_tmp end_tmp port_tmp
 declare -a lines_out protocols addresses ends ports
 
 # Creates a function called 'get_lines', which reads the files given as
