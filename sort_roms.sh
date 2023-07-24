@@ -38,10 +38,9 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-dn=$(readlink -f "$1")
-session="${RANDOM}-${RANDOM}"
-sorted_dn="sorted-${session}"
+if_dn=$(readlink -f "$1")
 
+declare session sorted_dn
 declare -a global_vars priority
 declare -A regex titles
 
@@ -50,13 +49,16 @@ regex[ext]='\.([^.]*)$'
 regex[1]="\(([A-Z]{1,3}|[0-9]{1})\).*${regex[ext]}"
 regex[2]="^.*(\[\!\]).*${regex[ext]}"
 
+session="${RANDOM}-${RANDOM}"
+sorted_dn="sorted-${session}"
+
 global_vars=('fn' 'bn' 'region' 'region_n')
 priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$' '^5$')
 
-cd "$dn"
+cd "$if_dn"
 mkdir "$sorted_dn"
 
-mapfile -t files < <(find "$dn" -maxdepth 1 -type f 2>&-)
+mapfile -t files < <(find "$if_dn" -maxdepth 1 -type f 2>&-)
 
 set_target () {
 	set_vars () {
@@ -120,7 +122,7 @@ get_games
 
 # Gets the verified ROMs.
 for title in "${!titles[@]}"; do
-	mapfile -t files < <(find "$dn" -maxdepth 1 -type f -name "${title}*" 2>&-)
+	mapfile -t files < <(find "$if_dn" -maxdepth 1 -type f -name "${title}*" 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		declare "${global_vars[@]}"
