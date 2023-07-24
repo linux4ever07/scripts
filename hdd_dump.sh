@@ -53,21 +53,23 @@ elif [[ -f $2 ]]; then
 	exit
 fi
 
-session="${RANDOM}-${RANDOM}"
-in_dir=$(readlink -f "$1")
-out_dir=$(readlink -f "$2")
+if_dn=$(readlink -f "$1")
+of_dn=$(readlink -f "$2")
 
+declare session cp_log error_log used free
 declare -A regex md5s
 
-cp_log="${out_dir}/hdd_dump_copied-${session}.txt"
-error_log="${out_dir}/hdd_dump_errors-${session}.txt"
+session="${RANDOM}-${RANDOM}"
+
+cp_log="${of_dn}/hdd_dump_copied-${session}.txt"
+error_log="${of_dn}/hdd_dump_errors-${session}.txt"
 
 regex[du]='^([0-9]+)([[:blank:]]+)(.*)$'
 
-mkdir -p "$out_dir" || exit
+mkdir -p "$of_dn" || exit
 
-used=$(du --summarize --block-size=1 "$in_dir" | grep -Eo '^[0-9]+')
-free=$(df --output=avail --block-size=1 "$out_dir" | tail -n +2 | tr -d '[:blank:]')
+used=$(du --summarize --block-size=1 "$if_dn" | grep -Eo '^[0-9]+')
+free=$(df --output=avail --block-size=1 "$of_dn" | tail -n +2 | tr -d '[:blank:]')
 
 if [[ $used -gt $free ]]; then
 	diff=$(( used - free ))
@@ -75,7 +77,7 @@ if [[ $used -gt $free ]]; then
 	cat <<USED
 
 Not enough free space in:
-${out_dir}
+${of_dn}
 
 Difference is ${diff} bytes.
 
@@ -149,11 +151,11 @@ md5copy () {
 
 touch "$cp_log" "$error_log"
 
-mapfile -d'/' -t dn_parts <<<"$in_dir"
+mapfile -d'/' -t dn_parts <<<"$if_dn"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 start="${#dn_parts[@]}"
 
-mapfile -t files < <(find "$in_dir" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
+mapfile -t files < <(find "$if_dn" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if="${files[${i}]}"
@@ -169,7 +171,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	dn="${dn:1}"
 	bn="${fn_parts[-1]}"
 
-	of_dn="${out_dir}/${dn}"
+	of_dn="${of_dn}/${dn}"
 	of="${of_dn}/${bn}"
 
 	mkdir -p "$of_dn" || exit
