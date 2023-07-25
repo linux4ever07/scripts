@@ -169,20 +169,16 @@ output () {
 # Creates a function, called 'check_cmd', which will be used to
 # check if the needed commands are installed.
 check_cmd () {
-	check () {
-		command -v "$1"
-	}
-
 	declare cmd_tmp name_tmp
 	declare -A cmd name
 
-	cmd[dar]=$(check 'dar')
-	cmd[7z]=$(check '7za')
-	cmd[rar]=$(check 'rar')
-	cmd[cab]=$(check 'cabextract')
-	cmd[arj]=$(check '7z')
-	cmd[iso]=$(check '7z')
-	cmd[lzh]=$(check '7z')
+	cmd[dar]='dar'
+	cmd[7z]='7za'
+	cmd[rar]='rar'
+	cmd[cab]='cabextract'
+	cmd[arj]='7z'
+	cmd[iso]='7z'
+	cmd[lzh]='7z'
 
 	name[dar]='dar'
 	name[7z]='7zip'
@@ -192,7 +188,7 @@ check_cmd () {
 	name[iso]='7zip'
 	name[lzh]='7zip'
 
-	cmd_tmp="${cmd[${1}]}"
+	cmd_tmp=$(command -v "${cmd[${1}]}")
 	name_tmp="${name[${1}]}"
 
 	if [[ -z ${cmd_tmp} ]]; then
