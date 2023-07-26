@@ -530,9 +530,8 @@ sleep 5
 
 	arch_pack "${files_tmp_in[@]}"
 
-	mv "${no_ext}.tar.7z" "${if[dn]}"
-
 	rm -f "${if[fn]}"
+	mv "${no_ext}.tar.7z" "${of[fn]}"
 }
 
 # Creates a function, called 'rm_tmp', which will remove temporary
