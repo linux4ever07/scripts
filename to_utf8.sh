@@ -7,8 +7,8 @@
 
 set -eo pipefail
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [txt]"
 	exit
@@ -45,7 +45,7 @@ regex[fn]='^(.*)\.([^.]*)$'
 regex[charset1]='([^; ]+)$'
 regex[charset2]='^charset=(.*)$'
 
-# Creates a function called 'read_decode_fn', which tries to figure out
+# Creates a function, called 'read_decode_fn', which tries to figure out
 # the correct character set encoding of the input file. If it succeeds,
 # it will encode that file to UTF-8.
 read_decode_fn () {

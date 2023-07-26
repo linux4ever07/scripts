@@ -14,8 +14,8 @@
 # adjusted so they don't overlap. They will all differ by at least 1
 # centisecond.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [srt]"
 	exit
@@ -51,7 +51,7 @@ regex[zero]='^0+([0-9]+)$'
 
 mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}//" -e "s/${regex[blank3]}/ /g")
 
-# Creates a function called 'time_convert', which converts the
+# Creates a function, called 'time_convert', which converts the
 # 'time line' back and forth between the time (hh:mm:ss) format and
 # centiseconds.
 time_convert () {
@@ -88,7 +88,8 @@ time_convert () {
 			cs_last="${BASH_REMATCH[1]#0}"
 		fi
 
-# If $cs_last is greater than 50, round it up, and if not, round it down.
+# If $cs_last is greater than 50, round it up, and if not, round it
+# down.
 		if [[ $cs_last -ge 50 ]]; then
 			cs=$(( (cs - cs_last) + 100 ))
 		else
@@ -115,7 +116,7 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'time_calc', which makes sure the current
+# Creates a function, called 'time_calc', which makes sure the current
 # 'time line' is at least 1 centisecond greater than previous
 # 'time line'. It also makes sure each line has a length of at least 1
 # centisecond.

@@ -3,8 +3,8 @@
 # This script will list tags of a FLAC album. It allows the user to
 # select individual tracks from a simple menu, and display the tags.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [dir]"
 	exit
@@ -27,7 +27,7 @@ declare -A regex
 
 regex[num]='^[0-9]+$'
 
-# Creates a function called 'gettags', which gets all the tags present
+# Creates a function, called 'gettags', which gets all the tags present
 # in a FLAC file.
 gettags () {
 	if="$1"

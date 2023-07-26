@@ -3,8 +3,8 @@
 # This script is meant to print a specific function in a Bash script
 # given to it as argument.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file] [function name]"
 	exit

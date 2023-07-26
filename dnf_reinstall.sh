@@ -6,8 +6,8 @@
 
 declare mode
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [full|verify]"
 	exit
@@ -40,7 +40,7 @@ txt_fn="${HOME}/dnf_reinstall_${date}.txt"
 regex[dnf]='^([^ ]+).*$'
 regex[rpm]='^[^/]+(.*)$'
 
-# Creates a function called 'dnf_install', which will reinstall
+# Creates a function, called 'dnf_install', which will reinstall
 # packages.
 dnf_install () {
 	touch "$txt_fn"

@@ -27,8 +27,8 @@
 # 1 = Japan
 # 5 = NTSC
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [ROM directory]"
 	exit

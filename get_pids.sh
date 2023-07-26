@@ -5,8 +5,8 @@
 # of a command, for example. Note that command names are case sensitive.
 # As an example, 'Xorg' will work, but 'xorg' will not.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [name]"
 	exit
@@ -21,8 +21,8 @@ declare -A regex pids
 
 regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
 
-# Creates a function called 'get_pids', which gets all child process IDs
-# of the command names given to it as arguments.
+# Creates a function, called 'get_pids', which gets all child process
+# IDs of the command names given to it as arguments.
 get_pids () {
 	declare pid args comm comm_path
 	declare -a child match

@@ -34,11 +34,11 @@ if [[ ! -f $log_killed ]]; then
 	touch "$log_killed"
 fi
 
-# Creates a function called 'now', which will print the date and time.
+# Creates a function, called 'now', which will print the date and time.
 now () { date '+%F %H:%M:%S'; }
 
-# Creates a function called 'get_pids', which gets all child process IDs
-# of the command names given to it as arguments.
+# Creates a function, called 'get_pids', which gets all child process
+# IDs of the command names given to it as arguments.
 get_pids () {
 	declare pid args comm comm_path
 	declare -a session child match
@@ -106,7 +106,7 @@ get_pids () {
 	done
 }
 
-# Creates a function called 'kill_firefox', which kills all child
+# Creates a function, called 'kill_firefox', which kills all child
 # processes belonging to either Firefox or Tor Browser.
 kill_firefox () {
 	declare time
@@ -136,7 +136,7 @@ kill_firefox () {
 	done
 }
 
-# Creates a function called 'kill_chrome', which kills all child
+# Creates a function, called 'kill_chrome', which kills all child
 # processes belonging to either Chrome or Chromium.
 kill_chrome () {
 	declare time

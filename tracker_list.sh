@@ -27,8 +27,8 @@ declare -a files
 
 nocheck=0
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [tracker txt] [-nocheck]"
 	exit
@@ -67,7 +67,7 @@ declare protocol address end port tracker
 declare protocol_tmp address_tmp end_tmp port_tmp
 declare -a lines_out protocols addresses ends ports
 
-# Creates a function called 'get_lines', which reads the files given as
+# Creates a function, called 'get_lines', which reads the files given as
 # arguments to the script into memory.
 get_lines () {
 	declare -a lines_in

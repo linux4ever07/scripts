@@ -56,7 +56,7 @@ ctrl_c () {
 	restore_n_quit
 }
 
-# Creates a function called 'restore_n_quit', which will restore STDOUT
+# Creates a function, called 'restore_n_quit', which will restore STDOUT
 # to the shell, and then quit.
 restore_n_quit () {
 	if [[ $c_tty =~ ${regex[dev]} ]]; then
@@ -67,8 +67,8 @@ restore_n_quit () {
 	exit
 }
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	cat <<USAGE
 
@@ -135,7 +135,7 @@ if [[ -z $mode ]]; then
 	usage 1>&2
 fi
 
-# Creates a function called 'print_stdout', which will print STDOUT.
+# Creates a function, called 'print_stdout', which will print STDOUT.
 print_stdout () {
 	declare -a lines
 
@@ -166,8 +166,8 @@ output () {
 	fi
 }
 
-# Creates a function, called 'check_cmd', which will be used to
-# check if the needed commands are installed.
+# Creates a function, called 'check_cmd', which will be used to check if
+# the needed commands are installed.
 check_cmd () {
 	declare cmd_tmp name_tmp
 	declare -A cmd name
@@ -213,7 +213,7 @@ CMD
 	fi
 }
 
-# Creates a function called 'get_ext', which will separate file names
+# Creates a function, called 'get_ext', which will separate file names
 # and extensions.
 get_ext () {
 	declare -a ext_list
@@ -232,8 +232,8 @@ get_ext () {
 	ext=$(printf '.%s' "${ext_list[@]}")
 }
 
-# Creates a function called 'set_names', which will create variables for
-# file names.
+# Creates a function, called 'set_names', which will create variables
+# for file names.
 set_names () {
 	declare switch
 
@@ -260,7 +260,7 @@ set_names () {
 	no_ext="${if_dn}/${no_ext}"
 }
 
-# Creates a function called 'arch_pack', which will create an archive.
+# Creates a function, called 'arch_pack', which will create an archive.
 arch_pack () {
 	case "$ext" in
 		*.tar)
@@ -331,7 +331,7 @@ iso_unpack () {
 	rm -rf "$iso_mnt"
 }
 
-# Creates a function called 'arch_unpack', which will extract an
+# Creates a function, called 'arch_unpack', which will extract an
 # archive.
 arch_unpack () {
 	case "$ext" in
@@ -412,7 +412,7 @@ arch_unpack () {
 	esac
 }
 
-# Creates a function called 'arch_test', which will test an archive.
+# Creates a function, called 'arch_test', which will test an archive.
 arch_test () {
 	case "$ext" in
 		*.dar)
@@ -483,7 +483,7 @@ arch_test () {
 	esac
 }
 
-# Creates a function called 'arch_list', which will list the content of
+# Creates a function, called 'arch_list', which will list the content of
 # an archive.
 arch_list () {
 	case "$ext" in

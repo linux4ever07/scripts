@@ -8,6 +8,7 @@
 # I'm using this script to automatically lower the volume when I fall
 # asleep to watching a movie or YouTube.
 
+#
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
 cfg_fn="${HOME}/lower_volume_pw.cfg"
@@ -36,7 +37,7 @@ unit=354
 
 count=(0 0 0)
 
-# Creates a function called 'get_id', which decides the audio output to
+# Creates a function, called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
 get_id () {
 	declare pw_node pw_node_tmp n
@@ -62,7 +63,7 @@ get_id () {
 # Parse the output from 'pw-cli'...
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
 		line="${pw_info[${i}]}"
-		
+
 		if [[ $line =~ ${regex[id]} ]]; then
 			if [[ -z $n ]]; then
 				n=0
@@ -144,7 +145,8 @@ get_id () {
 	fi
 }
 
-# Creates a function called 'get_volume', which gets the current volume.
+# Creates a function, called 'get_volume', which gets the current
+# volume.
 get_volume () {
 	declare -a pw_dump
 
@@ -173,7 +175,7 @@ get_volume () {
 	og_volume="$volume"
 }
 
-# Creates a function called 'set_volume', which sets the volume.
+# Creates a function, called 'set_volume', which sets the volume.
 set_volume () {
 	mute_tmp="$1"
 
@@ -194,7 +196,7 @@ set_volume () {
 	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume_dec}, ${volume_dec} ] }" 1>&- 2>&-
 }
 
-# Creates a function called 'reset_volume', which resets the volume.
+# Creates a function, called 'reset_volume', which resets the volume.
 reset_volume () {
 	volume="$no_volume"
 
@@ -213,7 +215,7 @@ reset_volume () {
 	done
 }
 
-# Creates a function called 'sleep_low', which sleeps and then lowers
+# Creates a function, called 'sleep_low', which sleeps and then lowers
 # the volume.
 sleep_low () {
 	diff="$1"
@@ -231,8 +233,8 @@ sleep_low () {
 	printf '%s\n' "$volume"
 }
 
-# Creates a function called 'get_count', which will get the exact number
-# to decrease the volume by every 10 seconds. Since Bash can't do
+# Creates a function, called 'get_count', which will get the exact
+# number to decrease the volume by every 10 seconds. Since Bash can't do
 # floating-point arithmetic, this becomes slightly tricky. Keep in mind
 # that Bash always rounds down, never up. I've chosen 354 as the unit
 # because then it'll be exactly 1 minute left to take care of potential
@@ -266,7 +268,7 @@ get_count () {
 	fi
 }
 
-# Creates a function called 'spin', which will show a simple animation,
+# Creates a function, called 'spin', which will show a simple animation,
 # while waiting for the command output.
 spin () {
 	spinner=('   ' '.  ' '.. ' '...')

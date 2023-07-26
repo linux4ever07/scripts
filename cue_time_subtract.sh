@@ -8,8 +8,8 @@ if_dn=$(dirname "$if")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [cue]"
 	exit
@@ -42,7 +42,7 @@ regex[audio]='^AUDIO$'
 declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total
 declare -A if_cue gaps
 
-# Creates a function called 'time_convert', which converts track
+# Creates a function, called 'time_convert', which converts track
 # timestamps back and forth between the time (mm:ss:ff) format and
 # frames / sectors.
 time_convert () {
@@ -83,7 +83,7 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'read_cue', which will read the source CUE
+# Creates a function, called 'read_cue', which will read the source CUE
 # sheet, get all the relevant information from it and store that in
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
@@ -103,7 +103,7 @@ read_cue () {
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
-# Creates a function called 'handle_command', which will process each
+# Creates a function, called 'handle_command', which will process each
 # line in the CUE sheet and store all the relevant information in the
 # 'if_cue' hash.
 	handle_command () {
@@ -252,7 +252,7 @@ read_cue () {
 	done
 }
 
-# Creates a function called 'get_length', which will get the start
+# Creates a function, called 'get_length', which will get the start
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
 get_length () {
@@ -265,7 +265,7 @@ get_length () {
 
 	bytes_total=0
 
-# Creates a function called 'get_size', which will get the track length
+# Creates a function, called 'get_size', which will get the track length
 # by reading the size of the BIN file associated with this track. This
 # function will also reset the 'bytes_total' variable to '0' (as the
 # current track is last in the current BIN file).
@@ -349,7 +349,7 @@ get_length () {
 	done
 }
 
-# Creates a function called 'loop_set', which will get the start
+# Creates a function, called 'loop_set', which will get the start
 # positions, lengths, pregaps and postgaps for all tracks.
 loop_set () {
 	declare track_n

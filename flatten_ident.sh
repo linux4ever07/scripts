@@ -4,8 +4,8 @@
 # given as argument, and flatten them, if they contain just 1 file that
 # has the same name as the directory.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [dir]"
 	exit

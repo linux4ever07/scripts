@@ -56,8 +56,8 @@ if_dn=$(dirname "$if")
 if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	cat <<USAGE
 
@@ -172,7 +172,7 @@ declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length trac
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 declare -A if_cue gaps
 
-# Creates a function called 'check_cmd', which will check if the
+# Creates a function, called 'check_cmd', which will check if the
 # necessary commands are installed. If any of the commands are missing
 # print them and quit.
 check_cmd () {
@@ -195,7 +195,7 @@ check_cmd () {
 	fi
 }
 
-# Creates a function called 'run_cmd', which will be used to run
+# Creates a function, called 'run_cmd', which will be used to run
 # external commands, capture their output, and print the output (and
 # quit) if the command fails.
 run_cmd () {
@@ -217,7 +217,7 @@ run_cmd () {
 	fi
 }
 
-# Creates a function called 'get_files', which will be used to generate
+# Creates a function, called 'get_files', which will be used to generate
 # file lists to be used by other functions.
 get_files () {
 	for glob in "$@"; do
@@ -225,7 +225,7 @@ get_files () {
 	done | sort -n
 }
 
-# Creates a function called 'time_convert', which converts track
+# Creates a function, called 'time_convert', which converts track
 # timestamps back and forth between the time (mm:ss:ff) format and
 # frames / sectors.
 time_convert () {
@@ -266,7 +266,7 @@ time_convert () {
 	printf '%s' "$time"
 }
 
-# Creates a function called 'read_cue', which will read the source CUE
+# Creates a function, called 'read_cue', which will read the source CUE
 # sheet, get all the relevant information from it and store that in
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
@@ -286,7 +286,7 @@ read_cue () {
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
-# Creates a function called 'handle_command', which will process each
+# Creates a function, called 'handle_command', which will process each
 # line in the CUE sheet and store all the relevant information in the
 # 'if_cue' hash.
 	handle_command () {
@@ -436,7 +436,7 @@ read_cue () {
 	done
 }
 
-# Creates a function called 'get_gaps', which will get pregap and
+# Creates a function, called 'get_gaps', which will get pregap and
 # postgap from the CUE sheet for the track number given as argument.
 # If there's both a pregap specified using the PREGAP command and INDEX
 # command, those values will be added together. However, a CUE sheet is
@@ -461,7 +461,7 @@ get_gaps () {
 	fi
 }
 
-# Creates a function called 'get_length', which will get the start
+# Creates a function, called 'get_length', which will get the start
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
 get_length () {
@@ -474,7 +474,7 @@ get_length () {
 
 	bytes_total=0
 
-# Creates a function called 'get_size', which will get the track length
+# Creates a function, called 'get_size', which will get the track length
 # by reading the size of the BIN file associated with this track. This
 # function will also reset the 'bytes_total' variable to '0' (as the
 # current track is last in the current BIN file).
@@ -558,7 +558,7 @@ get_length () {
 	done
 }
 
-# Creates a function called 'loop_set', which will get the start
+# Creates a function, called 'loop_set', which will get the start
 # positions, lengths, pregaps and postgaps for all tracks.
 loop_set () {
 	declare track_n
@@ -579,7 +579,7 @@ loop_set () {
 	done
 }
 
-# Creates a function called 'block_calc', which will be used to get the
+# Creates a function, called 'block_calc', which will be used to get the
 # optimal block size to use in the 'copy_track' function when reading
 # and writing tracks using 'dd'. Bigger block sizes makes the process
 # faster, and the reason for being able to handle variable block sizes
@@ -613,7 +613,7 @@ block_calc () {
 	done
 }
 
-# Creates a function called 'copy_track', which will extract the raw
+# Creates a function, called 'copy_track', which will extract the raw
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	track_n="$1"
@@ -676,7 +676,7 @@ copy_track () {
 	run_cmd "${args[@]}"
 }
 
-# Creates a function called 'copy_track_type', which will extract the
+# Creates a function, called 'copy_track_type', which will extract the
 # raw binary data for all tracks of either the data or audio type.
 copy_track_type () {
 	track_type="$1"
@@ -714,7 +714,7 @@ copy_track_type () {
 	mapfile -t files_cdr < <(get_files "*.bin" "*.cdr")
 }
 
-# Creates a function called 'cdr2wav', which will convert the extracted
+# Creates a function, called 'cdr2wav', which will convert the extracted
 # CDR files to WAV (using 'ffmpeg' or 'sox').
 cdr2wav () {
 	declare type_tmp if_cdr of_wav
@@ -761,7 +761,7 @@ cdr2wav () {
 	mapfile -t files_wav < <(get_files "*.bin" "*.wav")
 }
 
-# Creates a function called 'encode_audio', which will encode the WAVs
+# Creates a function, called 'encode_audio', which will encode the WAVs
 # created by previously run functions.
 encode_audio () {
 	declare type_tmp
@@ -788,7 +788,7 @@ encode_audio () {
 	esac
 }
 
-# Creates a function called 'create_cue', which will create a new CUE
+# Creates a function, called 'create_cue', which will create a new CUE
 # sheet, based on the file lists created by the 'copy_track_type' and
 # 'cdr2wav' functions.
 create_cue () {
@@ -803,7 +803,7 @@ create_cue () {
 
 	type_tmp="${audio_types[${type}]}"
 
-# Creates a function called 'set_track_info', which will add FILE,
+# Creates a function, called 'set_track_info', which will add FILE,
 # TRACK, PREGAP, INDEX and POSTGAP commands. Pregap and postgap is only
 # added if they exist in the source CUE sheet.
 	set_track_info () {
@@ -863,7 +863,7 @@ create_cue () {
 	done
 }
 
-# Creates a function called 'clean_up', which deletes temporary files:
+# Creates a function, called 'clean_up', which deletes temporary files:
 # * Potential WAV files
 clean_up () {
 	declare -a files
@@ -905,7 +905,7 @@ for type in "${!audio_types_run[@]}"; do
 	printf '%s\r\n' "${!lines_ref}" | tee "$of_cue"
 done
 
-printf '\n' 
+printf '\n'
 
 # Deletes temporary files.
 clean_up

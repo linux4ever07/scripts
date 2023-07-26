@@ -18,6 +18,13 @@
 
 set -eo pipefail
 
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
+usage () {
+	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
+	exit
+}
+
 # If the script isn't run with sudo / root privileges, quit.
 if [[ $EUID -ne 0 ]]; then
 	printf '\n%s\n\n' 'You need to be root to run this script!'
@@ -27,17 +34,14 @@ fi
 # If argument is not a real file, print usage instructions and then
 # quit.
 if [[ ! -f $1 ]]; then
-	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
-	exit
+	usage
 fi
 
 if=$(readlink -f "$1")
 bn=$(basename "$if")
-session="${RANDOM}-${RANDOM}"
-of="/dev/shm/${bn%.*}-${session}.txt"
 
-limit=72
-
+declare session of limit tab date
+declare -a lines_in lines_out
 declare -A regex
 
 regex[comment]='^[[:blank:]]*#+[[:blank:]]*'
@@ -47,14 +51,16 @@ regex[blank3]='[[:blank:]]+'
 regex[tab]='^ {4}'
 regex[shebang]='^#!'
 
-declare -a lines_in lines_out
+session="${RANDOM}-${RANDOM}"
+of="/dev/shm/${bn%.*}-${session}.txt"
 
+limit=72
 tab=$(printf '\t')
 
 # Reads the input file.
 mapfile -t lines_in < <(tr -d '\r' <"$if")
 
-# Creates a function called 'next_line', which will shift the line
+# Creates a function, called 'next_line', which will shift the line
 # variables by 1 line.
 next_line () {
 	(( i += 1 ))
@@ -64,7 +70,7 @@ next_line () {
 	line_next="${lines_in[${j}]}"
 }
 
-# Creates a function called 'if_shebang', which will check if the
+# Creates a function, called 'if_shebang', which will check if the
 # current line is a shebang, and add an empty line after if needed.
 if_shebang () {
 	if [[ $line_this =~ ${regex[shebang]} ]]; then
@@ -78,7 +84,7 @@ if_shebang () {
 	fi
 }
 
-# Creates a function called 'reformat_comments', which will reformat
+# Creates a function, called 'reformat_comments', which will reformat
 # comment lines if they're longer than the set limit.
 reformat_comments () {
 	declare start stop switch
@@ -139,8 +145,8 @@ reformat_comments () {
 	(( i -= 1 ))
 }
 
-# Creates a function called 'reformat_lines', which will fix indentation
-# among other things.
+# Creates a function, called 'reformat_lines', which will fix
+# indentation among other things.
 reformat_lines () {
 	declare indent
 
@@ -162,7 +168,7 @@ reformat_lines () {
 	lines_out+=("$line_this")
 }
 
-# Creates a function called 'reset_arrays', which will reset the line
+# Creates a function, called 'reset_arrays', which will reset the line
 # arrays in-between loops.
 reset_arrays () {
 	lines_in=("${lines_out[@]}")
@@ -198,18 +204,18 @@ for (( i = 0; i < ${#lines_in[@]}; i++ )); do
 done
 
 # If the last line is not empty, add an empty line.
-if [[ -n ${lines_out[-1]} ]]; then
-	lines_out+=('')
-fi
+#if [[ -n ${lines_out[-1]} ]]; then
+#	lines_out+=('')
+#fi
 
-# Prints the altered lines to the temporary file name.
-printf '%s\n' "${lines_out[@]}" > "$of"
+# Gets the modification time of the input file.
+date=$(date -R -r "$if")
 
-# Copies permissions and modification time from the original file to the
-# new file.
-chmod --reference="${if}" "$of"
-chown --reference="${if}" "$of"
-touch -r "$if" "$of"
+# Truncates the input file.
+truncate -s 0 "$if"
 
-# Replaces the original file with the new file.
-mv "$of" "$if"
+# Prints the altered lines to the input file.
+printf '%s\n' "${lines_out[@]}" > "$if"
+
+# Copies the original modification time to the changed file.
+touch -d "$date" "$if"

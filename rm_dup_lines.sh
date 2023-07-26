@@ -20,7 +20,7 @@ dn="/dev/shm/rm_dup_lines-${session}"
 
 mkdir "$dn"
 
-# Creates a function called 'get_client', which will figure out which
+# Creates a function, called 'get_client', which will figure out which
 # client was used to generate the IRC log in question, to be able to
 # parse it correctly.
 get_client () {

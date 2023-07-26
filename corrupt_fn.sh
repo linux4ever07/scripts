@@ -8,8 +8,8 @@ set -eo pipefail
 
 declare -a files
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file 1] [file N]"
 	exit
@@ -32,7 +32,7 @@ fi
 
 declare size_in size_out block_size seek count
 
-# Creates a function called 'block_calc', which will be used to get the
+# Creates a function, called 'block_calc', which will be used to get the
 # optimal block size to use.
 block_calc () {
 	bytes1="$1"

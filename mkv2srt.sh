@@ -45,14 +45,14 @@ if [[ ${#cmd[@]} -ne 2 ]]; then
 	exit
 fi
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [mkv]"
 	exit
 }
 
-# Creates a function called 'clean_up', which will remove temporary
+# Creates a function, called 'clean_up', which will remove temporary
 # files, if they exist.
 clean_up () {
 	if [[ ${#files_tmp[@]} -eq 0 ]]; then
@@ -68,8 +68,8 @@ clean_up () {
 	done
 }
 
-# Creates a function called 'set_names', which will create variables for
-# file names.
+# Creates a function, called 'set_names', which will create variables
+# for file names.
 set_names () {
 	if=$(readlink -f "$1")
 	if_dn=$(dirname "$if")
@@ -85,7 +85,7 @@ set_names () {
 	fi
 }
 
-# Creates a function called 'get_tracks', which will read the metadata
+# Creates a function, called 'get_tracks', which will read the metadata
 # of media files, and if they contain subtitle tracks, store those in
 # the 'sub_tracks' hash.
 get_tracks () {
@@ -168,7 +168,7 @@ get_tracks () {
 	unset -v mkvinfo_tracks
 }
 
-# Creates a function called 'extract_remux', which will extract SRT
+# Creates a function, called 'extract_remux', which will extract SRT
 # subtitles from the Matroska file, and remux it without the SRT
 # subtitles.
 extract_remux () {

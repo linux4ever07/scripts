@@ -9,8 +9,8 @@
 # results. The paranthesis around (year) are required for proper
 # parsing.)
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") \"movie title (year)\""
 	exit
@@ -22,7 +22,7 @@ fi
 
 declare -A regex
 
-# Creates a function called 'uriencode', which will translate the
+# Creates a function, called 'uriencode', which will translate the
 # special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
@@ -31,7 +31,7 @@ uriencode () {
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)$/\1/'
 }
 
-# Creates a function called 'time_calc', which will translate seconds
+# Creates a function, called 'time_calc', which will translate seconds
 # into the hh:mm:ss format.
 time_calc () {
 	s="$1"
@@ -47,9 +47,8 @@ time_calc () {
 	printf '%02d:%02d:%02d' "$h" "$m" "$s"
 }
 
-# Creates a function called 'imdb', which will look up the movie name on
-# IMDb.
-# https://www.imdb.com/search/title/
+# Creates a function, called 'imdb', which will look up the movie name
+# on IMDb. https://www.imdb.com/search/title/
 # https://www.imdb.com/interfaces/
 imdb () {
 	if [[ $# -eq 0 ]]; then

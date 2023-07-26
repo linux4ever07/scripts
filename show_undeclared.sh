@@ -5,8 +5,8 @@
 # that same function. However, the script only goes 1 level deep, hence
 # functions within functions will all be considered as 1 entity.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
 	exit

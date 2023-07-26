@@ -44,8 +44,8 @@ if [[ ${#cmd[@]} -ne 2 ]]; then
 	exit
 fi
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	cat <<USAGE
 
@@ -67,7 +67,7 @@ USAGE
 	exit
 }
 
-# Creates a function called 'run_cmd', which will be used to run
+# Creates a function, called 'run_cmd', which will be used to run
 # external commands, capture their output, and print the output (and
 # quit) if the command fails.
 run_cmd () {
@@ -88,7 +88,7 @@ run_cmd () {
 	fi
 }
 
-# Creates a function called 'clean_up', which will remove temporary
+# Creates a function, called 'clean_up', which will remove temporary
 # files, if they exist.
 clean_up () {
 	if [[ ${#files_tmp[@]} -eq 0 ]]; then
@@ -104,7 +104,7 @@ clean_up () {
 	done
 }
 
-# Creates a function called 'get_tracks', which will read the metadata
+# Creates a function, called 'get_tracks', which will read the metadata
 # of media files, and if they contain subtitle tracks, store those in
 # the 'sub_tracks' hash.
 get_tracks () {

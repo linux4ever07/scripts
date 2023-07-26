@@ -6,8 +6,8 @@
 
 set -eo pipefail
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [directory]"
 	exit
@@ -31,7 +31,7 @@ regex[num]='^[0-9]+$'
 regex[size]='^[0-9]+M'
 regex[date]='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}'
 
-# Creates a function called 'menu'. It displays 2 menus. First it
+# Creates a function, called 'menu'. It displays 2 menus. First it
 # displays the directories found, and once a directory is selected it
 # displays options ('list' and 'remove').
 menu () {

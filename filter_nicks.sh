@@ -5,8 +5,8 @@
 # highlight. The purpose is to highlight a specific conversation going
 # on between the nicks specified.
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [log] [nicks...]"
 	exit
@@ -34,7 +34,7 @@ regex[irccloud]='^(\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\])(.*)$'
 regex[irssi]='^([0-9]+:[0-9]+)(.*)$'
 regex[konversation]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
 
-# Creates a function called 'get_client', which will figure out which
+# Creates a function, called 'get_client', which will figure out which
 # client was used to generate the IRC log in question, to be able to
 # parse it correctly.
 get_client () {
@@ -62,7 +62,7 @@ get_client () {
 	done
 }
 
-# Creates a function called 'get_nick', which will print the nick this
+# Creates a function, called 'get_nick', which will print the nick this
 # line belongs to.
 get_nick () {
 	declare word
@@ -74,7 +74,7 @@ get_nick () {
 	fi
 }
 
-# Creates a function called 'utf8_convert', which will convert all
+# Creates a function, called 'utf8_convert', which will convert all
 # characters in the nick to their UTF8 code. This is to be able to use
 # the nick as a hash element name, even if the nick contains special
 # characters.
@@ -92,8 +92,8 @@ utf8_convert () {
 	printf '%s' "$string_out"
 }
 
-# Creates a function called 'set_vars', which will get the current line,
-# split it into words, and get the nick it belongs to.
+# Creates a function, called 'set_vars', which will get the current
+# line, split it into words, and get the nick it belongs to.
 set_vars () {
 	time="${times[${i}]}"
 	line="${lines[${i}]}"

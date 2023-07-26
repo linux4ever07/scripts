@@ -19,8 +19,8 @@
 
 set -eo pipefail
 
-# Creates a function called 'usage', which will print usage instructions
-# and then quit.
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [in_dir] [out_dir]"
 	exit

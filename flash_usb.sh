@@ -27,7 +27,7 @@ declare -A regex
 
 regex[part]='\-part[0-9]+$'
 
-# Creates a function called 'get_files', which will print file names in
+# Creates a function, called 'get_files', which will print file names in
 # the current directory, but only if the glob pattern matches actual
 # files. This is to prevent errors for when a pattern has no matches.
 get_files () {
@@ -36,8 +36,8 @@ get_files () {
 	done
 }
 
-# Creates a function called 'device_menu', which will generate a list of
-# available USB devices and allow the user to select one of them in a
+# Creates a function, called 'device_menu', which will generate a list
+# of available USB devices and allow the user to select one of them in a
 # menu.
 device_menu () {
 	cd '/dev/disk/by-id'
