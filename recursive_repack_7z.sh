@@ -675,6 +675,8 @@ for key in "${!md5h[@]}"; do
 	done
 done
 
+unset -v md5h
+
 # Print duplicate archive names...
 
 mapfile -t files < <(find "${library[@]}" -type f -iname "*.7z" 2>&-)
@@ -710,6 +712,8 @@ for key in "${!md5_bn[@]}"; do
 	printf '*** %s\n' "${of[common_dn]}" >> "${of[same_name_fn]}"
 	printf '%s\n' "${files_tmp_in[@]}" >> "${of[same_name_fn]}"
 done
+
+unset -v md5_bn
 
 # Print the rest of the text files.
 printf '%s\n' "${corrupt[@]}" > "${of[corrupt_fn]}"
