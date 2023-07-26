@@ -278,7 +278,7 @@ get_symlinks () {
 	done
 
 	if [[ ${#symlinks_tmp[@]} -gt 0 ]]; then
-		symlinks+=("*** ${if[fn]}" "${symlinks_tmp[@]}" '')
+		symlinks+=("*** ${of[fn]}" "${symlinks_tmp[@]}" '')
 	fi
 
 	files_tmp_out=()
@@ -612,8 +612,6 @@ get_common () {
 get_files
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-# sleep 1
-
 	set_names "${files[${i}]}"
 
 	mkdir -p "${of[dn_tmp]}"
@@ -634,8 +632,6 @@ done
 # Try to repair broken archives, and then repack them as 7zip...
 
 for (( i = 0; i < ${#corrupt_in[@]}; i++ )); do
-# sleep 1
-
 	set_names "${corrupt[${i}]}"
 
 	mkdir -p "${of[dn_tmp]}"
