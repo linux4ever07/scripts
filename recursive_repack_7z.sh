@@ -18,7 +18,7 @@
 # repair it, before repacking it. If it can't repair it, it won't
 # repack.
 
-# The TAR archive format is not compressed, but it preserves the
+# The TAR archive format doesn't use compression, but it preserves the
 # integrity of the contained files (by being able to contain multiple
 # files inside a single TAR file). The reason for putting TAR archives
 # in 7zip archives is that the TAR archive can at a later point be
