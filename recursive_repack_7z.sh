@@ -18,11 +18,12 @@
 # repair it, before repacking it. If it can't repair it, it won't
 # repack.
 
-# TAR archives are uncompressed, but they preserve the integrity of the
-# contained files. The reason for putting TAR archives in 7zip archives
-# is that the TAR archive can at a later point be compressed using a
-# different format, without having to extract the TAR or accidentally
-# change the content in any way.
+# The TAR archive format is not compressed, but it preserves the
+# integrity of the contained files (by being able to contain multiple
+# files inside a single TAR file). The reason for putting TAR archives
+# in 7zip archives is that the TAR archive can at a later point be
+# compressed using a different format, without having to extract the TAR
+# or accidentally change the content in any way.
 
 # If an input archive is for example '.tar.gz', only the gzip part will
 # be extracted, leaving the contained TAR archive untouched, before
