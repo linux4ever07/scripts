@@ -28,6 +28,9 @@
 # be extracted, leaving the contained TAR archive untouched, before
 # repacking as 7zip.
 
+# The script requires a recent version of 'md5db_fast.pl' to be located
+# in the same directory.
+
 # PS: This code is a bit janky right now. It's a work in progress...
 
 set -o pipefail
@@ -665,14 +668,9 @@ for key in "${!md5h[@]}"; do
 	mapfile -t files_tmp_in < <(sort_long "${files_tmp_in[@]}")
 
 	printf '\n*** %s\n' "$key" >> "${of[same_md5_fn]}"
-	printf '*** %s\n' "${files_tmp_in[0]}" >> "${of[same_md5_fn]}"
 
 	for (( i = 0; i < ${#files_tmp_in[@]}; i++ )); do
 		set_names "${files_tmp_in[${i}]}"
-
-		if [[ ${if[fn]} == "${of[test]}" ]]; then
-			continue
-		fi
 
 		printf '%s\n' "${if[fn]}" >> "${of[same_md5_fn]}"
 	done
