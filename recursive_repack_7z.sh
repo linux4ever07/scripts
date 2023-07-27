@@ -129,8 +129,8 @@ declare -A regex md5h md5_bn if of
 session="${RANDOM}-${RANDOM}"
 PATH="${if[script_dn]}:${PATH}"
 
-ext_list1=('.tar.bz2' '.tbz' '.tbz2' '.tar.xz' '.txz' '.tar.gz' '.tgz' '.tar.z')
-ext_list2=('.tar' '.7z' '.lzh' '.gz' '.z' '.bz2' '.xz' '.zip' '.rar' '.arj')
+ext_list1=('.tar' '.tgz' '.tbz' '.tbz2' '.txz')
+ext_list2=('.z' '.gz' '.bz2' '.xz' '.zip' '.7z' '.rar' '.lzh' '.lha' '.arj')
 
 regex[dev]='^\/dev'
 regex[fn]='^(.*)\.([^.]*)$'
