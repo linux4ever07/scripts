@@ -343,8 +343,6 @@ arch_unpack () {
 
 	case "$1" in
 		*.dar)
-			check_cmd dar
-
 			mapfile -t stdout_v < <(dar -x "$2" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
@@ -369,34 +367,27 @@ arch_unpack () {
 			output "$2"
 		;;
 		*.7z)
-			check_cmd 7z
-
 			mapfile -t stdout_v < <(7za x "$2" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.rar)
-			check_cmd rar
-
 			mapfile -t stdout_v < <(rar x "$2" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.lzh|*.lha)
-			check_cmd lzh
-
 			mapfile -t stdout_v < <(7z x "$2" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.cab|*.exe)
-			check_cmd cab
-
 			mapfile -t stdout_v < <(cabextract "$2" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.arj)
-			check_cmd arj
-
 			mapfile -t stdout_v < <(7z x "$2" 2>&1; printf '%s\n' "$?")
 			output "$2"
+		;;
+		*)
+			exit_status=1
 		;;
 	esac
 }
@@ -422,6 +413,8 @@ arch_repair () {
 		if [[ $exit_status -eq 0 ]]; then
 			return
 		fi
+
+		rm_tmp "${no_ext}${ext}"
 	fi
 
 	if [[ $ext == '.zip' ]]; then
