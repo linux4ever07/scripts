@@ -344,7 +344,7 @@ arch_unpack () {
 
 	case "$1" in
 		*.dar)
-			mapfile -t stdout_v < <(dar -x "$no_ext" 2>&1; printf '%s\n' "$?")
+			mapfile -t stdout_v < <(dar -x "${of[fn_tmp]}" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.tar)
@@ -606,7 +606,6 @@ get_common () {
 }
 
 # Check and repack archives that aren't 7zip...
-
 get_files
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
@@ -628,7 +627,6 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 done
 
 # Try to repair broken archives, and then repack them as 7zip...
-
 for (( i = 0; i < ${#corrupt_in[@]}; i++ )); do
 	set_names "${corrupt_in[${i}]}"
 
@@ -652,7 +650,6 @@ printf '%s\n' "${corrupt_out[@]}" > "${of[fn_corrupt]}"
 unset -v corrupt_in corrupt_out
 
 # Print duplicate MD5 hashes...
-
 for key in "${!md5h[@]}"; do
 	mapfile -t files_tmp_in < <(printf '%b' "${md5h[${key}]}" | sort)
 
@@ -674,7 +671,6 @@ done
 md5h=()
 
 # Print duplicate archive names...
-
 mapfile -t files < <(find "${library[@]}" -type f -iname "*.tar.7z" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
