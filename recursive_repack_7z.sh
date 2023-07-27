@@ -443,7 +443,6 @@ arch_repair () {
 arch_pack () {
 	mode='pack'
 
-# Depending on the filename extension, create an archive accordingly.
 	if [[ ! -f "${no_ext}.tar" ]]; then
 		mapfile -t stdout_v < <(tar -cf "${no_ext}.tar" "$@" 2>&1; printf '%s\n' "$?")
 		output "${of[fn_tmp]}.tar"
