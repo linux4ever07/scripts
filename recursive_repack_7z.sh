@@ -466,7 +466,6 @@ arch_pack () {
 # content as a 7zip archive.
 check_n_repack () {
 	declare md5db_fn md5db_hash type
-sleep 5
 
 	if [[ $ext == '.tar' ]]; then
 		rm_tmp "${of[fn_tmp]}${ext}"
@@ -520,7 +519,6 @@ sleep 5
 	else
 		empty+=("${of[fn]}")
 	fi
-sleep 5
 
 	if [[ $PWD == "${of[dn_tar]}" ]]; then
 		cd "${of[dn_tmp]}"
