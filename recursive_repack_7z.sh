@@ -29,8 +29,8 @@
 # be extracted, leaving the contained TAR archive untouched, before
 # repacking as 7zip.
 
-# The script requires a recent version of 'md5db_fast.pl' to be located
-# in the same directory.
+# A recent version of 'md5db_fast.pl' is required to be located in the
+# same directory as this script.
 
 # PS: This code is a bit janky right now. It's a work in progress...
 
