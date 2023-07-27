@@ -200,7 +200,6 @@ get_ext () {
 # for file names.
 set_names () {
 	declare switch
-	declare -a ext_list
 
 	switch=0
 
