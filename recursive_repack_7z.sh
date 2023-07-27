@@ -249,14 +249,18 @@ get_files () {
 		set_names "${files_all[${z}]}"
 
 		for ext_tmp in "${ext_list1[@]}"; do
-			if [[ $ext == "$ext_tmp" ]]; then
+			regex[ext]="${ext_tmp}$"
+
+			if [[ $ext =~ ${regex[ext]} ]]; then
 				files1+=("${if[fn]}")
 				break
 			fi
 		done
 
 		for ext_tmp in "${ext_list2[@]}"; do
-			if [[ $ext == "$ext_tmp" ]]; then
+			regex[ext]="${ext_tmp}$"
+
+			if [[ $ext =~ ${regex[ext]} ]]; then
 				files2+=("${if[fn]}")
 				break
 			fi
