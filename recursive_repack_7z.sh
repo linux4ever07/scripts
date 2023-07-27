@@ -705,8 +705,7 @@ for key in "${!md5_bn[@]}"; do
 		continue
 	fi
 
-	printf '\n*** %s\n' "$key" >> "${of[same_name_fn]}"
-	printf '*** %s\n' "${of[common_dn]}" >> "${of[same_name_fn]}"
+	printf '\n*** %s\n' "${of[common_dn]}" >> "${of[same_name_fn]}"
 	printf '%s\n' "${files_tmp_in[@]}" >> "${of[same_name_fn]}"
 done
 
