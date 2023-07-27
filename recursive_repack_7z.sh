@@ -631,7 +631,7 @@ done
 # Try to repair broken archives, and then repack them as 7zip...
 
 for (( i = 0; i < ${#corrupt_in[@]}; i++ )); do
-	set_names "${corrupt[${i}]}"
+	set_names "${corrupt_in[${i}]}"
 
 	mkdir -p "${of[dn_tmp]}"
 	cp -p "${if[fn]}" "${of[dn_tmp]}"
