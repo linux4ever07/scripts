@@ -127,7 +127,7 @@ declare -a ext_list1 ext_list2 stdout_v
 declare -A regex md5h md5_bn if of
 
 session="${RANDOM}-${RANDOM}"
-PATH="${if[script_dn]}:${PATH}"
+PATH="${if[dn_script]}:${PATH}"
 
 ext_list1=('.tar' '.tgz' '.tbz' '.tbz2' '.txz')
 ext_list2=('.z' '.gz' '.bz2' '.xz' '.zip' '.7z' '.rar' '.lzh' '.lha' '.arj')
@@ -139,13 +139,13 @@ regex[file]='^([^\/]+).*$'
 regex[tar]='^\.tar\.[^.]*$'
 regex[dar]='^\.[0-9]+\.dar$'
 
-if[script_dn]=$(dirname "$(readlink -f "$0")")
+if[dn_script]=$(dirname "$(readlink -f "$0")")
 
-of[same_md5_fn]="${HOME}/repack_same_md5-${session}.txt"
-of[same_name_fn]="${HOME}/repack_same_name-${session}.txt"
-of[corrupt_fn]="${HOME}/repack_corrupt-${session}.txt"
-of[empty_fn]="${HOME}/repack_empty-${session}.txt"
-of[symlink_fn]="${HOME}/repack_symlink-${session}.txt"
+of[fn_same_md5]="${HOME}/repack_same_md5-${session}.txt"
+of[fn_same_name]="${HOME}/repack_same_name-${session}.txt"
+of[fn_corrupt]="${HOME}/repack_corrupt-${session}.txt"
+of[fn_empty]="${HOME}/repack_empty-${session}.txt"
+of[fn_symlink]="${HOME}/repack_symlink-${session}.txt"
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
@@ -648,7 +648,7 @@ for (( i = 0; i < ${#corrupt_in[@]}; i++ )); do
 	rm_tmp
 done
 
-printf '%s\n' "${corrupt_out[@]}" > "${of[corrupt_fn]}"
+printf '%s\n' "${corrupt_out[@]}" > "${of[fn_corrupt]}"
 
 unset -v corrupt_in corrupt_out
 
@@ -663,12 +663,12 @@ for key in "${!md5h[@]}"; do
 
 	mapfile -t files_tmp_in < <(sort_long "${files_tmp_in[@]}")
 
-	printf '\n*** %s\n' "$key" >> "${of[same_md5_fn]}"
+	printf '\n*** %s\n' "$key" >> "${of[fn_same_md5]}"
 
 	for (( i = 0; i < ${#files_tmp_in[@]}; i++ )); do
 		set_names "${files_tmp_in[${i}]}"
 
-		printf '%s\n' "${if[fn]}" >> "${of[same_md5_fn]}"
+		printf '%s\n' "${if[fn]}" >> "${of[fn_same_md5]}"
 	done
 done
 
@@ -705,13 +705,12 @@ for key in "${!md5_bn[@]}"; do
 		continue
 	fi
 
-	printf '\n*** %s\n' "${of[common_dn]}" >> "${of[same_name_fn]}"
-	printf '%s\n' "${files_tmp_in[@]}" >> "${of[same_name_fn]}"
+	printf '\n*** %s\n' "${of[common_dn]}" >> "${of[fn_same_name]}"
+	printf '%s\n' "${files_tmp_in[@]}" >> "${of[fn_same_name]}"
 done
 
 unset -v md5_bn
 
 # Print the rest of the text files.
-printf '%s\n' "${corrupt[@]}" > "${of[corrupt_fn]}"
-printf '%s\n' "${empty[@]}" > "${of[empty_fn]}"
-printf '%s\n' "${symlinks[@]}" > "${of[symlink_fn]}"
+printf '%s\n' "${empty[@]}" > "${of[fn_empty]}"
+printf '%s\n' "${symlinks[@]}" > "${of[fn_symlink]}"
