@@ -414,7 +414,7 @@ arch_repair () {
 			return
 		fi
 
-		rm_tmp "${no_ext}${ext}"
+		rm_tmp "${of[fn_tmp]}${ext}"
 	fi
 
 	if [[ $ext == '.zip' ]]; then
