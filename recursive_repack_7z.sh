@@ -343,7 +343,7 @@ arch_unpack () {
 
 	case "$1" in
 		*.dar)
-			mapfile -t stdout_v < <(dar -x "$2" 2>&1; printf '%s\n' "$?")
+			mapfile -t stdout_v < <(dar -x "$no_ext" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.tar)
