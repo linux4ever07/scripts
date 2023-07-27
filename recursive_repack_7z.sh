@@ -121,10 +121,10 @@ fi
 
 check_cmd
 
-declare mode session exit_status no_ext ext
+declare mode session exit_status no_ext ext md5
 declare -a files files_tmp_in files_tmp_out empty symlinks corrupt_in corrupt_out
 declare -a ext_list1 ext_list2 stdout_v
-declare -A regex md5h md5_bn if of
+declare -A regex md5h if of
 
 session="${RANDOM}-${RANDOM}"
 PATH="${if[dn_script]}:${PATH}"
@@ -138,6 +138,8 @@ regex[abc]='[^a-zA-Z]'
 regex[file]='^([^\/]+).*$'
 regex[tar]='^\.tar\.[^.]*$'
 regex[dar]='^\.[0-9]+\.dar$'
+
+if[fn_md5db]='md5.db'
 
 if[dn_script]=$(dirname "$(readlink -f "$0")")
 
@@ -464,7 +466,7 @@ arch_pack () {
 # hash representing the extracted directory, and compress the directory
 # content as a 7zip archive.
 check_n_repack () {
-	declare md5db_fn md5db_hash type
+	declare type
 
 	if [[ $ext == '.tar' ]]; then
 		rm_tmp "${of[fn_tmp]}${ext}"
@@ -506,15 +508,13 @@ check_n_repack () {
 
 	get_symlinks
 
-	md5db_fn='md5.db'
-
 	md5db_fast.pl -index . 1>&- 2>&-
 
-	if [[ -f $md5db_fn ]]; then
-		md5db_hash=$(md5sum -b "$md5db_fn")
-		md5db_hash="${md5db_hash%% *}"
+	if [[ -f ${if[fn_md5db]} ]]; then
+		md5=$(md5sum -b "${if[fn_md5db]}")
+		md5="${md5%% *}"
 
-		md5h["${md5db_hash}"]+="${of[fn]}\n"
+		md5h["${md5}"]+="${of[fn]}\n"
 	else
 		empty+=("${of[fn]}")
 	fi
@@ -671,7 +671,7 @@ for key in "${!md5h[@]}"; do
 	done
 done
 
-unset -v md5h
+md5h=()
 
 # Print duplicate archive names...
 
@@ -686,11 +686,11 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	md5=$(md5sum -b <<<"${if[bn_abc]}")
 	md5="${md5%% *}"
 
-	md5_bn["${md5}"]+="${if[fn]}\n"
+	md5h["${md5}"]+="${if[fn]}\n"
 done
 
-for key in "${!md5_bn[@]}"; do
-	mapfile -t files_tmp_in < <(printf '%b' "${md5_bn[${key}]}" | sort)
+for key in "${!md5h[@]}"; do
+	mapfile -t files_tmp_in < <(printf '%b' "${md5h[${key}]}" | sort)
 
 	if [[ ${#files_tmp_in[@]} -eq 1 ]]; then
 		continue
@@ -708,7 +708,7 @@ for key in "${!md5_bn[@]}"; do
 	printf '%s\n' "${files_tmp_in[@]}" >> "${of[fn_same_name]}"
 done
 
-unset -v md5_bn
+unset -v md5h
 
 # Print the rest of the text files.
 printf '%s\n' "${empty[@]}" > "${of[fn_empty]}"
