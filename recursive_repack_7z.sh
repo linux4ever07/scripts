@@ -659,13 +659,15 @@ for key in "${!md5h[@]}"; do
 
 	mapfile -t files_tmp_in < <(sort_long "${files_tmp_in[@]}")
 
-	printf '\n*** %s\n' "$key" >> "${of[fn_same_md5]}"
+	printf '*** %s\n' "$key" >> "${of[fn_same_md5]}"
 
 	for (( i = 0; i < ${#files_tmp_in[@]}; i++ )); do
 		set_names "${files_tmp_in[${i}]}"
 
 		printf '%s\n' "${if[fn]}" >> "${of[fn_same_md5]}"
 	done
+
+	printf '\n' >> "${of[fn_same_md5]}"
 done
 
 md5h=()
@@ -700,8 +702,9 @@ for key in "${!md5h[@]}"; do
 		continue
 	fi
 
-	printf '\n*** %s\n' "${of[common_dn]}" >> "${of[fn_same_name]}"
+	printf '*** %s\n' "${of[common_dn]}" >> "${of[fn_same_name]}"
 	printf '%s\n' "${files_tmp_in[@]}" >> "${of[fn_same_name]}"
+	printf '\n' >> "${of[fn_same_name]}"
 done
 
 unset -v md5h
