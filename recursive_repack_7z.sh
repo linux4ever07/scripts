@@ -478,7 +478,7 @@ sleep 5
 	mapfile -t files_tmp_in < <(compgen -G "*")
 
 	for (( z = 0; z < ${#files_tmp_in[@]}; z++ )); do
-		if [[ ${files_tmp_in[${z}]} == 'not_a_tty' ]]; then
+		if [[ ${files_tmp_in[${z}]} == 'not a tty' ]]; then
 			continue
 		fi
 
