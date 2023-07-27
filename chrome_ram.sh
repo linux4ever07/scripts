@@ -39,9 +39,10 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode ram_limit time_limit time_start time_end
-declare cwd restart_fn tar_fn pid_chrome
+declare mode session ram_limit time_limit time_start time_end
+declare cwd pid_chrome
 declare -a files
+declare -A if of
 
 case "$1" in
 	'normal')
@@ -72,18 +73,19 @@ session="${RANDOM}-${RANDOM}"
 ram_limit=1000000
 time_limit=3600
 
-og_cfg="${HOME}/.config/google-chrome"
-og_cache="${HOME}/.cache/google-chrome"
+if[og_cfg]="${HOME}/.config/google-chrome"
+if[og_cache]="${HOME}/.cache/google-chrome"
 
-bak_cfg="${og_cfg}-${session}"
-bak_cache="${og_cache}-${session}"
+if[bak_cfg]="${if[og_cfg]}-${session}"
+if[bak_cache]="${if[og_cache]}-${session}"
 
-shm_dn="/dev/shm/google-chrome-${session}"
-shm_cfg="${shm_dn}/config"
-shm_cache="${shm_dn}/cache"
+of[shm_dn]="/dev/shm/google-chrome-${session}"
+of[shm_cfg]="${of[shm_dn]}/config"
+of[shm_cache]="${of[shm_dn]}/cache"
 
-restart_fn="${shm_dn}/kill"
-tar_fn="${HOME}/google-chrome-${session}.tar"
+of[restart_fn]="${of[shm_dn]}/kill"
+of[tar_fn]="${HOME}/google-chrome-${session}.tar"
+of[tar_unfinished_fn]="${of[tar_fn]}.unfinished"
 
 cwd="$PWD"
 
@@ -97,11 +99,11 @@ start_chrome () {
 }
 
 restart_chrome () {
-	if [[ ! -f $restart_fn ]]; then
+	if [[ ! -f ${of[restart_fn]} ]]; then
 		return
 	fi
 
-	rm "$restart_fn" || exit
+	rm "${of[restart_fn]}" || exit
 
 	kill -9 "$pid_chrome"
 
@@ -172,36 +174,25 @@ NOT_ENOUGH
 }
 
 backup_chrome () {
-	declare tar_fn_old
-
-	tar_fn_old="${tar_fn}.old"
-
 	cat <<BACKUP
 
 $(date)
 
 Backing up:
-${shm_cfg}
+${of[shm_cfg]}
 
 To:
-${tar_fn} 
+${of[tar_fn]} 
 
 BACKUP
-
-	if [[ -f $tar_fn ]]; then
-		mv "$tar_fn" "$tar_fn_old"
-	fi
 
 	sync
 
 	mapfile -t files < <(compgen -G "*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		tar -cf "$tar_fn" "${files[@]}"
-	fi
-
-	if [[ -f $tar_fn_old ]]; then
-		rm "$tar_fn_old"
+		tar -cf "${of[tar_unfinished_fn]}" "${files[@]}"
+		mv "${of[tar_unfinished_fn]}" "${of[tar_fn]}"
 	fi
 }
 
@@ -210,30 +201,30 @@ restore_chrome () {
 
 	sync
 
-	rm "$og_cfg" "$og_cache" || exit
+	rm "${if[og_cfg]}" "${if[og_cache]}" || exit
 
 	if [[ $mode == 'normal' ]]; then
-		mkdir -p "$og_cfg" "$og_cache" || exit
+		mkdir -p "${if[og_cfg]}" "${if[og_cache]}" || exit
 
-		mapfile -t files < <(compgen -G "${shm_cfg}/*")
+		mapfile -t files < <(compgen -G "${of[shm_cfg]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "$og_cfg" || exit
+			cp -rp "${files[@]}" "${if[og_cfg]}" || exit
 		fi
 
-		mapfile -t files < <(compgen -G "${shm_cache}/*")
+		mapfile -t files < <(compgen -G "${of[shm_cache]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "$og_cache" || exit
+			cp -rp "${files[@]}" "${if[og_cache]}" || exit
 		fi
 	fi
 
 	if [[ $mode == 'clean' ]]; then
-		mv "$bak_cfg" "$og_cfg" || exit
-		mv "$bak_cache" "$og_cache" || exit
+		mv "${if[bak_cfg]}" "${if[og_cfg]}" || exit
+		mv "${if[bak_cache]}" "${if[og_cache]}" || exit
 	fi
 
-	rm -r "$shm_dn"
+	rm -r "${of[shm_dn]}"
 
 	sync
 
@@ -252,53 +243,53 @@ kill_chrome () {
 	exit
 }
 
-mkdir -p "$og_cfg" "$og_cache" || exit
+mkdir -p "${if[og_cfg]}" "${if[og_cache]}" || exit
 
 if [[ $mode == 'normal' ]]; then
-	check_hdd "$og_cfg" || exit
+	check_hdd "${if[og_cfg]}" || exit
 fi
 
-mv "$og_cfg" "$bak_cfg" || exit
-mv "$og_cache" "$bak_cache" || exit
+mv "${if[og_cfg]}" "${if[bak_cfg]}" || exit
+mv "${if[og_cache]}" "${if[bak_cache]}" || exit
 
-mkdir -p "$shm_cfg" "$shm_cache" || exit
+mkdir -p "${of[shm_cfg]}" "${of[shm_cache]}" || exit
 
-ln -s "$shm_cfg" "$og_cfg" || exit
-ln -s "$shm_cache" "$og_cache" || exit
+ln -s "${of[shm_cfg]}" "${if[og_cfg]}" || exit
+ln -s "${of[shm_cache]}" "${if[og_cache]}" || exit
 
 if [[ $mode == 'normal' ]]; then
 	printf '\n%s\n\n' 'Copying Chrome config / cache to /dev/shm...'
 
-	mapfile -t files < <(compgen -G "${bak_cfg}/*")
+	mapfile -t files < <(compgen -G "${if[bak_cfg]}/*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		cp -rp "${files[@]}" "$shm_cfg" || exit
+		cp -rp "${files[@]}" "${of[shm_cfg]}" || exit
 	fi
 
-	mapfile -t files < <(compgen -G "${bak_cache}/*")
+	mapfile -t files < <(compgen -G "${if[bak_cache]}/*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		cp -rp "${files[@]}" "$shm_cache" || exit
+		cp -rp "${files[@]}" "${of[shm_cache]}" || exit
 	fi
 
-	rm -r "$bak_cache" || exit
+	rm -r "${if[bak_cache]}" || exit
 fi
 
 start_chrome
 
 if [[ $mode == 'normal' ]]; then
-	cd "$bak_cfg" || kill_chrome
+	cd "${if[bak_cfg]}" || kill_chrome
 
 	mapfile -t files < <(compgen -G "*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		tar -cf "$tar_fn" "${files[@]}" || kill_chrome
+		tar -cf "${of[tar_fn]}" "${files[@]}" || kill_chrome
 	fi
 
-	rm -r "$bak_cfg" || kill_chrome
+	rm -r "${if[bak_cfg]}" || kill_chrome
 fi
 
-cd "$shm_cfg" || kill_chrome
+cd "${of[shm_cfg]}" || kill_chrome
 
 time_start=$(date '+%s')
 time_end=$(( time_start + time_limit ))
@@ -313,7 +304,7 @@ while check_status; do
 	check_time || continue
 
 	if [[ $mode == 'normal' ]]; then
-		check_hdd "$shm_dn" && backup_chrome
+		check_hdd "${of[shm_dn]}" && backup_chrome
 	fi
 done
 

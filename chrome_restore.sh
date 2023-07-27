@@ -33,15 +33,15 @@ case "$1" in
 	;;
 esac
 
-declare ram_fn ram_date bak_fn bak_date
+declare date ram_date bak_date
 declare -a files
-declare -A regex
+declare -A regex if of
 
 ram_date=0
 bak_date=0
 
-cfg="${HOME}/.config/google-chrome"
-cache="${HOME}/.cache/google-chrome"
+of[og_cfg]="${HOME}/.config/google-chrome"
+of[og_cache]="${HOME}/.cache/google-chrome"
 
 regex[bn]='google-chrome-[0-9]+-[0-9]+'
 regex[ram]="^${regex[bn]}$"
@@ -60,7 +60,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	date=$(stat -c '%Y' "$fn")
 
 	if [[ $date -gt $ram_date ]]; then
-		ram_fn="$fn"
+		if[ram_fn]="$fn"
 		ram_date="$date"
 	fi
 done
@@ -78,25 +78,25 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	date=$(stat -c '%Y' "$fn")
 
 	if [[ $date -gt $bak_date ]]; then
-		bak_fn="$fn"
+		if[bak_fn]="$fn"
 		bak_date="$date"
 	fi
 done
 
 case "$mode" in
 	'ram')
-		if [[ -z $ram_fn ]]; then
+		if [[ -z ${if[ram_fn]} ]]; then
 			exit
 		fi
 	;;
 	'backup')
-		if [[ -z $bak_fn ]]; then
+		if [[ -z ${if[bak_fn]} ]]; then
 			exit
 		fi
 	;;
 esac
 
-for dn in "$cfg" "$cache"; do
+for dn in "${of[og_cfg]}" "${of[og_cache]}"; do
 	if [[ -L "$dn" ]]; then
 		rm "$dn" || exit
 	fi
@@ -112,28 +112,28 @@ sync
 
 case "$mode" in
 	'ram')
-		ram_cfg="${ram_fn}/config"
-		ram_cache="${ram_fn}/cache"
+		if[ram_cfg]="${if[ram_fn]}/config"
+		if[ram_cache]="${if[ram_fn]}/cache"
 
-		mapfile -t files < <(compgen -G "${ram_cfg}/*")
+		mapfile -t files < <(compgen -G "${if[ram_cfg]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "$cfg" || exit
+			cp -rp "${files[@]}" "${of[og_cfg]}" || exit
 		fi
 
-		mapfile -t files < <(compgen -G "${ram_cache}/*")
+		mapfile -t files < <(compgen -G "${if[ram_cache]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "$cache" || exit
+			cp -rp "${files[@]}" "${of[og_cache]}" || exit
 		fi
 
 		sync
 
-		rm -r "$ram_fn" || exit
+		rm -r "${if[ram_fn]}" || exit
 	;;
 	'backup')
-		cd "$cfg" || exit
-		tar -xf "$bak_fn" || exit
+		cd "${of[og_cfg]}" || exit
+		tar -xf "${if[bak_fn]}" || exit
 
 		sync
 	;;

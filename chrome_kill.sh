@@ -5,6 +5,7 @@
 # to access the hard drive, in case the intention was not to quit
 # Chrome.
 
+declare restart_fn
 declare -A regex
 
 regex[bn]='google-chrome-[0-9]+-[0-9]+'
@@ -20,5 +21,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 		continue
 	fi
 
-	touch "${fn}/kill"
+	restart_fn="${fn}/kill"
+
+	touch "$restart_fn"
 done
