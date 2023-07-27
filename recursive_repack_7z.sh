@@ -676,12 +676,12 @@ unset -v md5h
 
 # Print duplicate archive names...
 
-mapfile -t files < <(find "${library[@]}" -type f -iname "*.7z" 2>&-)
+mapfile -t files < <(find "${library[@]}" -type f -iname "*.tar.7z" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	set_names "${files[${i}]}"
 
-	if[bn_abc]=$(sed -E "s/${regex[abc]}//g" <<<"${if[bn],,}")
+	if[bn_abc]=$(sed -E "s/${regex[abc]}//g" <<<"${no_ext,,}")
 	if[bn_abc]="${if[bn_abc]:0:4}"
 
 	md5=$(md5sum -b <<<"${if[bn_abc]}")
