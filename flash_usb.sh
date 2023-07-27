@@ -5,6 +5,8 @@
 # check if it's an ISO file. The script asks the user to select the
 # correct USB device from a menu.
 
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [image]"
 	exit

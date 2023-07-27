@@ -3,6 +3,8 @@
 # This script is meant to do low-level formatting of devices, by writing
 # 0s to the entire device, reading from /dev/zero.
 
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [devices...]"
 	exit
