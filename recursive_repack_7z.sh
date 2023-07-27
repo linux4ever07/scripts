@@ -402,19 +402,21 @@ arch_repair () {
 	if [[ $type =~ ${regex[file]} ]]; then
 		type="${BASH_REMATCH[1]}"
 
-		ext="${ext%.*}.${type}"
+		if [[ $type != '???' ]]; then
+			ext="${ext%.*}.${type}"
 
-		mv -n "${if[bn]}" "${no_ext}${ext}"
+			mv -n "${if[bn]}" "${no_ext}${ext}"
 
-		if[bn]="${no_ext}${ext}"
+			if[bn]="${no_ext}${ext}"
 
-		arch_unpack "$ext" "${of[fn_tmp]}${ext}"
+			arch_unpack "$ext" "${of[fn_tmp]}${ext}"
 
-		if [[ $exit_status -eq 0 ]]; then
-			return
+			if [[ $exit_status -eq 0 ]]; then
+				return
+			fi
+
+			rm_tmp "${of[fn_tmp]}${ext}"
 		fi
-
-		rm_tmp "${of[fn_tmp]}${ext}"
 	fi
 
 	if [[ $ext == '.zip' ]]; then
