@@ -48,36 +48,28 @@ usage () {
 check_cmd () {
 	declare cmd_tmp name_tmp
 	declare -a missing_pkg
-	declare -A cmd name
+	declare -A cmd
 
 	cmd[dar]='dar'
-	cmd[7z]='7za'
+	cmd[7za]='7zip'
+	cmd[7z]='7zip'
 	cmd[rar]='rar'
-	cmd[cab]='cabextract'
-	cmd[arj]='7z'
-	cmd[lzh]='7z'
-
-	name[dar]='dar'
-	name[7z]='7zip'
-	name[rar]='rar'
-	name[cab]='cabextract'
-	name[arj]='7zip'
-	name[lzh]='7zip'
+	cmd[cabextract]='cabextract'
 
 	for cmd_tmp in "${!cmd[@]}"; do
-		name_tmp="${name[${cmd_tmp}]}"
+		name_tmp="${cmd[${cmd_tmp}]}"
 
-		command -v "${cmd[${cmd_tmp}]}" 1>&-
+		command -v "$cmd_tmp" 1>&-
 
 		if [[ $? -ne 0 ]]; then
-			missing_pkg+=("$name")
+			missing_pkg+=("${cmd_tmp} (${name_tmp})")
 		fi
 	done
 
 	if [[ ${missing_pkg[@]} -gt 0 ]]; then
 		cat <<CMD
 
-The following are not installed:
+The following commands are not installed:
 $(printf '%s\n' "${missing_pkg[@]}")
 
 Install them through your package manager.
