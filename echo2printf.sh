@@ -18,9 +18,15 @@
 
 # The output script file replaces the input file.
 
-if [[ ! -f $1 ]]; then
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
+usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [file]"
 	exit
+}
+
+if [[ ! -f $1 ]]; then
+	usage
 fi
 
 if=$(readlink -f "$1")
