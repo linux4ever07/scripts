@@ -164,7 +164,11 @@ sub time_calc {
 
 	my($diff);
 
-	if ($offset > 0 and $start_time < 100) {
+	if ($offset == 0) {
+		return($start_time, $stop_time);
+	}
+
+	if ($start_time < 100) {
 		$diff = 100 - $start_time;
 
 		$start_time = $start_time + $diff;
@@ -205,9 +209,7 @@ sub parse_srt {
 				$start_time = time_convert($1);
 				$stop_time = time_convert($2);
 
-				if ($offset > 0) {
-					($start_time, $stop_time) = time_calc($start_time, $stop_time);
-				}
+				($start_time, $stop_time) = time_calc($start_time, $stop_time);
 
 				$n = $n + 1;
 
