@@ -10,7 +10,6 @@ use diagnostics;
 use File::Basename qw(basename);
 use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
-use POSIX qw(floor);
 
 my(%regex, @lines, @format, $delim, $fn, $ext);
 
@@ -85,63 +84,12 @@ sub read_decode_fn {
 	return(@lines);
 }
 
-# The 'time_convert' subroutine converts the 'time line' back and forth
-# between the time (hh:mm:ss) format and centiseconds.
-sub time_convert {
-	my $time = shift;
-
-	my $h = 0;
-	my $m = 0;
-	my $s = 0;
-	my $cs = 0;
-
-	my $cs_last = 0;
-
-# If argument is in the hh:mm:ss format...
-	if ($time =~ m/$format[1]/) {
-		$h = $1;
-		$m = $2;
-		$s = $3;
-		$cs = $4;
-
-		$h =~ s/$regex{zero}/$1/;
-		$m =~ s/$regex{zero}/$1/;
-		$s =~ s/$regex{zero}/$1/;
-		$cs =~ s/$regex{zero}/$1/;
-
-# Converts all the numbers to centiseconds, because those kind of values
-# will be easier to compare in the 'time_calc' subroutine.
-		$h = $h * 60 * 60 * 1000;
-		$m = $m * 60 * 1000;
-		$s = $s * 1000;
-
-		$time = $h + $m + $s + $cs;
-
-# If argument is in the centisecond format...
-	} elsif ($time =~ m/$format[0]/) {
-		$cs = $time;
-
-		$s = floor($cs / 1000);
-		$m = floor($s / 60);
-		$h = floor($m / 60);
-
-		$cs = floor($cs % 1000);
-		$s = floor($s % 60);
-		$m = floor($m % 60);
-
-		$time = sprintf('%02d:%02d:%02d,%03d', $h, $m, $s, $cs);
-	}
-
-	return($time);
-}
-
 # The 'parse_srt' subroutine reads the SRT subtitle file passed to it,
 # and prints it without the timestamps.
 sub parse_srt {
 	my $fn = shift;
 
 	my($this, $next, $end, $total_n);
-	my($start_time, $stop_time, $time_line);
 	my(%lines, @lines_tmp);
 
 	my $i = 0;
@@ -161,13 +109,7 @@ sub parse_srt {
 
 		if (length($this) and $this =~ m/$format[0]/) {
 			if (length($next) and $next =~ m/$format[3]/) {
-				$start_time = time_convert($1);
-				$stop_time = time_convert($2);
-
 				$n = $n + 1;
-
-				$lines{$n}{start} = $start_time;
-				$lines{$n}{stop} = $stop_time;
 
 				$i = $i + 2;
 				$j = $i + 1;
@@ -210,11 +152,6 @@ sub parse_srt {
 	@lines_tmp = ();
 
 	until ($n > $total_n) {
-		$start_time = time_convert($lines{$n}{start});
-		$stop_time = time_convert($lines{$n}{stop});
-
-		$time_line = $start_time . $delim . $stop_time;
-
 		foreach my $line (@{$lines{$n}{text}}) {
 			push(@lines_tmp, $n . ': ' . $line);
 		}
