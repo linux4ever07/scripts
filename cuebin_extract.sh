@@ -29,12 +29,22 @@
 
 # The script will work with all kinds of games, including PS1 and Sega
 # Saturn games. All that's required is that the disc image is in the
-# BIN/CUE format. Though, I'm not sure if there's emulators that can
-# handle FLAC or Ogg Vorbis tracks. The point would mainly be to listen
-# to the music.
+# BIN/CUE format. There's some other emulators out there that can
+# handle FLAC and Ogg Vorbis tracks, like Mednafen, but support is not
+# widespread. The main point of the script is being able to quickly
+# extract music from BIN/CUE files.
 
 # Yet another use case is to just split a BIN/CUE into its separate
-# tracks, with the '-cdr' argument, without encoding the audio.
+# tracks, with the '-cdr' argument, without encoding the audio. Any
+# BIN/CUE, that has multiple tracks, can be split. It doesn't need to
+# have audio tracks.
+
+# Pregaps are automatically stripped from the output BIN files, and are
+# only symbolically represented in the generated CUE sheets as PREGAP
+# commands. In the rare case that the disc has a hidden bonus track in
+# the pregap for the 1st track, that will be stripped also as the script
+# has no way of knowing the difference. If the pregap is longer than
+# a couple of seconds, then it might contain a hidden track.
 
 # It's possible to do a byteswap on the audio tracks (to switch the
 # endianness / byte order), through the optional '-byteswap' argument.
@@ -167,7 +177,7 @@ regex[fn]='^(.*)\.([^.]*)$'
 regex[data]='^MODE([0-9])\/([0-9]{4})$'
 regex[audio]='^AUDIO$'
 
-declare type block_size
+declare type block_size track_n track_type
 declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total
 declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
 declare -A if_cue gaps
@@ -271,7 +281,7 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare line file_n track_n
+	declare line file_n
 	declare -a lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
@@ -442,8 +452,6 @@ read_cue () {
 # command, those values will be added together. However, a CUE sheet is
 # highly unlikely to specify a pregap twice like that.
 get_gaps () {
-	track_n="$1"
-
 	declare pregap_ref postgap_ref
 
 # If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
@@ -561,8 +569,6 @@ get_length () {
 # Creates a function, called 'loop_set', which will get the start
 # positions, lengths, pregaps and postgaps for all tracks.
 loop_set () {
-	declare track_n
-
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 		track_n="${tracks_total[${i}]}"
 
@@ -616,9 +622,6 @@ block_calc () {
 # Creates a function, called 'copy_track', which will extract the raw
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
-	track_n="$1"
-	track_type="$2"
-
 	declare file_n_ref file_ref start_ref length_ref
 	declare of_bin ext block_size skip count
 	declare -a args
@@ -676,38 +679,14 @@ copy_track () {
 	run_cmd "${args[@]}"
 }
 
-# Creates a function, called 'copy_track_type', which will extract the
-# raw binary data for all tracks of either the data or audio type.
-copy_track_type () {
-	track_type="$1"
+# Creates a function, called 'copy_all_tracks', which will extract the
+# raw binary data for all tracks (i.e. separate the tracks).
+copy_all_tracks () {
+	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
+		track_n="${tracks_total[${i}]}"
+		track_type="${tracks_type[${track_n}]}"
 
-	declare track_n track_type_ref
-	declare -a tracks
-
-# Depending on whether the track type is set to 'all', 'data' or
-# 'audio', copy only that type from the source BIN file.
-	if [[ $track_type == 'all' ]]; then
-		tracks=("${!tracks_type[@]}")
-	else
-		for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
-			track_n="${tracks_total[${i}]}"
-			track_type_ref="tracks_type[${track_n}]"
-
-			if [[ ${!track_type_ref} == "$track_type" ]]; then
-				tracks+=("$track_n")
-			fi
-		done
-	fi
-
-	if [[ ${#tracks[@]} -eq 0 ]]; then
-		return
-	fi
-
-	for (( i = 0; i < ${#tracks[@]}; i++ )); do
-		track_n="${tracks[${i}]}"
-		track_type_ref="tracks_type[${track_n}]"
-
-		copy_track "$track_n" "${!track_type_ref}"
+		copy_track
 	done
 
 # Creates a file list to be used later in the 'create_cue' function.
@@ -789,10 +768,10 @@ encode_audio () {
 }
 
 # Creates a function, called 'create_cue', which will create a new CUE
-# sheet, based on the file lists created by the 'copy_track_type' and
+# sheet, based on the file lists created by the 'copy_all_tracks' and
 # 'cdr2wav' functions.
 create_cue () {
-	declare index_string elements line_ref track_n type_tmp
+	declare index_string elements line_ref type_tmp
 	declare -a offset
 	declare -A ext_format
 
@@ -888,7 +867,7 @@ cd "$of_dn" || exit
 read_cue
 loop_set
 
-copy_track_type 'all'
+copy_all_tracks
 
 for type in "${!audio_types_run[@]}"; do
 	cdr2wav
