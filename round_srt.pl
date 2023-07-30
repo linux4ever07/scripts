@@ -33,6 +33,7 @@ $regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
 $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/[[:blank:]]+/;
 $regex{last2} = qr/([0-9]{1,2})$/;
+$regex{zero} = qr/^0+([0-9]+)$/;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -135,7 +136,7 @@ sub time_convert {
 # Saves the last 2 (or 1) digits of $cs in $cs_last.
 		if ($cs =~ m/$regex{last2}/) {
 			$cs_last = $1;
-			$cs_last =~ s/^0//;
+			$cs_last =~ s/$regex{zero}/$1/;
 		}
 
 # If $cs_last is greater than 50, round it up, and if not, round it down.
