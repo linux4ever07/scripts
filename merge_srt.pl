@@ -161,8 +161,7 @@ sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
-	my($diff);
-	my(@times);
+	my($diff, $time_line);
 
 	$start_time = time_convert($start_time);
 	$stop_time = time_convert($stop_time);
@@ -180,20 +179,23 @@ sub time_calc {
 	$start_time = time_convert($start_time);
 	$stop_time = time_convert($stop_time);
 
-	push(@times, $start_time, $stop_time);
+	$time_line = $start_time . $delim . $stop_time;
 
-	return(@times);
+	return($time_line);
 }
 
 # The 'parse_srt' subroutine reads the SRT subtitle file passed to it,
 # and adjusts the timestamps.
 sub parse_srt {
 	my $fn = shift;
+
+	my($this, $next, $end, $total_n);
+	my($start_time, $stop_time, $time_line);
+	my(%lines, @lines_tmp);
+
 	my $i = 0;
 	my $j = 0;
 	my $switch = 0;
-	my($this, $next, $end, $start_time, $stop_time, $time_line);
-	my(@lines, @lines_tmp);
 
 	push(@lines_tmp, read_decode_fn($fn));
 
@@ -210,14 +212,13 @@ sub parse_srt {
 				$start_time = $1;
 				$stop_time = $2;
 
-				my(@times, @tmp);
-
 				if ($offset > 0) {
-					push(@times, time_calc($start_time, $stop_time));
-					$time_line = $times[0] . $delim . $times[1];
+					$time_line = time_calc($start_time, $stop_time);
 				} else { $time_line = $next; }
 
-				push(@tmp, $time_line);
+				$n = $n + 1;
+
+				$lines{$n}{time} = $time_line;
 
 				$i = $i + 2;
 				$j = $i + 1;
@@ -225,7 +226,9 @@ sub parse_srt {
 				$this = $lines_tmp[$i];
 				$next = $lines_tmp[$j];
 
-				if (length($this)) { push(@tmp, $this); }
+				if (length($this)) {
+					push(@{$lines{$n}{text}}, $this);
+				}
 
 				until ($i > $end) {
 					$i = $i + 1;
@@ -241,24 +244,10 @@ sub parse_srt {
 						}
 					}
 
-					if (length($this)) { push(@tmp, $this); }
-				}
-
-				if (scalar(@tmp) > 0) {
-					$n = $n + 1;
-
-					push(@lines, $n);
-
-					foreach my $line (@tmp) {
-						push(@lines, $line);
+					if (length($this)) {
+						push(@{$lines{$n}{text}}, $this);
 					}
-
-					if (scalar(@tmp) == 1) { push(@lines, '', ''); }
-					else { push(@lines, ''); }
 				}
-
-				undef(@times);
-				undef(@tmp);
 			}
 		}
 
@@ -266,9 +255,29 @@ sub parse_srt {
 		else { $switch = 0; }
 	}
 
+	$total_n = $n;
+	$n = 1;
+
+	@lines_tmp = ();
+
+	until ($n > $total_n) {
+		push(@lines_tmp, $n);
+		push(@lines_tmp, $lines{$n}{time});
+
+		foreach my $line (@{$lines{$n}{text}}) {
+			push(@lines_tmp, $line);
+		}
+
+		push(@lines_tmp, '');
+
+		$n = $n + 1;
+	}
+
+	$n = $total_n;
+
 	$offset = $offset + time_convert($stop_time);
 
-	return(@lines);
+	return(@lines_tmp);
 }
 
 while (my $fn = shift(@files)) {

@@ -11,7 +11,7 @@ use File::Basename qw(basename);
 use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 
-my(%regex, @lines, @format, $fn, $ext);
+my(%regex, @lines, @format, $delim, $fn, $ext);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -31,9 +31,12 @@ if (length($ARGV[0])) {
 
 if (! -f $fn or $ext ne 'srt') { usage(); }
 
+$delim = ' --> ';
+
 $format[0] = qr/[0-9]+/;
-$format[1] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
-$format[2] = qr/^$format[1] --> $format[1]$/;
+$format[1] = qr/([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})/;
+$format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
+$format[3] = qr/^($format[2])$delim($format[2])$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
@@ -84,16 +87,17 @@ sub read_decode_fn {
 # and prints it without the timestamps.
 sub parse_srt {
 	my $fn = shift;
+
+	my($this, $next, $end, $total_n);
+	my($start_time, $stop_time, $time_line);
+	my(%lines, @lines_tmp);
+
 	my $i = 0;
 	my $j = 0;
 	my $n = 0;
 	my $switch = 0;
-	my($this, $next, $end);
-	my(@lines_tmp);
 
 	push(@lines_tmp, read_decode_fn($fn));
-
-	push(@lines, $fn, '');
 
 	$end = $#lines_tmp;
 
@@ -104,8 +108,15 @@ sub parse_srt {
 		$next = $lines_tmp[$j];
 
 		if (length($this) and $this =~ m/$format[0]/) {
-			if (length($next) and $next =~ m/$format[2]/) {
-				my(@tmp);
+			if (length($next) and $next =~ m/$format[3]/) {
+				$start_time = $1;
+				$stop_time = $2;
+
+				$time_line = $start_time . $delim . $stop_time;
+
+				$n = $n + 1;
+
+				$lines{$n}{time} = $time_line;
 
 				$i = $i + 2;
 				$j = $i + 1;
@@ -113,7 +124,9 @@ sub parse_srt {
 				$this = $lines_tmp[$i];
 				$next = $lines_tmp[$j];
 
-				if (length($this)) { push(@tmp, $this); }
+				if (length($this)) {
+					push(@{$lines{$n}{text}}, $this);
+				}
 
 				until ($i > $end) {
 					$i = $i + 1;
@@ -123,35 +136,47 @@ sub parse_srt {
 					$next = $lines_tmp[$j];
 
 					if (length($this) and $this =~ m/$format[0]/) {
-						if (length($next) and $next =~ m/$format[2]/) {
+						if (length($next) and $next =~ m/$format[3]/) {
 							$switch = 1;
 							last;
 						}
 					}
 
-					if (length($this)) { push(@tmp, $this); }
-				}
-
-				if (scalar(@tmp) > 0) {
-					$n = $n + 1;
-
-					push(@lines, '');
-
-					foreach my $line (@tmp) {
-						push(@lines, $n . ': ' . $line);
+					if (length($this)) {
+						push(@{$lines{$n}{text}}, $this);
 					}
 				}
-
-				undef(@tmp);
 			}
 		}
 
 		if ($switch eq 0) { $i = $i + 1; }
 		else { $switch = 0; }
 	}
+
+	$total_n = $n;
+	$n = 1;
+
+	@lines_tmp = ();
+
+	until ($n > $total_n) {
+		push(@lines_tmp, $n);
+		push(@lines_tmp, $lines{$n}{time});
+
+		foreach my $line (@{$lines{$n}{text}}) {
+			push(@lines_tmp, $line);
+		}
+
+		push(@lines_tmp, '');
+
+		$n = $n + 1;
+	}
+
+	return(@lines_tmp);
 }
 
-parse_srt($fn);
+push(@lines, parse_srt($fn));
+
+say $fn . "\n";
 
 foreach my $line (@lines) {
 	say $line;

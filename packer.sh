@@ -589,7 +589,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f $if || ! -r $if ]]; then
+			if [[ ! -f ${if[fn]} || ! -r ${if[fn]} ]]; then
 				usage 1>&2
 			fi
 
@@ -602,7 +602,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f $if || ! -r $if ]]; then
+			if [[ ! -f ${if[fn]} || ! -r ${if[fn]} ]]; then
 				usage 1>&2
 			fi
 
@@ -615,7 +615,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f $if || ! -r $if ]]; then
+			if [[ ! -f ${if[fn]} || ! -r ${if[fn]} ]]; then
 				usage 1>&2
 			fi
 
