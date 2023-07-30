@@ -262,8 +262,7 @@ sub parse_srt {
 
 		$time_line = $start_time . $delim . $stop_time;
 
-		push(@lines_tmp, $n);
-		push(@lines_tmp, $time_line);
+		push(@lines_tmp, $n, $time_line);
 
 		foreach my $line (@{$lines{$n}{text}}) {
 			push(@lines_tmp, $line);
