@@ -39,6 +39,7 @@ regex[path]='^(.*[\\\/])'
 regex[data]='^MODE([0-9])\/([0-9]{4})$'
 regex[audio]='^AUDIO$'
 
+declare track_n
 declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total
 declare -A if_cue gaps
 
@@ -88,7 +89,7 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare line file_n track_n
+	declare line file_n
 	declare -a lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
@@ -352,8 +353,6 @@ get_length () {
 # Creates a function, called 'loop_set', which will get the start
 # positions, lengths, pregaps and postgaps for all tracks.
 loop_set () {
-	declare track_n
-
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 		track_n="${tracks_total[${i}]}"
 
