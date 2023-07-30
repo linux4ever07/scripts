@@ -19,7 +19,7 @@ use strict;
 use warnings;
 use diagnostics;
 use File::Basename qw(basename);
-use Cwd qw(abs_path cwd);
+use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
@@ -214,24 +214,17 @@ sub parse_srt {
 
 		if (length($this) and $this =~ m/$format[0]/) {
 			if (length($next) and $next =~ m/$format[3]/) {
-				$start_time = $1;
-				$stop_time = $2;
-
-				$start_time = time_convert($start_time);
-				$stop_time = time_convert($stop_time);
+				$start_time = time_convert($1);
+				$stop_time = time_convert($2);
 
 				($start_time, $stop_time) = time_calc($start_time, $stop_time, $previous);
 
 				$previous = $stop_time;
 
-				$start_time = time_convert($start_time);
-				$stop_time = time_convert($stop_time);
-
-				$time_line = $start_time . $delim . $stop_time;
-
 				$n = $n + 1;
 
-				$lines{$n}{time} = $time_line;
+				$lines{$n}{start} = $start_time;
+				$lines{$n}{stop} = $stop_time;
 
 				$i = $i + 2;
 				$j = $i + 1;
@@ -274,8 +267,13 @@ sub parse_srt {
 	@lines_tmp = ();
 
 	until ($n > $total_n) {
+		$start_time = time_convert($lines{$n}{start});
+		$stop_time = time_convert($lines{$n}{stop});
+
+		$time_line = $start_time . $delim . $stop_time;
+
 		push(@lines_tmp, $n);
-		push(@lines_tmp, $lines{$n}{time});
+		push(@lines_tmp, $time_line);
 
 		foreach my $line (@{$lines{$n}{text}}) {
 			push(@lines_tmp, $line);
