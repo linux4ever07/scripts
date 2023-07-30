@@ -32,6 +32,7 @@ $regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
 $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/[[:blank:]]+/;
+$regex{zero} = qr/^0+([0-9]+)$/;
 
 $offset = 0;
 $n = 0;
@@ -124,10 +125,10 @@ sub time_convert {
 		$s = $3;
 		$cs = $4;
 
-		$h =~ s/^0//;
-		$m =~ s/^0//;
-		$s =~ s/^0//;
-		$cs =~ s/^0{1,2}//;
+		$h =~ s/$regex{zero}/$1/;
+		$m =~ s/$regex{zero}/$1/;
+		$s =~ s/$regex{zero}/$1/;
+		$cs =~ s/$regex{zero}/$1/;
 
 # Converts all the numbers to centiseconds, because those kind of values
 # will be easier to compare in the 'time_calc' subroutine.
