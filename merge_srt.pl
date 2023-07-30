@@ -56,6 +56,10 @@ while (my $arg = shift(@ARGV)) {
 	push(@files, $fn);
 }
 
+if (! scalar(@files)) {
+	usage();
+}
+
 $delim = ' --> ';
 
 $format[0] = qr/[0-9]+/;
