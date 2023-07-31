@@ -274,7 +274,7 @@ sub parse_srt {
 
 	if ($n > $shift) {
 		@interval = (1, 1);
-		$threshold = $n - $shift;
+		$threshold = ($n - $shift) + 3;
 	}
 
 	$n = 1;
