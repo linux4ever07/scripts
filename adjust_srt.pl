@@ -15,7 +15,8 @@ use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my(%regex, @files, @format, @interval, $delim, $mode, $shift, $n, $total_n, $offset);
+my(%regex, @files, @format, @interval);
+my($delim, $mode, $shift, $n, $total_n, $offset, $threshold);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -40,6 +41,7 @@ $format[4] = qr/^([-+])($format[2])$/;
 $n = 0;
 $total_n = 0;
 $offset = 0;
+$threshold = 1;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -172,7 +174,7 @@ sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
-	if ($n == 1) {
+	if ($n == $threshold) {
 		return($start_time, $stop_time);
 	}
 
@@ -265,12 +267,15 @@ sub parse_srt {
 
 	$total_n = $n;
 
-	if ($n > 2) {
-		$n = $n - 2;
-	}
+	if ($n > 2) { $n = $n - 2; }
 
 	$interval[0] = floor($shift / $n);
 	$interval[1] = floor($shift % $n);
+
+	if ($shift > $n) {
+		@interval = (1, 1);
+		$threshold = $shift;
+	}
 
 	$n = 1;
 
