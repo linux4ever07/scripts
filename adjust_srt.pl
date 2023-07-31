@@ -272,9 +272,9 @@ sub parse_srt {
 	$interval[0] = floor($shift / $n);
 	$interval[1] = floor($shift % $n);
 
-	if ($shift > $n) {
+	if ($n > $shift) {
 		@interval = (1, 1);
-		$threshold = $shift;
+		$threshold = $n - $shift;
 	}
 
 	$n = 1;
