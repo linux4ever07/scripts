@@ -572,7 +572,7 @@ case "$mode" in
 		shift
 
 # If the archive file name already exists, quit.
-		if [[ -f $if ]]; then
+		if [[ -f ${if[fn]} ]]; then
 			printf '\n%s: %s\n\n' "${if[fn]}" 'File already exists' 1>&2
 			restore_n_quit
 		fi
