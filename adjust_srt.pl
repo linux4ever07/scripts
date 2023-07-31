@@ -41,7 +41,7 @@ $format[4] = qr/^([-+])($format[2])$/;
 $n = 0;
 $total_n = 0;
 $offset = 0;
-$threshold = 1;
+$threshold = 2;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -174,7 +174,7 @@ sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
-	if ($n == $threshold) {
+	if ($n < $threshold) {
 		return($start_time, $stop_time);
 	}
 
