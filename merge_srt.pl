@@ -213,8 +213,6 @@ sub parse_srt {
 				$start_time = time_convert($1);
 				$stop_time = time_convert($2);
 
-				($start_time, $stop_time) = time_calc($start_time, $stop_time);
-
 				$n = $n + 1;
 
 				$lines{$n}{start} = $start_time;
@@ -261,8 +259,13 @@ sub parse_srt {
 	@lines_tmp = ();
 
 	until ($n > $total_n) {
-		$start_time = time_convert($lines{$n}{start});
-		$stop_time = time_convert($lines{$n}{stop});
+		$start_time = $lines{$n}{start};
+		$stop_time = $lines{$n}{stop};
+
+		($start_time, $stop_time) = time_calc($start_time, $stop_time);
+
+		$start_time = time_convert($start_time);
+		$stop_time = time_convert($stop_time);
 
 		$time_line = $start_time . $delim . $stop_time;
 
