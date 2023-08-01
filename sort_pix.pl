@@ -63,7 +63,7 @@ sub get_type {
 	if (! length($ext)) { return; }
 
 	if ($ext eq 'jpeg') { $ext = 'jpg'; }
-	
+
 	return($type, $ext);
 }
 
