@@ -83,7 +83,6 @@ and 'list' modes:
 
 dar, z|gz, bz2, xz, lzh|lha, cab|exe, arj, iso
 
-
 	Mode arguments:
 
 a
