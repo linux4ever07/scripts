@@ -143,7 +143,8 @@ sub time_convert {
 			$cs_last =~ s/$regex{zero}/$1/;
 		}
 
-# If $cs_last is greater than 50, round it up, and if not, round it down.
+# If $cs_last is greater than 50, round it up, and if not, round it
+# down.
 		if ($cs_last >= 50) { $cs = ($cs - $cs_last) + 100; }
 		else { $cs = $cs - $cs_last; }
 
