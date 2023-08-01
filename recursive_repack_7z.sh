@@ -90,10 +90,10 @@ CMD
 	fi
 }
 
-# if [[ $EUID -ne 0 ]]; then
-# printf '\n%s\n\n' 'You need to be root to run this script!'
-# exit
-# fi
+#if [[ $EUID -ne 0 ]]; then
+#	printf '\n%s\n\n' 'You need to be root to run this script!'
+#	exit
+#fi
 
 if [[ $# -eq 0 ]]; then
 	usage
