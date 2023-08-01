@@ -204,9 +204,9 @@ for (( i = 0; i < ${#lines_in[@]}; i++ )); do
 done
 
 # If the last line is not empty, add an empty line.
-#if [[ -n ${lines_out[-1]} ]]; then
-#	lines_out+=('')
-#fi
+# if [[ -n ${lines_out[-1]} ]]; then
+# lines_out+=('')
+# fi
 
 # Gets the modification time of the input file.
 date=$(date -R -r "$if")

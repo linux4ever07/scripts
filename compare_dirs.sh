@@ -163,7 +163,7 @@ print_list () {
 
 	unset -v "$type"
 
-	printf '\n' 
+	printf '\n'
 }
 
 for type in "${var_list3[@]}"; do
@@ -175,7 +175,7 @@ for type in "${var_list3[@]}"; do
 		continue
 	fi
 
-	printf '\n' 
+	printf '\n'
 
 	case $type in
 		'dir1_files_missing')

@@ -182,7 +182,7 @@ Backing up:
 ${of[shm_cfg]}
 
 To:
-${of[tar_fn]} 
+${of[tar_fn]}
 
 BACKUP
 
