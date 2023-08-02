@@ -209,6 +209,7 @@ sub parse_srt {
 	$offset = 0;
 
 	@interval_in = (0, 0);
+	@interval_out = ();
 
 	push(@lines_tmp, read_decode_fn($fn));
 
