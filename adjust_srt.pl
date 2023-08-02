@@ -6,6 +6,10 @@
 # 1st and last by the approriate amount to make them all line up
 # proportionally.
 
+# Example:
+
+# adjust_srt.pl '+00:00:03,000' 'subtitle.srt'
+
 use 5.34.0;
 use strict;
 use warnings;
@@ -178,7 +182,7 @@ sub time_calc {
 		return($start_time, $stop_time);
 	}
 
-	if ($n == $total_n and $interval[1] > 0) {
+	if ($n == $total_n) {
 		$offset = $offset + $interval[1];
 	} else {
 		$offset = $offset + $interval[0];
