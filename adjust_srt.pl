@@ -14,6 +14,19 @@
 # 1st and last by the approriate amount to make them all line up
 # proportionally.
 
+# This script is designed to streamline the syncing / re-syncing of
+# subtitles. The first most common problem when syncing a subtitle is
+# when the first line isn't synced. The second most common problem is
+# when the last line isn't synced. What causes this is different
+# releases of a movie have different intros (studio logos etc.). That
+# affects the timestamp of the first line. Also, different releases (and
+# different rips) have different framerates. That affects the timestamp
+# of the last line.
+
+# To remedy this, shift the beginning of the subtitle so the first line
+# is synced, and then adjust the end of the subtitle so the last line
+# is synced.
+
 # Examples:
 
 # adjust_srt.pl -first '-00:00:03,000' 'subtitle.srt'
