@@ -51,9 +51,7 @@ while (my $arg = shift(@ARGV)) {
 	push(@files, $fn);
 }
 
-if (! scalar(@files)) {
-	usage();
-}
+if (! scalar(@files)) { usage(); }
 
 $delim = ' --> ';
 
