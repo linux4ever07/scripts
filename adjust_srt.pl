@@ -267,7 +267,7 @@ sub parse_srt {
 
 	$total_n = $n;
 
-	if ($n > 1) { $n = $n - 1; }
+	if ($n > 1) { $n -= 1; }
 
 	$interval_in[0] = floor($shift / $n);
 	$interval_in[1] = floor($shift % $n);
