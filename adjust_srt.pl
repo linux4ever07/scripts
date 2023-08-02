@@ -20,8 +20,8 @@ use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my(%regex, @files, @format, @interval);
-my($delim, $mode, $shift, $n, $total_n, $offset, $threshold);
+my(%regex, @files, @format, @interval_in, @interval_out);
+my($delim, $mode, $shift, $n, $total_n, $offset);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -40,13 +40,6 @@ $format[1] = qr/([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})/;
 $format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
 $format[3] = qr/^($format[2])$delim($format[2])$/;
 $format[4] = qr/^([-+])($format[2])$/;
-
-@interval = (0, 0);
-
-$n = 0;
-$total_n = 0;
-$offset = 0;
-$threshold = 2;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -179,15 +172,11 @@ sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
-	if ($n < $threshold) {
+	if (! length($interval_out[$n])) {
 		return($start_time, $stop_time);
 	}
 
-	if ($n == $total_n) {
-		$offset = $offset + $interval[1];
-	} else {
-		$offset = $offset + $interval[0];
-	}
+	$offset += $interval_out[$n];
 
 	if ($mode == 1) {
 		$start_time = $start_time + $offset;
@@ -215,6 +204,12 @@ sub parse_srt {
 	my $j = 0;
 	my $switch = 0;
 
+	$n = 0;
+	$total_n = 0;
+	$offset = 0;
+
+	@interval_in = (0, 0);
+
 	push(@lines_tmp, read_decode_fn($fn));
 
 	$end = $#lines_tmp;
@@ -230,12 +225,12 @@ sub parse_srt {
 				$start_time = time_convert($1);
 				$stop_time = time_convert($2);
 
-				$n = $n + 1;
+				$n += 1;
 
 				$lines{$n}{start} = $start_time;
 				$lines{$n}{stop} = $stop_time;
 
-				$i = $i + 2;
+				$i += 2;
 				$j = $i + 1;
 
 				$this = $lines_tmp[$i];
@@ -246,7 +241,7 @@ sub parse_srt {
 				}
 
 				until ($i > $end) {
-					$i = $i + 1;
+					$i += 1;
 					$j = $i + 1;
 
 					$this = $lines_tmp[$i];
@@ -266,20 +261,41 @@ sub parse_srt {
 			}
 		}
 
-		if ($switch eq 0) { $i = $i + 1; }
+		if ($switch eq 0) { $i += 1; }
 		else { $switch = 0; }
 	}
 
 	$total_n = $n;
 
-	if ($n > 2) { $n = $n - 2; }
+	if ($n > 1) { $n = $n - 1; }
 
-	$interval[0] = floor($shift / $n);
-	$interval[1] = floor($shift % $n);
+	$interval_in[0] = floor($shift / $n);
+	$interval_in[1] = floor($shift % $n);
 
 	if ($n > $shift) {
-		@interval = (1, 1);
-		$threshold = ($n - $shift) + 3;
+		@interval_in = (1, 0);
+	}
+
+	$n = $total_n;
+
+	while ($n > 1 and $shift > 0) {
+		my $diff = 0;
+
+		$diff += $interval_in[0];
+
+		if ($interval_in[1] > 0) {
+			$interval_in[1] -= 1;
+			$diff += 1;
+		}
+
+		$shift -= $diff;
+		$interval_out[$n] = $diff;
+
+		$n -= 1;
+	}
+
+	if ($interval_in[1] > 0) {
+		$interval_out[$total_n] += $interval_in[1];
 	}
 
 	$n = 1;
@@ -305,7 +321,7 @@ sub parse_srt {
 
 		push(@lines_tmp, '');
 
-		$n = $n + 1;
+		$n += 1;
 	}
 
 	return(@lines_tmp);

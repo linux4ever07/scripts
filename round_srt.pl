@@ -222,12 +222,12 @@ sub parse_srt {
 				$start_time = time_convert($1);
 				$stop_time = time_convert($2);
 
-				$n = $n + 1;
+				$n += 1;
 
 				$lines{$n}{start} = $start_time;
 				$lines{$n}{stop} = $stop_time;
 
-				$i = $i + 2;
+				$i += 2;
 				$j = $i + 1;
 
 				$this = $lines_tmp[$i];
@@ -238,7 +238,7 @@ sub parse_srt {
 				}
 
 				until ($i > $end) {
-					$i = $i + 1;
+					$i += 1;
 					$j = $i + 1;
 
 					$this = $lines_tmp[$i];
@@ -258,7 +258,7 @@ sub parse_srt {
 			}
 		}
 
-		if ($switch eq 0) { $i = $i + 1; }
+		if ($switch eq 0) { $i += 1; }
 		else { $switch = 0; }
 	}
 
@@ -288,7 +288,7 @@ sub parse_srt {
 
 		push(@lines_tmp, '');
 
-		$n = $n + 1;
+		$n += 1;
 	}
 
 	return(@lines_tmp);
