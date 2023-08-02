@@ -30,7 +30,7 @@ use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
 my(%regex, %lines);
-my(@files, @format, @mode, @shift, @interval_in, @interval_out);
+my(@files, @format, @mode, @shift);
 my($delim, $n, $total_n);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
@@ -235,6 +235,7 @@ sub shift_first {
 # incl.) the 2nd and last.
 sub adjust_last {
 	my($start_time, $stop_time, $offset);
+	my(@interval_in, @interval_out);
 
 	$n = $total_n;
 
@@ -314,9 +315,6 @@ sub parse_srt {
 	$total_n = 0;
 
 	%lines = ();
-
-	@interval_in = (0, 0);
-	@interval_out = ();
 
 	push(@lines_tmp, read_decode_fn($fn));
 
