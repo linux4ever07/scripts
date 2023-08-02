@@ -10,9 +10,8 @@
 # will simply be shifted forward or backward by the amount specified.
 
 # In the case of modifying the end of the subtitle, it shifts the last
-# timestamp by the full amount, and every other timestamp between the
-# 1st and last by the approriate amount to make them all line up
-# proportionally.
+# timestamp by the full amount, and every timestamp between the 1st and
+# last by the approriate amount to make them all line up proportionally.
 
 # This script is designed to streamline the syncing / re-syncing of
 # subtitles. The first most common problem with subtitle timestamps is
