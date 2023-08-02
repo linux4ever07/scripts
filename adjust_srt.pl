@@ -279,9 +279,7 @@ sub adjust_last {
 		$start_time = $lines{$n}{start};
 		$stop_time = $lines{$n}{stop};
 
-		if (! length($interval_out[$n])) {
-			next;
-		}
+		if (! length($interval_out[$n])) { next; }
 
 		$offset += $interval_out[$n];
 
@@ -379,13 +377,8 @@ sub parse_srt {
 
 	$total_n = $n;
 
-	if ($shift[0] > 0) {
-		shift_first();
-	}
-
-	if ($shift[1] > 0) {
-		adjust_last();
-	}
+	if ($shift[0] > 0) { shift_first(); }
+	if ($shift[1] > 0) { adjust_last(); }
 
 	$n = 0;
 
