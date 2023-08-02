@@ -1,15 +1,24 @@
 #!/usr/bin/perl
 
-# This script will shift the timestamps in an SRT subtitle file, by the
-# amount specified as the 1st argument. Specifically, it shifts the last
+# This script will shift (and adjust) the timestamps in an SRT subtitle
+# file, by the amount specified as arguments.
+
+# The script can shift the subtitle in either direction, positive
+# (forward) or negative (backward).
+
+# In the case of modifying the beginning of the subtitle, all timestamps
+# will simply be shifted forward or backward by the amount specified.
+
+# In the case of modifying the end of the subtitle, it shifts the last
 # timestamp by the full amount, and every other timestamp between the
 # 1st and last by the approriate amount to make them all line up
-# proportionally. The script can shift the subtitle in either direction,
-# positive (forward) or negative (backward).
+# proportionally.
 
-# Example:
+# Examples:
 
-# adjust_srt.pl '+00:00:03,000' 'subtitle.srt'
+# adjust_srt.pl -first '-00:00:03,000' 'subtitle.srt'
+# adjust_srt.pl -last '+00:00:03,000' 'subtitle.srt'
+# adjust_srt.pl -first '+00:00:00,500' -last '-00:00:02,500' 'subtitle.srt'
 
 use 5.34.0;
 use strict;
@@ -20,8 +29,9 @@ use Cwd qw(abs_path);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my(%regex, @files, @format, @interval_in, @interval_out);
-my($delim, $mode, $shift, $n, $total_n, $offset);
+my(%regex, %lines);
+my(@files, @format, @mode, @shift, @interval_in, @interval_out);
+my($delim, $n, $total_n, $offset);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -41,26 +51,44 @@ $format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
 $format[3] = qr/^($format[2])$delim($format[2])$/;
 $format[4] = qr/^([-+])($format[2])$/;
 
+@shift = (0, 0);
+
 if (! scalar(@ARGV)) { usage(); }
-
-$mode = shift(@ARGV);
-
-if ($mode =~ m/$format[4]/) {
-	$mode = $1;
-	$shift = time_convert($2);
-} else { usage(); }
-
-if ($mode eq '-') { $mode = 0; }
-if ($mode eq '+') { $mode = 1; }
 
 while (my $arg = shift(@ARGV)) {
 	my($fn, $ext);
 
-	if (length($arg)) {
-		$fn = abs_path($arg);
-		$fn =~ m/$regex{fn}/;
-		$ext = lc($2);
+	if (! length($arg)) { next; }
+
+	if ($arg eq '-first') {
+		$mode[0] = shift(@ARGV);
+
+		if (! length($mode[0])) { usage(); }
+
+		if ($mode[0] =~ m/$format[4]/) {
+			$mode[0] = $1;
+			$shift[0] = time_convert($2);
+		} else { usage(); }
+
+		next;
 	}
+
+	if ($arg eq '-last') {
+		$mode[1] = shift(@ARGV);
+
+		if (! length($mode[1])) { usage(); }
+
+		if ($mode[1] =~ m/$format[4]/) {
+			$mode[1] = $1;
+			$shift[1] = time_convert($2);
+		} else { usage(); }
+
+		next;
+	}
+
+	$fn = abs_path($arg);
+	$fn =~ m/$regex{fn}/;
+	$ext = lc($2);
 
 	if (! -f $fn or $ext ne 'srt') { usage(); }
 
@@ -73,7 +101,18 @@ if (! scalar(@files)) {
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say "\n" . 'Usage: ' . basename($0) . ' [-+][h{2}:m{2}:s{2},ms{3}] [srt...]' . "\n";
+	say '
+Usage: ' . basename($0) . ' [options] [srt...]
+
+	Options:
+
+-first [-+][h{2}:m{2}:s{2},ms{3}]
+	Shift all timestamps
+
+-last [-+][h{2}:m{2}:s{2},ms{3}]
+	Adjust timestamps between 1st and last
+';
+
 	exit;
 }
 
@@ -166,29 +205,99 @@ sub time_convert {
 	return($time);
 }
 
-# The 'time_calc' subroutine shifts the current 'time line' according
-# to the amount specified when running the script.
-sub time_calc {
-	my $start_time = shift;
-	my $stop_time = shift;
+# The 'shift_first' subroutine shifts all timestamps (incl. the 1st)
+# forward or backward.
+sub shift_first {
+	my($start_time, $stop_time);
 
-	if (! length($interval_out[$n])) {
-		return($start_time, $stop_time);
+	$n = 0;
+
+	until ($n == $total_n) {
+		$n += 1;
+
+		$start_time = $lines{$n}{start};
+		$stop_time = $lines{$n}{stop};
+
+		if ($mode[0] eq '+') {
+			$start_time += $shift[0];
+			$stop_time += $shift[0];
+		}
+
+		if ($mode[0] eq '-') {
+			$start_time -= $shift[0];
+			$stop_time -= $shift[0];
+		}
+
+		$lines{$n}{start} = $start_time;
+		$lines{$n}{stop} = $stop_time;
+	}
+}
+
+# The 'adjust_last' subroutine adjusts every timestamp between (and
+# incl.) the 2nd and last.
+sub adjust_last {
+	my($start_time, $stop_time, $diff);
+
+	$n = $total_n;
+
+	if ($n > 1) { $n -= 1; }
+
+	$interval_in[0] = floor($shift[1] / $n);
+	$interval_in[1] = floor($shift[1] % $n);
+
+	if ($n > $shift[1]) {
+		@interval_in = (1, 0);
 	}
 
-	$offset += $interval_out[$n];
+	$n = $total_n;
 
-	if ($mode == 1) {
-		$start_time = $start_time + $offset;
-		$stop_time = $stop_time + $offset;
+	while ($n > 1 and $shift[1] > 0) {
+		$diff = 0;
+
+		$diff += $interval_in[0];
+
+		if ($interval_in[1] > 0) {
+			$interval_in[1] -= 1;
+			$diff += 1;
+		}
+
+		$shift[1] -= $diff;
+		$interval_out[$n] = $diff;
+
+		$n -= 1;
 	}
 
-	if ($mode == 0) {
-		$start_time = $start_time - $offset;
-		$stop_time = $stop_time - $offset;
+	if ($interval_in[1] > 0) {
+		$interval_out[$total_n] += $interval_in[1];
 	}
 
-	return($start_time, $stop_time);
+	$n = 0;
+
+	until ($n == $total_n) {
+		$n += 1;
+
+		$start_time = $lines{$n}{start};
+		$stop_time = $lines{$n}{stop};
+
+		if (! length($interval_out[$n])) {
+			next;
+		}
+
+		$offset += $interval_out[$n];
+
+		if ($mode[1] eq '+') {
+			$start_time = $start_time + $offset;
+			$stop_time = $stop_time + $offset;
+		}
+
+		if ($mode[1] eq '-') {
+			$start_time = $start_time - $offset;
+			$stop_time = $stop_time - $offset;
+		}
+
+		$lines{$n}{start} = $start_time;
+		$lines{$n}{stop} = $stop_time;
+	}
 }
 
 # The 'parse_srt' subroutine reads the SRT subtitle file passed to it,
@@ -198,7 +307,7 @@ sub parse_srt {
 
 	my($this, $next, $end);
 	my($start_time, $stop_time, $time_line);
-	my(%lines, @lines_tmp);
+	my(@lines_tmp);
 
 	my $i = 0;
 	my $j = 0;
@@ -207,6 +316,8 @@ sub parse_srt {
 	$n = 0;
 	$total_n = 0;
 	$offset = 0;
+
+	%lines = ();
 
 	@interval_in = (0, 0);
 	@interval_out = ();
@@ -268,49 +379,23 @@ sub parse_srt {
 
 	$total_n = $n;
 
-	if ($n > 1) { $n -= 1; }
-
-	$interval_in[0] = floor($shift / $n);
-	$interval_in[1] = floor($shift % $n);
-
-	if ($n > $shift) {
-		@interval_in = (1, 0);
+	if ($shift[0] > 0) {
+		shift_first();
 	}
 
-	$n = $total_n;
-
-	while ($n > 1 and $shift > 0) {
-		my $diff = 0;
-
-		$diff += $interval_in[0];
-
-		if ($interval_in[1] > 0) {
-			$interval_in[1] -= 1;
-			$diff += 1;
-		}
-
-		$shift -= $diff;
-		$interval_out[$n] = $diff;
-
-		$n -= 1;
+	if ($shift[1] > 0) {
+		adjust_last();
 	}
 
-	if ($interval_in[1] > 0) {
-		$interval_out[$total_n] += $interval_in[1];
-	}
-
-	$n = 1;
+	$n = 0;
 
 	@lines_tmp = ();
 
-	until ($n > $total_n) {
-		$start_time = $lines{$n}{start};
-		$stop_time = $lines{$n}{stop};
+	until ($n == $total_n) {
+		$n += 1;
 
-		($start_time, $stop_time) = time_calc($start_time, $stop_time);
-
-		$start_time = time_convert($start_time);
-		$stop_time = time_convert($stop_time);
+		$start_time = time_convert($lines{$n}{start});
+		$stop_time = time_convert($lines{$n}{stop});
 
 		$time_line = $start_time . $delim . $stop_time;
 
@@ -321,8 +406,6 @@ sub parse_srt {
 		}
 
 		push(@lines_tmp, '');
-
-		$n += 1;
 	}
 
 	return(@lines_tmp);

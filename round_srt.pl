@@ -40,11 +40,11 @@ if (! scalar(@ARGV)) { usage(); }
 while (my $arg = shift(@ARGV)) {
 	my($fn, $ext);
 
-	if (length($arg)) {
-		$fn = abs_path($arg);
-		$fn =~ m/$regex{fn}/;
-		$ext = lc($2);
-	}
+	if (! length($arg)) { next; }
+
+	$fn = abs_path($arg);
+	$fn =~ m/$regex{fn}/;
+	$ext = lc($2);
 
 	if (! -f $fn or $ext ne 'srt') { usage(); }
 
@@ -263,11 +263,13 @@ sub parse_srt {
 	}
 
 	$total_n = $n;
-	$n = 1;
+	$n = 0;
 
 	@lines_tmp = ();
 
-	until ($n > $total_n) {
+	until ($n == $total_n) {
+		$n += 1;
+
 		$start_time = $lines{$n}{start};
 		$stop_time = $lines{$n}{stop};
 
@@ -287,8 +289,6 @@ sub parse_srt {
 		}
 
 		push(@lines_tmp, '');
-
-		$n += 1;
 	}
 
 	return(@lines_tmp);
