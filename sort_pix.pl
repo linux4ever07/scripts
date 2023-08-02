@@ -76,9 +76,9 @@ sub md5sum {
 
 	my($hash);
 
-	open(my $mf, '< :raw', $if) or die "can't open '$if': $!";
+	open(my $mf, '< :raw', $if) or die "Can't open '$if': $!";
 	$hash = Digest::MD5->new->addfile($mf)->hexdigest;
-	close($mf) or die "can't close '$if': $!";
+	close($mf) or die "Can't close '$if': $!";
 
 	$md5h{$hash}{$if} = $date;
 }
@@ -91,9 +91,9 @@ sub get_res {
 	my(@lines, $res, $ratio);
 
 	open(my $output, '-|', 'identify', '-quiet', '-verbose', $fn)
-	or die "can't open 'identify': $!";
+	or die "Can't open 'identify': $!";
 	chomp(@lines = (<$output>));
-	close($output) or die "can't close 'identify': $!";
+	close($output) or die "Can't close 'identify': $!";
 
 	foreach my $line (@lines) {
 		if ($line =~ m/$regex{magick}/) {
@@ -171,14 +171,14 @@ sub mv_res {
 	$of = join('/', $of_dn, $if_bn);
 
 	unless (-f $of) {
-		move($if, $of) or die "can't move '$if': $!";
+		move($if, $of) or die "Can't move '$if': $!";
 	}
 
 	say $if_bn . ': ' . $res . ' (' . $ratio . ')';
 }
 
 foreach my $if_dn (@dirs) {
-	chdir($if_dn) or die "can't change to '$if_dn': $!";
+	chdir($if_dn) or die "Can't change to '$if_dn': $!";
 
 	my @files_in = (glob("*"));
 
@@ -206,7 +206,7 @@ foreach my $if_dn (@dirs) {
 		$of = $if_dn . '/' . $if_bn . '.' . $of_ext;
 
 		if ($if ne $of and ! -f $of) {
-			move($if, $of) or die "can't move '$if': $!";
+			move($if, $of) or die "Can't move '$if': $!";
 			push(@files_out, $of);
 		} else { push(@files_out, $if); }
 	}
@@ -245,7 +245,7 @@ foreach my $if_dn (@dirs) {
 
 		foreach my $fn (keys(%{$md5h{$hash}})) {
 			if ($fn ne $og_fn) {
-				unlink($fn) or die "can't remove '$fn': $!";
+				unlink($fn) or die "Can't remove '$fn': $!";
 			}
 		}
 	}
