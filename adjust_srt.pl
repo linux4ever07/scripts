@@ -4,7 +4,8 @@
 # amount specified as the 1st argument. Specifically, it shifts the last
 # timestamp by the full amount, and every other timestamp between the
 # 1st and last by the approriate amount to make them all line up
-# proportionally.
+# proportionally. The script can shift the subtitle in either direction,
+# positive (forward) or negative (backward).
 
 # Example:
 
