@@ -234,9 +234,7 @@ sub shift_first {
 # The 'adjust_last' subroutine adjusts every timestamp between (and
 # incl.) the 2nd and last.
 sub adjust_last {
-	my($start_time, $stop_time, $offset, $diff);
-
-	$offset = 0;
+	my($start_time, $stop_time, $offset);
 
 	$n = $total_n;
 
@@ -252,17 +250,17 @@ sub adjust_last {
 	$n = $total_n;
 
 	while ($n > 1 and $shift[1] > 0) {
-		$diff = 0;
+		$offset = 0;
 
-		$diff += $interval_in[0];
+		$offset += $interval_in[0];
 
 		if ($interval_in[1] > 0) {
 			$interval_in[1] -= 1;
-			$diff += 1;
+			$offset += 1;
 		}
 
-		$shift[1] -= $diff;
-		$interval_out[$n] = $diff;
+		$shift[1] -= $offset;
+		$interval_out[$n] = $offset;
 
 		$n -= 1;
 	}
@@ -272,6 +270,7 @@ sub adjust_last {
 	}
 
 	$n = 0;
+	$offset = 0;
 
 	until ($n == $total_n) {
 		$n += 1;
