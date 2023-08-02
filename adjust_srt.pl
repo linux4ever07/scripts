@@ -31,7 +31,7 @@ use POSIX qw(floor);
 
 my(%regex, %lines);
 my(@files, @format, @mode, @shift, @interval_in, @interval_out);
-my($delim, $n, $total_n, $offset);
+my($delim, $n, $total_n);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -234,7 +234,9 @@ sub shift_first {
 # The 'adjust_last' subroutine adjusts every timestamp between (and
 # incl.) the 2nd and last.
 sub adjust_last {
-	my($start_time, $stop_time, $diff);
+	my($start_time, $stop_time, $offset, $diff);
+
+	$offset = 0;
 
 	$n = $total_n;
 
@@ -311,7 +313,6 @@ sub parse_srt {
 
 	$n = 0;
 	$total_n = 0;
-	$offset = 0;
 
 	%lines = ();
 
