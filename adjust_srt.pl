@@ -15,13 +15,13 @@
 # proportionally.
 
 # This script is designed to streamline the syncing / re-syncing of
-# subtitles. The first most common problem when syncing a subtitle is
+# subtitles. The first most common problem with subtitle timestamps is
 # when the first line isn't synced. The second most common problem is
 # when the last line isn't synced. What causes this is different
 # releases of a movie have different intros (studio logos etc.). That
-# affects the timestamp of the first line. Also, different releases (and
-# different rips) have different framerates. That affects the timestamp
-# of the last line.
+# affects the timestamp of the first line, and hence every following
+# line. Also, different releases (and different rips) have different
+# framerates. That affects the timestamp of the last line.
 
 # To remedy this, shift the beginning of the subtitle so the first line
 # is synced, and then adjust the end of the subtitle so the last line
