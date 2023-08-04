@@ -197,7 +197,7 @@ sub time_convert {
 
 		$time = $h + $m + $s + $ms;
 
-# If argument is in the centisecond format...
+# If argument is in the millisecond format...
 	} elsif ($time =~ m/$format[0]/) {
 		$ms = $time;
 

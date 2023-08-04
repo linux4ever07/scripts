@@ -98,7 +98,7 @@ time_convert () {
 
 		time=$(( h + m + s + ms ))
 
-# If argument is in the centisecond format...
+# If argument is in the millisecond format...
 	elif [[ $time =~ ${format[0]} ]]; then
 		ms="$time"
 
