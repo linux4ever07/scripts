@@ -77,8 +77,8 @@ time_convert () {
 			ms="${BASH_REMATCH[1]}"
 		fi
 
-# Converts all the numbers to milliseconds, because those kind of values
-# will be easier to compare in the 'time_calc' function.
+# Converts all the numbers to milliseconds, because that kind of
+# value is easier to process.
 		h=$(( h * 60 * 60 * 1000 ))
 		m=$(( m * 60 * 1000 ))
 		s=$(( s * 1000 ))
