@@ -53,7 +53,7 @@ mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "
 
 # Creates a function, called 'time_convert', which converts the
 # 'time line' back and forth between the time (hh:mm:ss) format and
-# centiseconds.
+# milliseconds.
 time_convert () {
 	time="$1"
 
@@ -77,7 +77,7 @@ time_convert () {
 			cs="${BASH_REMATCH[1]}"
 		fi
 
-# Converts all the numbers to centiseconds, because those kind of values
+# Converts all the numbers to milliseconds, because those kind of values
 # will be easier to compare in the 'time_calc' function.
 		h=$(( h * 60 * 60 * 1000 ))
 		m=$(( m * 60 * 1000 ))

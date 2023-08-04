@@ -111,7 +111,7 @@ sub read_decode_fn {
 }
 
 # The 'time_convert' subroutine converts the 'time line' back and forth
-# between the time (hh:mm:ss) format and centiseconds.
+# between the time (hh:mm:ss) format and milliseconds.
 sub time_convert {
 	my $time = shift;
 
@@ -132,7 +132,7 @@ sub time_convert {
 		$s =~ s/$regex{zero}/$1/;
 		$cs =~ s/$regex{zero}/$1/;
 
-# Converts all the numbers to centiseconds, because those kind of values
+# Converts all the numbers to milliseconds, because those kind of values
 # will be easier to compare in the 'time_calc' subroutine.
 		$h = $h * 60 * 60 * 1000;
 		$m = $m * 60 * 1000;
