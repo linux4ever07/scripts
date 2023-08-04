@@ -321,7 +321,6 @@ sub parse_srt {
 
 	my $i = 0;
 	my $j = 0;
-	my $switch = 0;
 
 	$n = 0;
 	$total_n = 0;
@@ -353,34 +352,14 @@ sub parse_srt {
 
 				$this = $lines_tmp[$i];
 				$next = $lines_tmp[$j];
-
-				if (length($this)) {
-					push(@{$lines{$n}{text}}, $this);
-				}
-
-				until ($i > $end) {
-					$i += 1;
-					$j = $i + 1;
-
-					$this = $lines_tmp[$i];
-					$next = $lines_tmp[$j];
-
-					if (length($this) and $this =~ m/$format[0]/) {
-						if (length($next) and $next =~ m/$format[3]/) {
-							$switch = 1;
-							last;
-						}
-					}
-
-					if (length($this)) {
-						push(@{$lines{$n}{text}}, $this);
-					}
-				}
 			}
 		}
 
-		if ($switch eq 0) { $i += 1; }
-		else { $switch = 0; }
+		if (length($this)) {
+			push(@{$lines{$n}{text}}, $this);
+		}
+
+		$i += 1;
 	}
 
 	$total_n = $n;
