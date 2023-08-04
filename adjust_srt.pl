@@ -348,10 +348,8 @@ sub parse_srt {
 				$lines{$n}{stop} = $stop_time;
 
 				$i += 2;
-				$j = $i + 1;
 
 				$this = $lines_tmp[$i];
-				$next = $lines_tmp[$j];
 			}
 		}
 

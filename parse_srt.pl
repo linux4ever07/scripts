@@ -111,10 +111,8 @@ sub parse_srt {
 				$n += 1;
 
 				$i += 2;
-				$j = $i + 1;
 
 				$this = $lines_tmp[$i];
-				$next = $lines_tmp[$j];
 			}
 		}
 
