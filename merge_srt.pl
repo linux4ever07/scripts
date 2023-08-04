@@ -22,7 +22,7 @@ use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my($dn, $of, $delim, $n);
+my($dn, $of, $delim);
 my(%regex, @files, @lines, @format, @offset);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
@@ -187,7 +187,7 @@ sub time_calc {
 sub parse_srt {
 	my $fn = shift;
 
-	my($this, $next, $end, $total_n);
+	my($this, $next, $end, $n, $total_n);
 	my($start_time, $stop_time, $time_line);
 	my(%lines, @lines_tmp);
 

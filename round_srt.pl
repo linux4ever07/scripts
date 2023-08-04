@@ -196,13 +196,15 @@ sub time_calc {
 sub parse_srt {
 	my $fn = shift;
 
-	my($this, $next, $end, $total_n);
+	my($this, $next, $end, $n, $total_n);
 	my($start_time, $stop_time, $time_line, $previous);
 	my(%lines, @lines_tmp);
 
 	my $i = 0;
 	my $j = 0;
-	my $n = 0;
+
+	$n = 0;
+	$total_n = 0;
 
 	push(@lines_tmp, read_decode_fn($fn));
 
