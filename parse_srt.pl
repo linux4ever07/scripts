@@ -95,7 +95,6 @@ sub parse_srt {
 	my $i = 0;
 	my $j = 0;
 	my $n = 0;
-	my $switch = 0;
 
 	push(@lines_tmp, read_decode_fn($fn));
 
