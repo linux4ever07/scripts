@@ -22,8 +22,8 @@ use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my($dn, $of, $delim, $offset, $n);
-my(%regex, @files, @lines, @format);
+my($dn, $of, $delim, $n);
+my(%regex, @files, @lines, @format, @offset);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -34,8 +34,7 @@ $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/[[:blank:]]+/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
-$offset = 0;
-$n = 0;
+@offset = (0, 0);
 
 $dn = cwd();
 $of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
@@ -166,7 +165,7 @@ sub time_calc {
 
 	my($diff);
 
-	if ($offset == 0) {
+	if ($offset[1] == 0) {
 		return($start_time, $stop_time);
 	}
 
@@ -177,8 +176,8 @@ sub time_calc {
 		$stop_time = $stop_time + $diff;
 	}
 
-	$start_time = $offset + $start_time;
-	$stop_time = $offset + $stop_time;
+	$start_time = $offset[1] + $start_time;
+	$stop_time = $offset[1] + $stop_time;
 
 	return($start_time, $stop_time);
 }
@@ -194,6 +193,9 @@ sub parse_srt {
 
 	my $i = 0;
 	my $j = 0;
+
+	$n = 0;
+	$total_n = 0;
 
 	push(@lines_tmp, read_decode_fn($fn));
 
@@ -246,7 +248,7 @@ sub parse_srt {
 
 		$time_line = $start_time . $delim . $stop_time;
 
-		push(@lines_tmp, $n, $time_line);
+		push(@lines_tmp, $n + $offset[0], $time_line);
 
 		foreach my $line (@{$lines{$n}{text}}) {
 			push(@lines_tmp, $line);
@@ -255,9 +257,8 @@ sub parse_srt {
 		push(@lines_tmp, '');
 	}
 
-	$n = $total_n;
-
-	$offset = $offset + time_convert($stop_time);
+	$offset[0] += $n;
+	$offset[1] += time_convert($stop_time);
 
 	return(@lines_tmp);
 }
