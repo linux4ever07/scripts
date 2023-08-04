@@ -57,24 +57,24 @@ mapfile -t lines < <(tr -d '\r' <"$if" | sed -E -e "s/${regex[blank1]}/\1/" -e "
 time_convert () {
 	time="$1"
 
-	declare h m s cs cs_last
+	declare h m s ms ms_last
 
 	h=0
 	m=0
 	s=0
-	cs=0
+	ms=0
 
-	cs_last=0
+	ms_last=0
 
 # If argument is in the hh:mm:ss format...
 	if [[ $time =~ ${format[1]} ]]; then
 		h="${BASH_REMATCH[1]#0}"
 		m="${BASH_REMATCH[2]#0}"
 		s="${BASH_REMATCH[3]#0}"
-		cs="${BASH_REMATCH[4]}"
+		ms="${BASH_REMATCH[4]}"
 
-		if [[ $cs =~ ${regex[zero]} ]]; then
-			cs="${BASH_REMATCH[1]}"
+		if [[ $ms =~ ${regex[zero]} ]]; then
+			ms="${BASH_REMATCH[1]}"
 		fi
 
 # Converts all the numbers to milliseconds, because those kind of values
@@ -83,34 +83,34 @@ time_convert () {
 		m=$(( m * 60 * 1000 ))
 		s=$(( s * 1000 ))
 
-# Saves the last 2 (or 1) digits of $cs in $cs_last.
-		if [[ $cs =~ ${regex[last2]} ]]; then
-			cs_last="${BASH_REMATCH[1]#0}"
+# Saves the last 2 (or 1) digits of $ms in $ms_last.
+		if [[ $ms =~ ${regex[last2]} ]]; then
+			ms_last="${BASH_REMATCH[1]#0}"
 		fi
 
-# If $cs_last is greater than 50, round it up, and if not, round it
+# If $ms_last is greater than 50, round it up, and if not, round it
 # down.
-		if [[ $cs_last -ge 50 ]]; then
-			cs=$(( (cs - cs_last) + 100 ))
+		if [[ $ms_last -ge 50 ]]; then
+			ms=$(( (ms - ms_last) + 100 ))
 		else
-			cs=$(( cs - cs_last ))
+			ms=$(( ms - ms_last ))
 		fi
 
-		time=$(( h + m + s + cs ))
+		time=$(( h + m + s + ms ))
 
 # If argument is in the centisecond format...
 	elif [[ $time =~ ${format[0]} ]]; then
-		cs="$time"
+		ms="$time"
 
-		s=$(( cs / 1000 ))
+		s=$(( ms / 1000 ))
 		m=$(( s / 60 ))
 		h=$(( m / 60 ))
 
-		cs=$(( cs % 1000 ))
+		ms=$(( ms % 1000 ))
 		s=$(( s % 60 ))
 		m=$(( m % 60 ))
 
-		time=$(printf '%02d:%02d:%02d,%03d' "$h" "$m" "$s" "$cs")
+		time=$(printf '%02d:%02d:%02d,%03d' "$h" "$m" "$s" "$ms")
 	fi
 
 	printf '%s' "$time"

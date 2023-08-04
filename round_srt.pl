@@ -113,21 +113,21 @@ sub time_convert {
 	my $h = 0;
 	my $m = 0;
 	my $s = 0;
-	my $cs = 0;
+	my $ms = 0;
 
-	my $cs_last = 0;
+	my $ms_last = 0;
 
 # If argument is in the hh:mm:ss format...
 	if ($time =~ m/$format[1]/) {
 		$h = $1;
 		$m = $2;
 		$s = $3;
-		$cs = $4;
+		$ms = $4;
 
 		$h =~ s/$regex{zero}/$1/;
 		$m =~ s/$regex{zero}/$1/;
 		$s =~ s/$regex{zero}/$1/;
-		$cs =~ s/$regex{zero}/$1/;
+		$ms =~ s/$regex{zero}/$1/;
 
 # Converts all the numbers to milliseconds, because those kind of values
 # will be easier to compare in the 'time_calc' subroutine.
@@ -135,32 +135,32 @@ sub time_convert {
 		$m = $m * 60 * 1000;
 		$s = $s * 1000;
 
-# Saves the last 2 (or 1) digits of $cs in $cs_last.
-		if ($cs =~ m/$regex{last2}/) {
-			$cs_last = $1;
-			$cs_last =~ s/$regex{zero}/$1/;
+# Saves the last 2 (or 1) digits of $ms in $ms_last.
+		if ($ms =~ m/$regex{last2}/) {
+			$ms_last = $1;
+			$ms_last =~ s/$regex{zero}/$1/;
 		}
 
-# If $cs_last is greater than 50, round it up, and if not, round it
+# If $ms_last is greater than 50, round it up, and if not, round it
 # down.
-		if ($cs_last >= 50) { $cs = ($cs - $cs_last) + 100; }
-		else { $cs = $cs - $cs_last; }
+		if ($ms_last >= 50) { $ms = ($ms - $ms_last) + 100; }
+		else { $ms = $ms - $ms_last; }
 
-		$time = $h + $m + $s + $cs;
+		$time = $h + $m + $s + $ms;
 
 # If argument is in the centisecond format...
 	} elsif ($time =~ m/$format[0]/) {
-		$cs = $time;
+		$ms = $time;
 
-		$s = floor($cs / 1000);
+		$s = floor($ms / 1000);
 		$m = floor($s / 60);
 		$h = floor($m / 60);
 
-		$cs = floor($cs % 1000);
+		$ms = floor($ms % 1000);
 		$s = floor($s % 60);
 		$m = floor($m % 60);
 
-		$time = sprintf('%02d:%02d:%02d,%03d', $h, $m, $s, $cs);
+		$time = sprintf('%02d:%02d:%02d,%03d', $h, $m, $s, $ms);
 	}
 
 	return($time);
