@@ -20,6 +20,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
+declare device pause_msg exit_status
 declare -a types args
 declare -A regex
 
@@ -35,6 +36,7 @@ while [[ $# -gt 0 ]]; do
 	fi
 
 	unset -v type
+	declare type
 
 # If argument is a partition instead of the device itself, strip the
 # partition number from the path.
@@ -88,7 +90,12 @@ Are you sure? [y/n]: "
 # Run 'dd'.
 	eval "${args[@]}"
 
-	if [[ $? -eq 0 ]]; then
+	exit_status="$?"
+
+# Synchronize cached writes.
+	sync
+
+	if [[ $exit_status -eq 0 ]]; then
 		printf '\n%s: %s\n\n' "$device" 'format succeeded!'
 	else
 		printf '\n%s: %s\n\n' "$device" 'format failed!'
@@ -96,6 +103,3 @@ Are you sure? [y/n]: "
 
 	shift
 done
-
-# Synchronize cached writes.
-sync

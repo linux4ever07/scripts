@@ -24,7 +24,7 @@ fi
 
 image=$(readlink -f "$1")
 
-declare device
+declare device pause_msg exit_status
 declare -A regex
 
 regex[part]='\-part[0-9]+$'
@@ -42,7 +42,10 @@ get_files () {
 # of available USB devices and allow the user to select one of them in a
 # menu.
 device_menu () {
+	declare device_link
+
 	cd '/dev/disk/by-id'
+
 	mapfile -t devices < <(get_files "usb-*" | grep -Ev "${regex[part]}")
 
 	if [[ ${#devices[@]} -eq 0 ]]; then
@@ -99,11 +102,13 @@ printf '\n\n%s: %s\n\n' "$device" 'flashing...'
 
 dd if="$image" of="$device" bs=1M
 
-if [[ $? -eq 0 ]]; then
+exit_status="$?"
+
+# Synchronize cached writes.
+sync
+
+if [[ $exit_status -eq 0 ]]; then
 	printf '\n%s: %s\n\n' "$device" 'flash succeeded!'
 else
 	printf '\n%s: %s\n\n' "$device" 'flash failed!'
 fi
-
-# Synchronize cached writes.
-sync
