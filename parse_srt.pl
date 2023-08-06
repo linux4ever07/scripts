@@ -130,14 +130,14 @@ sub parse_srt {
 
 	@lines_tmp = ();
 
-	until ($n > $total_n) {
+	until ($n == $total_n) {
+		$n += 1;
+
 		foreach my $line (@{$lines{$n}{text}}) {
 			push(@lines_tmp, $n . ': ' . $line);
 		}
 
 		push(@lines_tmp, '');
-
-		$n = $n + 1;
 	}
 
 	return(@lines_tmp);
