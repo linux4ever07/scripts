@@ -55,12 +55,12 @@ $regex{blank3} = qr/[[:blank:]]+/;
 $regex{last2} = qr/([0-9]{1,2})$/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
-$delim = ' --> ';
+$delim = '-->';
 
 $format[0] = qr/[0-9]+/;
 $format[1] = qr/([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})/;
 $format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
-$format[3] = qr/^($format[2])$delim($format[2])$/;
+$format[3] = qr/^($format[2]) *$delim *($format[2])$/;
 $format[4] = qr/^([-+])($format[2])$/;
 
 @shift = (0, 0);
@@ -375,7 +375,7 @@ sub parse_srt {
 		$start_time = time_convert($lines{$n}{start});
 		$stop_time = time_convert($lines{$n}{stop});
 
-		$time_line = $start_time . $delim . $stop_time;
+		$time_line = $start_time . ' ' . $delim . ' ' . $stop_time;
 
 		push(@lines_tmp, $n, $time_line);
 

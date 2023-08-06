@@ -57,12 +57,12 @@ while (my $arg = shift(@ARGV)) {
 
 if (! scalar(@files)) { usage(); }
 
-$delim = ' --> ';
+$delim = '-->';
 
 $format[0] = qr/[0-9]+/;
 $format[1] = qr/([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})/;
 $format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
-$format[3] = qr/^($format[2])$delim($format[2])$/;
+$format[3] = qr/^($format[2]) *$delim *($format[2])$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
@@ -246,7 +246,7 @@ sub parse_srt {
 		$start_time = time_convert($start_time);
 		$stop_time = time_convert($stop_time);
 
-		$time_line = $start_time . $delim . $stop_time;
+		$time_line = $start_time . ' ' . $delim . ' ' . $stop_time;
 
 		push(@lines_tmp, $n + $offset[0], $time_line);
 

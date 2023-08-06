@@ -36,12 +36,12 @@ declare delim start_time stop_time previous
 declare -a format
 declare -A regex
 
-delim=' --> '
+delim='-->'
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})$'
 format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
-format[3]="^(${format[2]})${delim}(${format[2]})$"
+format[3]="^(${format[2]}) *${delim} *(${format[2]})$"
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[blank2]='^[[:blank:]]*$'
@@ -153,7 +153,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	start_time=$(time_convert "$start_time")
 	stop_time=$(time_convert "$stop_time")
 
-	time_line="${start_time}${delim}${stop_time}"
+	time_line="${start_time} ${delim} ${stop_time}"
 	lines["${i}"]="$time_line"
 done
 

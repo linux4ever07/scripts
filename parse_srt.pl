@@ -32,12 +32,12 @@ if (length($ARGV[0])) {
 
 if (! -f $fn or $ext ne 'srt') { usage(); }
 
-$delim = ' --> ';
+$delim = '-->';
 
 $format[0] = qr/[0-9]+/;
 $format[1] = qr/([0-9]{2}):([0-9]{2}):([0-9]{2}),([0-9]{3})/;
 $format[2] = qr/[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}/;
-$format[3] = qr/^($format[2])$delim($format[2])$/;
+$format[3] = qr/^($format[2]) *$delim *($format[2])$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
