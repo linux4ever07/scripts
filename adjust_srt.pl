@@ -278,8 +278,6 @@ sub parse_srt_bad {
 
 		$n += 1;
 	}
-
-	$n = 0;
 }
 
 # The 'parse_srt_good' parses a subtitle in the correct SRT (SubRip)
@@ -323,7 +321,6 @@ sub parse_srt_good {
 	}
 
 	$total_n = $n;
-	$n = 0;
 }
 
 # The 'shift_first' subroutine shifts all timestamps (incl. the 1st)
@@ -352,8 +349,6 @@ sub shift_first {
 		$lines{$n}{start} = $start_time;
 		$lines{$n}{stop} = $stop_time;
 	}
-
-	$n = 0;
 }
 
 # The 'adjust_last' subroutine adjusts every timestamp between (and
@@ -421,8 +416,6 @@ sub adjust_last {
 		$lines{$n}{start} = $start_time;
 		$lines{$n}{stop} = $stop_time;
 	}
-
-	$n = 0;
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
@@ -448,6 +441,8 @@ sub process_sub {
 
 	if ($shift[0] > 0) { shift_first(); }
 	if ($shift[1] > 0) { adjust_last(); }
+
+	$n = 0;
 
 	@lines_tmp = ();
 

@@ -196,8 +196,6 @@ sub parse_srt_bad {
 
 		$n += 1;
 	}
-
-	$n = 0;
 }
 
 # The 'parse_srt_good' parses a subtitle in the correct SRT (SubRip)
@@ -241,7 +239,6 @@ sub parse_srt_good {
 	}
 
 	$total_n = $n;
-	$n = 0;
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
@@ -264,6 +261,8 @@ sub process_sub {
 	if ($n == 0) {
 		parse_srt_good();
 	}
+
+	$n = 0;
 
 	@lines_tmp = ();
 
