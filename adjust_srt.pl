@@ -178,8 +178,6 @@ sub time_convert {
 	my $s = 0;
 	my $ms = 0;
 
-	my $ms_last = 0;
-
 # If argument is in the hh:mm:ss format...
 	if ($time =~ m/$format[1]/) {
 		$h = $1;
