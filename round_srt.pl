@@ -184,7 +184,7 @@ sub frames2ms {
 # is not in the correct (SubRip) format. It's another semi-common
 # format.
 sub parse_srt_bad {
-	my($i, $j, $this, $end);
+	my($i, $this, $end);
 	my($start_time, $stop_time);
 
 	$i = 0;
@@ -218,15 +218,20 @@ sub parse_srt_bad {
 		$i += 1;
 	}
 
-	$i = 0;
+	$total_n = $n;
+	$n = 0;
 
-	until ($i > $end) {
-		for ($j = 0; $j < scalar(@{$lines{$n}{text}}); $j++) {
-			$lines{$n}{text}->[$j] =~ s/$regex{blank1}/$1/;
+	until ($n == $total_n) {
+		if (! length($lines{$n}{text})) { next; }
+
+		for ($i = 0; $i < scalar(@{$lines{$n}{text}}); $i++) {
+			$lines{$n}{text}->[$i] =~ s/$regex{blank1}/$1/;
 		}
 
-		$i += 1;
+		$n += 1;
 	}
+
+	$n = 0;
 }
 
 # The 'parse_srt_good' parses a subtitle in the correct SRT (SubRip)
@@ -268,6 +273,9 @@ sub parse_srt_good {
 
 		$i += 1;
 	}
+
+	$total_n = $n;
+	$n = 0;
 }
 
 # The 'time_calc' subroutine makes sure the current 'time line' is at
@@ -315,9 +323,6 @@ sub process_sub {
 	if ($n == 0) {
 		parse_srt_good();
 	}
-
-	$total_n = $n;
-	$n = 0;
 
 	@lines_tmp = ();
 
