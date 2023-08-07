@@ -160,7 +160,7 @@ sub parse_srt_bad {
 	until ($i > $end) {
 		$this = $lines_tmp[$i];
 
-		if (! $this =~ m/$format[4]/) {
+		if (length($this) and ! $this =~ m/$format[4]/) {
 			return;
 		}
 
@@ -172,7 +172,7 @@ sub parse_srt_bad {
 	until ($i > $end) {
 		$this = $lines_tmp[$i];
 
-		if ($this =~ m/$format[4]/) {
+		if (length($this) and $this =~ m/$format[4]/) {
 			$lines{$n}{start} = frames2ms($1);
 			$lines{$n}{stop} = frames2ms($2);
 
