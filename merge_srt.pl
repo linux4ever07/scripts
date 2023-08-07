@@ -173,7 +173,7 @@ sub frames2ms {
 # is not in the correct (SubRip) format. It's another semi-common
 # format.
 sub parse_srt_bad {
-	my($i, $this, $end);
+	my($i, $j, $this, $end);
 	my($start_time, $stop_time);
 
 	$i = 0;
@@ -202,6 +202,16 @@ sub parse_srt_bad {
 			$lines{$n}{stop} = frames2ms($2);
 
 			push(@{$lines{$n}{text}}, split('\|', $3));
+		}
+
+		$i += 1;
+	}
+
+	$i = 0;
+
+	until ($i > $end) {
+		for ($j = 0; $j < scalar(@{$lines{$n}{text}}); $j++) {
+			$lines{$n}{text}->[$j] =~ s/$regex{blank1}/$1/;
 		}
 
 		$i += 1;
