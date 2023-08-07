@@ -110,6 +110,8 @@ while (my $arg = shift(@ARGV)) {
 
 if (! scalar(@files)) { usage(); }
 
+if ($shift[0] == 0 and $shift[1] == 0) { usage(); }
+
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
 	say '
