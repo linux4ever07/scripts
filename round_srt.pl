@@ -119,8 +119,6 @@ sub time_convert {
 	my $s = 0;
 	my $ms = 0;
 
-	my $ms_last = 0;
-
 # If argument is in the hh:mm:ss format...
 	if ($time =~ m/$format[1]/) {
 		$h = $1;
@@ -139,16 +137,7 @@ sub time_convert {
 		$m = $m * 60 * 1000;
 		$s = $s * 1000;
 
-# Saves the last 2 (or 1) digits of $ms in $ms_last.
-		if ($ms =~ m/$regex{last2}/) {
-			$ms_last = $1;
-			$ms_last =~ s/$regex{zero}/$1/;
-		}
-
-# If $ms_last is greater than 50, round it up, and if not, round it
-# down.
-		if ($ms_last >= 50) { $ms = ($ms - $ms_last) + 100; }
-		else { $ms = $ms - $ms_last; }
+		$ms = round_ms($ms);
 
 		$time = $h + $m + $s + $ms;
 
@@ -176,6 +165,29 @@ sub frames2ms {
 	my $frames = shift;
 
 	my $ms = floor(($frames / 24) * 1000);
+
+	$ms = round_ms($ms);
+
+	return($ms);
+}
+
+# The 'round_ms' subroutine rounds millisecond values to the closest
+# centisecond.
+sub round_ms {
+	my $ms = shift;
+
+	my $ms_last = 0;
+
+# Saves the last 2 (or 1) digits of $ms in $ms_last.
+	if ($ms =~ m/$regex{last2}/) {
+		$ms_last = $1;
+		$ms_last =~ s/$regex{zero}/$1/;
+	}
+
+# If $ms_last is greater than 50, round it up, and if not, round it
+# down.
+	if ($ms_last >= 50) { $ms = ($ms - $ms_last) + 100; }
+	else { $ms = $ms - $ms_last; }
 
 	return($ms);
 }
