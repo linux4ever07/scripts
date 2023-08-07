@@ -336,7 +336,7 @@ sub process_sub {
 	}
 }
 
-say "\n";
+print "\n";
 
 while (my $fn = shift(@files)) {
 	my $of = $fn;
