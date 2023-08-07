@@ -188,13 +188,13 @@ sub parse_srt_bad {
 	$n = 0;
 
 	until ($n == $total_n) {
+		$n += 1;
+
 		if (! length($lines{$n}{text})) { next; }
 
 		for ($i = 0; $i < scalar(@{$lines{$n}{text}}); $i++) {
 			$lines{$n}{text}->[$i] =~ s/$regex{blank1}/$1/;
 		}
-
-		$n += 1;
 	}
 }
 
