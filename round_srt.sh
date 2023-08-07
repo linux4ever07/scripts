@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# This script will round all the centiseconds in an SRT subtitle file.
-# Every start time and end time of a subtitle will now end in ,?00
+# This script will round all the centiseconds in an SRT (SubRip)
+# subtitle file. Every start time and end time of a subtitle will now
+# end in ,?00
 
 # Example: 00:20:47,500 --> 00:20:52,600
 # Instead of: 00:20:47,457 --> 00:20:52,611
