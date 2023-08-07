@@ -232,7 +232,7 @@ sub frames2ms {
 # is not in the correct (SubRip) format. It's another semi-common
 # format.
 sub parse_srt_bad {
-	my($i, $this, $next, $end);
+	my($i, $this, $end);
 	my($start_time, $stop_time);
 
 	$i = 0;
