@@ -336,6 +336,8 @@ sub process_sub {
 	}
 }
 
+say "\n";
+
 while (my $fn = shift(@files)) {
 	my $of = $fn;
 	$of =~ s/$regex{fn}/$1/;
@@ -349,5 +351,5 @@ while (my $fn = shift(@files)) {
 	}
 	close($srt) or die "Can't close file '$of': $!";
 
-	say "\n" . 'Wrote file: ' . $of . "\n";
+	say 'Wrote file: ' . $of . "\n";
 }
