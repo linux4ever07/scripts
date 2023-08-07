@@ -219,10 +219,10 @@ sub parse_srt_bad {
 		$this = $lines_tmp[$i];
 
 		if ($this =~ m/$format[4]/) {
-			$n += 1;
-
 			$lines{$n}{start} = frames2ms($1);
 			$lines{$n}{stop} = frames2ms($2);
+
+			$n += 1;
 
 			push(@{$lines{$n}{text}}, split('\|', $3));
 		}
