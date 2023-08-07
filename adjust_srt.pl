@@ -352,6 +352,8 @@ sub shift_first {
 		$lines{$n}{start} = $start_time;
 		$lines{$n}{stop} = $stop_time;
 	}
+
+	$n = 0;
 }
 
 # The 'adjust_last' subroutine adjusts every timestamp between (and
@@ -419,6 +421,8 @@ sub adjust_last {
 		$lines{$n}{start} = $start_time;
 		$lines{$n}{stop} = $stop_time;
 	}
+
+	$n = 0;
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
