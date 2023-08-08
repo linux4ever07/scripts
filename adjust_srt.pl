@@ -231,7 +231,6 @@ sub frames2ms {
 # format.
 sub parse_srt_bad {
 	my($i, $this, $end);
-	my($start_time, $stop_time);
 
 	$i = 0;
 
@@ -253,10 +252,10 @@ sub parse_srt_bad {
 		$this = $lines_tmp[$i];
 
 		if (length($this) and $this =~ m/$format[4]/) {
+			$n += 1;
+
 			$lines{$n}{start} = frames2ms($1);
 			$lines{$n}{stop} = frames2ms($2);
-
-			$n += 1;
 
 			push(@{$lines{$n}{text}}, split('\|', $3));
 		}
@@ -282,7 +281,6 @@ sub parse_srt_bad {
 # format.
 sub parse_srt_good {
 	my($i, $j, $this, $next, $end);
-	my($start_time, $stop_time);
 
 	$i = 0;
 	$j = 0;
@@ -297,13 +295,10 @@ sub parse_srt_good {
 
 		if (length($this) and $this =~ m/$format[0]/) {
 			if (length($next) and $next =~ m/$format[3]/) {
-				$start_time = time_convert($1);
-				$stop_time = time_convert($2);
-
 				$n += 1;
 
-				$lines{$n}{start} = $start_time;
-				$lines{$n}{stop} = $stop_time;
+				$lines{$n}{start} = time_convert($1);
+				$lines{$n}{stop} = time_convert($2);
 
 				$i += 2;
 
