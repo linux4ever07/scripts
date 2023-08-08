@@ -293,11 +293,16 @@ sub parse_srt_good {
 sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
-	my $previous = shift;
+
+	my($i, $previous);
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
-	if (length($previous)) {
+	if ($n > 1) {
+		$i = $n - 1;
+
+		$previous = $lines{$i}{stop};
+
 		if ($previous > $start_time) {
 			$start_time = $previous + 100;
 		}
@@ -317,7 +322,7 @@ sub time_calc {
 sub process_sub {
 	my $fn = shift;
 
-	my($start_time, $stop_time, $time_line, $previous);
+	my($start_time, $stop_time, $time_line);
 
 	$n = 0;
 	$total_n = 0;
@@ -343,9 +348,7 @@ sub process_sub {
 		$start_time = $lines{$n}{start};
 		$stop_time = $lines{$n}{stop};
 
-		($start_time, $stop_time) = time_calc($start_time, $stop_time, $previous);
-
-		$previous = $stop_time;
+		($start_time, $stop_time) = time_calc($start_time, $stop_time);
 
 		$start_time = time_convert($start_time);
 		$stop_time = time_convert($stop_time);
