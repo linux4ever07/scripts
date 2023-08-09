@@ -22,7 +22,7 @@ $regex{charset2} = qr/^charset=(.*)$/;
 $regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{blank1} = qr/^[[:blank:]]*(.*)[[:blank:]]*$/;
 $regex{blank2} = qr/^[[:blank:]]*$/;
-$regex{blank3} = qr/[[:blank:]]+/;
+$regex{blank3} = qr/ +/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
 if (! scalar(@ARGV)) { usage(); }
