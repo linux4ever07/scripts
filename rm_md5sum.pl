@@ -102,7 +102,7 @@ for (my $i = 1; $i < scalar(@dirs); $i++) {
 	foreach my $hash (keys(%{$files_in[$i]})) {
 		if (! length($files_in[0]{$hash})) { next; }
 
-		foreach my $fn (keys(%{$files_in[$i]{$hash}})) {
+		foreach my $fn (sort(keys(%{$files_in[$i]{$hash}}))) {
 			say $fn;
 
 			unlink($fn) or die "Can't remove '$fn': $!";
