@@ -114,7 +114,7 @@ for (my $i = 1; $i < scalar(@dirs); $i++) {
 # argument.
 if (scalar(@dirs) == 1) {
 	foreach my $hash (keys(%{$files_in[0]})) {
-		if (scalar(keys(%{$files_in[0]{$hash}})) == 1) { next; }
+		if (keys(%{$files_in[0]{$hash}}) == 1) { next; }
 
 		my($date_tmp, $fn_tmp);
 
