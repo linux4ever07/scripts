@@ -173,13 +173,11 @@ sub frames2ms {
 # is not in the correct (SubRip) format. It's another semi-common
 # format.
 sub parse_srt_bad {
-	my($i, $this, $end);
+	my($i, $this);
 
 	$i = 0;
 
-	$end = $#lines_tmp;
-
-	until ($i > $end) {
+	until ($i == scalar(@lines_tmp)) {
 		$this = $lines_tmp[$i];
 
 		if (length($this) and ! $this =~ m/$format[4]/) {
@@ -191,7 +189,7 @@ sub parse_srt_bad {
 
 	$i = 0;
 
-	until ($i > $end) {
+	until ($i == scalar(@lines_tmp)) {
 		$this = $lines_tmp[$i];
 
 		if (length($this) and $this =~ m/$format[4]/) {
@@ -223,14 +221,12 @@ sub parse_srt_bad {
 # The 'parse_srt_good' parses a subtitle in the correct SRT (SubRip)
 # format.
 sub parse_srt_good {
-	my($i, $j, $this, $next, $end);
+	my($i, $j, $this, $next);
 
 	$i = 0;
 	$j = 0;
 
-	$end = $#lines_tmp;
-
-	until ($i > $end) {
+	until ($i == scalar(@lines_tmp)) {
 		$j = $i + 1;
 
 		$this = $lines_tmp[$i];
