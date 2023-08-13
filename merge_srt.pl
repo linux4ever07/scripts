@@ -169,9 +169,9 @@ sub frames2ms {
 	return($ms);
 }
 
-# The 'parse_srt_bad' parses a subtitle that has the SRT extension, but
-# is not in the correct (SubRip) format. It's another semi-common
-# format.
+# The 'parse_srt_bad' subroutine parses a subtitle that has the SRT
+# extension, but is not in the correct (SubRip) format. It's another
+# semi-common format.
 sub parse_srt_bad {
 	my($i, $this);
 
@@ -218,8 +218,8 @@ sub parse_srt_bad {
 	}
 }
 
-# The 'parse_srt_good' parses a subtitle in the correct SRT (SubRip)
-# format.
+# The 'parse_srt_good' subroutine parses a subtitle in the correct SRT
+# (SubRip) format.
 sub parse_srt_good {
 	my($i, $j, $this, $next);
 
