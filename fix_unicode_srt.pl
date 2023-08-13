@@ -5,7 +5,7 @@
 # that some written languages use various empty characters in
 # combination with graphical characters. They don't use the normal space
 # character, but they use other similar space characters that are
-# invisible. By using a regex that converts all continuous whitespace as
+# invisible. By using a regex that converts all continuous whitespace to
 # 1 normal space, some of the graphical characters became unrecognized.
 # I figured out a way to fix it, by converting character 32 (next to
 # graphical characters) to 160, and then testing if the character is
