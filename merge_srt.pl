@@ -322,23 +322,24 @@ sub process_sub {
 
 # The 'print_sub' subroutine prints the finished subtitle.
 sub print_sub {
-	my($time_line, $end, $i, $n);
+	my($time_line, $end, $n);
 	my($start_time, $stop_time);
 	my(%tmp);
 
 	$n = 0;
 
-	foreach $start_time (sort { $a <=> $b } keys(%lines)) {
-		$end = scalar(@{$lines{$start_time}});
+	foreach my $key (sort { $a <=> $b } keys(%lines)) {
+		$end = scalar(@{$lines{$key}});
 
-		for ($i = 0; $i < $end; $i++) {
+		for (my $i = 0; $i < $end; $i++) {
 			$n += 1;
 
-			%tmp = (%{$lines{$start_time}[$i]});
+			%tmp = (%{$lines{$key}[$i]});
 
-			$stop_time = $tmp{stop};
+			$start_time = time_convert($key);
+			$stop_time = time_convert($tmp{stop});
 
-			$time_line = time_convert($start_time) . ' ' . $delim . ' ' . time_convert($stop_time);
+			$time_line = $start_time . ' ' . $delim . ' ' . $stop_time;
 
 			push(@lines_tmp, $n, $time_line);
 
