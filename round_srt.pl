@@ -15,6 +15,9 @@
 # adjusted so they don't overlap. They will all differ by at least 1
 # centisecond.
 
+# The charset of input files will be decoded and then encoded to UTF-8
+# in the output.
+
 use 5.34.0;
 use strict;
 use warnings;

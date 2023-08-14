@@ -3,6 +3,9 @@
 # This script simply parses an SRT (SubRip) subtitle file, and prints
 # the content without the timestamps.
 
+# The charset of input files will be decoded and then encoded to UTF-8
+# in the output.
+
 use 5.34.0;
 use strict;
 use warnings;

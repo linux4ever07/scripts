@@ -32,6 +32,9 @@
 # adjust_srt.pl -last '+00:00:03,000' 'subtitle.srt'
 # adjust_srt.pl -first '+00:00:00,500' -last '-00:00:02,500' 'subtitle.srt'
 
+# The charset of input files will be decoded and then encoded to UTF-8
+# in the output.
+
 use 5.34.0;
 use strict;
 use warnings;

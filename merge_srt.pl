@@ -14,8 +14,8 @@
 # appends each subtitle file and shifts the timestamps. In mix mode, it
 # will sort and number the lines based on the start timestamps.
 
-# The charset of the input files will be decoded and then encoded to
-# UTF-8 in the output file.
+# The charset of input files will be decoded and then encoded to UTF-8
+# in the output.
 
 use 5.34.0;
 use strict;
