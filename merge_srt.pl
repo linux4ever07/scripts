@@ -322,8 +322,8 @@ sub process_sub {
 
 # The 'print_sub' subroutine prints the finished subtitle.
 sub print_sub {
-	my($time_line, $end, $n);
-	my($start_time, $stop_time);
+	my($end, $n);
+	my($start_time, $stop_time, $time_line);
 	my(%tmp);
 
 	$n = 0;
