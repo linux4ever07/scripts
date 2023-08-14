@@ -13,8 +13,8 @@ use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
 my(%regex, %lines);
-my(@lines_tmp, @format);
-my($delim, $n, $total_n, $fn, $ext);
+my(@files, @lines_tmp, @format);
+my($delim, $n, $total_n);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -27,13 +27,24 @@ $regex{zero} = qr/^0+([0-9]+)$/;
 
 if (! scalar(@ARGV)) { usage(); }
 
-if (length($ARGV[0])) {
-	$fn = abs_path($ARGV[0]);
-	$fn =~ m/$regex{fn}/;
-	$ext = lc($2);
+while (my $arg = shift(@ARGV)) {
+	my($fn, $ext);
+
+	if (! length($arg)) { next; }
+
+	if (! -f $arg) { usage(); }
+
+	if ($arg =~ m/$regex{fn}/) {
+		$fn = abs_path($arg);
+		$ext = lc($2);
+	} else { usage(); }
+
+	if ($ext ne 'srt') { usage(); }
+
+	push(@files, $fn);
 }
 
-if (! -f $fn or $ext ne 'srt') { usage(); }
+if (! scalar(@files)) { usage(); }
 
 $delim = '-->';
 
@@ -150,7 +161,7 @@ sub frames2ms {
 # extension, but is not in the correct (SubRip) format. It's another
 # semi-common format.
 sub parse_srt_bad {
-	my($i, $this);
+	my($i, $this, $end);
 
 	$i = 0;
 
@@ -189,7 +200,9 @@ sub parse_srt_bad {
 
 		if (! length($lines{$n}{text})) { next; }
 
-		for ($i = 0; $i < scalar(@{$lines{$n}{text}}); $i++) {
+		$end = scalar(@{$lines{$n}{text}});
+
+		for ($i = 0; $i < $end; $i++) {
 			$lines{$n}{text}->[$i] =~ s/$regex{blank1}/$1/;
 		}
 	}
@@ -233,11 +246,9 @@ sub parse_srt_good {
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
-# processes it, and then prints the result.
+# processes it.
 sub process_sub {
 	my $fn = shift;
-
-	my($start_time, $stop_time, $time_line);
 
 	$n = 0;
 	$total_n = 0;
@@ -253,9 +264,14 @@ sub process_sub {
 		parse_srt_good();
 	}
 
-	$n = 0;
-
 	@lines_tmp = ();
+}
+
+# The 'print_sub' subroutine prints the finished subtitle.
+sub print_sub {
+	my($start_time, $stop_time, $time_line);
+
+	$n = 0;
 
 	until ($n == $total_n) {
 		$n += 1;
@@ -268,10 +284,17 @@ sub process_sub {
 	}
 }
 
-process_sub($fn);
+print "\n";
 
-say $fn . "\n";
+while (my $fn = shift(@files)) {
+	process_sub($fn);
+	print_sub();
 
-foreach my $line (@lines_tmp) {
-	say $line;
+	say $fn . "\n";
+
+	foreach my $line (@lines_tmp) {
+		say $line;
+	}
+
+	print "\n";
 }

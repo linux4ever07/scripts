@@ -1,17 +1,21 @@
 #!/usr/bin/perl
 
 # This script merges an arbitrary number of SRT subtitle files to 1
-# file, and adjusts the timings. This is useful when a movie that's
+# file, and adjusts the timestamps. This is useful when a movie that's
 # split accross multiple discs has been merged to 1 file, and the
 # subtitles also need to be merged. Or just merging SRT subtitle files
 # in general.
 
-# The charset of the input files will be decoded and then encoded to
-# UTF-8 in the output file.
-
 # The output file will probably still need to be edited in a subtitle
 # editor to be properly synced to the movie file, but at least most of
 # the work will already be done.
+
+# The script has 2 modes, linear and mix. In linear mode, it just
+# appends each subtitle file and shifts the timestamps. In mix mode, it
+# will sort and number the lines based on the start timestamps.
+
+# The charset of the input files will be decoded and then encoded to
+# UTF-8 in the output file.
 
 use 5.34.0;
 use strict;
@@ -22,9 +26,9 @@ use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my(%regex, %lines);
-my(@files, @lines_tmp, @lines, @format, @offset);
-my($dn, $of, $delim, $n, $total_n);
+my(%regex, %lines, %start_time, %stop_time);
+my(@files, @lines_tmp, @format);
+my($mode, $dn, $of, $delim, $offset);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -35,7 +39,7 @@ $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/ +/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
-@offset = (0, 0);
+$offset = 0;
 
 $dn = cwd();
 $of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
@@ -47,16 +51,33 @@ while (my $arg = shift(@ARGV)) {
 
 	if (! length($arg)) { next; }
 
-	$fn = abs_path($arg);
-	$fn =~ m/$regex{fn}/;
-	$ext = lc($2);
+	if ($arg eq '-linear') {
+		$mode = 'linear';
 
-	if (! -f $fn or $ext ne 'srt') { usage(); }
+		next;
+	}
+
+	if ($arg eq '-mix') {
+		$mode = 'mix';
+
+		next;
+	}
+
+	if (! -f $arg) { usage(); }
+
+	if ($arg =~ m/$regex{fn}/) {
+		$fn = abs_path($arg);
+		$ext = lc($2);
+	} else { usage(); }
+
+	if ($ext ne 'srt') { usage(); }
 
 	push(@files, $fn);
 }
 
 if (! scalar(@files)) { usage(); }
+
+if (! length($mode)) { usage(); }
 
 $delim = '-->';
 
@@ -68,7 +89,7 @@ $format[4] = qr/^\{([0-9]+)\}\{([0-9]+)\}(.*)$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say "\n" . 'Usage: ' . basename($0) . ' [srt...]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [-linear|-mix] [srt...]' . "\n";
 	exit;
 }
 
@@ -173,15 +194,21 @@ sub frames2ms {
 # extension, but is not in the correct (SubRip) format. It's another
 # semi-common format.
 sub parse_srt_bad {
-	my($i, $this);
+	my($i, $n, $this);
+	my(%tmp);
+
+	%start_time = ();
+	%stop_time = ();
 
 	$i = 0;
+
+	$n = 0;
 
 	until ($i == scalar(@lines_tmp)) {
 		$this = $lines_tmp[$i];
 
 		if (length($this) and ! $this =~ m/$format[4]/) {
-			return;
+			return(0);
 		}
 
 		$i += 1;
@@ -195,36 +222,44 @@ sub parse_srt_bad {
 		if (length($this) and $this =~ m/$format[4]/) {
 			$n += 1;
 
-			$lines{$n}{start} = frames2ms($1);
-			$lines{$n}{stop} = frames2ms($2);
+			$start_time{in} = frames2ms($1);
+			$stop_time{in} = frames2ms($2);
 
-			push(@{$lines{$n}{text}}, split('\|', $3));
+			if ($mode eq 'linear') {
+				$start_time{in} += $offset;
+				$stop_time{in} += $offset;
+			}
+
+			$tmp{stop} = $stop_time{in};
+			$tmp{text} = ();
+
+			push(@{$tmp{text}}, split('\|', $3));
+
+			push(@{$lines{$start_time{in}}}, {%tmp});
 		}
 
 		$i += 1;
 	}
 
-	$total_n = $n;
-	$n = 0;
+	if (length($stop_time{in})) { $offset += $stop_time{in}; }
 
-	until ($n == $total_n) {
-		$n += 1;
-
-		if (! length($lines{$n}{text})) { next; }
-
-		for ($i = 0; $i < scalar(@{$lines{$n}{text}}); $i++) {
-			$lines{$n}{text}->[$i] =~ s/$regex{blank1}/$1/;
-		}
-	}
+	if ($n > 0) { return(1); }
+	else { return(0); }
 }
 
 # The 'parse_srt_good' subroutine parses a subtitle in the correct SRT
 # (SubRip) format.
 sub parse_srt_good {
-	my($i, $j, $this, $next);
+	my($i, $j, $n, $this, $next);
+	my(%tmp);
+
+	%start_time = ();
+	%stop_time = ();
 
 	$i = 0;
 	$j = 0;
+
+	$n = 0;
 
 	until ($i == scalar(@lines_tmp)) {
 		$j = $i + 1;
@@ -236,8 +271,18 @@ sub parse_srt_good {
 			if (length($next) and $next =~ m/$format[3]/) {
 				$n += 1;
 
-				$lines{$n}{start} = time_convert($1);
-				$lines{$n}{stop} = time_convert($2);
+				if ($n > 1) { push(@{$lines{$start_time{in}}}, {%tmp}); }
+
+				$start_time{in} = time_convert($1);
+				$stop_time{in} = time_convert($2);
+
+				if ($mode eq 'linear') {
+					$start_time{in} += $offset;
+					$stop_time{in} += $offset;
+				}
+
+				$tmp{stop} = $stop_time{in};
+				$tmp{text} = ();
 
 				$i += 2;
 
@@ -246,99 +291,87 @@ sub parse_srt_good {
 		}
 
 		if (length($this)) {
-			push(@{$lines{$n}{text}}, $this);
+			push(@{$tmp{text}}, $this);
 		}
 
 		$i += 1;
 	}
 
-	$total_n = $n;
+	if (length($start_time{in})) { push(@{$lines{$start_time{in}}}, {%tmp}); }
+
+	if (length($stop_time{in})) { $offset += $stop_time{in}; }
+
+	if ($n > 0) { return(1); }
+	else { return(0); }
 }
 
-# The 'time_calc' subroutine adds the total time of the previous SRT
-# subtitle file to the current 'time line'.
-sub time_calc {
-	my $start_time = shift;
-	my $stop_time = shift;
+# The 'print_sub' subroutine prints the finished subtitle.
+sub print_sub {
+	my($time_line, $end, $n);
+	my(%tmp);
 
-	my($diff);
+	%start_time = ();
+	%stop_time = ();
 
-	if ($offset[1] == 0) {
-		return($start_time, $stop_time);
+	$n = 0;
+
+	foreach my $start_time (sort { $a <=> $b } keys(%lines)) {
+		$start_time{in} = $start_time;
+
+		$end = scalar(@{$lines{$start_time{in}}});
+
+		for (my $i = 0; $i < $end; $i++) {
+			$n += 1;
+
+			%tmp = (%{$lines{$start_time{in}}[$i]});
+
+			$stop_time{in} = $tmp{stop};
+
+			$start_time{out} = $stop_time{in};
+			$stop_time{out} = $stop_time{in};
+
+			$start_time{out} = time_convert($start_time{out});
+			$stop_time{out} = time_convert($stop_time{out});
+
+			$time_line = $start_time{out} . ' ' . $delim . ' ' . $stop_time{out};
+
+			push(@lines_tmp, $n, $time_line);
+
+			foreach my $line (@{$tmp{text}}) {
+				$line =~ s/$regex{blank1}/$1/;
+
+				push(@lines_tmp, $line);
+			}
+
+			push(@lines_tmp, '');
+		}
 	}
-
-	if ($start_time < 100) {
-		$diff = 100 - $start_time;
-
-		$start_time = $start_time + $diff;
-		$stop_time = $stop_time + $diff;
-	}
-
-	$start_time = $offset[1] + $start_time;
-	$stop_time = $offset[1] + $stop_time;
-
-	return($start_time, $stop_time);
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
-# processes it, and then prints the result.
+# processes it.
 sub process_sub {
 	my $fn = shift;
 
-	my($start_time, $stop_time, $time_line);
-
-	$n = 0;
-	$total_n = 0;
-
 	@lines_tmp = ();
-	%lines = ();
 
 	push(@lines_tmp, read_decode_fn($fn));
 
-	parse_srt_bad();
-
-	if ($n == 0) {
+	if (! parse_srt_bad()) {
 		parse_srt_good();
 	}
 
-	$n = 0;
-
 	@lines_tmp = ();
-
-	until ($n == $total_n) {
-		$n += 1;
-
-		$start_time = $lines{$n}{start};
-		$stop_time = $lines{$n}{stop};
-
-		($start_time, $stop_time) = time_calc($start_time, $stop_time);
-
-		$start_time = time_convert($start_time);
-		$stop_time = time_convert($stop_time);
-
-		$time_line = $start_time . ' ' . $delim . ' ' . $stop_time;
-
-		push(@lines_tmp, $n + $offset[0], $time_line);
-
-		foreach my $line (@{$lines{$n}{text}}) {
-			push(@lines_tmp, $line);
-		}
-
-		push(@lines_tmp, '');
-	}
-
-	$offset[0] += $n;
-	$offset[1] += time_convert($stop_time);
 }
 
 while (my $fn = shift(@files)) {
 	process_sub($fn);
-
-	push(@lines, @lines_tmp);
 }
 
+print_sub();
+
 open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
-foreach my $line (@lines) {
+foreach my $line (@lines_tmp) {
 	print $srt $line . "\r\n";
 }
 close($srt) or die "Can't close file '$of': $!";

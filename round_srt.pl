@@ -45,11 +45,14 @@ while (my $arg = shift(@ARGV)) {
 
 	if (! length($arg)) { next; }
 
-	$fn = abs_path($arg);
-	$fn =~ m/$regex{fn}/;
-	$ext = lc($2);
+	if (! -f $arg) { usage(); }
 
-	if (! -f $fn or $ext ne 'srt') { usage(); }
+	if ($arg =~ m/$regex{fn}/) {
+		$fn = abs_path($arg);
+		$ext = lc($2);
+	} else { usage(); }
+
+	if ($ext ne 'srt') { usage(); }
 
 	push(@files, $fn);
 }
@@ -196,7 +199,7 @@ sub round_ms {
 # extension, but is not in the correct (SubRip) format. It's another
 # semi-common format.
 sub parse_srt_bad {
-	my($i, $this);
+	my($i, $this, $end);
 
 	$i = 0;
 
@@ -235,7 +238,9 @@ sub parse_srt_bad {
 
 		if (! length($lines{$n}{text})) { next; }
 
-		for ($i = 0; $i < scalar(@{$lines{$n}{text}}); $i++) {
+		$end = scalar(@{$lines{$n}{text}});
+
+		for ($i = 0; $i < $end; $i++) {
 			$lines{$n}{text}->[$i] =~ s/$regex{blank1}/$1/;
 		}
 	}
@@ -309,11 +314,9 @@ sub time_calc {
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
-# processes it, and then prints the result.
+# processes it.
 sub process_sub {
 	my $fn = shift;
-
-	my($start_time, $stop_time, $time_line);
 
 	$n = 0;
 	$total_n = 0;
@@ -329,9 +332,14 @@ sub process_sub {
 		parse_srt_good();
 	}
 
-	$n = 0;
-
 	@lines_tmp = ();
+}
+
+# The 'print_sub' subroutine prints the finished subtitle.
+sub print_sub {
+	my($start_time, $stop_time, $time_line);
+
+	$n = 0;
 
 	until ($n == $total_n) {
 		$n += 1;
@@ -364,6 +372,7 @@ while (my $fn = shift(@files)) {
 	$of = $of . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
 	process_sub($fn);
+	print_sub();
 
 	open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
 	foreach my $line (@lines_tmp) {
