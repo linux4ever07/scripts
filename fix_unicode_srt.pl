@@ -184,7 +184,7 @@ sub parse_srt_bad {
 		$this = $lines_tmp[$i];
 
 		if (length($this) and ! $this =~ m/$format[4]/) {
-			return;
+			return(0);
 		}
 
 		$i += 1;
@@ -208,19 +208,9 @@ sub parse_srt_bad {
 	}
 
 	$total_n = $n;
-	$n = 0;
 
-	until ($n == $total_n) {
-		$n += 1;
-
-		if (! length($lines{$n}{text})) { next; }
-
-		$end = scalar(@{$lines{$n}{text}});
-
-		for ($i = 0; $i < $end; $i++) {
-			$lines{$n}{text}->[$i] =~ s/$regex{blank1}/$1/;
-		}
-	}
+	if ($n > 0) { return(1); }
+	else { return(0); }
 }
 
 # The 'parse_srt_good' subroutine parses a subtitle in the correct SRT
@@ -258,6 +248,9 @@ sub parse_srt_good {
 	}
 
 	$total_n = $n;
+
+	if ($n > 0) { return(1); }
+	else { return(0); }
 }
 
 # The 'test_line' subroutine will test if the current line has any
@@ -370,9 +363,7 @@ sub process_sub {
 
 	push(@lines_tmp, read_decode_fn($fn));
 
-	parse_srt_bad();
-
-	if ($n == 0) { parse_srt_good(); }
+	if (! parse_srt_bad()) { parse_srt_good(); }
 
 	@lines_tmp = ();
 }
@@ -394,6 +385,8 @@ sub print_sub {
 		push(@lines_tmp, $n, $time_line);
 
 		foreach my $line (@{$lines{$n}{text}}) {
+			$line =~ s/$regex{blank1}/$1/;
+
 			fix_chars($line);
 
 			push(@lines_tmp, $line_out);

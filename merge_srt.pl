@@ -15,9 +15,9 @@
 # be properly synced to the movie file, but at least most of the work
 # will already be done.
 
-# The script has 2 modes, 'linear' and 'mix'. In linear mode, it just
-# appends each subtitle file and shifts the timestamps. In mix mode, it
-# will sort and number the lines based on the start timestamps.
+# The script has 2 modes, 'append' and 'blend'. In append mode, it just
+# appends each subtitle file and shifts the timestamps. In blend mode,
+# it will sort and number the lines based on the start timestamps.
 
 # The charset of input files will be decoded and then encoded to UTF-8
 # in the output.
@@ -31,7 +31,7 @@ use Cwd qw(abs_path cwd);
 use Encode qw(encode decode find_encoding);
 use POSIX qw(floor);
 
-my(%regex, %lines, %start_time, %stop_time);
+my(%regex, %lines);
 my(@files, @lines_tmp, @format);
 my($mode, $dn, $of, $delim, $offset);
 
@@ -56,14 +56,14 @@ while (my $arg = shift(@ARGV)) {
 
 	if (! length($arg)) { next; }
 
-	if ($arg eq '-linear') {
-		$mode = 'linear';
+	if ($arg eq '-append') {
+		$mode = 'append';
 
 		next;
 	}
 
-	if ($arg eq '-mix') {
-		$mode = 'mix';
+	if ($arg eq '-blend') {
+		$mode = 'blend';
 
 		next;
 	}
@@ -94,7 +94,7 @@ $format[4] = qr/^\{([0-9]+)\}\{([0-9]+)\}(.*)$/;
 
 # The 'usage' subroutine prints syntax, and then quits.
 sub usage {
-	say "\n" . 'Usage: ' . basename($0) . ' [-linear|-mix] [srt...]' . "\n";
+	say "\n" . 'Usage: ' . basename($0) . ' [-append|-blend] [srt...]' . "\n";
 	exit;
 }
 
@@ -200,10 +200,8 @@ sub frames2ms {
 # semi-common format.
 sub parse_srt_bad {
 	my($i, $n, $this);
+	my($start_time, $stop_time);
 	my(%tmp);
-
-	%start_time = ();
-	%stop_time = ();
 
 	$i = 0;
 
@@ -227,26 +225,26 @@ sub parse_srt_bad {
 		if (length($this) and $this =~ m/$format[4]/) {
 			$n += 1;
 
-			$start_time{in} = frames2ms($1);
-			$stop_time{in} = frames2ms($2);
+			$start_time = frames2ms($1);
+			$stop_time = frames2ms($2);
 
-			if ($mode eq 'linear') {
-				$start_time{in} += $offset;
-				$stop_time{in} += $offset;
+			if ($mode eq 'append') {
+				$start_time += $offset;
+				$stop_time += $offset;
 			}
 
-			$tmp{stop} = $stop_time{in};
+			$tmp{stop} = $stop_time;
 			$tmp{text} = ();
 
 			push(@{$tmp{text}}, split('\|', $3));
 
-			push(@{$lines{$start_time{in}}}, {%tmp});
+			push(@{$lines{$start_time}}, {%tmp});
 		}
 
 		$i += 1;
 	}
 
-	if (length($stop_time{in})) { $offset += $stop_time{in}; }
+	if (length($stop_time)) { $offset += $stop_time; }
 
 	if ($n > 0) { return(1); }
 	else { return(0); }
@@ -256,10 +254,8 @@ sub parse_srt_bad {
 # (SubRip) format.
 sub parse_srt_good {
 	my($i, $j, $n, $this, $next);
+	my($start_time, $stop_time);
 	my(%tmp);
-
-	%start_time = ();
-	%stop_time = ();
 
 	$i = 0;
 	$j = 0;
@@ -276,17 +272,17 @@ sub parse_srt_good {
 			if (length($next) and $next =~ m/$format[3]/) {
 				$n += 1;
 
-				if ($n > 1) { push(@{$lines{$start_time{in}}}, {%tmp}); }
+				if ($n > 1) { push(@{$lines{$start_time}}, {%tmp}); }
 
-				$start_time{in} = time_convert($1);
-				$stop_time{in} = time_convert($2);
+				$start_time = time_convert($1);
+				$stop_time = time_convert($2);
 
-				if ($mode eq 'linear') {
-					$start_time{in} += $offset;
-					$stop_time{in} += $offset;
+				if ($mode eq 'append') {
+					$start_time += $offset;
+					$stop_time += $offset;
 				}
 
-				$tmp{stop} = $stop_time{in};
+				$tmp{stop} = $stop_time;
 				$tmp{text} = ();
 
 				$i += 2;
@@ -302,9 +298,9 @@ sub parse_srt_good {
 		$i += 1;
 	}
 
-	if (length($start_time{in})) { push(@{$lines{$start_time{in}}}, {%tmp}); }
+	if (length($start_time)) { push(@{$lines{$start_time}}, {%tmp}); }
 
-	if (length($stop_time{in})) { $offset += $stop_time{in}; }
+	if (length($stop_time)) { $offset += $stop_time; }
 
 	if ($n > 0) { return(1); }
 	else { return(0); }
@@ -327,32 +323,25 @@ sub process_sub {
 # The 'print_sub' subroutine prints the finished subtitle.
 sub print_sub {
 	my($time_line, $end, $n);
+	my($start_time, $stop_time);
 	my(%tmp);
-
-	%start_time = ();
-	%stop_time = ();
 
 	$n = 0;
 
 	foreach my $start_time (sort { $a <=> $b } keys(%lines)) {
-		$start_time{in} = $start_time;
-
-		$end = scalar(@{$lines{$start_time{in}}});
+		$end = scalar(@{$lines{$start_time}});
 
 		for (my $i = 0; $i < $end; $i++) {
 			$n += 1;
 
-			%tmp = (%{$lines{$start_time{in}}[$i]});
+			%tmp = (%{$lines{$start_time}[$i]});
 
-			$stop_time{in} = $tmp{stop};
+			$stop_time = $tmp{stop};
 
-			$start_time{out} = $stop_time{in};
-			$stop_time{out} = $stop_time{in};
+			$start_time = time_convert($start_time);
+			$stop_time = time_convert($stop_time);
 
-			$start_time{out} = time_convert($start_time{out});
-			$stop_time{out} = time_convert($stop_time{out});
-
-			$time_line = $start_time{out} . ' ' . $delim . ' ' . $stop_time{out};
+			$time_line = $start_time . ' ' . $delim . ' ' . $stop_time;
 
 			push(@lines_tmp, $n, $time_line);
 
