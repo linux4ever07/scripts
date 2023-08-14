@@ -6,11 +6,16 @@
 # subtitles also need to be merged. Or just merging SRT subtitle files
 # in general.
 
-# The output file will probably still need to be edited in a subtitle
-# editor to be properly synced to the movie file, but at least most of
-# the work will already be done.
+# The script can also be useful in the case when a subtitle only has
+# the English parts, but other subtitles have the foreign dialogue
+# parts. If that's the case, manually delete all the lines that exist
+# in both subtitles, and then merge them using this script.
 
-# The script has 2 modes, linear and mix. In linear mode, it just
+# The output file might still need to be edited in a subtitle editor to
+# be properly synced to the movie file, but at least most of the work
+# will already be done.
+
+# The script has 2 modes, 'linear' and 'mix'. In linear mode, it just
 # appends each subtitle file and shifts the timestamps. In mix mode, it
 # will sort and number the lines based on the start timestamps.
 
