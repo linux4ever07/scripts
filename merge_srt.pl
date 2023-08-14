@@ -319,9 +319,7 @@ sub process_sub {
 
 	push(@lines_tmp, read_decode_fn($fn));
 
-	if (! parse_srt_bad()) {
-		parse_srt_good();
-	}
+	if (! parse_srt_bad()) { parse_srt_good(); }
 
 	@lines_tmp = ();
 }
