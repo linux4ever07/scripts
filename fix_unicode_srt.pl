@@ -372,9 +372,7 @@ sub process_sub {
 
 	parse_srt_bad();
 
-	if ($n == 0) {
-		parse_srt_good();
-	}
+	if ($n == 0) { parse_srt_good(); }
 
 	@lines_tmp = ();
 }

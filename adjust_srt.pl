@@ -430,9 +430,7 @@ sub process_sub {
 
 	parse_srt_bad();
 
-	if ($n == 0) {
-		parse_srt_good();
-	}
+	if ($n == 0) { parse_srt_good(); }
 
 	if ($shift[0] > 0) { shift_first(); }
 	if ($shift[1] > 0) { adjust_last(); }
