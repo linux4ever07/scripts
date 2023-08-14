@@ -305,6 +305,22 @@ sub parse_srt_good {
 	else { return(0); }
 }
 
+# The 'process_sub' subroutine reads a subtitle file, parses and
+# processes it.
+sub process_sub {
+	my $fn = shift;
+
+	@lines_tmp = ();
+
+	push(@lines_tmp, read_decode_fn($fn));
+
+	if (! parse_srt_bad()) {
+		parse_srt_good();
+	}
+
+	@lines_tmp = ();
+}
+
 # The 'print_sub' subroutine prints the finished subtitle.
 sub print_sub {
 	my($time_line, $end, $n);
@@ -346,22 +362,6 @@ sub print_sub {
 			push(@lines_tmp, '');
 		}
 	}
-}
-
-# The 'process_sub' subroutine reads a subtitle file, parses and
-# processes it.
-sub process_sub {
-	my $fn = shift;
-
-	@lines_tmp = ();
-
-	push(@lines_tmp, read_decode_fn($fn));
-
-	if (! parse_srt_bad()) {
-		parse_srt_good();
-	}
-
-	@lines_tmp = ();
 }
 
 while (my $fn = shift(@files)) {
