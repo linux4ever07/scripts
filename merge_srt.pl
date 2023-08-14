@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-# This script merges an arbitrary number of SRT subtitle files to 1
-# file, and adjusts the timestamps. This is useful when a movie that's
-# split accross multiple discs has been merged to 1 file, and the
+# This script merges an arbitrary number of SRT (SubRip) subtitle files
+# to 1 file, and adjusts the timestamps. This is useful when a movie
+# that's split accross multiple discs has been merged to 1 file, and the
 # subtitles also need to be merged. Or just merging SRT subtitle files
 # in general.
 
