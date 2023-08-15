@@ -238,7 +238,7 @@ sub files2queue {
 		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} ne '1') { next; }
 
-			if ($fn =~ /$regex{flac}/) {
+			if ($fn =~ m/$regex{flac}/) {
 				if (scalar(@flac_req) != 2) { next; }
 			}
 
@@ -253,7 +253,7 @@ sub files2queue {
 		foreach my $fn (keys(%md5h)) {
 			if ($md5h{$fn} eq '1') { next; }
 
-			if ($fn =~ /$regex{flac}/) {
+			if ($fn =~ m/$regex{flac}/) {
 				if (scalar(@flac_req) != 2) { next; }
 
 				$dn = dirname($fn);
@@ -297,7 +297,7 @@ sub files2queue {
 # If script mode is 'test', copy the FLAC file to /dev/shm, otherwise
 # just enqueue it directly. If it's not a FLAC file, use the normal
 # sysread method of reading files into RAM.
-		if ($fn =~ /$regex{flac}/) {
+		if ($fn =~ m/$regex{flac}/) {
 			if ($mode eq 'test') {
 				copy($fn, $files{$fn}{dn}) or die "Can't copy '$fn': $!";
 
@@ -526,7 +526,7 @@ sub file2hash {
 # Loop to check that the format of the database file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if ($line =~ /$format/) {
+		if ($line =~ m/$format/) {
 # Split the line into relative file name and MD5 hash.
 			$fn = $1;
 			$hash = $2;
@@ -629,7 +629,7 @@ sub md5import {
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if ($line =~ /$format/) {
+		if ($line =~ m/$format/) {
 # Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
 			$fn = $2;
@@ -801,7 +801,7 @@ sub md5index {
 	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
-		if ($fn =~ /$regex{flac}/) { $tmp_md5 = md5flac($fn, $size); }
+		if ($fn =~ m/$regex{flac}/) { $tmp_md5 = md5flac($fn, $size); }
 		else { $tmp_md5 = md5sum($fn, $size); }
 
 		if (! length($tmp_md5)) { next; }
@@ -825,7 +825,7 @@ sub md5test {
 	while (my($fn, $size) = $files_q->dequeue(2)) {
 		if ($saw_sigint) { last; }
 
-		if ($fn =~ /$regex{flac}/) { $tmp_md5 = md5flac($fn, $size); }
+		if ($fn =~ m/$regex{flac}/) { $tmp_md5 = md5flac($fn, $size); }
 		else { $tmp_md5 = md5sum($fn, $size); }
 
 		if (! length($tmp_md5)) { next; }
@@ -937,7 +937,7 @@ while (my $dn = shift(@lib)) {
 # Import *.MD5 files to database.
 		when ('import') {
 			foreach my $fn (sort(keys(%md5h))) {
-				if ($fn =~ /$regex{md5}/) { md5import($fn); }
+				if ($fn =~ m/$regex{md5}/) { md5import($fn); }
 			}
 		}
 	}
