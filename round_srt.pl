@@ -286,24 +286,26 @@ sub time_calc {
 	my $start_time = shift;
 	my $stop_time = shift;
 
-	my($i, $previous);
+	my($i, %diff);
+
+	$diff{stop} = $start_time + 100;
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
 	if ($n > 1) {
 		$i = $n - 1;
 
-		$previous = $lines{$i}{stop};
+		$diff{start} = $lines{$i}{stop} + 100;
 
-		if ($previous > $start_time) {
-			$start_time = $previous + 100;
+		if ($diff{start} > $start_time) {
+			$start_time = $diff{start};
 		}
 	}
 
 # If the stop time of the current 'time line' is less than the start
 # time, then set it to the start time plus 1 centisecond.
-	if ($stop_time < $start_time) {
-		$stop_time = $start_time + 100;
+	if ($stop_time < $diff{stop}) {
+		$stop_time = $diff{stop};
 	}
 
 	return($start_time, $stop_time);
