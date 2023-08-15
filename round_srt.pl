@@ -294,8 +294,6 @@ sub time_calc {
 		$start_time = \$lines{$n}{start};
 		$stop_time = \$lines{$n}{stop};
 
-		$diff{stop} = $$start_time + 100;
-
 # If the gap between the previous 'time line' and the current one is not
 # at least 1 centisecond long, then make it so.
 		if ($n > 1) {
@@ -307,6 +305,8 @@ sub time_calc {
 				$$start_time = $diff{start};
 			}
 		}
+
+		$diff{stop} = $$start_time + 100;
 
 # If the current 'time line' is not at least 1 centisecond long, then
 # make it so.
