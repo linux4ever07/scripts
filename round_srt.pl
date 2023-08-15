@@ -279,9 +279,9 @@ sub parse_srt_good {
 	else { return(0); }
 }
 
-# The 'time_calc' subroutine makes sure the current 'time line' is at
-# least 1 centisecond greater than previous 'time line'. It also makes
-# sure each line has a length of at least 1 centisecond.
+# The 'time_calc' subroutine makes sure the gap between each 'time line'
+# is at least 1 centisecond. It also makes sure that the length of each
+# 'time line' is at least 1 centisecond long.
 sub time_calc {
 	my($i, $start_time, $stop_time);
 	my(%diff);
@@ -296,8 +296,8 @@ sub time_calc {
 
 		$diff{stop} = $$start_time + 100;
 
-# If the previous 'time line' is greater than the current one, make the
-# current 'time line' 1 centisecond greater than that.
+# If the gap between the previous 'time line' and the current one is not
+# at least 1 centisecond long, then make it so.
 		if ($n > 1) {
 			$i = $n - 1;
 
@@ -308,8 +308,8 @@ sub time_calc {
 			}
 		}
 
-# If the stop time of the current 'time line' is less than the start
-# time, then set it to the start time plus 1 centisecond.
+# If the current 'time line' is not at least 1 centisecond long, then
+# make it so.
 		if ($$stop_time < $diff{stop}) {
 			$$stop_time = $diff{stop};
 		}
