@@ -281,7 +281,7 @@ sub parse_srt_good {
 
 # The 'time_calc' subroutine makes sure the gap between each 'time line'
 # is at least 1 centisecond long. It also makes sure that the length of
-# each 'time line' is at least 1 centisecond long.
+# each 'time line' is at least 1 centisecond.
 sub time_calc {
 	my($i, $start_time, $stop_time);
 	my(%diff);
