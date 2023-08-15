@@ -383,8 +383,8 @@ sub adjust_last {
 	until ($n == $total_n) {
 		$n += 1;
 
-		$$start_time = \$lines{$n}{start};
-		$$stop_time = \$lines{$n}{stop};
+		$start_time = \$lines{$n}{start};
+		$stop_time = \$lines{$n}{stop};
 
 		if (! length($interval_out[$n])) { next; }
 
