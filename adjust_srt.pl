@@ -323,21 +323,18 @@ sub shift_first {
 	until ($n == $total_n) {
 		$n += 1;
 
-		$start_time = $lines{$n}{start};
-		$stop_time = $lines{$n}{stop};
+		$start_time = \$lines{$n}{start};
+		$stop_time = \$lines{$n}{stop};
 
 		if ($mode[0] eq '+') {
-			$start_time += $shift[0];
-			$stop_time += $shift[0];
+			$$start_time += $shift[0];
+			$$stop_time += $shift[0];
 		}
 
 		if ($mode[0] eq '-') {
-			$start_time -= $shift[0];
-			$stop_time -= $shift[0];
+			$$start_time -= $shift[0];
+			$$stop_time -= $shift[0];
 		}
-
-		$lines{$n}{start} = $start_time;
-		$lines{$n}{stop} = $stop_time;
 	}
 }
 
@@ -386,25 +383,22 @@ sub adjust_last {
 	until ($n == $total_n) {
 		$n += 1;
 
-		$start_time = $lines{$n}{start};
-		$stop_time = $lines{$n}{stop};
+		$$start_time = \$lines{$n}{start};
+		$$stop_time = \$lines{$n}{stop};
 
 		if (! length($interval_out[$n])) { next; }
 
 		$offset += $interval_out[$n];
 
 		if ($mode[1] eq '+') {
-			$start_time = $start_time + $offset;
-			$stop_time = $stop_time + $offset;
+			$$start_time += $offset;
+			$$stop_time += $offset;
 		}
 
 		if ($mode[1] eq '-') {
-			$start_time = $start_time - $offset;
-			$stop_time = $stop_time - $offset;
+			$$start_time -= $offset;
+			$$stop_time -= $offset;
 		}
-
-		$lines{$n}{start} = $start_time;
-		$lines{$n}{stop} = $stop_time;
 	}
 }
 
