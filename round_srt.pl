@@ -310,7 +310,7 @@ sub time_calc {
 
 # If the current 'time line' is not at least 1 centisecond long, then
 # make it so.
-		if ($$stop_time < $diff{stop}) {
+		if ($diff{stop} > $$stop_time) {
 			$$stop_time = $diff{stop};
 		}
 	}
