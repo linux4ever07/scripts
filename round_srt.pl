@@ -283,32 +283,37 @@ sub parse_srt_good {
 # least 1 centisecond greater than previous 'time line'. It also makes
 # sure each line has a length of at least 1 centisecond.
 sub time_calc {
-	my $start_time = shift;
-	my $stop_time = shift;
+	my($i, $start_time, $stop_time);
+	my(%diff);
 
-	my($i, %diff);
+	$n = 0;
 
-	$diff{stop} = $start_time + 100;
+	until ($n == $total_n) {
+		$n += 1;
+
+		$start_time = \$lines{$n}{start};
+		$stop_time = \$lines{$n}{stop};
+
+		$diff{stop} = $$start_time + 100;
 
 # If the previous 'time line' is greater than the current one, make the
 # current 'time line' 1 centisecond greater than that.
-	if ($n > 1) {
-		$i = $n - 1;
+		if ($n > 1) {
+			$i = $n - 1;
 
-		$diff{start} = $lines{$i}{stop} + 100;
+			$diff{start} = $lines{$i}{stop} + 100;
 
-		if ($diff{start} > $start_time) {
-			$start_time = $diff{start};
+			if ($diff{start} > $$start_time) {
+				$$start_time = $diff{start};
+			}
 		}
-	}
 
 # If the stop time of the current 'time line' is less than the start
 # time, then set it to the start time plus 1 centisecond.
-	if ($stop_time < $diff{stop}) {
-		$stop_time = $diff{stop};
+		if ($$stop_time < $diff{stop}) {
+			$$stop_time = $diff{stop};
+		}
 	}
-
-	return($start_time, $stop_time);
 }
 
 # The 'process_sub' subroutine reads a subtitle file, parses and
@@ -326,6 +331,8 @@ sub process_sub {
 
 	if (! parse_srt_bad()) { parse_srt_good(); }
 
+	time_calc();
+
 	@lines_tmp = ();
 }
 
@@ -338,13 +345,8 @@ sub print_sub {
 	until ($n == $total_n) {
 		$n += 1;
 
-		$start_time = $lines{$n}{start};
-		$stop_time = $lines{$n}{stop};
-
-		($start_time, $stop_time) = time_calc($start_time, $stop_time);
-
-		$start_time = time_convert($start_time);
-		$stop_time = time_convert($stop_time);
+		$start_time = time_convert($lines{$n}{start});
+		$stop_time = time_convert($lines{$n}{stop});
 
 		$time_line = $start_time . ' ' . $delim . ' ' . $stop_time;
 
