@@ -40,6 +40,10 @@ $regex{blank3} = qr/ +/;
 $regex{last2} = qr/([0-9]{1,2})$/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
+$regex{microdvd_font} = qr/^(\{.{3}\})(.*)$/;
+$regex{microdvd_italic} = qr/^\{y:i\}$/i;
+$regex{microdvd_bold} = qr/^\{y:b\}$/i;
+
 if (! scalar(@ARGV)) { usage(); }
 
 while (my $arg = shift(@ARGV)) {
@@ -173,10 +177,11 @@ sub frames2ms {
 }
 
 # The 'parse_srt_bad' subroutine parses a subtitle that has the SRT
-# extension, but is not in the correct (SubRip) format. It's another
-# semi-common format.
+# extension, but is not in the correct (SubRip) format. It's the
+# MicroDVD Sub format.
 sub parse_srt_bad {
-	my($i, $this, $end);
+	my($i, $this, $line_tmp);
+	my(@match);
 
 	$i = 0;
 
@@ -201,7 +206,26 @@ sub parse_srt_bad {
 			$lines{$n}{start} = frames2ms($1);
 			$lines{$n}{stop} = frames2ms($2);
 
-			push(@{$lines{$n}{text}}, split('\|', $3));
+			$line_tmp = $3;
+			$line_tmp =~ s/$regex{blank1}/$1/;
+
+			if ($line_tmp =~ m/$regex{microdvd_font}/) {
+				@match = ($1, $2);
+
+				if ($match[0] =~ m/$regex{microdvd_italic}/) {
+					$line_tmp = '<i>' . $match[1] . '</i>';
+				}
+
+				if ($match[0] =~ m/$regex{microdvd_bold}/) {
+					$line_tmp = '<b>' . $match[1] . '</b>';
+				}
+			}
+
+			foreach my $line (split('\|', $line_tmp)) {
+				$line =~ s/$regex{blank1}/$1/;
+
+				push(@{$lines{$n}{text}}, $line);
+			}
 		}
 
 		$i += 1;
@@ -385,8 +409,6 @@ sub print_sub {
 		push(@lines_tmp, $n, $time_line);
 
 		foreach my $line (@{$lines{$n}{text}}) {
-			$line =~ s/$regex{blank1}/$1/;
-
 			fix_chars($line);
 
 			push(@lines_tmp, $line_out);
