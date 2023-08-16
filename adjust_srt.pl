@@ -272,6 +272,8 @@ sub parse_srt_bad {
 			if ($line_tmp =~ m/$regex{microdvd_font}/) {
 				@match = ($1, $2);
 
+				$match[0] =~ s/$regex{blank3}//g;
+
 				if ($match[0] =~ m/$regex{microdvd_italic}/) {
 					$line_tmp = '<i>' . $match[1] . '</i>';
 				}
