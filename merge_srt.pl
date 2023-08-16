@@ -44,9 +44,9 @@ $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/ +/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
-$regex{microdvd_font} = qr/^(\{.{3}\})(.*)$/;
-$regex{microdvd_italic} = qr/^\{y:i\}$/i;
-$regex{microdvd_bold} = qr/^\{y:b\}$/i;
+$regex{microdvd_font} = qr/^(\{[^{}]+\})(.*)$/;
+$regex{microdvd_italic} = qr/^\{ *y *: *i *\}$/i;
+$regex{microdvd_bold} = qr/^\{ *y *: *b *\}$/i;
 
 $offset = 0;
 
@@ -246,8 +246,6 @@ sub parse_srt_bad {
 
 			if ($line_tmp =~ m/$regex{microdvd_font}/) {
 				@match = ($1, $2);
-
-				$match[0] =~ s/$regex{blank3}//g;
 
 				if ($match[0] =~ m/$regex{microdvd_italic}/) {
 					$line_tmp = '<i>' . $match[1] . '</i>';
