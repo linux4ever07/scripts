@@ -198,6 +198,8 @@ sub parse_srt_bad {
 			$line_tmp = $3;
 			$line_tmp =~ s/$regex{blank1}/$1/;
 
+			@code = ();
+
 			@match = ($line_tmp =~ m/$regex{microdvd_code}/);
 
 			while (scalar(@match)) {
