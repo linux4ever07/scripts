@@ -41,8 +41,9 @@ $regex{last2} = qr/([0-9]{1,2})$/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
 $regex{microdvd_font} = qr/^(\{[^{}]+\})(.*)$/;
-$regex{microdvd_italic} = qr/^\{ *y *: *i *\}$/i;
 $regex{microdvd_bold} = qr/^\{ *y *: *b *\}$/i;
+$regex{microdvd_italic} = qr/^\{ *y *: *i *\}$/i;
+$regex{microdvd_underline} = qr/^\{ *y *: *u *\}$/i;
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -209,15 +210,19 @@ sub parse_srt_bad {
 			$line_tmp = $3;
 			$line_tmp =~ s/$regex{blank1}/$1/;
 
-			if ($line_tmp =~ m/$regex{microdvd_font}/) {
-				@match = ($1, $2);
+			@match = ($line_tmp =~ m/$regex{microdvd_font}/);
+
+			if (scalar(@match)) {
+				if ($match[0] =~ m/$regex{microdvd_bold}/) {
+					$line_tmp = '<b>' . $match[1] . '</b>';
+				}
 
 				if ($match[0] =~ m/$regex{microdvd_italic}/) {
 					$line_tmp = '<i>' . $match[1] . '</i>';
 				}
 
-				if ($match[0] =~ m/$regex{microdvd_bold}/) {
-					$line_tmp = '<b>' . $match[1] . '</b>';
+				if ($match[0] =~ m/$regex{microdvd_underline}/) {
+					$line_tmp = '<u>' . $match[1] . '</u>';
 				}
 			}
 
