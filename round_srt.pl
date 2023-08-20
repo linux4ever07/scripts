@@ -236,14 +236,12 @@ sub parse_srt_bad {
 			$line_tmp = $3;
 			$line_tmp =~ s/$regex{blank1}/$1/;
 
-			@code = ();
-
 			while ($line_tmp =~ m/$regex{microdvd_code}/) {
 				push(@code, $1);
 				$line_tmp = $2;
 			}
 
-			foreach my $code (@code) {
+			while (my $code = shift(@code)) {
 				if ($code =~ m/$regex{microdvd_bold}/) {
 					$line_tmp = '<b>' . $line_tmp . '</b>';
 				}
