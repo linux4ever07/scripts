@@ -44,7 +44,7 @@ $regex{blank2} = qr/^[[:blank:]]*$/;
 $regex{blank3} = qr/ +/;
 $regex{zero} = qr/^0+([0-9]+)$/;
 
-$regex{microdvd_font} = qr/^(\{[^{}]+\})(.*)$/;
+$regex{microdvd_code} = qr/^(\{[^{}]+\})(.*)$/;
 $regex{microdvd_bold} = qr/^\{ *y *: *b *\}$/i;
 $regex{microdvd_italic} = qr/^\{ *y *: *i *\}$/i;
 $regex{microdvd_underline} = qr/^\{ *y *: *u *\}$/i;
@@ -206,7 +206,7 @@ sub frames2ms {
 sub parse_srt_bad {
 	my($i, $n, $this, $line_tmp);
 	my($start_time, $stop_time);
-	my(@match);
+	my(@match, @code);
 	my(%tmp);
 
 	$i = 0;
@@ -245,19 +245,26 @@ sub parse_srt_bad {
 			$line_tmp = $3;
 			$line_tmp =~ s/$regex{blank1}/$1/;
 
-			@match = ($line_tmp =~ m/$regex{microdvd_font}/);
+			@match = ($line_tmp =~ m/$regex{microdvd_code}/);
 
-			if (scalar(@match)) {
-				if ($match[0] =~ m/$regex{microdvd_bold}/) {
-					$line_tmp = '<b>' . $match[1] . '</b>';
+			while (scalar(@match)) {
+				push(@code, $match[0]);
+				$line_tmp = $match[1];
+
+				@match = ($line_tmp =~ m/$regex{microdvd_code}/);
+			}
+
+			foreach my $code (@code) {
+				if ($code =~ m/$regex{microdvd_bold}/) {
+					$line_tmp = '<b>' . $line_tmp . '</b>';
 				}
 
-				if ($match[0] =~ m/$regex{microdvd_italic}/) {
-					$line_tmp = '<i>' . $match[1] . '</i>';
+				if ($code =~ m/$regex{microdvd_italic}/) {
+					$line_tmp = '<i>' . $line_tmp . '</i>';
 				}
 
-				if ($match[0] =~ m/$regex{microdvd_underline}/) {
-					$line_tmp = '<u>' . $match[1] . '</u>';
+				if ($code =~ m/$regex{microdvd_underline}/) {
+					$line_tmp = '<u>' . $line_tmp . '</u>';
 				}
 			}
 
