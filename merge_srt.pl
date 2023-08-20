@@ -206,7 +206,7 @@ sub frames2ms {
 sub parse_srt_bad {
 	my($i, $n, $this, $line_tmp);
 	my($start_time, $stop_time);
-	my(@match, @code);
+	my(@code);
 	my(%tmp);
 
 	$i = 0;
@@ -247,13 +247,9 @@ sub parse_srt_bad {
 
 			@code = ();
 
-			@match = ($line_tmp =~ m/$regex{microdvd_code}/);
-
-			while (scalar(@match)) {
-				push(@code, $match[0]);
-				$line_tmp = $match[1];
-
-				@match = ($line_tmp =~ m/$regex{microdvd_code}/);
+			while ($line_tmp =~ m/$regex{microdvd_code}/) {
+				push(@code, $1);
+				$line_tmp = $2;
 			}
 
 			foreach my $code (@code) {
