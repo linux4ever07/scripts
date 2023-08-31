@@ -87,9 +87,9 @@ while [[ 1 ]]; do
 		printf '%s) %s\n' "$i" "${wolfendoom_info[${i}]}"
 	done
 
-	printf '\n%s' '>'
+	printf '\n'
 
-	read n
+	read -p '>' n
 
 	if [[ ! $n =~ ${regex[num]} ]]; then
 		continue
