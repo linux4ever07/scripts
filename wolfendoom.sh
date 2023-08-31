@@ -13,8 +13,8 @@
 # https://ufile.io/c53dwjdf
 
 declare gzdoom_cfg doom2_wad wolf_dn
-declare -a wolfendoom_wads
-declare -a wolfendoom_info
+declare -a wolf_wads
+declare -a wolf_info
 declare -A regex
 
 # Change the path variables below, to point to the correct directories
@@ -37,54 +37,54 @@ gzdoom () {
 }
 
 # Laz Rojas WADs.
-wolfendoom_wads[0]='astrostein.pk3'
-wolfendoom_wads[1]='astrostein2.pk3'
-wolfendoom_wads[2]='astrostein3.pk3'
-wolfendoom_wads[3]='totenhaus.pk3'
-wolfendoom_wads[4]='halten.pk3'
-wolfendoom_wads[5]='arcticwolf1.pk3'
-wolfendoom_wads[6]='arcticwolf2.pk3'
-wolfendoom_wads[7]='eisenmann.pk3'
-wolfendoom_wads[8]='rheingold1.pk3'
-wolfendoom_wads[9]='rheingold2.pk3'
-wolfendoom_wads[10]='portal.pk3'
-wolfendoom_wads[11]='treasure.pk3'
-wolfendoom_wads[12]='wolfen_2nd.pk3'
-wolfendoom_wads[13]='wolfen_orig.pk3'
-wolfendoom_wads[14]='wolfen_noct.pk3'
-wolfendoom_wads[15]='wolfen_sod.pk3'
+wolf_wads[0]='astrostein.pk3'
+wolf_wads[1]='astrostein2.pk3'
+wolf_wads[2]='astrostein3.pk3'
+wolf_wads[3]='totenhaus.pk3'
+wolf_wads[4]='halten.pk3'
+wolf_wads[5]='arcticwolf1.pk3'
+wolf_wads[6]='arcticwolf2.pk3'
+wolf_wads[7]='eisenmann.pk3'
+wolf_wads[8]='rheingold1.pk3'
+wolf_wads[9]='rheingold2.pk3'
+wolf_wads[10]='portal.pk3'
+wolf_wads[11]='treasure.pk3'
+wolf_wads[12]='wolfen_2nd.pk3'
+wolf_wads[13]='wolfen_orig.pk3'
+wolf_wads[14]='wolfen_noct.pk3'
+wolf_wads[15]='wolfen_sod.pk3'
 
 # Caleb26 Spear of Destiny WADs.
-wolfendoom_wads[16]='sod_revisited.pk3'
-wolfendoom_wads[17]='sod_lost.pk3'
+wolf_wads[16]='sod_revisited.pk3'
+wolf_wads[17]='sod_lost.pk3'
 
 # Laz Rojas WADs.
-wolfendoom_info[0]='Astrostein Trilogy 1'
-wolfendoom_info[1]='Astrostein Trilogy 2'
-wolfendoom_info[2]='Astrostein Trilogy 3'
-wolfendoom_info[3]='Escape from Totenhaus'
-wolfendoom_info[4]='Halten Sie!'
-wolfendoom_info[5]='Operation Arctic Wolf Pt. 1'
-wolfendoom_info[6]='Operation Arctic Wolf Pt. 2'
-wolfendoom_info[7]='Operation Eisenmann'
-wolfendoom_info[8]='Operation Rheingold Ep. 1'
-wolfendoom_info[9]='Operation Rheingold Ep. 2'
-wolfendoom_info[10]='The Portal'
-wolfendoom_info[11]='Treasure Hunt'
-wolfendoom_info[12]='WolfenDoom: Second Encounter'
-wolfendoom_info[13]='WolfenDoom: Original Missions'
-wolfendoom_info[14]='WolfenDoom: Nocturnal Missions'
-wolfendoom_info[15]='WolfenDoom: Spear of Destiny'
+wolf_info[0]='Astrostein Trilogy 1'
+wolf_info[1]='Astrostein Trilogy 2'
+wolf_info[2]='Astrostein Trilogy 3'
+wolf_info[3]='Escape from Totenhaus'
+wolf_info[4]='Halten Sie!'
+wolf_info[5]='Operation Arctic Wolf Pt. 1'
+wolf_info[6]='Operation Arctic Wolf Pt. 2'
+wolf_info[7]='Operation Eisenmann'
+wolf_info[8]='Operation Rheingold Ep. 1'
+wolf_info[9]='Operation Rheingold Ep. 2'
+wolf_info[10]='The Portal'
+wolf_info[11]='Treasure Hunt'
+wolf_info[12]='WolfenDoom: Second Encounter'
+wolf_info[13]='WolfenDoom: Original Missions'
+wolf_info[14]='WolfenDoom: Nocturnal Missions'
+wolf_info[15]='WolfenDoom: Spear of Destiny'
 
 # Caleb26 Spear of Destiny WADs.
-wolfendoom_info[16]='Spear Revisited'
-wolfendoom_info[17]='SoD: The Lost Episodes'
+wolf_info[16]='Spear Revisited'
+wolf_info[17]='SoD: The Lost Episodes'
 
 while [[ 1 ]]; do
 	printf '\n%s\n\n' '*** CHOOSE WAD ***'
 
-	for (( i = 0; i < ${#wolfendoom_wads[@]}; i++ )); do
-		printf '%s) %s\n' "$i" "${wolfendoom_info[${i}]}"
+	for (( i = 0; i < ${#wolf_wads[@]}; i++ )); do
+		printf '%s) %s\n' "$i" "${wolf_info[${i}]}"
 	done
 
 	printf '\n'
@@ -95,7 +95,7 @@ while [[ 1 ]]; do
 		continue
 	fi
 
-	wad="${wolfendoom_wads[${REPLY}]}"
+	wad="${wolf_wads[${REPLY}]}"
 
 	if [[ -z $wad ]]; then
 		continue
