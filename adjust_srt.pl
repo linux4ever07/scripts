@@ -389,24 +389,19 @@ sub adjust_last {
 
 	$n = $total_n;
 
-	while ($n > 1 and $shift[1] > 0) {
-		$offset = 0;
-
-		$offset += $interval_in[0];
-
-		if ($interval_in[1] > 0) {
-			$interval_in[1] -= 1;
-			$offset += 1;
-		}
-
-		$shift[1] -= $offset;
-		$interval_out[$n] = $offset;
+	while ($n > 1) {
+		$interval_out[$n] = $interval_in[0];
 
 		$n -= 1;
 	}
 
-	if ($interval_in[1] > 0) {
-		$interval_out[$total_n] += $interval_in[1];
+	while ($interval_in[1] > 0) {
+		if ($n == 1) { $n = $total_n; }
+
+		$interval_in[1] -= 1;
+		$interval_out[$n] += 1;
+
+		$n -= 1;
 	}
 
 	$n = 0;
