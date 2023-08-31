@@ -33,7 +33,7 @@ cd "$wolf_dn"
 # Creates a function, called 'gzdoom', which will run the GZDoom
 # Flatpak (with arguments).
 gzdoom () {
-    flatpak run org.zdoom.GZDoom "$@"
+	flatpak run org.zdoom.GZDoom "$@"
 }
 
 # Laz Rojas WADs.
