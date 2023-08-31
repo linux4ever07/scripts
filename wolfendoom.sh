@@ -12,7 +12,8 @@
 # https://mega.nz/#F!AFxnRCyZ!Ce648WN0JYI8jVWtZ_p89A
 # https://ufile.io/c53dwjdf
 
-declare gzdoom_cfg doom2_wad wolf_dn
+declare gzdoom_cfg wolf_dn
+declare doom_wad doom2_wad wad
 declare -a wolf_wads
 declare -a wolf_info
 declare -A regex
@@ -20,11 +21,14 @@ declare -A regex
 # Change the path variables below, to point to the correct directories
 # for:
 # * GZDoom configuration directory
-# * DOOM 2 WAD directory
 # * WolfenDoom PK3 files directory
 gzdoom_cfg="${HOME}/.var/app/org.zdoom.GZDoom/.config/gzdoom"
-doom2_wad="${gzdoom_cfg}/doom2.wad"
 wolf_dn="${gzdoom_cfg}/wolfendoom"
+
+# * The Ultimate DOOM WAD
+# * DOOM 2 WAD
+doom_wad="${gzdoom_cfg}/doom.wad"
+doom2_wad="${gzdoom_cfg}/doom2.wad"
 
 regex[num]='^[0-9]+$'
 
