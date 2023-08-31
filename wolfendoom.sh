@@ -89,13 +89,13 @@ while [[ 1 ]]; do
 
 	printf '\n'
 
-	read -p '>' n
+	read -p '>'
 
-	if [[ ! $n =~ ${regex[num]} ]]; then
+	if [[ ! $REPLY =~ ${regex[num]} ]]; then
 		continue
 	fi
 
-	wad="${wolfendoom_wads[${n}]}"
+	wad="${wolfendoom_wads[${REPLY}]}"
 
 	if [[ -z $wad ]]; then
 		continue
