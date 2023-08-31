@@ -384,7 +384,7 @@ sub adjust_last {
 	$interval_in[1] = floor($shift[1] % $n);
 
 	if ($n > $shift[1]) {
-		@interval_in = (1, 0);
+		@interval_in = (0, $shift[1]);
 	}
 
 	$n = $total_n;
