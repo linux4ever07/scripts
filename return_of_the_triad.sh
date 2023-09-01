@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script is a launcher for Return of the Triad (DOOM mod), and
-# fan-madesequel to Rise of the Triad: Dark War, for GZDoom.
+# This script is a launcher for Return of the Triad (DOOM mod), fan-made
+# sequel to Rise of the Triad: Dark War, for GZDoom.
 
 # https://www.moddb.com/mods/return-of-the-triad
 
