@@ -30,4 +30,4 @@ gzdoom () {
 	flatpak run org.zdoom.GZDoom "$@"
 }
 
-gzdoom -iwad "$doom_wad" -file "$wad" -noautoload
+gzdoom -iwad "$iwad" -file "$wad" -noautoload
