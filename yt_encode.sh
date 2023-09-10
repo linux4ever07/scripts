@@ -100,8 +100,8 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 # If the encoding succeeded, copy file permissions and modification
 # time from input file to output file, and then delete the input file.
 	if [[ $exit_status -eq 0 ]]; then
-		chmod --reference="$if" "$of"
 		chown --reference="$if" "$of"
+		chmod --reference="$if" "$of"
 		touch -r "$if" "$of"
 
 		rm -f "$if"
