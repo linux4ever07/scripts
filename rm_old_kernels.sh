@@ -120,7 +120,7 @@ for type in "${types[@]}"; do
 
 	sort_versions
 
-	latest["${type}"]="${versions_out[-1]}"
+	latest["${type}"]="${versions_out[0]}"
 done
 
 # This loop decides which kernel packages will be kept, and which will
