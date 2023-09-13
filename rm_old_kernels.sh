@@ -36,7 +36,7 @@ regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
 # number and print the result.
 parse_version () {
 	if [[ ! $1 =~ ${regex[version]} ]]; then
-		return
+		exit
 	fi
 
 	printf '%s\n' "${BASH_REMATCH[@]:1}"
@@ -92,6 +92,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 	dnf_pkgs["${dnf_pkgs_n},pkg"]="${match[0]}"
 	dnf_pkgs["${dnf_pkgs_n},ver"]="${match[1]}"
+
 	(( dnf_pkgs_n += 1 ))
 done
 
@@ -110,9 +111,7 @@ for type in "${types[@]}"; do
 			continue
 		fi
 
-		if [[ ${match[1]} =~ ${regex[version]} ]]; then
-			versions_in+=(${match[1]})
-		fi
+		versions_in+=(${match[1]})
 	done
 
 	sort_versions
