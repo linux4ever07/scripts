@@ -25,11 +25,11 @@ declare -A regex sub_tracks
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
 regex[strip]='^\| +\+ (.*)$'
-regex[track]="^Track$"
-regex[num]="^Track number: [0-9]+ \(track ID for mkvmerge & mkvextract: ([0-9]+)\)$"
-regex[sub]="^Track type: subtitles$"
-regex[lang]="^Language( \(.*\)){0,1}: (.*)$"
-regex[name]="^Name: (.*)$"
+regex[track]='^Track$'
+regex[num]='^Track number: [0-9]+ \(track ID for mkvmerge & mkvextract: ([0-9]+)\)$'
+regex[sub]='^Track type: subtitles$'
+regex[lang]='^Language( \(.*\)){0,1}: (.*)$'
+regex[name]='^Name: (.*)$'
 
 regex[fn]='^(.*)\.([^.]*)$'
 regex[lang_arg]='^[[:alpha:]]{3}$'

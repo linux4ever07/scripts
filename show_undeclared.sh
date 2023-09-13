@@ -22,7 +22,7 @@ declare switch_func switch_var
 declare -a lines
 declare -A regex
 
-regex[start]="^([[:blank:]]*)([^ ]+)[[:blank:]]*\(\) \{"
+regex[start]='^([[:blank:]]*)([^ ]+)[[:blank:]]*\(\) \{'
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[declare]='^(declare|local)( -[[:alpha:]]+){0,1} (.*)$'
 regex[var]='^([a-zA-Z0-9_]+)=(.*)$'

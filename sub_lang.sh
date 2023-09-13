@@ -14,10 +14,10 @@ declare -A regex tracks
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
 regex[strip]='^\| +\+ (.*)$'
-regex[track]="^Track$"
-regex[sub]="^Track type: subtitles$"
-regex[lang]="^Language( \(.*\)){0,1}: (.*)$"
-regex[name]="^Name: (.*)$"
+regex[track]='^Track$'
+regex[sub]='^Track type: subtitles$'
+regex[lang]='^Language( \(.*\)){0,1}: (.*)$'
+regex[name]='^Name: (.*)$'
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.

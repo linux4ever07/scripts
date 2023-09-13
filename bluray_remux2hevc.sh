@@ -245,7 +245,7 @@ regex[lang2]="^(${lang}|und)$"
 regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
 regex[stream1]='^ +Stream #(0:[0-9]+).*$'
-regex[stream2]="^ +Stream #0:[0-9]+(\([[:alpha:]]+\)){0,1}: ([[:alpha:]]+): (.*)$"
+regex[stream2]='^ +Stream #0:[0-9]+(\([[:alpha:]]+\)){0,1}: ([[:alpha:]]+): (.*)$'
 
 regex[kbps]='^([0-9]+) kb\/s'
 regex[bps]='^ +BPS.*: ([0-9]+)$'
