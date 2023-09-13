@@ -43,7 +43,7 @@ parse_version () {
 }
 
 # Creates a function, called 'sort_versions', which will sort a list of
-# versions numbers from oldest to latest.
+# versions numbers from latest to oldest.
 sort_versions () {
 	declare in out
 	declare -a num_in num_out
@@ -62,6 +62,10 @@ sort_versions () {
 # or higher than the previous version that was checked.
 			for (( z = 0; z < ${#num_in[@]}; z++ )); do
 				if [[ ${num_in[${z}]} -lt ${num_out[${z}]} ]]; then
+					break
+				fi
+
+				if [[ ${num_in[${z}]} -gt ${num_out[${z}]} ]]; then
 					out="$y"
 					num_out=("${num_in[@]}")
 
