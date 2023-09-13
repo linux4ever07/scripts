@@ -20,7 +20,7 @@ declare switch
 declare -a lines
 declare -A regex
 
-regex[start]='^([[:blank:]]*)${2}[[:blank:]]*\(\) \{'
+regex[start]="^([[:blank:]]*)${2}[[:blank:]]*\(\) \{"
 
 switch=0
 
