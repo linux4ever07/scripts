@@ -10,8 +10,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare dnf_pkgs_n arch pause_msg version current latest_tmp
-declare -a types keep remove
+declare dnf_pkgs_n arch pause_msg current latest_tmp
+declare -a types versions_in versions_out keep remove
 declare -A dnf_pkgs latest regex
 
 dnf_pkgs_n=0
@@ -32,46 +32,49 @@ regex[kernel]="^kernel\.${arch}$"
 regex[modules]="^kernel\-modules\.${arch}$"
 regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
 
-# Creates a function, called 'version_compare'. It finds out which
-# version number passed to it is the most recent.
-version_compare () {
-	version_array=("$@")
+# Creates a function, called 'parse_version', which will parse a version
+# number and print the result.
+parse_version () {
+	if [[ ! $1 =~ ${regex[version]} ]]; then
+		return
+	fi
 
-	declare newest
-	declare -a num newest_num
+	printf '%s\n' "${BASH_REMATCH[@]:1}"
+}
 
-	for version_tmp in "${version_array[@]}"; do
-		if [[ ! $version_tmp =~ ${regex[version]} ]]; then
-			continue
-		fi
+# Creates a function, called 'sort_versions', which will sort a list of
+# versions numbers from oldest to latest.
+sort_versions () {
+	declare in out
+	declare -a num_in num_out
 
-		num=("${BASH_REMATCH[@]:1}")
+	while [[ ${#versions_in[@]} -gt 0 ]]; do
+		out=0
 
-		if [[ -z $newest ]]; then
-			newest="$version_tmp"
-			newest_num=("${num[@]}")
-			continue
-		fi
+		mapfile -t num_out < <(parse_version "${versions_in[0]}")
 
-# This loop goes through each number, and first checks if the number is
-# lower than the previous version that was checked. If it is, then break
-# the loop. Since it's checking the numbers from left to right, if a
-# version is older, one of the first numbers is going to be lower, even
-# if one of the later numbers may be higher.
-		for (( z = 0; z < ${#num[@]}; z++ )); do
-			if [[ ${num[${z}]} -lt ${newest_num[${z}]} ]]; then
-				break
-			fi
+		for (( y = 0; y < ${#versions_in[@]}; y++ )); do
+			in="${versions_in[${y}]}"
 
-			if [[ ${num[${z}]} -gt ${newest_num[${z}]} ]]; then
-				newest="$version_tmp"
-				newest_num=("${num[@]}")
-				break
-			fi
+			mapfile -t num_in < <(parse_version "$in")
+
+# This loop goes through each number, and checks if the number is lower
+# or higher than the previous version that was checked.
+			for (( z = 0; z < ${#num_in[@]}; z++ )); do
+				if [[ ${num_in[${z}]} -lt ${num_out[${z}]} ]]; then
+					out="$y"
+					num_out=("${num_in[@]}")
+
+					break
+				fi
+			done
 		done
-	done
 
-	printf '%s' "$newest"
+		versions_out+=("${versions_in[${out}]}")
+
+		unset -v versions_in["${out}"]
+		versions_in=("${versions_in[@]}")
+	done
 }
 
 mapfile -t lines < <(dnf list --installed | grep -E '^kernel' | sed -E 's/[[:blank:]]+/ /g')
@@ -96,50 +99,44 @@ unset -v lines
 
 # This loop finds out what the latest version is for each kernel
 # package.
-for (( i = 0; i < dnf_pkgs_n; i++ )); do
-	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
+for type in "${types[@]}"; do
+	versions_in=()
+	versions_out=()
 
-	for type in "${types[@]}"; do
+	for (( i = 0; i < dnf_pkgs_n; i++ )); do
+		match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
+
 		if [[ ! ${match[0]} =~ ${regex[${type}]} ]]; then
 			continue
 		fi
 
 		if [[ ${match[1]} =~ ${regex[version]} ]]; then
-			hash_ref="latest[${match[0]}]"
-
-			if [[ -z ${!hash_ref} ]]; then
-				latest["${match[0]}"]="${match[1]}"
-			else
-				version=$(version_compare "${!hash_ref}" "${match[1]}")
-				latest["${match[0]}"]="$version"
-			fi
+			versions_in+=(${match[1]})
 		fi
-
-		break
 	done
+
+	sort_versions
+
+	latest["${type}"]="${versions_out[-1]}"
 done
 
 # This loop decides which kernel packages will be kept, and which will
 # be removed.
-for (( i = 0; i < dnf_pkgs_n; i++ )); do
-	match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
+for type in "${types[@]}"; do
+	for (( i = 0; i < dnf_pkgs_n; i++ )); do
+		match=("${dnf_pkgs[${i},pkg]}" "${dnf_pkgs[${i},ver]}")
 
-	dnf_pkg="${match[0]%.${arch}}-${match[1]}.${arch}"
+		dnf_pkg="${match[0]%.${arch}}-${match[1]}.${arch}"
 
-	for type in "${types[@]}"; do
 		if [[ ! ${match[0]} =~ ${regex[${type}]} ]]; then
 			continue
 		fi
 
-		hash_ref="latest[${match[0]}]"
-
-		if [[ ${match[1]} == "${!hash_ref}" ]]; then
+		if [[ ${match[1]} == "${latest[${type}]}" ]]; then
 			keep+=("$dnf_pkg")
 		else
 			remove+=("$dnf_pkg")
 		fi
-
-		break
 	done
 done
 
@@ -151,7 +148,7 @@ if [[ ${#remove[@]} -eq 0 ]]; then
 fi
 
 current=$(uname -r)
-latest_tmp="${latest[kernel.${arch}]}.${arch}"
+latest_tmp="${latest[kernel]}.${arch}"
 
 # If the user does not have the latest installed kernel loaded, ask them
 # to reboot before running the script.
