@@ -43,7 +43,7 @@ parse_version () {
 }
 
 # Creates a function, called 'sort_versions', which will sort a list of
-# versions numbers from latest to oldest.
+# version numbers from latest to oldest.
 sort_versions () {
 	declare in out
 	declare -a num_in num_out
