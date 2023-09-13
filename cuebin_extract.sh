@@ -281,14 +281,15 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare line file_n
-	declare -a lines files not_found wrong_format wrong_mode
+	declare line file_n index_n frames
+	declare -a match lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
 	declare -A error_msgs
 
 	file_n=0
 	track_n=0
+	index_n=0
 
 	error_types=('not_found' 'wrong_format' 'wrong_mode')
 	error_msgs[no_files]='No files were found in CUE sheet!'
