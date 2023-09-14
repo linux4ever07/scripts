@@ -115,7 +115,7 @@ for type in "${types[@]}"; do
 			continue
 		fi
 
-		versions_in+=(${match[1]})
+		versions_in+=("${match[1]}")
 	done
 
 	sort_versions
