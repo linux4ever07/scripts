@@ -53,7 +53,7 @@ sort_versions () {
 
 		mapfile -t num_out < <(parse_version "${versions_in[0]}")
 
-		for (( y = 0; y < ${#versions_in[@]}; y++ )); do
+		for (( y = 1; y < ${#versions_in[@]}; y++ )); do
 			in="${versions_in[${y}]}"
 
 			mapfile -t num_in < <(parse_version "$in")
