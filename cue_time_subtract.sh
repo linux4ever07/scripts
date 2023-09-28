@@ -254,6 +254,51 @@ read_cue () {
 	done
 }
 
+# Creates a function, called 'get_gaps', which will get pregap and
+# postgap from the CUE sheet for the track number given as argument.
+# If there's both a pregap specified using the PREGAP command and INDEX
+# command, those values will be added together. However, a CUE sheet is
+# highly unlikely to specify a pregap twice like that.
+get_gaps () {
+	declare frames
+	declare index0_ref index1_ref
+	declare pregap_ref postgap_ref
+
+	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
+		track_n="${tracks_total[${i}]}"
+
+		gaps["${track_n},index"]=0
+		gaps["${track_n},pre"]=0
+		gaps["${track_n},post"]=0
+
+# If the CUE sheet specifies a pregap using the INDEX command, save that
+# in the 'gaps' hash so it can later be converted to a PREGAP command.
+		index0_ref="if_cue[${track_n},index,0]"
+		index1_ref="if_cue[${track_n},index,1]"
+
+		if [[ -n ${!index0_ref} ]]; then
+			frames=$(( ${!index1_ref} - ${!index0_ref} ))
+
+			(( gaps[${track_n},index] += frames ))
+			(( gaps[${track_n},pre] += frames ))
+		fi
+
+# If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
+# 'gaps' hash. Add it to the value that might already be there, cause of
+# pregaps specified by INDEX commands.
+		pregap_ref="if_cue[${track_n},pregap]"
+		postgap_ref="if_cue[${track_n},postgap]"
+
+		if [[ -n ${!pregap_ref} ]]; then
+			(( gaps[${track_n},pre] += ${!pregap_ref} ))
+		fi
+
+		if [[ -n ${!postgap_ref} ]]; then
+			(( gaps[${track_n},post] += ${!postgap_ref} ))
+		fi
+	done
+}
+
 # Creates a function, called 'get_length', which will get the start
 # position, and length, (in bytes) of all tracks in the respective BIN
 # files.
@@ -261,7 +306,7 @@ get_length () {
 	declare this next
 	declare bytes_pregap bytes_track bytes_total frames
 	declare pregap_this_ref pregap_next_ref
-	declare index0_this_ref index1_this_ref index0_next_ref index1_next_ref
+	declare index1_this_ref index1_next_ref
 	declare file_n_this_ref file_n_next_ref file_ref
 	declare sector_ref start_ref
 
@@ -288,12 +333,10 @@ get_length () {
 		this="${tracks_total[${i}]}"
 		next="${tracks_total[${j}]}"
 
-		pregap_this_ref="gaps[${this},pre]"
-		pregap_next_ref="gaps[${next},pre]"
+		pregap_this_ref="gaps[${this},index]"
+		pregap_next_ref="gaps[${next},index]"
 
-		index0_this_ref="if_cue[${this},index,0]"
 		index1_this_ref="if_cue[${this},index,1]"
-		index0_next_ref="if_cue[${next},index,0]"
 		index1_next_ref="if_cue[${next},index,1]"
 
 		file_n_this_ref="tracks_file[${this}]"
@@ -304,16 +347,6 @@ get_length () {
 		sector_ref="tracks_sector[${this}]"
 
 		start_ref="tracks_start[${this}]"
-
-# If the CUE sheet specifies a pregap using the INDEX command, save that
-# in the 'gaps' hash so it can later be converted to a PREGAP command.
-		if [[ -n ${!index0_this_ref} && ${!pregap_this_ref} -eq 0 ]]; then
-			gaps["${this},pre"]=$(( ${!index1_this_ref} - ${!index0_this_ref} ))
-		fi
-
-		if [[ -n ${!index0_next_ref} ]]; then
-			gaps["${next},pre"]=$(( ${!index1_next_ref} - ${!index0_next_ref} ))
-		fi
 
 # Converts potential pregap frames to bytes, and adds it to the total
 # bytes of the track position. This makes it possible for the
@@ -351,21 +384,9 @@ get_length () {
 	done
 }
 
-# Creates a function, called 'loop_set', which will get the start
-# positions, lengths, pregaps and postgaps for all tracks.
-loop_set () {
-	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
-		track_n="${tracks_total[${i}]}"
-
-		gaps["${track_n},pre"]=0
-		gaps["${track_n},post"]=0
-	done
-
-	get_length
-}
-
 read_cue
-loop_set
+get_gaps
+get_length
 
 printf '\n'
 
@@ -374,7 +395,7 @@ for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 
 	declare pregap_ref length_ref sector_ref frames
 
-	pregap_ref="gaps[${track_n},pre]"
+	pregap_ref="gaps[${track_n},index]"
 	length_ref="tracks_length[${track_n}]"
 	sector_ref="tracks_sector[${track_n}]"
 
