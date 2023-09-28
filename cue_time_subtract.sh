@@ -255,10 +255,10 @@ read_cue () {
 }
 
 # Creates a function, called 'get_gaps', which will get pregap and
-# postgap from the CUE sheet for the track number given as argument.
-# If there's both a pregap specified using the PREGAP command and INDEX
-# command, those values will be added together. However, a CUE sheet is
-# highly unlikely to specify a pregap twice like that.
+# postgap from the CUE sheet for all tracks. If there's both a pregap
+# specified using the PREGAP command and INDEX command, those values
+# will be added together. However, a CUE sheet is highly unlikely to
+# specify a pregap twice like that.
 get_gaps () {
 	declare frames
 	declare index0_ref index1_ref
