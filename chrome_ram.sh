@@ -20,15 +20,17 @@
 # discarded, and when the Chrome process quits, the original config and
 # cache are restored.
 
-# The script also checks the amount of free RAM every 10 seconds, to
-# make sure it's not less than 1GB ($ram_limit). If it's less, then
-# Chrome will be killed and the config / cache directories restored to
-# the hard drive. This is to make sure those directories don't get
-# corrupted when there's not enough free space in /dev/shm to write
-# files.
+# The script also checks the amount of free RAM every second, to make
+# sure it's not less than 1GB ($ram_limit). If it's less, then Chrome
+# will be killed and the config / cache directories restored to the hard
+# drive. This is to make sure those directories don't get corrupted when
+# there's not enough free space in /dev/shm to write files.
 
 # If Chrome were to become unresponsive, 'killall -9 chrome' will allow
-# the script to quit normally and restore everything.
+# the script to quit normally and restore everything. In case the user
+# wants to restart Chrome quickly, without relaunching the script or
+# touching the hard drive, there's an accompanying script to this called
+# 'chrome_kill.sh'.
 
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [normal|clean]"
