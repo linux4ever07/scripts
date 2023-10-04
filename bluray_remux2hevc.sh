@@ -1235,7 +1235,7 @@ is_handbrake () {
 # Starts the loop that will wait for HandBrake to finish.
 	while [[ ${#hb_pids[@]} -gt 0 ]]; do
 # Sleeps for 5 seconds.
-		sleep 5
+		sleep 1
 
 # Checks again if HandBrake is running.
 		mapfile -t hb_pids < <(eval "${args[@]}")
@@ -1325,8 +1325,10 @@ is_torrent () {
 	printf '%s\n\n' "$if_tmp"
 
 	while [[ -f $if_tmp ]]; do
-		sleep 5
+		sleep 1
 	done
+
+	sync
 
 	if="${if%.part}"
 
