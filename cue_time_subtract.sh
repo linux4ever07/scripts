@@ -271,11 +271,14 @@ get_gaps () {
 		gaps["${track_n},pre"]=0
 		gaps["${track_n},post"]=0
 
-# If the CUE sheet specifies a pregap using the INDEX command, save that
-# in the 'gaps' hash so it can later be converted to a PREGAP command.
 		index0_ref="if_cue[${track_n},index,0]"
 		index1_ref="if_cue[${track_n},index,1]"
 
+		pregap_ref="if_cue[${track_n},pregap]"
+		postgap_ref="if_cue[${track_n},postgap]"
+
+# If the CUE sheet specifies a pregap using the INDEX command, save that
+# in the 'gaps' hash so it can later be converted to a PREGAP command.
 		if [[ -n ${!index0_ref} ]]; then
 			frames=$(( ${!index1_ref} - ${!index0_ref} ))
 
@@ -286,9 +289,6 @@ get_gaps () {
 # If the CUE sheet contains PREGAP or POSTGAP commands, save that in the
 # 'gaps' hash. Add it to the value that might already be there, cause of
 # pregaps specified by INDEX commands.
-		pregap_ref="if_cue[${track_n},pregap]"
-		postgap_ref="if_cue[${track_n},postgap]"
-
 		if [[ -n ${!pregap_ref} ]]; then
 			(( gaps[${track_n},pre] += ${!pregap_ref} ))
 		fi
