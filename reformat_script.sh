@@ -10,11 +10,11 @@
 # * Replace individual spaces at the beginning of each line with tabs
 # (4 spaces / tab).
 # * Reduce the number of successive empty lines to a maximum of 1.
-# * Remove space at the beginning of comment lines.
-# * Reduce multiple #s to just 1 # in comment lines.
 # * Remove space at the end of lines.
-# * Replace multiple successive spaces in comments with just one space.
-# * Reduce the total length of comment lines to 72 characters.
+# * Remove space at the beginning of comments.
+# * Reduce multiple #s to just 1 # in comments.
+# * Replace multiple successive spaces in comments with just 1 space.
+# * Reduce the total length of comments to 72 characters.
 
 set -eo pipefail
 
@@ -85,7 +85,7 @@ if_shebang () {
 }
 
 # Creates a function, called 'reformat_comments', which will reformat
-# comment lines if they're longer than the set limit.
+# comments if they're longer than the set limit.
 reformat_comments () {
 	declare start stop switch
 	declare -a buffer
