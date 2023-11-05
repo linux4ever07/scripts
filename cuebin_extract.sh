@@ -297,10 +297,10 @@ read_cue () {
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
-# Reads the source CUE sheet and processes the lines.
+# Reads the source CUE sheet into RAM.
 	mapfile -t lines < <(tr -d '\r' <"$if" | sed -E "s/${regex[blank]}/\1/")
 
-# This loop processes each line in the CUE sheet and stores all the
+# This loop processes each line in the CUE sheet, and stores all the
 # relevant information in the 'if_cue' hash.
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
