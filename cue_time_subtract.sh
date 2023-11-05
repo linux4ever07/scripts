@@ -105,11 +105,14 @@ read_cue () {
 	error_msgs[wrong_format]='The files below have the wrong format:'
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
-# Creates a function, called 'handle_command', which will process each
-# line in the CUE sheet and store all the relevant information in the
-# 'if_cue' hash.
-	handle_command () {
-# If line is a FILE command...
+# Reads the source CUE sheet and processes the lines.
+	mapfile -t lines < <(tr -d '\r' <"$if" | sed -E "s/${regex[blank]}/\1/")
+
+# This loop processes each line in the CUE sheet and stores all the
+# relevant information in the 'if_cue' hash.
+	for (( i = 0; i < ${#lines[@]}; i++ )); do
+		line="${lines[${i}]}"
+
 		if [[ $line =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
@@ -135,7 +138,7 @@ read_cue () {
 			if_cue["${file_n},filename"]="$fn"
 			if_cue["${file_n},file_format"]="${match[2]}"
 
-			return
+			continue
 		fi
 
 # If line is a TRACK command...
@@ -172,7 +175,7 @@ read_cue () {
 			if_cue["${track_n},track_number"]="${match[1]}"
 			if_cue["${track_n},track_mode"]="${match[2]}"
 
-			return
+			continue
 		fi
 
 # If line is a PREGAP command...
@@ -182,7 +185,7 @@ read_cue () {
 			frames=$(time_convert "${match[1]}")
 			if_cue["${track_n},pregap"]="$frames"
 
-			return
+			continue
 		fi
 
 # If line is an INDEX command...
@@ -194,7 +197,7 @@ read_cue () {
 			frames=$(time_convert "${match[2]}")
 			if_cue["${track_n},index,${index_n}"]="$frames"
 
-			return
+			continue
 		fi
 
 # If line is a POSTGAP command...
@@ -204,21 +207,14 @@ read_cue () {
 			frames=$(time_convert "${match[1]}")
 			if_cue["${track_n},postgap"]="$frames"
 
-			return
+			continue
 		fi
-	}
-
-# Reads the source CUE sheet and processes the lines.
-	mapfile -t lines < <(tr -d '\r' <"$if" | sed -E "s/${regex[blank]}/\1/")
-
-	for (( i = 0; i < ${#lines[@]}; i++ )); do
-		line="${lines[${i}]}"
-		handle_command
 	done
 
 # If errors were found, print them and quit.
 	if [[ ${#files[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' "${error_msgs[no_files]}"
+
 		exit
 	fi
 
