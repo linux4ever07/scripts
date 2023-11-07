@@ -355,6 +355,7 @@ get_length () {
 # the BIN file associated with this track.
 		if [[ -z $next ]]; then
 			get_size
+
 			continue
 		fi
 
@@ -369,6 +370,8 @@ get_length () {
 			(( bytes_total += (bytes_track + bytes_pregap) ))
 
 			tracks_length["${this}"]="$bytes_track"
+
+			continue
 		fi
 
 # If the BIN file associated with this track is different from the next
@@ -376,6 +379,8 @@ get_length () {
 # associated with this track.
 		if [[ ${!file_n_this_ref} -ne ${!file_n_next_ref} ]]; then
 			get_size
+
+			continue
 		fi
 	done
 }
