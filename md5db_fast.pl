@@ -147,43 +147,37 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 }
 
 # Go through the arguments passed to the script by the user.
-while (my $arg = shift(@ARGV)) {
+my $arg = shift(@ARGV);
+
 # When '-double', set script mode to 'double', and call the md5double
 # subroutine later.
-	if ($arg eq '-double') {
-		push(@cmd, $arg);
-		$mode = 'double';
-
-		next;
-	}
+if ($arg eq '-double') {
+	push(@cmd, $arg);
+	$mode = 'double';
+}
 
 # When '-import', set script mode to 'import', and call the md5import
 # subroutine later.
-	if ($arg eq '-import') {
-		push(@cmd, $arg);
-		$mode = 'import';
-
-		next;
-	}
+if ($arg eq '-import') {
+	push(@cmd, $arg);
+	$mode = 'import';
+}
 
 # When '-index', set script mode to 'index', and call the md5index
 # subroutine later.
-	if ($arg eq '-index') {
-		push(@cmd, $arg);
-		$mode = 'index';
-
-		next;
-	}
+if ($arg eq '-index') {
+	push(@cmd, $arg);
+	$mode = 'index';
+}
 
 # When '-test', set the script mode to 'test', and call the md5test
 # subroutine later.
-	if ($arg eq '-test') {
-		push(@cmd, $arg);
-		$mode = 'test';
+if ($arg eq '-test') {
+	push(@cmd, $arg);
+	$mode = 'test';
+}
 
-		next;
-	}
-
+if (! scalar($mode)) {
 	usage();
 }
 

@@ -102,39 +102,33 @@ Usage: ' . basename($0) . ' [format] [FLAC directory 1] .. [FLAC directory N]
 }
 
 # Choose script mode (codec) based on arguments given to the script.
-while (my $arg = shift(@ARGV)) {
-	if ($arg eq '-mp3') {
-		$mode = 'mp3';
+my $arg = shift(@ARGV);
 
-		@opts = ('lame', '--silent', '-q', '0', '-V', '2', '--id3v2-only');
+if ($arg eq '-mp3') {
+	$mode = 'mp3';
 
-		next;
-	}
+	@opts = ('lame', '--silent', '-q', '0', '-V', '2', '--id3v2-only');
+}
 
-	if ($arg eq '-aac') {
-		$mode = 'aac';
+if ($arg eq '-aac') {
+	$mode = 'aac';
 
-		@opts = ('ffmpeg', '-loglevel', 'fatal', '-f', 's16le', '-ar', '44.1k', '-ac', '2', '-i', 'pipe:', '-strict', '-2', '-c:a', 'aac', '-b:a', '192k', '-profile:a', 'aac_ltp');
+	@opts = ('ffmpeg', '-loglevel', 'fatal', '-f', 's16le', '-ar', '44.1k', '-ac', '2', '-i', 'pipe:', '-strict', '-2', '-c:a', 'aac', '-b:a', '192k', '-profile:a', 'aac_ltp');
+}
 
-		next;
-	}
+if ($arg eq '-ogg') {
+	$mode = 'ogg';
 
-	if ($arg eq '-ogg') {
-		$mode = 'ogg';
+	@opts = ('oggenc', '--quiet', '--quality=6');
+}
 
-		@opts = ('oggenc', '--quiet', '--quality=6');
+if ($arg eq '-opus') {
+	$mode = 'opus';
 
-		next;
-	}
+	@opts = ('opusenc', '--quiet', '--bitrate', '160', '--vbr', '--music', '--comp', '10');
+}
 
-	if ($arg eq '-opus') {
-		$mode = 'opus';
-
-		@opts = ('opusenc', '--quiet', '--bitrate', '160', '--vbr', '--music', '--comp', '10');
-
-		next;
-	}
-
+if (! scalar($mode)) {
 	usage();
 }
 
