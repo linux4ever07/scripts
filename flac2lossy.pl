@@ -102,28 +102,40 @@ Usage: ' . basename($0) . ' [format] [FLAC directory 1] .. [FLAC directory N]
 }
 
 # Choose script mode (codec) based on arguments given to the script.
-given (my $arg = shift(@ARGV)) {
-	when ('-mp3') {
+while (my $arg = shift(@ARGV)) {
+	if ($arg eq '-mp3') {
 		$mode = 'mp3';
 
 		@opts = ('lame', '--silent', '-q', '0', '-V', '2', '--id3v2-only');
+
+		next;
 	}
-	when ('-aac') {
+
+	if ($arg eq '-aac') {
 		$mode = 'aac';
 
 		@opts = ('ffmpeg', '-loglevel', 'fatal', '-f', 's16le', '-ar', '44.1k', '-ac', '2', '-i', 'pipe:', '-strict', '-2', '-c:a', 'aac', '-b:a', '192k', '-profile:a', 'aac_ltp');
+
+		next;
 	}
-	when ('-ogg') {
+
+	if ($arg eq '-ogg') {
 		$mode = 'ogg';
 
 		@opts = ('oggenc', '--quiet', '--quality=6');
+
+		next;
 	}
-	when ('-opus') {
+
+	if ($arg eq '-opus') {
 		$mode = 'opus';
 
 		@opts = ('opusenc', '--quiet', '--bitrate', '160', '--vbr', '--music', '--comp', '10');
+
+		next;
 	}
-	default { usage(); }
+
+	usage();
 }
 
 # If the remaining arguments are directories, store them in the @dirs
@@ -572,19 +584,28 @@ say "\n" . 'Starting threads!' . "\n";
 push(@threads, threads->create(\&files2queue));
 
 foreach (1 .. $cores) {
-	given ($mode) {
-		when ('mp3') {
-			push(@threads, threads->create(\&lame));
-		}
-		when ('aac') {
-			push(@threads, threads->create(\&aac));
-		}
-		when ('ogg') {
-			push(@threads, threads->create(\&vorbis));
-		}
-		when ('opus') {
-			push(@threads, threads->create(\&opus));
-		}
+	if ($mode eq 'mp3') {
+		push(@threads, threads->create(\&lame));
+
+		next;
+	}
+
+	if ($mode eq 'aac') {
+		push(@threads, threads->create(\&aac));
+
+		next;
+	}
+
+	if ($mode eq 'ogg') {
+		push(@threads, threads->create(\&vorbis));
+
+		next;
+	}
+
+	if ($mode eq 'opus') {
+		push(@threads, threads->create(\&opus));
+
+		next;
 	}
 }
 

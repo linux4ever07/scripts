@@ -359,65 +359,61 @@ sub vendor {
 	open(STDERR, ">&", $stderr_dup) or die "Can't dup STDERR: $!";
 	close($stderr_dup) or die "Can't close STDERR: $!";
 
-	given ($?) {
-		when (0) {
-			move($of_flac, $if) or die "Can't rename '$of_flac': $!";
-			say 'done';
-		}
-		when (2) {
-			sigint($of_flac, $of_stderr);
-		}
-		default {
+	if ($? == 0) {
+		move($of_flac, $if) or die "Can't rename '$of_flac': $!";
+		say 'done';
+	} elsif ($? == 2) {
+		sigint($of_flac, $of_stderr);
+	} else {
 # Open a filehandle that reads from the STDERR file ($of_stderr).
 # Checks if FLAC file has ID3v2 tags.
-			open(my $stderr_fh, '<', $of_stderr)
-			or die "Can't open '$of_stderr': $!";
-			while (chomp(my $line = <$stderr_fh>)) {
-				if ($line =~ m/$regex{id3v2}/) {
-					$has_id3v2 = 1;
-					last;
-				}
+		open(my $stderr_fh, '<', $of_stderr)
+		or die "Can't open '$of_stderr': $!";
+		while (chomp(my $line = <$stderr_fh>)) {
+			if ($line =~ m/$regex{id3v2}/) {
+				$has_id3v2 = 1;
+				last;
 			}
-			close($stderr_fh) or die "Can't close '$of_stderr': $!";
+		}
+		close($stderr_fh) or die "Can't close '$of_stderr': $!";
 
-			if (! $has_id3v2) { last; }
+		if (! $has_id3v2) { last; }
 
-			print "\n" . $if . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
+		print "\n" . $if . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
 
 # Decode the FLAC file to WAV (in order to lose the ID3v2 tags).
-			system('flac', '--silent', '--decode', $if, "--output-name=$of_wav");
-			or_warn("Can't decode file");
+		system('flac', '--silent', '--decode', $if, "--output-name=$of_wav");
+		or_warn("Can't decode file");
 
-			if ($? == 2) { sigint($of_wav, $of_stderr); }
+		if ($? == 2) { sigint($of_wav, $of_stderr); }
 
 # Back up the album art, if it exists.
-			system("metaflac --export-picture-to=\"$of_art\" \"$if\" 1>&- 2>&-");
+		system("metaflac --export-picture-to=\"$of_art\" \"$if\" 1>&- 2>&-");
 
 # Encode the WAV file to FLAC.
-			if (-f $of_art) {
-				system('flac', '--silent', '-8', "--picture=$of_art", $of_wav, "--output-name=$of_flac");
-				or_warn("Can't encode file");
+		if (-f $of_art) {
+			system('flac', '--silent', '-8', "--picture=$of_art", $of_wav, "--output-name=$of_flac");
+			or_warn("Can't encode file");
 
-				unlink($of_art)
-				or die "Can't remove '$of_art': $!";
-			} else {
-				system('flac', '--silent', '-8', $of_wav, "--output-name=$of_flac");
-				or_warn("Can't encode file");
-			}
+			unlink($of_art)
+			or die "Can't remove '$of_art': $!";
+		} else {
+			system('flac', '--silent', '-8', $of_wav, "--output-name=$of_flac");
+			or_warn("Can't encode file");
+		}
 
-			unlink($of_wav)
-			or die "Can't remove '$of_wav': $!";
+		unlink($of_wav)
+		or die "Can't remove '$of_wav': $!";
 
-			if ($? == 0) {
-				move($of_flac, $if)
-				or die "Can't move '$of_flac': $!";
-				say 'done';
+		if ($? == 0) {
+			move($of_flac, $if)
+			or die "Can't move '$of_flac': $!";
+			say 'done';
 
 # Rewrite the tags. They were removed in the decoding process.
-				writetags($if, 0);
-			} elsif ($? == 2) {
-				sigint($of_wav, $of_flac, $of_stderr);
-			}
+			writetags($if, 0);
+		} elsif ($? == 2) {
+			sigint($of_wav, $of_flac, $of_stderr);
 		}
 	}
 

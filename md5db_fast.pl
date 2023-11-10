@@ -147,20 +147,44 @@ Usage: $cmd[0] [options] [directory 1] .. [directory N]
 }
 
 # Go through the arguments passed to the script by the user.
-given (my $arg = shift(@ARGV)) {
+while (my $arg = shift(@ARGV)) {
 # When '-double', set script mode to 'double', and call the md5double
 # subroutine later.
-	when ('-double') { push(@cmd, $arg); $mode = 'double'; }
+	if ($arg eq '-double') {
+		push(@cmd, $arg);
+		$mode = 'double';
+
+		next;
+	}
+
 # When '-import', set script mode to 'import', and call the md5import
 # subroutine later.
-	when ('-import') { push(@cmd, $arg); $mode = 'import'; }
+	if ($arg eq '-import') {
+		push(@cmd, $arg);
+		$mode = 'import';
+
+		next;
+	}
+
 # When '-index', set script mode to 'index', and call the md5index
 # subroutine later.
-	when ('-index') { push(@cmd, $arg); $mode = 'index'; }
+	if ($arg eq '-index') {
+		push(@cmd, $arg);
+		$mode = 'index';
+
+		next;
+	}
+
 # When '-test', set the script mode to 'test', and call the md5test
 # subroutine later.
-	when ('-test') { push(@cmd, $arg); $mode = 'test'; }
-	default { usage(); }
+	if ($arg eq '-test') {
+		push(@cmd, $arg);
+		$mode = 'test';
+
+		next;
+	}
+
+	usage();
 }
 
 # If the remaining arguments are directories, store them in the @lib
@@ -893,15 +917,14 @@ sub p_gone {
 push(@run, \&iquit);
 push(@run, \&logger);
 
-given ($mode) {
-	when ('index') {
-		push(@run, \&files2queue);
-		push(@run, ((\&md5index) x $cores));
-	}
-	when ('test') {
-		push(@run, \&files2queue);
-		push(@run, ((\&md5test) x $cores));
-	}
+if ($mode eq 'index') {
+	push(@run, \&files2queue);
+	push(@run, ((\&md5index) x $cores));
+}
+
+if ($mode eq 'test') {
+	push(@run, \&files2queue);
+	push(@run, ((\&md5test) x $cores));
 }
 
 # This loop is where the actual action takes place (i.e. where all the
@@ -929,16 +952,15 @@ while (my $dn = shift(@lib)) {
 		}
 	}
 
-	given ($mode) {
 # Find duplicate files in database.
-		when ('double') {
-			md5double();
-		}
+	if ($mode eq 'double') {
+		md5double();
+	}
+
 # Import *.MD5 files to database.
-		when ('import') {
-			foreach my $fn (sort(keys(%md5h))) {
-				if ($fn =~ m/$regex{md5}/) { md5import($fn); }
-			}
+	if ($mode eq 'import') {
+		foreach my $fn (sort(keys(%md5h))) {
+			if ($fn =~ m/$regex{md5}/) { md5import($fn); }
 		}
 	}
 
