@@ -427,13 +427,13 @@ imdb () {
 	fi
 
 	declare agent y t type url_tmp url id
-	declare -a term id_array tmp_array
+	declare -a term tmp_array
 	declare -A json_types imdb_info
 
 	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
 	regex[y]='^\(([0-9]{4})\)$'
-	regex[id]='^.*\/title\/(tt[0-9]+).*$'
+	regex[id]='(title\/tt[0-9]+)'
 	regex[list]='^,$'
 
 	regex[title1]='\,\"originalTitleText\":'
@@ -511,28 +511,26 @@ imdb () {
 # Sets the type of IMDb search results to include.
 
 # All currently available types:
-# feature,tv_movie,tv_series,tv_episode,tv_special,tv_miniseries,
-# documentary,video_game,short,video,tv_short,podcast_series,
-# podcast_episode,music_video
-	type='feature,tv_movie,tv_special,documentary,video'
+# feature,tv_series,short,tv_episode,tv_miniseries,tv_movie,tv_special,
+# tv_short,video_game,video,music_video,podcast_series,podcast_episode
+	type='feature,tv_series,tv_miniseries,tv_movie,tv_special,video'
 
 # If the $y variable is empty, that means the year is unknown, hence we
 # will need to use slightly different URLs, when searching for the
 # movie.
 	if [[ -z $y ]]; then
-		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&view=simple"
+		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}"
 	else
-		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y},${y}&view=simple"
+		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y}-01-01,"
 	fi
 
-	mapfile -t id_array < <(get_page "$url_tmp" | sed -nE "s/${regex[id]}/\1/p")
-	id="${id_array[0]}"
+	id=$(get_page "$url_tmp" | sed -nE "s/${regex[id]}.*$/\1/;s/^.*${regex[id]}/\1/p")
 
 	if [[ -z $id ]]; then
 		return 1
 	fi
 
-	url="https://www.imdb.com/title/${id}/"
+	url="https://www.imdb.com/${id}/"
 
 # Translate {} characters to newlines so we can parse the JSON data.
 # I came to the conclusion that this is the most simple, reliable and
