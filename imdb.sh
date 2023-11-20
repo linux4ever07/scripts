@@ -82,7 +82,7 @@ imdb () {
 	regex[runtime1]='\,\"runtime\":'
 	regex[runtime2]='\"seconds\":(.*)\,\"displayableProperty\":'
 
-	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
 
 # This function gets a URL using cURL.
 	get_page () {
@@ -150,7 +150,7 @@ imdb () {
 	if [[ -z $y ]]; then
 		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}"
 	else
-		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y}-01-01,"
+		url_tmp="https://www.imdb.com/search/title/?title=${t}&title_type=${type}&release_date=${y}-01-01,${y}-12-31"
 	fi
 
 	id=$(get_page "$url_tmp" | sed -nE "s/${regex[id]}.*$/\1/;s/^.*${regex[id]}/\1/p")
