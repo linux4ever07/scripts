@@ -105,8 +105,8 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 
 # This loop processes each line in the CUE sheet, and stores all the
 # containing file names in the 'files' array.
-	for (( i = 0; i < ${#lines[@]}; i++ )); do
-		line="${lines[${i}]}"
+	for (( j = 0; j < ${#lines[@]}; j++ )); do
+		line="${lines[${j}]}"
 
 		if [[ $line =~ ${format[0]} ]]; then
 			files+=("$(tr -d '"' <<<"${BASH_REMATCH[2]}" | sed -E "s/${regex[path]}//")")
