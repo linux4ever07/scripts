@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This script is meant to take an input BIN/CUE file, extract the raw
+# This script is meant to take an input CUE/BIN file, extract the raw
 # track(s) (data / audio) in whatever format the user has specified
 # through script arguments. The script simply separates all the tracks
-# of BIN/CUE files.
+# of CUE/BIN files.
 
 # Available audio formats are:
 # * cdr (native CD audio)
@@ -29,14 +29,14 @@
 
 # The script will work with all kinds of games, including PS1 and Sega
 # Saturn games. All that's required is that the disc image is in the
-# BIN/CUE format. There's some other emulators out there that can
+# CUE/BIN format. There's some other emulators out there that can
 # handle FLAC and Ogg Vorbis tracks, like Mednafen, but support is not
 # widespread. The main point of the script is being able to quickly
-# extract music from BIN/CUE files.
+# extract music from CUE/BIN files.
 
-# Yet another use case is to just split a BIN/CUE into its separate
+# Yet another use case is to just split a CUE/BIN into its separate
 # tracks, with the '-cdr' argument, without encoding the audio. Any
-# BIN/CUE, that has multiple tracks, can be split. It doesn't need to
+# CUE/BIN, that has multiple tracks, can be split. It doesn't need to
 # have audio tracks.
 
 # Pregaps are automatically stripped from the output BIN files, and are
@@ -55,7 +55,7 @@
 # The script is able to process CUE sheets that contain multiple FILE
 # commands (list multiple BIN files). As an example, Redump will use 1
 # BIN file / track, so that can be processed by the script directly in
-# this case, without having to merge the BIN/CUE first.
+# this case, without having to merge the CUE/BIN first.
 
 # Earlier versions of the script used to depend on 'bchunk', which is a
 # good program, but not needed anymore as other functions have replaced
