@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# This script looks for CUE/FLAC images in the directories passed to it
-# as arguments. It then proceeds to split the FLAC images it finds into
-# separate tracks. Lastly it copies the tags (if available) from the CUE
-# file to the newly split tracks. You need 'cuetools' and 'shntool' to
-# run this script.
+# This script looks for CUE/FLAC files (single FLAC albums) in the
+# directories passed to it as arguments. It then proceeds to split the
+# FLAC files it finds into separate tracks. Lastly it copies the tags
+# (if available) from the CUE file to the newly split tracks. You need
+# 'cuetools' and 'shntool' to run this script.
 
 # The output files are put here:
 # ${HOME}/split-tracks/${album}
