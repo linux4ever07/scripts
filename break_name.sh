@@ -162,8 +162,8 @@ break_name_find () {
 			continue
 		fi
 
-		for g in "${rip[@]}"; do
-			if [[ ${!array_ref,,} =~ $g ]]; then
+		for tag in "${rip[@]}"; do
+			if [[ ${!array_ref,,} =~ $tag ]]; then
 				(( count += 1 ))
 				break
 			fi
