@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script looks for CUE/FLAC files (single FLAC albums) in the
+# This script looks for CUE/FLAC files (single file FLAC albums) in the
 # directories passed to it as arguments. It then proceeds to split the
-# FLAC files it finds into separate tracks. Lastly it copies the tags
+# FLAC files it finds into separate tracks. Lastly, it copies the tags
 # (if available) from the CUE file to the newly split tracks. You need
 # 'cuetools' and 'shntool' to run this script.
 
