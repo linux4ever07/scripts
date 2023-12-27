@@ -4,6 +4,8 @@
 # given as argument, and flatten them, if they contain just 1 file that
 # has the same name as the directory.
 
+set -eo pipefail
+
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
 usage () {
@@ -19,103 +21,84 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-if_dn=$(readlink -f "$1")
+declare session
+declare -a vars
+declare -A if of depth regex
+
+vars=('files' 'dirs' 'path_parts')
 
 session="${RANDOM}-${RANDOM}"
 
-declare -a vars1 vars2 vars3
-declare -A regex
+if[dn]=$(readlink -f "$1")
 
 regex[fn]='^(.*)\.([^.]*)$'
 
-vars1=('depth_og' 'depth_tmp' 'depth_diff')
-vars2=('dirs' 'path_parts')
-vars3=('dn' 'dn_dn' 'dn_bn' 'fn' 'bn' 'ext')
+depth[max]=0
 
-depth_max=0
+mapfile -d'/' -t path_parts <<<"${if[dn]}"
+depth[min]=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -d'/' -t path_parts <<<"$if_dn"
-depth_og=$(( ${#path_parts[@]} - 1 ))
+mapfile -t files < <(find "${if[dn]}" -exec printf '%q\n' {} + 2>&-)
 
-mapfile -t dirs < <(find "$if_dn" -type d -exec printf '%q\n' {} + 2>&-)
+for (( i = 0; i < ${#files[@]}; i++ )); do
+	eval if[fn]="${files[${i}]}"
 
-for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	eval fn="${dirs[${i}]}"
+	mapfile -d'/' -t path_parts <<<"${if[fn]}"
+	depth[tmp]=$(( ${#path_parts[@]} - 1 ))
+	depth[diff]=$(( depth[tmp] - depth[min] ))
 
-	mapfile -d'/' -t path_parts <<<"$fn"
-	depth_tmp=$(( ${#path_parts[@]} - 1 ))
-	depth_diff=$(( depth_tmp - depth_og ))
-
-	if [[ $depth_diff -gt $depth_max ]]; then
-		depth_max="$depth_diff"
+	if [[ ${depth[diff]} -gt ${depth[max]} ]]; then
+		depth[max]="${depth[diff]}"
 	fi
 done
 
-unset -v "${vars1[@]}" "${vars2[@]}"
+unset -v "${vars[@]}"
 
-mv_print () {
-	declare if of
-
-	printf '%s\n' "$fn"
-
-	if [[ -n $ext ]]; then
-		of="${bn}-${session}.${ext}"
-	else
-		of="${bn}-${session}"
-	fi
-
-	of="${dn_dn}/${of}"
-
-	mv -n "$fn" "$of"
-	rm -r "$dn"
-
-	if [[ -n $ext ]]; then
-		if="${bn}.${ext}"
-	else
-		if="$bn"
-	fi
-
-	if="${dn_dn}/${if}"
-
-	mv -n "$of" "$if"
-}
-
-for (( i = depth_max; i > 0; i-- )); do
-	mapfile -t dirs < <(find "$if_dn" -type d -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
+for (( i = depth[max]; i > 0; i-- )); do
+	mapfile -t dirs < <(find "${if[dn]}" -type d -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
 	for (( j = 0; j < ${#dirs[@]}; j++ )); do
-		declare "${vars3[@]}"
+		eval if[fn]="${dirs[${j}]}"
+		of[dn]=$(dirname "${if[fn]}")
+		if[bn]=$(basename "${if[fn]}")
 
-		eval dn="${dirs[${j}]}"
-		dn_dn=$(dirname "$dn")
-		dn_bn=$(basename "$dn")
+		unset -v if[ext] of[ext]
 
-		mapfile -t files < <(compgen -G "${dn}/*")
+		mapfile -t files < <(compgen -G "${if[fn]}/*")
 
 		if [[ ${#files[@]} -ne 1 ]]; then
 			continue
 		fi
 
-		fn="${files[0]}"
-		bn=$(basename "$fn")
+		of[fn]="${files[0]}"
+		of[bn]=$(basename "${of[fn]}")
 
-		if [[ $bn == "$dn_bn" ]]; then
-			mv_print
-			unset -v "${vars3[@]}"
+		if [[ ${if[bn]} =~ ${regex[fn]} ]]; then
+			if[bn]="${BASH_REMATCH[1]}"
+			if[ext]="${BASH_REMATCH[2]}"
+		fi
+
+		if [[ ${of[bn]} =~ ${regex[fn]} ]]; then
+			of[bn]="${BASH_REMATCH[1]}"
+			of[ext]="${BASH_REMATCH[2]}"
+		fi
+
+		if [[ ${if[bn]} != "${of[bn]}" ]]; then
 			continue
 		fi
 
-		if [[ $bn =~ ${regex[fn]} ]]; then
-			bn="${BASH_REMATCH[1]}"
-			ext="${BASH_REMATCH[2]}"
+		printf '%s\n' "${if[fn]}"
+
+		if [[ -n ${if[ext]} ]]; then
+			of[fn]="${if[bn]}-${session}.${if[ext]}"
+		else
+			of[fn]="${if[bn]}-${session}"
 		fi
 
-		if [[ $bn == "$dn_bn" ]]; then
-			mv_print
-			unset -v "${vars3[@]}"
-			continue
-		fi
+		of[fn]="${of[dn]}/${of[fn]}"
 
-		unset -v "${vars3[@]}"
+		mv -n "${if[fn]}" "${of[fn]}"
+		mv -n "${of[fn]}"/* "${of[dn]}"
+		rm -r "${of[fn]}"
 	done
 done

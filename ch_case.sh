@@ -24,16 +24,17 @@ elif [[ $2 != 'upper' && $2 != 'lower' ]]; then
 	usage
 fi
 
-if_dn=$(readlink -f "$1")
+declare case pause_msg
+declare -a vars
+declare -A if of depth
+
+vars=('files' 'path_parts')
+
+if[dn]=$(readlink -f "$1")
 
 case="$2"
 
-declare -a vars1 vars2
-
-vars1=('depth_og' 'depth_tmp' 'depth_diff')
-vars2=('files' 'path_parts')
-
-depth_max=0
+depth[max]=0
 
 pause_msg="
 You're about to recursively change all the file / directory names
@@ -49,44 +50,43 @@ fi
 
 printf '\n'
 
-mapfile -d'/' -t path_parts <<<"$if_dn"
-depth_og=$(( ${#path_parts[@]} - 1 ))
+mapfile -d'/' -t path_parts <<<"${if[dn]}"
+depth[min]=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "$if_dn" -exec printf '%q\n' {} + 2>&-)
+mapfile -t files < <(find "${if[dn]}" -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	eval fn="${files[${i}]}"
+	eval if[fn]="${files[${i}]}"
 
-	mapfile -d'/' -t path_parts <<<"$fn"
-	depth_tmp=$(( ${#path_parts[@]} - 1 ))
-	depth_diff=$(( depth_tmp - depth_og ))
+	mapfile -d'/' -t path_parts <<<"${if[fn]}"
+	depth[tmp]=$(( ${#path_parts[@]} - 1 ))
+	depth[diff]=$(( depth[tmp] - depth[min] ))
 
-	if [[ $depth_diff -gt $depth_max ]]; then
-		depth_max="$depth_diff"
+	if [[ ${depth[diff]} -gt ${depth[max]} ]]; then
+		depth[max]="${depth[diff]}"
 	fi
 done
 
-unset -v "${vars1[@]}" "${vars2[@]}"
+unset -v "${vars[@]}"
 
-for (( i = depth_max; i > 0; i-- )); do
-	mapfile -t files < <(find "$if_dn" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
+for (( i = depth[max]; i > 0; i-- )); do
+	mapfile -t files < <(find "${if[dn]}" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
 	for (( j = 0; j < ${#files[@]}; j++ )); do
-		eval fn="${files[${j}]}"
-		dn=$(dirname "$fn")
-		bn=$(basename "$fn")
+		eval if[fn]="${files[${j}]}"
+		of[dn]=$(dirname "${if[fn]}")
+		if[bn]=$(basename "${if[fn]}")
 
-		if [[ $case == 'upper' ]]; then
-			new_bn="${bn^^}"
-		elif [[ $case == 'lower' ]]; then
-			new_bn="${bn,,}"
-		fi
+		of[upper]="${if[bn]^^}"
+		of[lower]="${if[bn],,}"
 
-		new_fn="${dn}/${new_bn}"
+		of[bn]="${of[${case}]}"
 
-		if [[ $new_bn != "$bn" ]]; then
-			printf '%s\n' "$new_fn"
-			mv -n "$fn" "$new_fn"
+		of[fn]="${of[dn]}/${of[bn]}"
+
+		if [[ ${of[bn]} != "${if[bn]}" ]]; then
+			printf '%s\n' "${of[bn]}"
+			mv -n "${if[fn]}" "${of[fn]}"
 		fi
 	done
 done
