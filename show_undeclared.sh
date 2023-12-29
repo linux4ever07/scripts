@@ -18,9 +18,9 @@ fi
 
 if=$(readlink -f "$1")
 
-declare switch_func switch_var
+declare switch_func switch_var func_name
 declare -a lines
-declare -A regex
+declare -A regex declared_global undeclared_global
 
 regex[start]='^([[:blank:]]*)([^ ]+)[[:blank:]]*\(\) \{'
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -30,10 +30,107 @@ regex[mapfile]='^mapfile( -d.{3}){0,1}( -t){0,1} ([^ ]+).*$'
 
 switch_func=0
 
+func_name='main'
+
 mapfile -t lines < <(tr -d '\r' <"$if")
 
-printf '\n'
+printf '\n%s\n\n' "$if"
 
+# Handling global variables here.
+for (( i = 0; i < ${#lines[@]}; i++ )); do
+	line="${lines[${i}]}"
+	line_tmp="$line"
+
+	if [[ $line =~ ${regex[start]} && $switch_func -eq 0 ]]; then
+		switch_func=1
+
+		regex[stop]="^${BASH_REMATCH[1]}\}"
+	fi
+
+	if [[ $line =~ ${regex[stop]} && $switch_func -eq 1 ]]; then
+		switch_func=0
+	fi
+
+	if [[ $switch_func -eq 1 ]]; then
+		continue
+	fi
+
+	if [[ $line_tmp =~ ${regex[blank]} ]]; then
+		line_tmp="${BASH_REMATCH[1]}"
+	fi
+
+	if [[ $line_tmp =~ ${regex[declare]} ]]; then
+		mapfile -d' ' -t declared_tmp <<<"${BASH_REMATCH[3]}"
+		declared_tmp[-1]="${declared_tmp[-1]%$'\n'}"
+
+		for (( j = 0; j < ${#declared_tmp[@]}; j++ )); do
+			var_tmp="${declared_tmp[${j}]}"
+			declared_global["${var_tmp}"]=1
+		done
+	fi
+
+	if [[ $line_tmp =~ ${regex[var]} ]]; then
+		var="${BASH_REMATCH[1]}"
+
+		switch_var=0
+
+		for var_tmp in "${!declared_global[@]}"; do
+			if [[ $var_tmp == "$var" ]]; then
+				switch_var=1
+				break
+			fi
+		done
+
+		if [[ $switch_var -eq 0 ]]; then
+			for var_tmp in "${!undeclared_global[@]}"; do
+				if [[ $var_tmp == "$var" ]]; then
+					switch_var=1
+					break
+				fi
+			done
+
+			if [[ $switch_var -eq 0 ]]; then
+				undeclared_global["${var}"]=1
+			fi
+		fi
+	fi
+
+	if [[ $line_tmp =~ ${regex[mapfile]} ]]; then
+		var="${BASH_REMATCH[3]}"
+
+		switch_var=0
+
+		for var_tmp in "${!declared_global[@]}"; do
+			if [[ $var_tmp == "$var" ]]; then
+				switch_var=1
+				break
+			fi
+		done
+
+		if [[ $switch_var -eq 0 ]]; then
+			for var_tmp in "${!undeclared_global[@]}"; do
+				if [[ $var_tmp == "$var" ]]; then
+					switch_var=1
+					break
+				fi
+			done
+
+			if [[ $switch_var -eq 0 ]]; then
+				undeclared_global["${var}"]=1
+			fi
+		fi
+	fi
+done
+
+if [[ ${#undeclared_global[@]} -gt 0 ]]; then
+	printf '*** %s ***\n' "$func_name"
+	printf '%s\n' "${!undeclared_global[@]}" | sort
+	printf '\n'
+fi
+
+unset -v func_name declared_global undeclared_global
+
+# Handling local variables here.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
 	line_tmp="$line"
@@ -42,7 +139,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		switch_func=1
 
 		declare func_name
-		declare -a declared undeclared
+		declare -A declared_local undeclared_local
 
 		func_name="${BASH_REMATCH[2]}"
 		regex[stop]="^${BASH_REMATCH[1]}\}"
@@ -60,7 +157,10 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		mapfile -d' ' -t declared_tmp <<<"${BASH_REMATCH[3]}"
 		declared_tmp[-1]="${declared_tmp[-1]%$'\n'}"
 
-		declared+=("${declared_tmp[@]}")
+		for (( j = 0; j < ${#declared_tmp[@]}; j++ )); do
+			var_tmp="${declared_tmp[${j}]}"
+			declared_local["${var_tmp}"]=1
+		done
 	fi
 
 	if [[ $line_tmp =~ ${regex[var]} ]]; then
@@ -68,9 +168,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 		switch_var=0
 
-		for (( j = 0; j < ${#declared[@]}; j++ )); do
-			var_tmp="${declared[${j}]}"
-
+		for var_tmp in "${!declared_local[@]}"; do
 			if [[ $var_tmp == "$var" ]]; then
 				switch_var=1
 				break
@@ -78,9 +176,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		done
 
 		if [[ $switch_var -eq 0 ]]; then
-			for (( j = 0; j < ${#undeclared[@]}; j++ )); do
-				var_tmp="${undeclared[${j}]}"
-
+			for var_tmp in "${!undeclared_local[@]}"; do
 				if [[ $var_tmp == "$var" ]]; then
 					switch_var=1
 					break
@@ -88,7 +184,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 			done
 
 			if [[ $switch_var -eq 0 ]]; then
-				undeclared+=("$var")
+				undeclared_local["${var}"]=1
 			fi
 		fi
 	fi
@@ -98,9 +194,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 
 		switch_var=0
 
-		for (( j = 0; j < ${#declared[@]}; j++ )); do
-			var_tmp="${declared[${j}]}"
-
+		for var_tmp in "${!declared_local[@]}"; do
 			if [[ $var_tmp == "$var" ]]; then
 				switch_var=1
 				break
@@ -108,9 +202,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		done
 
 		if [[ $switch_var -eq 0 ]]; then
-			for (( j = 0; j < ${#undeclared[@]}; j++ )); do
-				var_tmp="${undeclared[${j}]}"
-
+			for var_tmp in "${!undeclared_local[@]}"; do
 				if [[ $var_tmp == "$var" ]]; then
 					switch_var=1
 					break
@@ -118,7 +210,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 			done
 
 			if [[ $switch_var -eq 0 ]]; then
-				undeclared+=("$var")
+				undeclared_local["${var}"]=1
 			fi
 		fi
 	fi
@@ -126,13 +218,13 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	if [[ $line =~ ${regex[stop]} && $switch_func -eq 1 ]]; then
 		switch_func=0
 
-		if [[ ${#undeclared[@]} -gt 0 ]]; then
+		if [[ ${#undeclared_local[@]} -gt 0 ]]; then
 			printf '*** %s ***\n' "$func_name"
-			printf '%s\n' "${undeclared[@]}"
+			printf '%s\n' "${!undeclared_local[@]}" | sort
 
 			printf '\n'
 		fi
 
-		unset -v func_name declared undeclared
+		unset -v func_name declared_local undeclared_local
 	fi
 done
