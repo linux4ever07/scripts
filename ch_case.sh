@@ -38,7 +38,7 @@ depth[max]=0
 
 pause_msg="
 You're about to recursively change all the file / directory names
-under \"${if_dn}\" to ${case} case.
+under \"${if[dn]}\" to ${case} case.
 
 Are you sure? [y/n]: "
 
