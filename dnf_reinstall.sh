@@ -32,6 +32,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 declare date txt_fn
+declare -a dnf_pkgs
 declare -A regex
 
 date=$(date '+%F')

@@ -14,7 +14,7 @@
 
 set -eo pipefail
 
-declare -a dirs ignore
+declare -a dirs files ignore
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.

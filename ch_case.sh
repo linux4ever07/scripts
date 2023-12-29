@@ -25,7 +25,7 @@ elif [[ $2 != 'upper' && $2 != 'lower' ]]; then
 fi
 
 declare case pause_msg
-declare -a vars
+declare -a vars files path_parts
 declare -A if of depth
 
 vars=('files' 'path_parts')

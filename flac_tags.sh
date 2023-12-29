@@ -16,6 +16,8 @@ fi
 
 dn=$(readlink -f "$1")
 
+declare -a files
+
 mapfile -t files < <(find "$dn" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)
 
 if [[ ${#files[@]} -eq 0 ]]; then

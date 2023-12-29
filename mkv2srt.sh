@@ -19,7 +19,7 @@
 
 declare tracks_n
 declare if if_dn if_bn of_dn of_mkv
-declare -a files_tmp
+declare -a cmd files_tmp
 declare -A regex tracks
 
 regex[start]='^\|\+ Tracks$'

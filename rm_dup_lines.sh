@@ -5,7 +5,7 @@
 
 set -eo pipefail
 
-declare -a clients lines
+declare -a clients files lines
 declare -A regex
 
 clients=('hexchat' 'irccloud' 'irssi' 'konversation')

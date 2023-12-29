@@ -57,6 +57,7 @@ if_dn=$(readlink -f "$1")
 of_dn=$(readlink -f "$2")
 
 declare session cp_log error_log used free
+declare -a files fn_parts dn_parts
 declare -A regex md5s
 
 session="${RANDOM}-${RANDOM}"

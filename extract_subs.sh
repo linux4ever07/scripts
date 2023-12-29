@@ -17,6 +17,8 @@ if_bn=$(basename "$if")
 if_bn_lc="${if_bn,,}"
 of="${if%.*}-${RANDOM}.mkv"
 
+declare -a cmd
+
 mapfile -t cmd < <(command -v mkvinfo mkvmerge)
 
 if [[ ${#cmd[@]} -ne 2 ]]; then

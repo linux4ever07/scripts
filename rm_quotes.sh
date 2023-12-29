@@ -17,7 +17,7 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-declare -a vars
+declare -a vars files path_parts
 declare -A if of depth
 
 vars=('files' 'path_parts')

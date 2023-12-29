@@ -43,7 +43,7 @@ if_dn=$(readlink -f "$1")
 of_dn=$(readlink -f "$2")
 
 declare pause_msg start stop
-declare -a dn_parts fn_parts
+declare -a files dn_parts fn_parts
 
 pause_msg="
 You're about to recursively symlink:

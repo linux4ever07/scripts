@@ -6,6 +6,7 @@
 # Chrome.
 
 declare restart_fn
+declare -a files
 declare -A regex
 
 regex[bn]='google-chrome-[0-9]+-[0-9]+'

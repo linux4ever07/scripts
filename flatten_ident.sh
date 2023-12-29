@@ -22,7 +22,7 @@ if [[ ! -d $1 ]]; then
 fi
 
 declare session
-declare -a vars
+declare -a vars files dirs path_parts
 declare -A if of depth regex
 
 vars=('files' 'dirs' 'path_parts')

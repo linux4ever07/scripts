@@ -41,7 +41,7 @@ fi
 if_dn=$(readlink -f "$1")
 
 declare session sorted_dn
-declare -a global_vars priority
+declare -a global_vars priority files
 declare -A regex titles
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'

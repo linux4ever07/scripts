@@ -19,7 +19,7 @@ session="${RANDOM}-${RANDOM}"
 of="${if%.*}-${session}.mkv"
 
 declare default files_n sub_tracks_n
-declare -a files files_tmp args full_args range1 range2
+declare -a cmd files files_tmp args full_args range1 range2
 declare -A regex sub_tracks
 
 regex[start]='^\|\+ Tracks$'

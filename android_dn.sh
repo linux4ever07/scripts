@@ -19,7 +19,9 @@ if [[ $# -ne 1 || ! -d $1 ]]; then
 	usage
 fi
 
+declare pause_msg
 declare -a targets dirs
+
 in_dn=$(readlink -f "$1")
 targets=('Android' 'LOST.DIR' 'System Volume Information' '.Trash*')
 

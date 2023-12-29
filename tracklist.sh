@@ -4,6 +4,7 @@
 # a tracklist from the tags.
 
 declare total_length total_time
+declare -a files
 declare -A alltags
 
 # Creates a function, called 'gettags', which gets all the tags present
