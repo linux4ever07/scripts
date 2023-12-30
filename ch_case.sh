@@ -85,7 +85,7 @@ for (( i = depth[max]; i > 0; i-- )); do
 		of[fn]="${of[dn]}/${of[bn]}"
 
 		if [[ ${of[bn]} != "${if[bn]}" ]]; then
-			printf '%s\n' "${of[bn]}"
+			printf '%s\n' "${of[fn]}"
 			mv -n "${if[fn]}" "${of[fn]}"
 		fi
 	done
