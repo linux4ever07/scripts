@@ -61,10 +61,12 @@
 # good program, but not needed anymore as other functions have replaced
 # it.
 
-if=$(readlink -f "$1")
-if_dn=$(dirname "$if")
-if_bn=$(basename "$if")
-if_bn_lc="${if_bn,,}"
+declare -A if of
+
+if[fn]=$(readlink -f "$1")
+if[dn]=$(dirname "${if[fn]}")
+if[bn]=$(basename "${if[fn]}")
+if[bn_lc]="${if[bn],,}"
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -97,17 +99,23 @@ USAGE
 
 # If input is not a real file, or it has the wrong extension, print
 # usage and quit.
-if [[ ! -f $if || ${if_bn_lc##*.} != 'cue' ]]; then
+if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare mode byteswap session of_name of_dn of_cue
+declare mode byteswap session
+declare type block_size track_n track_type
+declare -a format tracks_total
+declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
+declare -A regex if_info of_info gaps bytes
 declare -A audio_types audio_types_run
 
 audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
 
 mode='ffmpeg'
 byteswap=0
+
+session="${RANDOM}-${RANDOM}"
 
 # The loop below handles the arguments to the script.
 shift
@@ -151,15 +159,10 @@ if [[ ${#audio_types_run[@]} -eq 0 ]]; then
 	done
 fi
 
-session="${RANDOM}-${RANDOM}"
+of[name]="${if[bn_lc]%.*}"
+of[name]=$(sed -E 's/[[:blank:]]+/_/g' <<<"${of[name]}")
 
-of_name="${if_bn_lc%.*}"
-of_name=$(sed -E 's/[[:blank:]]+/_/g' <<<"$of_name")
-
-of_dn="${PWD}/${of_name}-${session}"
-
-declare -a format
-declare -A regex
+of[dn]="${PWD}/${of[name]}-${session}"
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2})$'
@@ -176,11 +179,6 @@ regex[fn]='^(.*)\.([^.]*)$'
 
 regex[data]='^MODE([0-9])\/([0-9]{4})$'
 regex[audio]='^AUDIO$'
-
-declare type block_size track_n track_type
-declare -a tracks_file tracks_type tracks_sector tracks_start tracks_length tracks_total
-declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
-declare -A if_cue gaps
 
 # Creates a function, called 'check_cmd', which will check if the
 # necessary commands are installed. If any of the commands are missing
@@ -298,10 +296,10 @@ read_cue () {
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
 # Reads the source CUE sheet into RAM.
-	mapfile -t lines < <(tr -d '\r' <"$if" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"${if[fn]}" | sed -E "s/${regex[blank]}/\1/")
 
 # This loop processes each line in the CUE sheet, and stores all the
-# relevant information in the 'if_cue' hash.
+# relevant information in the 'if_info' hash.
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
 
@@ -310,25 +308,25 @@ read_cue () {
 
 # Strips quotes, and path that may be present in the CUE sheet, and adds
 # full path to the basename.
-			fn=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
-			fn="${if_dn}/${fn}"
+			match[1]=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
+			match[1]="${if[dn]}/${match[1]}"
 
 # If file can't be found, or format isn't binary, then it's useless even
 # trying to process this CUE sheet.
-			if [[ ! -f $fn ]]; then
-				not_found+=("$fn")
+			if [[ ! -f ${match[1]} ]]; then
+				not_found+=("${match[1]}")
 			fi
 
 			if [[ ${match[2]} != 'BINARY' ]]; then
-				wrong_format+=("$fn")
+				wrong_format+=("${match[1]}")
 			fi
 
-			files+=("$fn")
+			files+=("${match[1]}")
 
 			(( file_n += 1 ))
 
-			if_cue["${file_n},filename"]="$fn"
-			if_cue["${file_n},file_format"]="${match[2]}"
+			if_info["${file_n},filename"]="${match[1]}"
+			if_info["${file_n},file_format"]="${match[2]}"
 
 			continue
 		fi
@@ -340,7 +338,7 @@ read_cue () {
 			track_n="${match[1]#0}"
 
 # Saves the file number associated with this track.
-			tracks_file["${track_n}"]="$file_n"
+			of_info["${track_n},file"]="$file_n"
 
 # Saves the current track number (and in effect, every track number) in
 # an array so the exact track numbers can be referenced later.
@@ -349,23 +347,23 @@ read_cue () {
 # Figures out if this track is data or audio, and saves the sector size.
 # Typical sector size is 2048 bytes for data CDs, and 2352 for audio.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
-				tracks_type["${track_n}"]='data'
-				tracks_sector["${track_n}"]="${BASH_REMATCH[2]}"
+				of_info["${track_n},type"]='data'
+				of_info["${track_n},sector"]="${BASH_REMATCH[2]}"
 			fi
 
 			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
-				tracks_type["${track_n}"]='audio'
-				tracks_sector["${track_n}"]=2352
+				of_info["${track_n},type"]='audio'
+				of_info["${track_n},sector"]=2352
 			fi
 
 # If the track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
-			if [[ -z ${tracks_type[${track_n}]} ]]; then
+			if [[ -z ${of_info[${track_n},type]} ]]; then
 				wrong_mode+=("$track_n")
 			fi
 
-			if_cue["${track_n},track_number"]="${match[1]}"
-			if_cue["${track_n},track_mode"]="${match[2]}"
+			if_info["${track_n},track_number"]="${match[1]}"
+			if_info["${track_n},track_mode"]="${match[2]}"
 
 			continue
 		fi
@@ -375,7 +373,7 @@ read_cue () {
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
-			if_cue["${track_n},pregap"]="$frames"
+			if_info["${track_n},pregap"]="$frames"
 
 			continue
 		fi
@@ -387,7 +385,7 @@ read_cue () {
 			index_n="${match[1]#0}"
 
 			frames=$(time_convert "${match[2]}")
-			if_cue["${track_n},index,${index_n}"]="$frames"
+			if_info["${track_n},index,${index_n}"]="$frames"
 
 			continue
 		fi
@@ -397,7 +395,7 @@ read_cue () {
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
-			if_cue["${track_n},postgap"]="$frames"
+			if_info["${track_n},postgap"]="$frames"
 
 			continue
 		fi
@@ -459,11 +457,11 @@ get_gaps () {
 		gaps["${track_n},pre"]=0
 		gaps["${track_n},post"]=0
 
-		index0_ref="if_cue[${track_n},index,0]"
-		index1_ref="if_cue[${track_n},index,1]"
+		index0_ref="if_info[${track_n},index,0]"
+		index1_ref="if_info[${track_n},index,1]"
 
-		pregap_ref="if_cue[${track_n},pregap]"
-		postgap_ref="if_cue[${track_n},postgap]"
+		pregap_ref="if_info[${track_n},pregap]"
+		postgap_ref="if_info[${track_n},postgap]"
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
@@ -512,7 +510,7 @@ get_length () {
 		bytes_track=$(( size - ${!start_ref} ))
 		bytes_total=0
 
-		tracks_length["${this}"]="$bytes_track"
+		bytes["${this},track,length"]="$bytes_track"
 	}
 
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
@@ -524,24 +522,28 @@ get_length () {
 		pregap_this_ref="gaps[${this},index]"
 		pregap_next_ref="gaps[${next},index]"
 
-		index1_this_ref="if_cue[${this},index,1]"
-		index1_next_ref="if_cue[${next},index,1]"
+		index1_this_ref="if_info[${this},index,1]"
+		index1_next_ref="if_info[${next},index,1]"
 
-		file_n_this_ref="tracks_file[${this}]"
-		file_n_next_ref="tracks_file[${next}]"
+		file_n_this_ref="of_info[${this},file]"
+		file_n_next_ref="of_info[${next},file]"
 
-		file_ref="if_cue[${!file_n_this_ref},filename]"
+		file_ref="if_info[${!file_n_this_ref},filename]"
 
-		sector_ref="tracks_sector[${this}]"
+		sector_ref="of_info[${this},sector]"
 
-		start_ref="tracks_start[${this}]"
+		start_ref="bytes[${this},track,start]"
 
 # Converts potential pregap frames to bytes, and adds it to the total
 # bytes of the track position. This makes it possible for the
 # 'copy_track' function to skip over the useless junk data in the
 # pregap, when reading the track.
 		bytes_pregap=$(( ${!pregap_this_ref} * ${!sector_ref} ))
-		tracks_start["${this}"]=$(( bytes_total + bytes_pregap ))
+
+		bytes["${this},pregap,start"]="$bytes_total"
+		bytes["${this},pregap,length"]="$bytes_pregap"
+
+		bytes["${this},track,start"]=$(( bytes_total + bytes_pregap ))
 
 # If this is the last track, get the track length by reading the size of
 # the BIN file associated with this track.
@@ -561,7 +563,7 @@ get_length () {
 			bytes_track=$(( frames * ${!sector_ref} ))
 			(( bytes_total += (bytes_track + bytes_pregap) ))
 
-			tracks_length["${this}"]="$bytes_track"
+			bytes["${this},track,length"]="$bytes_track"
 
 			continue
 		fi
@@ -615,11 +617,11 @@ block_calc () {
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	declare file_n_ref file_ref start_ref length_ref
-	declare of_bin ext block_size skip count
+	declare ext block_size skip count
 	declare -a args
 
-	file_n_ref="tracks_file[${track_n}]"
-	file_ref="if_cue[${!file_n_ref},filename]"
+	file_n_ref="of_info[${track_n},file]"
+	file_ref="if_info[${!file_n_ref},filename]"
 
 # Depending on whether the track type is data or audio, use the
 # appropriate file name extension for the output file.
@@ -632,10 +634,10 @@ copy_track () {
 		;;
 	esac
 
-	of_bin=$(printf '%s/%s%02d.%s' "$of_dn" "$of_name" "$track_n" "$ext")
+	of[fn]=$(printf '%s/%s%02d.%s' "${of[dn]}" "${of[name]}" "$track_n" "$ext")
 
 # Creates the first part of the 'dd' command.
-	args=(dd if=\""${!file_ref}"\" of=\""${of_bin}"\")
+	args=(dd if=\""${!file_ref}"\" of=\""${of[fn]}"\")
 
 # Does a byteswap if the script was run with the '-byteswap' option, and
 # the track is audio.
@@ -644,8 +646,8 @@ copy_track () {
 	fi
 
 # Gets the start position, and length, of the track.
-	start_ref="tracks_start[${track_n}]"
-	length_ref="tracks_length[${track_n}]"
+	start_ref="bytes[${track_n},track,start]"
+	length_ref="bytes[${track_n},track,length]"
 
 # Gets the optimal block size to use with 'dd'.
 	block_calc "${!start_ref}" "${!length_ref}"
@@ -676,7 +678,7 @@ copy_track () {
 copy_all_tracks () {
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 		track_n="${tracks_total[${i}]}"
-		track_type="${tracks_type[${track_n}]}"
+		track_type="${of_info[${track_n},type]}"
 
 		copy_track
 	done
@@ -688,7 +690,7 @@ copy_all_tracks () {
 # Creates a function, called 'cdr2wav', which will convert the extracted
 # CDR files to WAV (using 'ffmpeg' or 'sox').
 cdr2wav () {
-	declare type_tmp if_cdr of_wav
+	declare type_tmp
 	declare -a files
 
 	type_tmp="${audio_types[${type}]}"
@@ -702,17 +704,17 @@ cdr2wav () {
 	mapfile -t files < <(get_files "*.cdr")
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
-		if_cdr="${files[${i}]}"
-		of_wav="${if_cdr%.*}.wav"
+		if[cdr]="${files[${i}]}"
+		of[wav]="${if[cdr]%.*}.wav"
 
 		declare args_ref
 		declare -a args_ffmpeg args_sox
 
 # Creates the command arguments for 'ffmpeg' and 'sox'.
 		args_ffmpeg=(-ar 44.1k -ac 2)
-		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${if_cdr}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${of_wav}"\")
+		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${if[cdr]}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${of[wav]}"\")
 
-		args_sox=(sox -L \""${if_cdr}"\" \""${of_wav}"\")
+		args_sox=(sox -L \""${if[cdr]}"\" \""${of[wav]}"\")
 
 # Depending on what the mode is, run 'ffmpeg' or 'sox' on the CDR file,
 # specifying 'little-endian' for the input.
@@ -722,7 +724,7 @@ cdr2wav () {
 
 # If 'cdr' is not among the chosen audio types, delete the CDR file.
 		if [[ -z ${audio_types_run[cdr]} ]]; then
-			rm "$if_cdr" || exit
+			rm "${if[cdr]}" || exit
 		fi
 
 		unset -v args_ref args_ffmpeg args_sox
@@ -781,7 +783,7 @@ create_cue () {
 		declare mode_ref format_ref track_string
 		declare pregap_ref postgap_ref time_tmp
 
-		mode_ref="if_cue[${track_n},track_mode]"
+		mode_ref="if_info[${track_n},track_mode]"
 		format_ref="ext_format[${ext}]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
@@ -841,10 +843,11 @@ clean_up () {
 
 	mapfile -t files < <(get_files "*.wav")
 
-	for (( i = 0; i < ${#files[@]}; i++ )); do
-		fn="${files[${i}]}"
-		rm "$fn" || exit
-	done
+	if [[ ${#files[@]} -eq 0 ]]; then
+		return
+	fi
+
+	rm "${files[@]}" || exit
 }
 
 # Checks if 'oggenc', 'flac' are installed. Depending on which mode is
@@ -852,8 +855,8 @@ clean_up () {
 check_cmd 'oggenc' 'flac' "$mode"
 
 # Creates the output directory and changes into it.
-mkdir "$of_dn" || exit
-cd "$of_dn" || exit
+mkdir "${of[dn]}" || exit
+cd "${of[dn]}" || exit
 
 # Runs the functions.
 read_cue
@@ -870,11 +873,11 @@ done
 
 # Prints the created CUE sheet to the terminal, and to the output file.
 for type in "${!audio_types_run[@]}"; do
-	of_cue="${of_dn}/${of_name}01_${type}.cue"
+	of[fn]="${of[dn]}/${of[name]}01_${type}.cue"
 	lines_ref="of_cue_${type}[@]"
 
 	printf '\n'
-	printf '%s\r\n' "${!lines_ref}" | tee "$of_cue"
+	printf '%s\r\n' "${!lines_ref}" | tee "${of[fn]}"
 done
 
 printf '\n'
