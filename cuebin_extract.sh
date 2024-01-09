@@ -665,8 +665,8 @@ copy_track () {
 		length_ref="bytes[${track_n},pregap,length]"
 	fi
 
-# If track length is zero, don't bother copying it, but instead return
-# from this function.
+# If the track length is '0', don't bother copying it, but instead
+# return from this function.
 	if [[ ${!length_ref} -eq 0 ]]; then
 		return
 	fi
