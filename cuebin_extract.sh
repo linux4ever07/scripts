@@ -39,18 +39,20 @@
 # CUE/BIN, that has multiple tracks, can be split. It doesn't need to
 # have audio tracks.
 
-# Pregaps are automatically stripped from the output BIN files, and are
-# only symbolically represented in the generated CUE sheets as PREGAP
-# commands. In the rare case that the disc has a hidden bonus track in
-# the pregap for the 1st track, that will be stripped also as the script
-# has no way of knowing the difference. If the pregap is longer than
-# a couple of seconds, then it might contain a hidden track.
-
 # It's possible to do a byteswap on the audio tracks (to switch the
 # endianness / byte order), through the optional '-byteswap' argument.
 # This is needed in some cases, or audio tracks will be white noise if
 # the endianness is wrong. So, it's easy to tell whether or not the byte
 # order is correct.
+
+# Pregaps are automatically stripped from the output BIN files, and are
+# only symbolically represented in the generated CUE sheets as PREGAP
+# commands. In the rare case that the disc has a hidden bonus track in
+# the pregap for the 1st track, that will be stripped also as the script
+# has no way of knowing the difference. If the pregap is longer than
+# a couple of seconds, then it might contain a hidden track. The pregaps
+# can be extracted separately with the optional '-pregaps' argument, if
+# needed.
 
 # The script is able to process CUE sheets that contain multiple FILE
 # commands (list multiple BIN files). As an example, Redump will use 1
@@ -92,6 +94,9 @@ Usage: $(basename "$0") [cue] [...]
 -byteswap
 	Reverses the endianness / byte order of the audio tracks.
 
+-pregaps
+	Saves pregap data only.
+
 USAGE
 
 	exit
@@ -103,10 +108,10 @@ if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare mode byteswap session
+declare mode byteswap pregaps session
 declare type block_size track_n track_type
-declare -a format tracks_total
-declare -a files_cdr files_wav of_cue_cdr of_cue_ogg of_cue_flac
+declare -a format tracks_total files_total
+declare -a of_cue_cdr of_cue_ogg of_cue_flac
 declare -A regex if_info of_info gaps bytes
 declare -A audio_types audio_types_run
 
@@ -114,6 +119,7 @@ audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
 
 mode='ffmpeg'
 byteswap=0
+pregaps=0
 
 session="${RANDOM}-${RANDOM}"
 
@@ -144,6 +150,11 @@ while [[ $# -gt 0 ]]; do
 		;;
 		'-byteswap')
 			byteswap=1
+
+			shift
+		;;
+		'-pregaps')
+			pregaps=1
 
 			shift
 		;;
@@ -649,6 +660,11 @@ copy_track () {
 	start_ref="bytes[${track_n},track,start]"
 	length_ref="bytes[${track_n},track,length]"
 
+	if [[ $pregaps -eq 1 ]]; then
+		start_ref="bytes[${track_n},pregap,start]"
+		length_ref="bytes[${track_n},pregap,length]"
+	fi
+
 # Gets the optimal block size to use with 'dd'.
 	block_calc "${!start_ref}" "${!length_ref}"
 
@@ -671,6 +687,9 @@ copy_track () {
 
 # Runs 'dd'.
 	run_cmd "${args[@]}"
+
+# Adds file name to list.
+	files_total["${track_n}"]=$(basename "${of[fn]}")
 }
 
 # Creates a function, called 'copy_all_tracks', which will extract the
@@ -682,9 +701,6 @@ copy_all_tracks () {
 
 		copy_track
 	done
-
-# Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_cdr < <(get_files "*.bin" "*.cdr")
 }
 
 # Creates a function, called 'cdr2wav', which will convert the extracted
@@ -695,17 +711,21 @@ cdr2wav () {
 
 	type_tmp="${audio_types[${type}]}"
 
+	mapfile -t files < <(get_files "*.cdr")
+
 # If type is not 'wav' or WAV files have already been produced, return
 # from this function.
-	if [[ $type_tmp != 'wav' || ${#files_wav[@]} -gt 0 ]]; then
+	if [[ $type_tmp != 'wav' || ${#files[@]} -eq 0 ]]; then
 		return
 	fi
-
-	mapfile -t files < <(get_files "*.cdr")
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		if[cdr]="${files[${i}]}"
 		of[wav]="${if[cdr]%.*}.wav"
+
+		if [[ -f ${of[wav]} ]]; then
+			continue
+		fi
 
 		declare args_ref
 		declare -a args_ffmpeg args_sox
@@ -729,9 +749,6 @@ cdr2wav () {
 
 		unset -v args_ref args_ffmpeg args_sox
 	done
-
-# Creates a file list to be used later in the 'create_cue' function.
-	mapfile -t files_wav < <(get_files "*.bin" "*.wav")
 }
 
 # Creates a function, called 'encode_audio', which will encode the WAVs
@@ -810,8 +827,12 @@ create_cue () {
 # Goes through the list of files produced by previously run functions,
 # and creates a new CUE sheet based on that.
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
-		line_ref="files_${type_tmp}[${i}]"
 		track_n="${tracks_total[${i}]}"
+		line_ref="files_total[${track_n}]"
+
+		if [[ -z ${!line_ref} ]]; then
+			continue
+		fi
 
 		declare fn ext
 
@@ -825,7 +846,7 @@ create_cue () {
 
 # If the extension is 'wav', then the correct extension is the same as
 # the current audio type.
-		if [[ $ext == 'wav' ]]; then
+		if [[ $ext == 'cdr' ]]; then
 			ext="$type"
 		fi
 
@@ -875,6 +896,10 @@ done
 for type in "${!audio_types_run[@]}"; do
 	of[fn]="${of[dn]}/${of[name]}01_${type}.cue"
 	lines_ref="of_cue_${type}[@]"
+
+	if [[ $pregaps -eq 1 ]]; then
+		continue
+	fi
 
 	printf '\n'
 	printf '%s\r\n' "${!lines_ref}" | tee "${of[fn]}"
