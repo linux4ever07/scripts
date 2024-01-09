@@ -663,10 +663,12 @@ copy_track () {
 	if [[ $pregaps -eq 1 ]]; then
 		start_ref="bytes[${track_n},pregap,start]"
 		length_ref="bytes[${track_n},pregap,length]"
+	fi
 
-		if [[ ${!length_ref} -eq 0 ]]; then
-			return
-		fi
+# If track length is zero, don't bother copying it, but instead return
+# from this function.
+	if [[ ${!length_ref} -eq 0 ]]; then
+		return
 	fi
 
 # Gets the optimal block size to use with 'dd'.
