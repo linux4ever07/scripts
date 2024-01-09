@@ -628,7 +628,7 @@ block_calc () {
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	declare file_n_ref file_ref start_ref length_ref
-	declare ext block_size skip count
+	declare ext skip count
 	declare -a args
 
 	file_n_ref="of_info[${track_n},file]"
