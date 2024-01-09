@@ -95,7 +95,7 @@ Usage: $(basename "$0") [cue] [...]
 	Reverses the endianness / byte order of the audio tracks.
 
 -pregaps
-	Saves pregap data only.
+	Outputs pregap data exclusively.
 
 USAGE
 
@@ -663,6 +663,10 @@ copy_track () {
 	if [[ $pregaps -eq 1 ]]; then
 		start_ref="bytes[${track_n},pregap,start]"
 		length_ref="bytes[${track_n},pregap,length]"
+
+		if [[ ${!length_ref} -eq 0 ]]; then
+			return
+		fi
 	fi
 
 # Gets the optimal block size to use with 'dd'.
