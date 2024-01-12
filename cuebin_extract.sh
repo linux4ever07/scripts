@@ -785,8 +785,7 @@ encode_audio () {
 }
 
 # Creates a function, called 'create_cue', which will create a new CUE
-# sheet, based on the file lists created by the 'copy_all_tracks' and
-# 'cdr2wav' functions.
+# sheet, based on the file list created by the 'copy_track' function.
 create_cue () {
 	declare index_string line_ref type_tmp
 	declare -a offset
@@ -850,7 +849,7 @@ create_cue () {
 		fn="${BASH_REMATCH[1]}"
 		ext="${BASH_REMATCH[2]}"
 
-# If the extension is 'wav', then the correct extension is the same as
+# If the extension is 'cdr', then the correct extension is the same as
 # the current audio type.
 		if [[ $ext == 'cdr' ]]; then
 			ext="$type"
