@@ -25,7 +25,7 @@ fi
 
 declare track_n
 declare -a format tracks_total
-declare -A regex if_info of_info gaps bytes
+declare -A regex if_info gaps bytes
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2})$'
@@ -147,7 +147,7 @@ read_cue () {
 			track_n="${match[1]#0}"
 
 # Saves the file number associated with this track.
-			of_info["${track_n},file"]="$file_n"
+			if_info["${track_n},file"]="$file_n"
 
 # Saves the current track number (and in effect, every track number) in
 # an array so the exact track numbers can be referenced later.
@@ -156,18 +156,18 @@ read_cue () {
 # Figures out if this track is data or audio, and saves the sector size.
 # Typical sector size is 2048 bytes for data CDs, and 2352 for audio.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
-				of_info["${track_n},type"]='data'
-				of_info["${track_n},sector"]="${BASH_REMATCH[2]}"
+				if_info["${track_n},type"]='data'
+				if_info["${track_n},sector"]="${BASH_REMATCH[2]}"
 			fi
 
 			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
-				of_info["${track_n},type"]='audio'
-				of_info["${track_n},sector"]=2352
+				if_info["${track_n},type"]='audio'
+				if_info["${track_n},sector"]=2352
 			fi
 
 # If the track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
-			if [[ -z ${of_info[${track_n},type]} ]]; then
+			if [[ -z ${if_info[${track_n},type]} ]]; then
 				wrong_mode+=("$track_n")
 			fi
 
@@ -334,12 +334,12 @@ get_length () {
 		index1_this_ref="if_info[${this},index,1]"
 		index1_next_ref="if_info[${next},index,1]"
 
-		file_n_this_ref="of_info[${this},file]"
-		file_n_next_ref="of_info[${next},file]"
+		file_n_this_ref="if_info[${this},file]"
+		file_n_next_ref="if_info[${next},file]"
 
 		file_ref="if_info[${!file_n_this_ref},filename]"
 
-		sector_ref="of_info[${this},sector]"
+		sector_ref="if_info[${this},sector]"
 
 		start_ref="bytes[${this},track,start]"
 
@@ -401,7 +401,7 @@ for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 
 	pregap_ref="gaps[${track_n},index]"
 	length_ref="bytes[${track_n},track,length]"
-	sector_ref="of_info[${track_n},sector]"
+	sector_ref="if_info[${track_n},sector]"
 
 	frames=$(( ${!length_ref} / ${!sector_ref} ))
 
