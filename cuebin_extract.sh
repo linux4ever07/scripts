@@ -645,7 +645,8 @@ copy_track () {
 		;;
 	esac
 
-	of[fn]=$(printf '%s/%s%02d.%s' "${of[dn]}" "${of[name]}" "$track_n" "$ext")
+	of[bn]=$(printf '%s%02d.%s' "${of[name]}" "$track_n" "$ext")
+	of[fn]="${of[dn]}/${of[bn]}"
 
 # Creates the first part of the 'dd' command.
 	args=(dd if=\""${!file_ref}"\" of=\""${of[fn]}"\")
@@ -695,7 +696,7 @@ copy_track () {
 	run_cmd "${args[@]}"
 
 # Adds file name to list.
-	files_total["${track_n}"]=$(basename "${of[fn]}")
+	files_total["${track_n}"]="${of[bn]}"
 }
 
 # Creates a function, called 'copy_all_tracks', which will extract the
