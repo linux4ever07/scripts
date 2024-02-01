@@ -41,7 +41,7 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare mode session ram_limit time_limit time_start time_end
+declare mode session ram_limit time_limit time_start time_end pause_msg
 declare cwd pid_chrome
 declare -a files
 declare -A if of
@@ -75,6 +75,8 @@ session="${RANDOM}-${RANDOM}"
 ram_limit=1000000
 time_limit=3600
 
+pause_msg='Restart Chrome? [y/n]: '
+
 if[og_cfg]="${HOME}/.config/google-chrome"
 if[og_cache]="${HOME}/.cache/google-chrome"
 
@@ -107,12 +109,7 @@ restart_chrome () {
 
 	rm "${of[restart_fn]}" || exit
 
-	kill -9 "$pid_chrome"
-
-	while is_chrome; do
-		sleep 1
-	done
-
+	kill_chrome
 	start_chrome
 }
 
@@ -134,10 +131,22 @@ check_ram () {
 	if [[ ${ram[6]} -lt $ram_limit ]]; then
 		printf '\n%s\n\n' 'Running out of RAM...'
 
-		return 1
-	fi
+		kill_chrome
 
-	return 0
+		printf '\n'
+
+		read -p "$pause_msg" -t 60
+
+		if [[ $REPLY == 'y' ]]; then
+			start_chrome
+		fi
+
+		if [[ $REPLY != 'y' ]]; then
+			restore_chrome
+
+			exit
+		fi
+	fi
 }
 
 check_time () {
@@ -239,7 +248,10 @@ kill_chrome () {
 	while is_chrome; do
 		sleep 1
 	done
+}
 
+iquit () {
+	kill_chrome
 	restore_chrome
 
 	exit
@@ -280,18 +292,18 @@ fi
 start_chrome
 
 if [[ $mode == 'normal' ]]; then
-	cd "${if[bak_cfg]}" || kill_chrome
+	cd "${if[bak_cfg]}" || iquit
 
 	mapfile -t files < <(compgen -G "*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		tar -cf "${of[tar_fn]}" "${files[@]}" || kill_chrome
+		tar -cf "${of[tar_fn]}" "${files[@]}" || iquit
 	fi
 
-	rm -r "${if[bak_cfg]}" || kill_chrome
+	rm -r "${if[bak_cfg]}" || iquit
 fi
 
-cd "${of[shm_cfg]}" || kill_chrome
+cd "${of[shm_cfg]}" || iquit
 
 time_start=$(date '+%s')
 time_end=$(( time_start + time_limit ))
@@ -301,7 +313,7 @@ while check_status; do
 
 	sleep 1
 
-	check_ram || kill_chrome
+	check_ram
 
 	check_time || continue
 
