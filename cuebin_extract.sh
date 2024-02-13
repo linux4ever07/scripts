@@ -356,20 +356,16 @@ read_cue () {
 			tracks_total+=("$track_n")
 
 # Figures out if this track is data or audio, and saves the sector size.
-# Typical sector size is 2048 bytes for data CDs, and 2352 for audio.
+# Typical sector size is 2048 bytes for data CDs, and 2352 for audio. If
+# the track mode was not recognized, then it's useless even trying to
+# process this CUE sheet.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
 				if_info["${track_n},type"]='data'
 				if_info["${track_n},sector"]="${BASH_REMATCH[2]}"
-			fi
-
-			if [[ ${match[2]} =~ ${regex[audio]} ]]; then
+			elif [[ ${match[2]} =~ ${regex[audio]} ]]; then
 				if_info["${track_n},type"]='audio'
 				if_info["${track_n},sector"]=2352
-			fi
-
-# If the track mode was not recognized, then it's useless even trying to
-# process this CUE sheet.
-			if [[ -z ${if_info[${track_n},type]} ]]; then
+			else
 				wrong_mode+=("$track_n")
 			fi
 
