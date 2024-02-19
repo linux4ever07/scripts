@@ -73,6 +73,8 @@ get_files () {
 			size_tmp=$(stat -c '%s' "$srt_tmp")
 
 			if [[ $size_tmp -gt $size ]]; then
+				size="$size_tmp"
+
 				bn=$(basename "$srt_tmp")
 				if="Subs/${bn}"
 
