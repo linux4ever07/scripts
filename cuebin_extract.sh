@@ -109,7 +109,7 @@ if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
 fi
 
 declare mode byteswap pregaps session
-declare type block_size track_n track_type
+declare type block_size track_n
 declare -a format tracks_total files_total
 declare -a of_cue_cdr of_cue_ogg of_cue_flac
 declare -A regex if_info gaps bytes
@@ -623,16 +623,18 @@ block_calc () {
 # Creates a function, called 'copy_track', which will extract the raw
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
-	declare file_n_ref file_ref start_ref length_ref
+	declare file_n_ref file_ref track_type_ref start_ref length_ref
 	declare ext skip count
 	declare -a args
 
 	file_n_ref="if_info[${track_n},file]"
 	file_ref="if_info[${!file_n_ref},filename]"
 
+	track_type_ref="if_info[${track_n},type]"
+
 # Depending on whether the track type is data or audio, use the
 # appropriate file name extension for the output file.
-	case "$track_type" in
+	case "${!track_type_ref}" in
 		'data')
 			ext='bin'
 		;;
@@ -649,7 +651,7 @@ copy_track () {
 
 # Does a byteswap if the script was run with the '-byteswap' option, and
 # the track is audio.
-	if [[ $byteswap -eq 1 && $track_type == 'audio' ]]; then
+	if [[ $byteswap -eq 1 && ${!track_type_ref} == 'audio' ]]; then
 		args+=(conv=swab)
 	fi
 
@@ -700,7 +702,6 @@ copy_track () {
 copy_all_tracks () {
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 		track_n="${tracks_total[${i}]}"
-		track_type="${if_info[${track_n},type]}"
 
 		copy_track
 	done
@@ -800,7 +801,7 @@ create_cue () {
 # added if they exist in the source CUE sheet.
 	set_track_info () {
 		declare mode_ref format_ref track_string
-		declare pregap_ref postgap_ref time_tmp
+		declare pregap_ref postgap_ref time
 
 		mode_ref="if_info[${track_n},track_mode]"
 		format_ref="ext_format[${ext}]"
@@ -814,15 +815,15 @@ create_cue () {
 		postgap_ref="gaps[${track_n},post]"
 
 		if [[ ${!pregap_ref} -gt 0 ]]; then
-			time_tmp=$(time_convert "${!pregap_ref}")
-			eval of_cue_"${type}"+=\(\""${offset[1]}PREGAP ${time_tmp}"\"\)
+			time=$(time_convert "${!pregap_ref}")
+			eval of_cue_"${type}"+=\(\""${offset[1]}PREGAP ${time}"\"\)
 		fi
 
 		eval of_cue_"${type}"+=\(\""${offset[1]}${index_string}"\"\)
 
 		if [[ ${!postgap_ref} -gt 0 ]]; then
-			time_tmp=$(time_convert "${!postgap_ref}")
-			eval of_cue_"${type}"+=\(\""${offset[1]}POSTGAP ${time_tmp}"\"\)
+			time=$(time_convert "${!postgap_ref}")
+			eval of_cue_"${type}"+=\(\""${offset[1]}POSTGAP ${time}"\"\)
 		fi
 	}
 
