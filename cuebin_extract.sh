@@ -623,18 +623,18 @@ block_calc () {
 # Creates a function, called 'copy_track', which will extract the raw
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
-	declare file_n_ref file_ref track_type_ref start_ref length_ref
+	declare file_n_ref file_ref type_ref start_ref length_ref
 	declare ext skip count
 	declare -a args
 
 	file_n_ref="if_info[${track_n},file]"
 	file_ref="if_info[${!file_n_ref},filename]"
 
-	track_type_ref="if_info[${track_n},type]"
+	type_ref="if_info[${track_n},type]"
 
 # Depending on whether the track type is data or audio, use the
 # appropriate file name extension for the output file.
-	case "${!track_type_ref}" in
+	case "${!type_ref}" in
 		'data')
 			ext='bin'
 		;;
@@ -651,7 +651,7 @@ copy_track () {
 
 # Does a byteswap if the script was run with the '-byteswap' option, and
 # the track is audio.
-	if [[ $byteswap -eq 1 && ${!track_type_ref} == 'audio' ]]; then
+	if [[ $byteswap -eq 1 && ${!type_ref} == 'audio' ]]; then
 		args+=(conv=swab)
 	fi
 
