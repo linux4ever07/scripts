@@ -108,8 +108,7 @@ if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare mode byteswap pregaps session
-declare type block_size track_n
+declare mode byteswap pregaps session type
 declare -a format tracks_total files_total
 declare -a of_cue_cdr of_cue_ogg of_cue_flac
 declare -A regex if_info gaps bytes
@@ -624,7 +623,7 @@ block_calc () {
 # binary data for the track number given as argument, from the BIN file.
 copy_track () {
 	declare file_n_ref file_ref type_ref start_ref length_ref
-	declare ext skip count
+	declare ext block_size skip count
 	declare -a args
 
 	file_n_ref="if_info[${track_n},file]"
@@ -700,6 +699,8 @@ copy_track () {
 # Creates a function, called 'copy_all_tracks', which will extract the
 # raw binary data for all tracks (i.e. separate the tracks).
 copy_all_tracks () {
+	declare track_n
+
 	for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 		track_n="${tracks_total[${i}]}"
 
