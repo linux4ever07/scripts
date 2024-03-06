@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # This script slowly and gradually lowers the volume until it's equal to
-# 0%. Although, any target volume can be set using the $target_volume
+# 0%. Although, any target volume can be set using the $volume[target]
 # variable. The script takes 1 hour (360 * 10 seconds) all in all, to
 # completely lower the volume to the target volume.
 
 # I'm using this script to automatically lower the volume when I fall
 # asleep to watching a movie or YouTube.
 
+#
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
-declare pw_id full_volume no_volume target_volume interval unit
-declare volume og_volume
+declare pw_id interval unit
 declare -a count
-declare -A regex
+declare -A regex volume
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[blank2]='[[:blank:]]+'
@@ -28,9 +28,10 @@ regex[zero]='^0+([0-9]+)$'
 regex[split]='^([0-9]+)([0-9]{6})$'
 regex[cfg_node]='^node = (.*)$'
 
-full_volume=1000000
-no_volume=0
-target_volume=0
+volume[full]=1000000
+volume[no]=0
+volume[target]=0
+
 interval=10
 unit=354
 
@@ -95,6 +96,8 @@ get_id () {
 
 # If the configuration file exists, get the node name from that.
 	if [[ -f $cfg_fn ]]; then
+		printf '\n%s: %s\n\n' 'Using audio output found in' "$cfg_fn"
+
 		mapfile -t lines <"$cfg_fn"
 
 		for (( i = 0; i < ${#lines[@]}; i++ )); do
@@ -158,27 +161,29 @@ get_volume () {
 			continue
 		fi
 
-		volume=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
+		volume[in]=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
 
-		if [[ $volume =~ ${regex[zero]} ]]; then
-			volume="${BASH_REMATCH[1]}"
+		if [[ ${volume[in]} =~ ${regex[zero]} ]]; then
+			volume[in]="${BASH_REMATCH[1]}"
 		fi
 
 		break
 	done
 
-	if [[ -z $volume ]]; then
+	if [[ -z ${volume[in]} ]]; then
 		exit
 	fi
 
-	og_volume="$volume"
+	volume[out]="${volume[in]}"
 }
 
 # Creates a function, called 'set_volume', which sets the volume.
 set_volume () {
 	mute_tmp="$1"
 
-	if [[ $volume =~ ${regex[split]} ]]; then
+	declare volume_1 volume_2
+
+	if [[ ${volume[out]} =~ ${regex[split]} ]]; then
 		volume_1="${BASH_REMATCH[1]}"
 		volume_2="${BASH_REMATCH[2]}"
 
@@ -187,25 +192,25 @@ set_volume () {
 		fi
 	else
 		volume_1=0
-		volume_2="$volume"
+		volume_2="${volume[out]}"
 	fi
 
-	volume_dec=$(printf '%d.%06d' "$volume_1" "$volume_2")
+	volume[dec]=$(printf '%d.%06d' "$volume_1" "$volume_2")
 
-	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume_dec}, ${volume_dec} ] }" 1>&- 2>&-
+	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume[dec]}, ${volume[dec]} ] }" 1>&- 2>&-
 }
 
 # Creates a function, called 'reset_volume', which resets the volume.
 reset_volume () {
-	volume="$no_volume"
+	volume[out]="${volume[no]}"
 
 	set_volume 'false'
 
-	until [[ $volume -eq $full_volume ]]; do
-		(( volume += 100000 ))
+	until [[ ${volume[out]} -eq ${volume[full]} ]]; do
+		(( volume[out] += 100000 ))
 
-		if [[ $volume -gt $full_volume ]]; then
-			volume="$full_volume"
+		if [[ ${volume[out]} -gt ${volume[full]} ]]; then
+			volume[out]="${volume[full]}"
 		fi
 
 		sleep 0.1
@@ -221,15 +226,15 @@ sleep_low () {
 
 	sleep "$interval"
 
-	if [[ $diff -ge $volume ]]; then
-		volume=0
+	if [[ $diff -ge ${volume[out]} ]]; then
+		volume[out]=0
 	else
-		(( volume -= diff ))
+		(( volume[out] -= diff ))
 	fi
 
 	set_volume 'false'
 
-	printf '%s\n' "$volume"
+	printf '%s\n' "${volume[out]}"
 }
 
 # Creates a function, called 'get_count', which will get the exact
@@ -242,7 +247,7 @@ get_count () {
 	declare diff rem
 
 # Calculates the difference between current volume and target volume.
-	diff=$(( volume - target_volume ))
+	diff=$(( volume[out] - volume[target] ))
 
 # If the difference is greater than (or equal to) 354, do some
 # calculations. Otherwise just decrease by 0 until the very last second,
@@ -294,14 +299,14 @@ get_volume
 reset_volume
 
 # If volume is greater than target volume, then...
-if [[ $volume -gt $target_volume ]]; then
+if [[ ${volume[out]} -gt ${volume[target]} ]]; then
 	get_count
 
 # Starts the spinner animation...
 	spin &
 	spin_pid="$!"
 
-	printf '%s\n' "$volume"
+	printf '%s\n' "${volume[out]}"
 
 # For the first 354 10-second intervals, lower the volume by the value
 # in ${count[0]}
