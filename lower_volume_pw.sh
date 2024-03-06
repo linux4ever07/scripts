@@ -11,9 +11,7 @@
 #
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
-cfg_fn="${HOME}/lower_volume_pw.cfg"
-
-declare pw_id interval unit
+declare cfg_fn pw_id interval unit
 declare -a count
 declare -A regex volume
 
@@ -31,6 +29,8 @@ regex[cfg_node]='^node = (.*)$'
 volume[full]=1000000
 volume[no]=0
 volume[target]=0
+
+cfg_fn="${HOME}/lower_volume_pw.cfg"
 
 interval=10
 unit=354
