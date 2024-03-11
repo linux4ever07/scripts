@@ -792,7 +792,7 @@ encode_audio () {
 # Creates a function, called 'create_cue', which will create a new CUE
 # sheet, based on the file list created by the 'copy_track' function.
 create_cue () {
-	declare index_string line_ref type_tmp
+	declare index_string track_n line_ref type_tmp
 	declare -a offset
 	declare -A ext_format
 
@@ -925,5 +925,4 @@ fi
 
 printf '\n'
 
-# Deletes temporary files.
 clean_up
