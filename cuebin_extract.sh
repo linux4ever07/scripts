@@ -620,7 +620,7 @@ block_calc () {
 }
 
 # Creates a function, called 'copy_track', which will extract the raw
-# binary data for the track number given as argument, from the BIN file.
+# binary data for the current track number, from the BIN file.
 copy_track () {
 	declare file_n_ref file_ref type_ref start_ref length_ref
 	declare ext block_size skip count
@@ -688,6 +688,12 @@ copy_track () {
 	if [[ $count -gt 0 ]]; then
 		args+=(count=\""${count}"\")
 	fi
+
+# Prints track information.
+	printf 'Track %02d)\n' "$track_n"
+	printf '  block: %s\n' "$block_size"
+	printf '  start: %s\n' "$skip"
+	printf '  length: %s\n\n' "$count"
 
 # Runs 'dd'.
 	run_cmd "${args[@]}"
@@ -861,6 +867,20 @@ create_cue () {
 	done
 }
 
+# Creates a function, called 'print_cue', which will print the created
+# CUE sheet(s) to the terminal, and to the output file.
+print_cue () {
+	declare lines_ref
+
+	for type in "${!audio_types_run[@]}"; do
+		of[fn]="${of[dn]}/${of[name]}01_${type}.cue"
+		lines_ref="of_cue_${type}[@]"
+
+		printf '\n'
+		printf '%s\r\n' "${!lines_ref}" | tee "${of[fn]}"
+	done
+}
+
 # Creates a function, called 'clean_up', which deletes temporary files:
 # * Potential WAV files
 clean_up () {
@@ -883,6 +903,9 @@ check_cmd 'oggenc' 'flac' "$mode"
 mkdir "${of[dn]}" || exit
 cd "${of[dn]}" || exit
 
+printf '\nOutput:\n'
+printf '%s\n\n' "${of[dn]}"
+
 # Runs the functions.
 read_cue
 get_gaps
@@ -896,18 +919,9 @@ for type in "${!audio_types_run[@]}"; do
 	create_cue
 done
 
-# Prints the created CUE sheet to the terminal, and to the output file.
-for type in "${!audio_types_run[@]}"; do
-	of[fn]="${of[dn]}/${of[name]}01_${type}.cue"
-	lines_ref="of_cue_${type}[@]"
-
-	if [[ $pregaps -eq 1 ]]; then
-		continue
-	fi
-
-	printf '\n'
-	printf '%s\r\n' "${!lines_ref}" | tee "${of[fn]}"
-done
+if [[ $pregaps -eq 0 ]]; then
+	print_cue
+fi
 
 printf '\n'
 
