@@ -903,8 +903,7 @@ check_cmd 'oggenc' 'flac' "$mode"
 mkdir "${of[dn]}" || exit
 cd "${of[dn]}" || exit
 
-printf '\nOutput:\n'
-printf '%s\n\n' "${of[dn]}"
+printf '\nOutput:\n%s\n\n' "${of[dn]}"
 
 # Runs the functions.
 read_cue
