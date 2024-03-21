@@ -331,7 +331,7 @@ uriencode () {
 # Creates a function, called 'break_name', which will break up the
 # input file name, and parse it, to extract the movie title, and year.
 break_name () {
-	bname=$(sed -E 's/[[:blank:]]+/ /g' <<<"$1")
+	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
 	declare -a types
 	declare -a bname_dots bname_hyphens bname_underscores bname_spaces

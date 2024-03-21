@@ -28,13 +28,13 @@ declare -a format tracks_total
 declare -A regex if_info gaps bytes
 
 format[0]='^[0-9]+$'
-format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2})$'
-format[2]='[0-9]{2}:[0-9]{2}:[0-9]{2}'
-format[3]='^(FILE) (.*) (.*)$'
-format[4]='^(TRACK) ([0-9]{2,}) (.*)$'
-format[5]="^(PREGAP) (${format[2]})$"
-format[6]="^(INDEX) ([0-9]{2,}) (${format[2]})$"
-format[7]="^(POSTGAP) (${format[2]})$"
+format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
+format[2]='[0-9]{2,}:[0-9]{2}:[0-9]{2}'
+format[3]='^(FILE) +(.*) +(.*)$'
+format[4]='^(TRACK) +([0-9]{2,}) +(.*)$'
+format[5]="^(PREGAP) +(${format[2]})$"
+format[6]="^(INDEX) +([0-9]{2,}) +(${format[2]})$"
+format[7]="^(POSTGAP) +(${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[path]='^(.*[\\\/])'

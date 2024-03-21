@@ -10,7 +10,7 @@
 declare -a format
 
 format[0]='^[0-9]+$'
-format[1]='^([0-9]{2}):([0-9]{2}):([0-9]{2})$'
+format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
 
 # Creates a function, called 'time_convert', which converts track
 # timestamps back and forth between the time (mm:ss:ff) format and

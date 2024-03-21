@@ -50,7 +50,7 @@ query_string="${query[@]}"
 # Creates a function, called 'break_name', which will break up the input
 # file name.
 break_name () {
-	bname=$(sed -E 's/[[:blank:]]+/ /g' <<<"$1")
+	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
 	declare -a types
 	declare -A bname_elements
