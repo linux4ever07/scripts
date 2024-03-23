@@ -368,7 +368,6 @@ read_cue () {
 				wrong_mode+=("$track_n")
 			fi
 
-			if_info["${track_n},track_number"]="${match[1]}"
 			if_info["${track_n},track_mode"]="${match[2]}"
 
 			continue
