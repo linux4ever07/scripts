@@ -134,7 +134,7 @@ read_cue () {
 
 			(( file_n += 1 ))
 
-			if_info["${file_n},filename"]="${match[1]}"
+			if_info["${file_n},file_name"]="${match[1]}"
 			if_info["${file_n},file_format"]="${match[2]}"
 
 			continue
@@ -155,7 +155,7 @@ read_cue () {
 
 # Figures out if this track is data or audio, and saves the sector size.
 # Typical sector size is 2048 bytes for data CDs, and 2352 for audio. If
-# the track mode was not recognized, then it's useless even trying to
+# track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
 				if_info["${track_n},type"]='data'
@@ -167,7 +167,7 @@ read_cue () {
 				wrong_mode+=("$track_n")
 			fi
 
-			if_info["${track_n},track_mode"]="${match[2]}"
+			if_info["${track_n},mode"]="${match[2]}"
 
 			continue
 		fi
@@ -332,7 +332,7 @@ get_length () {
 		file_n_this_ref="if_info[${this},file]"
 		file_n_next_ref="if_info[${next},file]"
 
-		file_ref="if_info[${!file_n_this_ref},filename]"
+		file_ref="if_info[${!file_n_this_ref},file_name]"
 
 		sector_ref="if_info[${this},sector]"
 

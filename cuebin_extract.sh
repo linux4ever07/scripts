@@ -335,7 +335,7 @@ read_cue () {
 
 			(( file_n += 1 ))
 
-			if_info["${file_n},filename"]="${match[1]}"
+			if_info["${file_n},file_name"]="${match[1]}"
 			if_info["${file_n},file_format"]="${match[2]}"
 
 			continue
@@ -356,7 +356,7 @@ read_cue () {
 
 # Figures out if this track is data or audio, and saves the sector size.
 # Typical sector size is 2048 bytes for data CDs, and 2352 for audio. If
-# the track mode was not recognized, then it's useless even trying to
+# track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
 				if_info["${track_n},type"]='data'
@@ -368,7 +368,7 @@ read_cue () {
 				wrong_mode+=("$track_n")
 			fi
 
-			if_info["${track_n},track_mode"]="${match[2]}"
+			if_info["${track_n},mode"]="${match[2]}"
 
 			continue
 		fi
@@ -533,7 +533,7 @@ get_length () {
 		file_n_this_ref="if_info[${this},file]"
 		file_n_next_ref="if_info[${next},file]"
 
-		file_ref="if_info[${!file_n_this_ref},filename]"
+		file_ref="if_info[${!file_n_this_ref},file_name]"
 
 		sector_ref="if_info[${this},sector]"
 
@@ -559,8 +559,8 @@ get_length () {
 		fi
 
 # If the BIN file associated with this track is the same as the next
-# track, get the track length by subtracting the start position of the
-# current track from the position of the next track.
+# track, get the track length by subtracting the start position of this
+# track from the position of the next track.
 		if [[ ${!file_n_this_ref} -eq ${!file_n_next_ref} ]]; then
 			frames=$(( ${!index1_next_ref} - ${!index1_this_ref} ))
 			(( frames -= ${!pregap_next_ref} ))
@@ -626,7 +626,7 @@ copy_track () {
 	declare -a args
 
 	file_n_ref="if_info[${track_n},file]"
-	file_ref="if_info[${!file_n_ref},filename]"
+	file_ref="if_info[${!file_n_ref},file_name]"
 
 	type_ref="if_info[${track_n},type]"
 
@@ -809,7 +809,7 @@ create_cue () {
 		declare mode_ref format_ref track_string
 		declare pregap_ref postgap_ref time
 
-		mode_ref="if_info[${track_n},track_mode]"
+		mode_ref="if_info[${track_n},mode]"
 		format_ref="ext_format[${ext}]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
