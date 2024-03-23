@@ -358,8 +358,8 @@ get_length () {
 		fi
 
 # If the BIN file associated with this track is the same as the next
-# track, get the track length by subtracting the start position of the
-# current track from the position of the next track.
+# track, get the track length by subtracting the start position of this
+# track from the position of the next track.
 		if [[ ${!file_n_this_ref} -eq ${!file_n_next_ref} ]]; then
 			frames=$(( ${!index1_next_ref} - ${!index1_this_ref} ))
 			(( frames -= ${!pregap_next_ref} ))
