@@ -14,7 +14,7 @@ declare -a cmd dirs files_in files_out
 declare -a format
 declare -A regex
 
-format[0]='^(FILE) (.*) (.*)$'
+format[0]='^(FILE) +\"(.*)\" +(.*)$'
 format[1]='^(TRACK) ([0-9]{2,}) (.*)$'
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -109,7 +109,7 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 		line="${lines[${j}]}"
 
 		if [[ $line =~ ${format[0]} ]]; then
-			files+=("$(tr -d '"' <<<"${BASH_REMATCH[2]}" | sed -E "s/${regex[path]}//")")
+			files+=("$(sed -E "s/${regex[path]}//" <<<"${BASH_REMATCH[2]}")")
 		fi
 
 		if [[ $line =~ ${format[1]} ]]; then

@@ -177,7 +177,7 @@ of[dn]="${PWD}/${of[name]}-${session}"
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
 format[2]='[0-9]{2,}:[0-9]{2}:[0-9]{2}'
-format[3]='^(FILE) +(.*) +(.*)$'
+format[3]='^(FILE) +\"(.*)\" +(.*)$'
 format[4]='^(TRACK) +([0-9]{2,}) +(.*)$'
 format[5]="^(PREGAP) +(${format[2]})$"
 format[6]="^(INDEX) +([0-9]{2,}) +(${format[2]})$"
@@ -318,7 +318,7 @@ read_cue () {
 
 # Strips quotes, and path that may be present in the CUE sheet, and adds
 # full path to the basename.
-			match[1]=$(tr -d '"' <<<"${match[1]}" | sed -E "s/${regex[path]}//")
+			match[1]=$(sed -E "s/${regex[path]}//" <<<"${match[1]}")
 			match[1]="${if[dn]}/${match[1]}"
 
 # If file can't be found, or format isn't binary, then it's useless even
