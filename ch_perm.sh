@@ -49,6 +49,10 @@ esac
 
 shift
 
+if [[ $# -eq 0 ]]; then
+	usage
+fi
+
 while [[ $# -gt 0 ]]; do
 	fn=$(readlink -f "$1")
 
