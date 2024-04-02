@@ -113,6 +113,7 @@ read_cue () {
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
 
+# If line is a FILE command...
 		if [[ $line =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
