@@ -39,6 +39,7 @@ time_convert () {
 	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
+# Converting frames to seconds and minutes.
 		s=$(( f / 75 ))
 		m=$(( s / 60 ))
 
