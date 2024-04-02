@@ -272,6 +272,7 @@ time_convert () {
 	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
+# Converting frames to seconds and minutes.
 		s=$(( f / 75 ))
 		m=$(( s / 60 ))
 
@@ -316,8 +317,8 @@ read_cue () {
 		if [[ $line =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
-# Strips quotes, and path that may be present in the CUE sheet, and adds
-# full path to the basename.
+# Strips path that may be present in the CUE sheet, and adds full path
+# to the basename.
 			match[1]=$(sed -E "s/${regex[path]}//" <<<"${match[1]}")
 			match[1]="${if[dn]}/${match[1]}"
 
