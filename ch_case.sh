@@ -9,7 +9,7 @@
 # case insensitive it doesn't matter which format you use, as it will
 # show up as upper case from within DOS anyway.
 
-set -eo pipefail
+set -o pipefail
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
