@@ -170,5 +170,9 @@ for (( i = 0; i < ${#cue_dirs[@]}; i++ )); do
 		of[dn]="${BASH_REMATCH[1]}"
 	fi
 
+	if [[ -d ${of[dn]} ]]; then
+		continue
+	fi
+
 	mv -n "${if[bn]}" "${of[dn]}" || exit
 done
