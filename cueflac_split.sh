@@ -14,11 +14,12 @@ declare -a cmd dirs files_in files_out
 declare -a format
 declare -A regex
 
-format[0]='^(FILE) +\"(.*)\" +(.*)$'
+format[0]='^(FILE) +(.*) +(.*)$'
 format[1]='^(TRACK) ([0-9]{2,}) (.*)$'
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex[path]='^(.*[\\\/])'
+regex[path]='^(.*[\\\/])*(.*)$'
+regex[quotes]='^\"*(.*)\"*$'
 regex[fn]='^(.*)\.([^.]*)$'
 
 # Creates an array of the list of commands needed by this script.
@@ -109,7 +110,17 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 		line="${lines[${j}]}"
 
 		if [[ $line =~ ${format[0]} ]]; then
-			files+=("$(sed -E "s/${regex[path]}//" <<<"${BASH_REMATCH[2]}")")
+			line="${BASH_REMATCH[2]}"
+
+			if [[ $line =~ ${regex[quotes]} ]]; then
+				line="${BASH_REMATCH[1]}"
+			fi
+
+			if [[ $line =~ ${regex[path]} ]]; then
+				line="${BASH_REMATCH[2]}"
+			fi
+
+			files+=("$line")
 		fi
 
 		if [[ $line =~ ${format[1]} ]]; then

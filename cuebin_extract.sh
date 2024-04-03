@@ -177,14 +177,15 @@ of[dn]="${PWD}/${of[name]}-${session}"
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
 format[2]='[0-9]{2,}:[0-9]{2}:[0-9]{2}'
-format[3]='^(FILE) +\"(.*)\" +(.*)$'
+format[3]='^(FILE) +(.*) +(.*)$'
 format[4]='^(TRACK) +([0-9]{2,}) +(.*)$'
 format[5]="^(PREGAP) +(${format[2]})$"
 format[6]="^(INDEX) +([0-9]{2,}) +(${format[2]})$"
 format[7]="^(POSTGAP) +(${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex[path]='^(.*[\\\/])'
+regex[path]='^(.*[\\\/])*(.*)$'
+regex[quotes]='^\"*(.*)\"*$'
 regex[fn]='^(.*)\.([^.]*)$'
 
 regex[data]='^MODE([0-9])\/([0-9]{4})$'
@@ -318,9 +319,17 @@ read_cue () {
 		if [[ $line =~ ${format[3]} ]]; then
 			match=("${BASH_REMATCH[@]:1}")
 
-# Strips path that may be present in the CUE sheet, and adds full path
-# to the basename.
-			match[1]=$(sed -E "s/${regex[path]}//" <<<"${match[1]}")
+# Strips quotes that may be present in the CUE sheet.
+			if [[ ${match[1]} =~ ${regex[quotes]} ]]; then
+				match[1]="${BASH_REMATCH[1]}"
+			fi
+
+# Strips path that may be present in the CUE sheet.
+			if [[ ${match[1]} =~ ${regex[path]} ]]; then
+				match[1]="${BASH_REMATCH[2]}"
+			fi
+
+# Adds full path to the basename.
 			match[1]="${if[dn]}/${match[1]}"
 
 # If file can't be found, or format isn't binary, then it's useless even
