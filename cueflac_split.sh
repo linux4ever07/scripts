@@ -18,8 +18,8 @@ format[0]='^(FILE) +(.*) +(.*)$'
 format[1]='^(TRACK) ([0-9]{2,}) (.*)$'
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex[path]='^(.*[\\\/])*(.*)$'
 regex[quotes]='^\"(.*)\"$'
+regex[path]='^(.*[\\\/])*(.*)$'
 regex[fn]='^(.*)\.([^.]*)$'
 
 # Creates an array of the list of commands needed by this script.
