@@ -121,10 +121,16 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 			fi
 
 			files+=("$line")
+
+			continue
 		fi
 
 		if [[ $line =~ ${format[1]} ]]; then
-			tracks+=("${BASH_REMATCH[2]}")
+			line="${BASH_REMATCH[2]}"
+
+			tracks+=("$line")
+
+			continue
 		fi
 	done
 
