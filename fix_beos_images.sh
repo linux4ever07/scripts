@@ -81,6 +81,8 @@ for (( i = 0; i < ${#cue_files[@]}; i++ )); do
 		mv "${if[cue]}" "${of[cue]}" || exit
 	fi
 
+	printf '%s\n\n' "*** ${of[cue]}"
+
 	mapfile -t lines < <(tr -d '\r' <"${of[cue]}" | sed -E "s/${regex[blank]}/\1/")
 
 	truncate -s 0 "${of[cue]}"
