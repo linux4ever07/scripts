@@ -332,6 +332,9 @@ read_cue () {
 # Adds full path to the basename.
 			match[1]="${if[dn]}/${match[1]}"
 
+# Resolves the path to the real file, in case it's a symlink.
+			match[1]=$(readlink -f "${match[1]}")
+
 # If file can't be found, or format isn't binary, then it's useless even
 # trying to process this CUE sheet.
 			if [[ ! -f ${match[1]} ]]; then
