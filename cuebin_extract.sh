@@ -185,7 +185,7 @@ format[7]="^(POSTGAP) +(${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[quotes]='^\"(.*)\"$'
-regex[path]='^(.*[\\\/])*(.*)$'
+regex[path]='^(.*[\\\/])(.*)$'
 regex[fn]='^(.*)\.([^.]*)$'
 
 regex[data]='^MODE([0-9])\/([0-9]{4})$'

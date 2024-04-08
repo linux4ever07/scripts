@@ -25,7 +25,7 @@ format[7]="^(POSTGAP) +(${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[quotes]='^\"(.*)\"$'
-regex[path]='^(.*[\\\/])*(.*)$'
+regex[path]='^(.*[\\\/])(.*)$'
 regex[fn]='^(.*)\.([^.]*)$'
 
 # Creates an array of the list of commands needed by this script.

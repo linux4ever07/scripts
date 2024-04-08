@@ -40,7 +40,7 @@ format[7]="^(POSTGAP) +(${format[2]})$"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[quotes]='^\"(.*)\"$'
-regex[path]='^(.*[\\\/])*(.*)$'
+regex[path]='^(.*[\\\/])(.*)$'
 regex[dn]='^(.*)-[0-9]+-[0-9]+$'
 regex[cuebin]='^(.*)[0-9]{2}_cdr.cue$'
 
