@@ -56,7 +56,7 @@
 
 # The script is able to process CUE sheets that contain multiple FILE
 # commands (list multiple BIN files). As an example, Redump will use 1
-# BIN file / track, so that can be processed by the script directly in
+# BIN file per track, so that can be processed by the script directly in
 # this case, without having to merge the CUE/BIN first.
 
 # Earlier versions of the script used to depend on 'bchunk', which is a
