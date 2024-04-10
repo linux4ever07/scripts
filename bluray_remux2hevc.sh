@@ -1255,27 +1255,27 @@ if_m2ts () {
 
 	mapfile -d'/' -t path_parts <<<"${if[fn]}"
 	(( field = ${#path_parts[@]} - 4 ))
-	bd_title="${path_parts[${field}]}"
-
-	printf '%s' "$bd_title"
+	if[m2ts_bn]="${path_parts[${field}]}"
 }
 
 # Creates a function, called 'get_name', which will get the movie title
 # and year, based on the input file name.
 get_name () {
-	declare if_m2ts
+	declare bname
 	declare -a bname_tmp imdb_tmp
+
+	bname="${if[bn]}"
 
 # If the input file name is an M2TS, get the movie title and year from
 # the surrounding directory structure.
 	if_m2ts=$(if_m2ts)
 
-	if [[ -n $if_m2ts ]]; then
-		if[bn]="$if_m2ts"
+	if [[ -n ${if[m2ts_bn]} ]]; then
+		bname="${if[m2ts_bn]}"
 	fi
 
 # Breaks up the input file name, and gets its IMDb name.
-	mapfile -t bname_tmp < <(break_name "${if[bn]}")
+	mapfile -t bname_tmp < <(break_name "$bname")
 
 	title="${bname_tmp[0]}"
 	year="${bname_tmp[1]}"
