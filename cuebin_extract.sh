@@ -29,7 +29,7 @@
 
 # The script will work with all kinds of games, including PS1 and Sega
 # Saturn games. All that's required is that the disc image is in the
-# CUE/BIN format. There's some other emulators out there that can
+# CUE/BIN format. There are some other emulators out there that can
 # handle FLAC and Ogg Vorbis tracks, like Mednafen, but support is not
 # widespread. The main point of the script is being able to quickly
 # extract music from CUE/BIN files.
@@ -737,8 +737,8 @@ cdr2wav () {
 
 	mapfile -t files < <(get_files "*.cdr")
 
-# If type is not 'wav' or WAV files have already been produced, return
-# from this function.
+# If type is not 'wav' or there are no CDR files, return from this
+# function.
 	if [[ $type_tmp != 'wav' || ${#files[@]} -eq 0 ]]; then
 		return
 	fi
@@ -785,9 +785,9 @@ encode_audio () {
 
 	mapfile -t files < <(get_files "*.wav")
 
-# If type is not 'wav' or there's no WAV files, return from this
+# If type is not 'wav' or there are no WAV files, return from this
 # function. This makes it possible for the script to finish normally,
-# even if there's no audio tracks.
+# even if there are no audio tracks.
 	if [[ $type_tmp != 'wav' || ${#files[@]} -eq 0 ]]; then
 		return
 	fi
