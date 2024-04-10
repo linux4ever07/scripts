@@ -33,6 +33,8 @@ regex[part]='\-part[0-9]+$'
 # the current directory, but only if the glob pattern matches actual
 # files. This is to prevent errors for when a pattern has no matches.
 get_files () {
+	declare glob
+
 	for glob in "$@"; do
 		compgen -G "$glob"
 	done

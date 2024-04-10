@@ -192,7 +192,7 @@ regex[data]='^MODE([0-9])\/([0-9]{4})$'
 regex[audio]='^AUDIO$'
 
 # Creates a function, called 'check_cmd', which will check if the
-# necessary commands are installed. If any of the commands are missing
+# necessary commands are installed. If any of the commands are missing,
 # print them and quit.
 check_cmd () {
 	declare -a missing_pkg
@@ -239,6 +239,8 @@ run_cmd () {
 # Creates a function, called 'get_files', which will be used to generate
 # file lists to be used by other functions.
 get_files () {
+	declare glob
+
 	for glob in "$@"; do
 		compgen -G "$glob"
 	done | sort -n

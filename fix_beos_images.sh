@@ -55,6 +55,8 @@ of[dn_floppy]="${if[dn]}/floppy"
 # Creates a function, called 'get_files', which will be used to generate
 # file lists to be used by other functions.
 get_files () {
+	declare glob
+
 	for glob in "$@"; do
 		compgen -G "$glob"
 	done | sort -n

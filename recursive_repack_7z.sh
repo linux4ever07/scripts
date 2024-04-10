@@ -44,7 +44,7 @@ usage () {
 }
 
 # Creates a function, called 'check_cmd', which will be used to check if
-# the needed commands are installed.
+# the necessary commands are installed.
 check_cmd () {
 	declare cmd_tmp name_tmp
 	declare -a missing_pkg

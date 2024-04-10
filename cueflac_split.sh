@@ -59,7 +59,7 @@ if [[ ${#dirs[@]} -eq 0 ]]; then
 fi
 
 # Creates a function, called 'check_cmd', which will check if the
-# necessary commands are installed. If any of the commands are missing
+# necessary commands are installed. If any of the commands are missing,
 # print them and quit.
 check_cmd () {
 	declare -a missing_pkg
