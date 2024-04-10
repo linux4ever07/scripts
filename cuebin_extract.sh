@@ -195,6 +195,7 @@ regex[audio]='^AUDIO$'
 # necessary commands are installed. If any of the commands are missing,
 # print them and quit.
 check_cmd () {
+	declare cmd
 	declare -a missing_pkg
 
 	for cmd in "$@"; do

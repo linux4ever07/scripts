@@ -62,6 +62,7 @@ fi
 # necessary commands are installed. If any of the commands are missing,
 # print them and quit.
 check_cmd () {
+	declare cmd_tmp
 	declare -a missing_pkg
 	declare -A cmd_pkg
 
