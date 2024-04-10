@@ -1246,7 +1246,6 @@ is_handbrake () {
 # name doesn't match the regex, return from this function, hence leaving
 # the $if_m2ts variable empty.
 if_m2ts () {
-	declare bd_title
 	declare -a path_parts
 
 	if [[ ! ${if[fn]} =~ ${regex[m2ts]} ]]; then
