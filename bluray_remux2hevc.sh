@@ -622,12 +622,12 @@ dts_extract_remux () {
 	bps_limit=$(( (high_bps - low_bps) / 2 ))
 	use_kbps="${high_kbps}k"
 
-	type[dts_hdma]='dts \(DTS-HD MA\)'
-	type[truehd]='truehd'
-	type[pcm]='pcm_bluray'
-	type[flac]='flac'
-	type[dts]='dts \(DTS(-ES){0,1}\)'
-	type[ac3]='ac3'
+	type[dts_hdma]='^dts \(DTS-HD MA\)'
+	type[truehd]='^truehd'
+	type[pcm]='^pcm_bluray'
+	type[flac]='^flac'
+	type[dts]='^dts \(DTS(-ES){0,1}\)'
+	type[ac3]='^ac3'
 	elements[dts_hdma]=0
 	elements[truehd]=0
 	elements[pcm]=0
