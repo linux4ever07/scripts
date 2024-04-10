@@ -1362,8 +1362,8 @@ of[remux_fn]="${of[dn]}/${of[remux_bn]}.mkv"
 # script. Also creates a file name that will store the output from
 # HandBrake. If the file name already exists, delete that file, and then
 # create a new one.
-of[command_fn]="${of[dn]}/Info/${title}.${year}_commands.txt"
-of[hb_log_fn]="${of[dn]}/Info/${title}.${year}_HandBrake_log.txt"
+of[command_fn]="${of[info_dn]}/${title}.${year}_commands.txt"
+of[hb_log_fn]="${of[info_dn]}/${title}.${year}_HandBrake_log.txt"
 
 for txt_fn in "${of[command_fn]}" "${of[hb_log_fn]}"; do
 	if [[ -f $txt_fn ]]; then
