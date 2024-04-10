@@ -1267,7 +1267,7 @@ get_name () {
 
 # If the input file name is an M2TS, get the movie title and year from
 # the surrounding directory structure.
-	if_m2ts=$(if_m2ts)
+	if_m2ts
 
 	if [[ -n ${if[m2ts_bn]} ]]; then
 		bname="${if[m2ts_bn]}"
