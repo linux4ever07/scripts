@@ -294,7 +294,7 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare line file_n index_n frames
+	declare line file_n track_n index_n frames
 	declare -a match lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
@@ -468,7 +468,7 @@ read_cue () {
 # will be added together. However, a CUE sheet is highly unlikely to
 # specify a pregap twice like that.
 get_gaps () {
-	declare frames
+	declare track_n frames
 	declare index0_ref index1_ref
 	declare pregap_ref postgap_ref
 
