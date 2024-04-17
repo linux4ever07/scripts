@@ -27,24 +27,6 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
-get_ram () {
-	declare ram_used
-	declare -a cmd_stdout
-
-	mapfile -d' ' -t cmd_stdout < <(pmap "$1" | tail -n 1 | sed -E 's/[[:blank:]]+/ /g')
-	cmd_stdout[-1]="${cmd_stdout[-1]%$'\n'}"
-
-	ram_used="${cmd_stdout[2]}"
-
-	if [[ $ram_used =~ ${regex[kb]} ]]; then
-		ram_used="${BASH_REMATCH[1]}"
-	else
-		return
-	fi
-
-	printf '%s' "$ram_used"
-}
-
 # Creates a function, called 'get_pids', which gets all child process
 # IDs of the command names given to it as arguments.
 get_pids () {
@@ -112,6 +94,26 @@ get_pids () {
 			pids["${pid}"]="$args"
 		done
 	done
+}
+
+# Creates a function, called 'get_ram', which will get the amount of RAM
+# used (in kilobytes) by the PID given as argument.
+get_ram () {
+	declare ram_used
+	declare -a cmd_stdout
+
+	mapfile -d' ' -t cmd_stdout < <(pmap "$1" | tail -n 1 | sed -E 's/[[:blank:]]+/ /g')
+	cmd_stdout[-1]="${cmd_stdout[-1]%$'\n'}"
+
+	ram_used="${cmd_stdout[2]}"
+
+	if [[ $ram_used =~ ${regex[kb]} ]]; then
+		ram_used="${BASH_REMATCH[1]}"
+	else
+		return
+	fi
+
+	printf '%s' "$ram_used"
 }
 
 printf '\n'
