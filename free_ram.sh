@@ -16,6 +16,7 @@
 # this script.
 
 declare ram_limit log_killed
+declare -a free_ram ram swap
 declare -A regex pids
 
 regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
@@ -40,7 +41,7 @@ now () { date '+%F %H:%M:%S'; }
 # Creates a function, called 'get_pids', which gets all child process
 # IDs of the command names given to it as arguments.
 get_pids () {
-	declare pid args comm comm_path
+	declare key pid args comm comm_path
 	declare -a session child match
 
 	for key in "${!pids[@]}"; do
@@ -109,7 +110,7 @@ get_pids () {
 # Creates a function, called 'kill_firefox', which kills all child
 # processes belonging to either Firefox or Tor Browser.
 kill_firefox () {
-	declare time
+	declare time pid args
 	declare -a pids_tmp
 
 	get_pids 'firefox' 'firefox.real'
@@ -139,7 +140,7 @@ kill_firefox () {
 # Creates a function, called 'kill_chrome', which kills all child
 # processes belonging to either Chrome or Chromium.
 kill_chrome () {
-	declare time
+	declare time pid args
 	declare -a pids_tmp
 
 	get_pids 'chrome' 'chromium'
