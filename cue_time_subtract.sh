@@ -62,7 +62,7 @@ time_convert () {
 		s="${BASH_REMATCH[2]#0}"
 		f="${BASH_REMATCH[3]#0}"
 
-# Converting minutes and seconds to frames, and adding all the numbers
+# Converts minutes and seconds to frames, and adds all the numbers
 # together.
 		m=$(( m * 60 * 75 ))
 		s=$(( s * 75 ))
@@ -73,7 +73,7 @@ time_convert () {
 	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
-# Converting frames to seconds and minutes.
+# Converts frames to seconds and minutes.
 		s=$(( f / 75 ))
 		m=$(( s / 60 ))
 
