@@ -41,9 +41,9 @@ sub usage {
 	exit;
 }
 
-# The 'getfiles' subroutine gets all files and directories in the
+# The 'get_files' subroutine gets all files and directories in the
 # directory passed to it as argument.
-sub getfiles {
+sub get_files {
 	my $dn = shift;
 
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
@@ -118,7 +118,7 @@ if (-f $in) {
 
 if (-d $in) {
 	$start = scalar(split('/', $in));
-	getfiles($in);
+	get_files($in);
 
 	$out = $out . '/' . basename($in);
 	make_path($out);

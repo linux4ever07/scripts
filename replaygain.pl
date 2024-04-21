@@ -74,11 +74,11 @@ $library = abs_path($ARGV[0]);
 $depth_og = scalar(split('/', $library));
 
 # Find all the sub-directories under the FLAC library directory.
-getdirs();
+get_dirs();
 
 # This is the main loop of the script, it calls most of the subroutines.
 foreach my $dn (@dirs) {
-	getfiles($dn);
+	get_files($dn);
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
 		mk_refs($fn);
@@ -95,7 +95,7 @@ foreach my $dn (@dirs) {
 # Running this loop after the first loop, because it renames the FLAC
 # files.
 foreach my $dn (@dirs) {
-	getfiles($dn);
+	get_files($dn);
 
 	foreach my $fn (sort(keys(%{$files{flac}}))) {
 		mk_refs($fn);
@@ -110,13 +110,13 @@ rm_empty_dirs();
 # Find all the sub-directories under the FLAC library directory. We're
 # checking the sub-directories a second time, because they may have
 # changed due to the 'tags2fn' subroutine being run.
-getdirs();
+get_dirs();
 
 # Adding the TOTALTRACKS tag last, because we need to do that after the
 # files have been moved to the proper directories. The same rule applies
 # to the ReplayGain tags.
 foreach my $dn (@dirs) {
-	getfiles($dn);
+	get_files($dn);
 
 	replaygain($dn);
 
@@ -145,10 +145,10 @@ sub or_warn {
 	if ($? != 0) { warn $msg; }
 }
 
-# The 'getdirs' subroutine finds all the sub-directories under the FLAC
+# The 'get_dirs' subroutine finds all the sub-directories under the FLAC
 # library directory. The list of directories is sorted with the deepest
 # directories first.
-sub getdirs {
+sub get_dirs {
 	my(@lines, @dirs_tmp, @path_parts, $depth_tmp, $depth_max);
 	$depth_max = 0;
 
@@ -185,9 +185,9 @@ sub getdirs {
 	push(@dirs, $library);
 }
 
-# The 'getfiles' subroutine gets a list of FLAC files in the directory
+# The 'get_files' subroutine gets a list of FLAC files in the directory
 # passed to it.
-sub getfiles {
+sub get_files {
 	my $dn = shift;
 
 	my(@lines);
@@ -631,7 +631,7 @@ sub replaygain {
 		if ($? == 0) {
 			say 'done';
 
-			getfiles($dn);
+			get_files($dn);
 		}
 	}
 }

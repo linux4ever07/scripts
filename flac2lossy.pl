@@ -137,14 +137,14 @@ if (! scalar($mode)) {
 while (my $arg = shift(@ARGV)) {
 	if (-d $arg) {
 		my $dn = abs_path($arg);
-		getdirs($dn);
+		get_dirs($dn);
 	} else { usage(); }
 }
 
 # Print usage instructions if @dirs array is empty.
 if (! scalar(@dirs)) { usage(); }
 
-foreach my $dn (@dirs) { getfiles($dn); }
+foreach my $dn (@dirs) { get_files($dn); }
 
 check_cmd('flac', 'metaflac', 'lame', 'ffmpeg', 'oggenc', 'opusenc');
 
@@ -208,9 +208,9 @@ sub gettags {
 	return(%alltags);
 }
 
-# The 'getdirs' subroutine finds all the sub-directories under the FLAC
+# The 'get_dirs' subroutine finds all the sub-directories under the FLAC
 # directories given as arguments to the script.
-sub getdirs {
+sub get_dirs {
 	my $dn = shift;
 
 	my(@lines);
@@ -223,9 +223,9 @@ sub getdirs {
 	push(@dirs, @lines);
 }
 
-# The 'getfiles' subroutine gets a list of FLAC files in the directory
+# The 'get_files' subroutine gets a list of FLAC files in the directory
 # passed to it.
-sub getfiles {
+sub get_files {
 	my $dn = shift;
 
 	my(%tags);

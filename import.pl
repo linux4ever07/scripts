@@ -52,9 +52,9 @@ sub usage {
 	exit;
 }
 
-# The 'getfiles' subroutine gets a list of FLAC files in the directory
+# The 'get_files' subroutine gets a list of FLAC files in the directory
 # passed to it.
-sub getfiles {
+sub get_files {
 	my $dn = shift;
 
 	my(%tags);
@@ -347,7 +347,7 @@ while (my $dn = shift(@dirs)) {
 		if (! -d) { return; }
 
 		my $dn = $File::Find::name;
-		getfiles($dn);
+		get_files($dn);
 
 		if ($tracks > 0) {
 			say $dn . ': importing...' . "\n";

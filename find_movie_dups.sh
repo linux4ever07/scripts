@@ -24,7 +24,7 @@ declare mode
 declare -a dirs files_in files_out
 declare -A if movie regex
 
-regex[prune]="^/run/media/${USER}/[[:alnum:]]{8}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{12}/extracted_subs"
+regex[prune]="^\/run\/media\/${USER}\/[[:alnum:]]{8}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{12}\/extracted_subs"
 regex[720p]='\(([0-9]{3,4})p_h\.264-aac\)'
 regex[1080p]='\(([0-9]{3,4})p_([0-9]{1,2})fps_(h264|av1)-([0-9]{2,3})kbit_(aac|opus)\)'
 

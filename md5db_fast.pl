@@ -62,7 +62,7 @@ my $db = 'md5.db';
 my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
 # Regex for skipping dotfiles in home directories.
-$regex{dotfile} = qr(^/home/[^/]+/\.);
+$regex{dotfile} = qr(^\/home\/[^\/]+\/\.);
 
 # Regex for stripping line breaks from lines.
 $regex{newline} = qr/(\r){0,}(\n){0,}$/;
@@ -71,7 +71,7 @@ $regex{newline} = qr/(\r){0,}(\n){0,}$/;
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 
 # Regex for stripping path from file name.
-$regex{path} = qr/^(.*[\\\/])/;
+$regex{path} = qr/^(.*[\\\/])(.*)$/;
 
 # Regex for identifying FLAC files.
 $regex{flac} = qr/\.flac$/i;
@@ -470,7 +470,7 @@ $args[1]
 # subroutine that will be executed, and all others depend upon it.
 sub init_hash {
 # Get all file names in the current directory.
-	getfiles();
+	get_files();
 
 # If no databases were found, say so and quit.
 	if (! scalar(@md5dbs)) {
@@ -490,7 +490,7 @@ No database file. Run the script in 'index' mode first to index files.
 }
 
 # Subroutine for finding all files in the current directory.
-sub getfiles {
+sub get_files {
 	my(@lines);
 
 	open(my $find, '-|', 'find', '.', '-type', 'f', '-nowarn')
@@ -505,7 +505,7 @@ sub getfiles {
 # clog the log file created by this script, making it hard to read.
 		if (abs_path($fn) =~ m($regex{dotfile})) { next; }
 
-		$fn =~ s(^\./)();
+		$fn =~ s(^\.\/)();
 
 		if (! -f $fn or ! -r $fn) { next; }
 
@@ -651,7 +651,7 @@ sub md5import {
 # Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
 			$fn = $2;
-			$fn =~ s($regex{path})();
+			$fn =~ s($regex{path})($2);
 		} else { next; }
 
 # Add full path to file name, unless it's the current directory.

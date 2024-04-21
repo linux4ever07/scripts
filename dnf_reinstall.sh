@@ -39,7 +39,7 @@ date=$(date '+%F')
 txt_fn="${HOME}/dnf_reinstall_${date}.txt"
 
 regex[dnf]='^([^ ]+).*$'
-regex[rpm]='^[^/]+(.*)$'
+regex[rpm]='^[^\/]+(.*)$'
 
 # Creates a function, called 'dnf_install', which will reinstall
 # packages.

@@ -39,9 +39,9 @@ sub usage {
 	exit;
 }
 
-# The 'getfiles' subroutine gets all files and directories in the
+# The 'get_files' subroutine gets all files and directories in the
 # directory passed to it as argument.
-sub getfiles {
+sub get_files {
 	my $dn = shift;
 
 	find({ wanted => \&action, no_chdir => 1 }, $dn);
@@ -73,7 +73,7 @@ sub md5sum {
 for (my $i = 0; $i < scalar(@dirs); $i++) {
 	my $dn = $dirs[$i];
 
-	getfiles($dn);
+	get_files($dn);
 
 	$files_in[$i] = {%files};
 	%files = ();
