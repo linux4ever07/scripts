@@ -265,7 +265,7 @@ time_convert () {
 		s="${BASH_REMATCH[2]#0}"
 		f="${BASH_REMATCH[3]#0}"
 
-# Converting minutes and seconds to frames, and adding all the numbers
+# Converts minutes and seconds to frames, and adds all the numbers
 # together.
 		m=$(( m * 60 * 75 ))
 		s=$(( s * 75 ))
@@ -276,7 +276,7 @@ time_convert () {
 	elif [[ $time =~ ${format[0]} ]]; then
 		f="$time"
 
-# Converting frames to seconds and minutes.
+# Converts frames to seconds and minutes.
 		s=$(( f / 75 ))
 		m=$(( s / 60 ))
 
@@ -604,13 +604,13 @@ get_length () {
 # Creates a function, called 'block_calc', which will be used to get the
 # optimal block size to use in the 'copy_track' function when reading
 # and writing tracks using 'dd'. Bigger block sizes makes the process
-# faster, and the reason for being able to handle variable block sizes
-# is that it's technically possible for a CUE sheet to contain tracks
-# that have different sector sizes. And that will affect the start
-# positions of tracks. This function counts down from 16KB, subtracting
-# 4 bytes at each iteration of the loop, until a matching block size is
-# found. We're using 4 byte increments cause that guarantees the block
-# size will be divisible by the common CD sector sizes:
+# faster. The reason for being able to handle variable block sizes is
+# that it's technically possible for a CUE sheet to contain tracks that
+# have different sector sizes. And that will affect the start positions
+# of tracks. This function counts down from 16KB, subtracting 4 bytes at
+# each iteration of the loop, until a matching block size is found.
+# We're using 4 byte increments cause that guarantees the block size
+# will be divisible by the common CD sector sizes:
 # * 2048
 # * 2324
 # * 2336
