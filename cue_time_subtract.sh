@@ -23,7 +23,8 @@ if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
 	usage
 fi
 
-declare track_n
+declare track_n frames
+declare pregap_ref length_ref sector_ref
 declare -a format tracks_total
 declare -A regex if_info gaps bytes
 
@@ -406,8 +407,6 @@ printf '\n'
 
 for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 	track_n="${tracks_total[${i}]}"
-
-	declare pregap_ref length_ref sector_ref frames
 
 	pregap_ref="gaps[${track_n},index]"
 	length_ref="bytes[${track_n},track,length]"
