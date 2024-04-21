@@ -1099,7 +1099,7 @@ info_txt () {
 	info[ff_version]="${of[info_dn]}/${cmd[1]}_version.txt"
 	info[ff_opts]="${of[info_dn]}/${cmd[1]}_options.txt"
 	info[size]="${of[info_dn]}/size.txt"
-	info[mediainfo]="${of[info_dn]}/${if[bn]}_mediainfo.txt"
+	info[mediainfo]="${of[info_dn]}/${of[bn]}_mediainfo.txt"
 
 	if [[ -n ${cmd[5]} ]]; then
 		info_list1=('if' 'of' 'of_remux' 'mediainfo')
