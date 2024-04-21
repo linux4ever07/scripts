@@ -7,6 +7,7 @@
 # around an infinite while loop, and only quits once killed or Ctrl+C is
 # pressed.
 
+declare track_n frames in out
 declare -a format
 
 format[0]='^[0-9]+$'
@@ -79,8 +80,8 @@ while [[ 1 ]]; do
 # Converts that number back to the mm:ss:ff format.
 	in=$(time_convert "$in")
 	(( frames += in ))
-	time=$(time_convert "$frames")
+	out=$(time_convert "$frames")
 
 # Prints the current total time in the mm:ss:ff format.
-	printf "\n*** Track %d start: %s ***\n" "$track_n" "$time"
+	printf "\n*** Track %d start: %s ***\n" "$track_n" "$out"
 done
