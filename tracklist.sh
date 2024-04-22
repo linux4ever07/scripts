@@ -3,14 +3,15 @@
 # This script looks for FLAC files in the current directory and creates
 # a tracklist from the tags.
 
-declare total_length total_time
+declare if artist album year track title
+declare length total_length time total_time
 declare -a files
 declare -A alltags
 
 # Creates a function, called 'gettags', which gets all the tags present
 # in a FLAC file.
 gettags () {
-	declare field
+	declare line field
 	declare -a lines
 
 	for field in "${!alltags[@]}"; do

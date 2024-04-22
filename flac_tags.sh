@@ -14,9 +14,10 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-dn=$(readlink -f "$1")
-
+declare dn
 declare -a files
+
+dn=$(readlink -f "$1")
 
 mapfile -t files < <(find "$dn" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)
 
@@ -34,7 +35,7 @@ regex[num]='^[0-9]+$'
 gettags () {
 	if="$1"
 
-	declare field
+	declare line field
 	declare -a lines
 	declare -A alltags
 

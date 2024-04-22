@@ -38,25 +38,25 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-if_dn=$(readlink -f "$1")
-
-declare session sorted_dn
+declare if_dn of_dn session title target
 declare -a global_vars priority files
 declare -A regex titles
+
+session="${RANDOM}-${RANDOM}"
+
+if_dn=$(readlink -f "$1")
+of_dn="sorted-${session}"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[ext]='\.([^.]*)$'
 regex[1]="\(([A-Z]{1,3}|[0-9]{1})\).*${regex[ext]}"
 regex[2]="^.*(\[\!\]).*${regex[ext]}"
 
-session="${RANDOM}-${RANDOM}"
-sorted_dn="sorted-${session}"
-
 global_vars=('fn' 'bn' 'region' 'region_n')
 priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$' '^5$')
 
 cd "$if_dn"
-mkdir "$sorted_dn"
+mkdir "$of_dn"
 
 mapfile -t files < <(find "$if_dn" -maxdepth 1 -type f 2>&-)
 
@@ -162,7 +162,7 @@ for title in "${!titles[@]}"; do
 
 		if [[ $region_n == "${titles[${title}]}" ]]; then
 			printf '%s\n' "$bn"
-			mv -n "$bn" "$sorted_dn" || exit
+			mv -n "$bn" "$of_dn" || exit
 		fi
 
 		unset -v "${global_vars[@]}"

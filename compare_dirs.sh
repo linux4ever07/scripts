@@ -10,6 +10,15 @@
 
 set -eo pipefail
 
+declare is_md5sum dir1 dir2 dir1_size dir2_size regex
+declare dir1_files_elements dir1_dirs_elements dir2_files_elements dir2_dirs_elements
+declare dir type dir1_f dir2_f
+declare dir1_files_missing_elements dir1_dirs_missing_elements
+declare dir2_files_missing_elements dir2_dirs_missing_elements
+declare md5s_mismatch_elements identical
+declare dn_ref fn_ref elements_ref
+declare -a dir1_files dir1_dirs dir2_files dir2_dirs var_list1 var_list2 var_list3
+
 # Checks if the user has 'md5sum' installed. This will probably not be
 # the case for macOS or FreeBSD, and that's why we're checking. If such
 # a user wants to run this script, he / she can just change the script

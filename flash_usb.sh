@@ -22,10 +22,19 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
+declare image device pause_msg exit_status
+declare -A regex
+
 image=$(readlink -f "$1")
 
-declare device pause_msg exit_status
-declare -A regex
+pause_msg="
+You are about to flash:
+${device}
+
+With:
+${image}
+
+Are you sure? [y/n]: "
 
 regex[part]='\-part[0-9]+$'
 
@@ -45,6 +54,7 @@ get_files () {
 # menu.
 device_menu () {
 	declare device_link
+	declare -a devices
 
 	cd '/dev/disk/by-id'
 
@@ -77,15 +87,6 @@ while [[ $REPLY != 'y' ]]; do
 	read -p 'Is this the correct device? [y/n]: '
 	printf '\n'
 done
-
-pause_msg="
-You are about to flash:
-${device}
-
-With:
-${image}
-
-Are you sure? [y/n]: "
 
 read -p "$pause_msg"
 

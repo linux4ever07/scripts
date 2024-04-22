@@ -2,6 +2,7 @@
 
 # Gets the title of a URL. Might be useful for IRC bots, as an example.
 
+declare agent word
 declare -a words
 declare -A regex
 

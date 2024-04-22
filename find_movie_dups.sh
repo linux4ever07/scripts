@@ -20,7 +20,7 @@
 # A recent version of 'break_name.sh' is required to be located in the
 # same directory as this script.
 
-declare mode
+declare mode count
 declare -a dirs files_in files_out
 declare -A if movie regex
 

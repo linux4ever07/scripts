@@ -13,14 +13,15 @@
 # read by 'mkvinfo'. The temporary files are deleted after the script is
 # done.
 
-if=$(readlink -f "$1")
+declare session default files_n sub_tracks_n range1_tmp range2_tmp string
+declare sub_tmp num_tmp lang_tmp name_tmp
+declare -a cmd files files_tmp args full_args range1 range2
+declare -A if of regex sub_tracks
 
 session="${RANDOM}-${RANDOM}"
-of="${if%.*}-${session}.mkv"
 
-declare default files_n sub_tracks_n
-declare -a cmd files files_tmp args full_args range1 range2
-declare -A regex sub_tracks
+if[fn]=$(readlink -f "$1")
+of[fn]="${if[fn]%.*}-${session}.mkv"
 
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
@@ -96,10 +97,10 @@ clean_up () {
 	fi
 
 	for (( i = 0; i < ${#files_tmp[@]}; i++ )); do
-		fn_tmp="${files_tmp[${i}]}"
+		if[fn_tmp]="${files_tmp[${i}]}"
 
-		if [[ -f $fn_tmp ]]; then
-			rm "$fn_tmp"
+		if [[ -f ${if[fn_tmp]} ]]; then
+			rm "${if[fn_tmp]}"
 		fi
 	done
 }
@@ -108,20 +109,22 @@ clean_up () {
 # of media files, and if they contain subtitle tracks, store those in
 # the 'sub_tracks' hash.
 get_tracks () {
-	if_tmp=$(readlink -f "$1")
-	bn_tmp=$(basename "$if_tmp")
-	dn_tmp=$(dirname "$if_tmp")
+	if[fn_tmp]=$(readlink -f "$1")
+	if[bn_tmp]=$(basename "${if[fn_tmp]}")
+	if[dn_tmp]=$(dirname "${if[fn_tmp]}")
 
-	declare ext_tmp session_tmp of_tmp switch tracks_n
+	declare fn_tmp ext_tmp session_tmp switch tracks_n line
 	declare -a mkvinfo_lines mkvinfo_tracks
 	declare -A tracks
 
 # Parses the input file name, and separates basename from extension.
 # If this fails, return from the function.
-	if [[ ${bn_tmp,,} =~ ${regex[fn]} ]]; then
+	if [[ ${if[bn_tmp],,} =~ ${regex[fn]} ]]; then
+		fn_tmp="${BASH_REMATCH[1]}"
 		ext_tmp="${BASH_REMATCH[2]}"
 		session_tmp="${RANDOM}-${RANDOM}"
-		of_tmp="${dn_tmp}/${BASH_REMATCH[1]}-tmp-${session_tmp}.mkv"
+
+		of[fn_tmp]="${if[dn_tmp]}/${fn_tmp}-tmp-${session_tmp}.mkv"
 	else
 		return
 	fi
@@ -130,19 +133,20 @@ get_tracks () {
 # add the file name to the 'files_tmp' array, so it can be deleted
 # later.
 	if [[ $ext_tmp != 'mkv' ]]; then
-		printf '\nRemuxing: %s\n' "$if_tmp"
+		printf '\nRemuxing: %s\n' "${if[fn_tmp]}"
 
-		run_cmd mkvmerge -o \""${of_tmp}"\" \""${if_tmp}"\"
+		run_cmd mkvmerge -o \""${of[fn_tmp]}"\" \""${if[fn_tmp]}"\"
 
-		files_tmp+=("$of_tmp")
-		if_tmp="$of_tmp"
+		files_tmp+=("${of[fn_tmp]}")
+
+		if[fn_tmp]="${of[fn_tmp]}"
 	fi
 
 # Adds file name to the 'files' array, so it can be used later to
 # construct the mkvmerge command.
-	files["${files_n}"]="$if_tmp"
+	files["${files_n}"]="${if[fn_tmp]}"
 
-	mapfile -t mkvinfo_lines < <(mkvinfo "$if_tmp" 2>&-)
+	mapfile -t mkvinfo_lines < <(mkvinfo "${if[fn_tmp]}" 2>&-)
 
 # Singles out the part that lists the tracks, and ignores the rest of
 # the output from 'mkvinfo'.
@@ -365,7 +369,7 @@ for (( i = 1; i < files_n; i++ )); do
 	unset -v args_tmp
 done
 
-full_args=(mkvmerge -o \""${of}"\" "${args[@]}")
+full_args=(mkvmerge -o \""${of[fn]}"\" "${args[@]}")
 
 # Runs mkvmerge.
 eval "${full_args[@]}"

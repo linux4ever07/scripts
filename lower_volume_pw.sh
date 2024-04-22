@@ -10,7 +10,7 @@
 
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
-declare cfg_fn pw_id interval unit
+declare cfg_fn pw_id interval unit spin_pid
 declare -a count
 declare -A regex volume
 
@@ -39,11 +39,13 @@ count=(0 0 0)
 # Creates a function, called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
 get_id () {
-	declare pw_node pw_node_tmp n
-	declare -a pw_info
+	declare pw_node pw_node_tmp n line
+	declare -a pw_info lines
 	declare -A pw_parsed nodes
 
 	match_node () {
+		declare pw_id_tmp
+
 		for pw_id_tmp in "${!nodes[@]}"; do
 			pw_node_tmp="${nodes[${pw_id_tmp}]}"
 
@@ -149,6 +151,7 @@ get_id () {
 # Creates a function, called 'get_volume', which gets the current
 # volume.
 get_volume () {
+	declare line
 	declare -a pw_dump
 
 	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
@@ -274,6 +277,9 @@ get_count () {
 # Creates a function, called 'spin', which will show a simple animation,
 # while waiting for the command output.
 spin () {
+	declare s
+	declare -a spinner
+
 	spinner=('   ' '.  ' '.. ' '...')
 
 	while [[ 1 ]]; do

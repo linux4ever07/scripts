@@ -7,7 +7,7 @@
 # The script uses the SIGSTP (20) signal to suspend the process.
 # To get a list of available signals: kill -l
 
-declare comm
+declare comm pid args state
 declare -a hb_pids
 declare -A regex
 

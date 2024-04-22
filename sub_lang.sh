@@ -4,12 +4,13 @@
 # in a comma-separated list. The MKV file should be given as the 1st
 # argument to this script.
 
-if=$(readlink -f "$1")
-if_bn=$(basename "$if")
-if_bn_lc="${if_bn,,}"
+declare switch line
+declare -a mkvinfo_tracks mkvinfo_lines lang_list
+declare -A if regex tracks
 
-declare -a mkvinfo_tracks
-declare -A regex tracks
+if[fn]=$(readlink -f "$1")
+if[bn]=$(basename "${if[fn]}")
+if[bn_lc]="${if[bn],,}"
 
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
@@ -26,7 +27,7 @@ usage () {
 	exit
 }
 
-if [[ ! -f $if || ${if_bn_lc##*.} != 'mkv' ]]; then
+if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'mkv' ]]; then
 	usage
 fi
 
@@ -37,7 +38,7 @@ if [[ $? -ne 0 ]]; then
 	exit
 fi
 
-mapfile -t mkvinfo_lines < <(mkvinfo "$if" 2>&-)
+mapfile -t mkvinfo_lines < <(mkvinfo "${if[fn]}" 2>&-)
 
 # Singles out the part that lists the tracks, and ignores the rest of
 # the output from 'mkvinfo'.

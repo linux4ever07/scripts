@@ -17,7 +17,7 @@
 declare mode query_string
 declare -a query
 
-declare elements type_tmp
+declare array_ref number_ref elements type_tmp
 declare -a bname_dots bname_hyphens bname_underscores bname_spaces
 
 declare -A regex

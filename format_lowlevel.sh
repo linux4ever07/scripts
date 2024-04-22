@@ -24,6 +24,12 @@ declare device pause_msg exit_status
 declare -a types args
 declare -A regex
 
+pause_msg="
+You are about to do a low-level format of:
+${device}
+
+Are you sure? [y/n]: "
+
 types=('quick' 'full')
 
 regex[part]='^(.*)[0-9]+$'
@@ -48,12 +54,6 @@ while [[ $# -gt 0 ]]; do
 	printf '\n'
 	fdisk -l "$device"
 	printf '\n'
-
-	pause_msg="
-You are about to do a low-level format of:
-${device}
-
-Are you sure? [y/n]: "
 
 	read -p "$pause_msg"
 

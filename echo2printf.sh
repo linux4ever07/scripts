@@ -29,12 +29,13 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-if=$(readlink -f "$1")
-
-declare printf_cmd
+declare if printf_cmd line
+declare -a lines
 declare -A regex
 
-regex[comment]='^([[:blank:]]*)#'
+if=$(readlink -f "$1")
+
+regex[comment]='^[[:blank:]]*#+'
 regex[echo]='echo( \-[[:alpha:]]+){0,}[[:blank:]]*'
 
 printf_cmd='printf '\''%s\\n'\'' '

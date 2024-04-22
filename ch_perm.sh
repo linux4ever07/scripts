@@ -5,12 +5,19 @@
 # / write permissions to match. In the case of root, all input files
 # and directories are write-protected.
 
+# Creates a function, called 'usage', which will print usage
+# instructions and then quit.
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [user|root] [file / directory]"
 	exit
 }
 
+# Creates a function, called 'ch_perm', which will figure out if the
+# name is a file or a directory, and change the permissions accordingly.
 ch_perm () {
+	declare dn
+	declare -a dirs
+
 	sudo chown -v -R "${owner}:${owner}" "$1"
 
 	if [[ $owner == "$USER" ]]; then
@@ -33,7 +40,7 @@ ch_perm () {
 	done
 }
 
-declare owner
+declare owner fn
 
 case "$1" in
 	'user')

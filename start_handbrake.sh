@@ -6,7 +6,7 @@
 # The script uses the SIGCONT (18) signal to resume the process.
 # To get a list of available signals: kill -l
 
-declare comm
+declare comm pid args state
 declare -a hb_pids
 declare -A regex
 

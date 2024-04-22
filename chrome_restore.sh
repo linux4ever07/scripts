@@ -33,7 +33,7 @@ case "$1" in
 	;;
 esac
 
-declare date ram_date bak_date
+declare dn date ram_date bak_date
 declare -a files
 declare -A regex if of
 
@@ -50,17 +50,17 @@ regex[bak]="^${regex[bn]}\.tar$"
 mapfile -t files < <(find '/dev/shm' -mindepth 1 -maxdepth 1 -type d -name "google-chrome-*")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
-	bn=$(basename "$fn")
+	if[fn]="${files[${i}]}"
+	if[bn]=$(basename "${if[fn]}")
 
-	if [[ ! $bn =~ ${regex[ram]} ]]; then
+	if [[ ! ${if[bn]} =~ ${regex[ram]} ]]; then
 		continue
 	fi
 
-	date=$(stat -c '%Y' "$fn")
+	date=$(stat -c '%Y' "${if[fn]}")
 
 	if [[ $date -gt $ram_date ]]; then
-		if[ram_fn]="$fn"
+		if[ram_fn]="${if[fn]}"
 		ram_date="$date"
 	fi
 done
@@ -68,17 +68,17 @@ done
 mapfile -t files < <(find "$HOME" -mindepth 1 -maxdepth 1 -type f -name "google-chrome-*.tar")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
-	bn=$(basename "$fn")
+	if[fn]="${files[${i}]}"
+	if[bn]=$(basename "${if[fn]}")
 
-	if [[ ! $bn =~ ${regex[bak]} ]]; then
+	if [[ ! ${if[bn]} =~ ${regex[bak]} ]]; then
 		continue
 	fi
 
-	date=$(stat -c '%Y' "$fn")
+	date=$(stat -c '%Y' "${if[fn]}")
 
 	if [[ $date -gt $bak_date ]]; then
-		if[bak_fn]="$fn"
+		if[bak_fn]="${if[fn]}"
 		bak_date="$date"
 	fi
 done
@@ -97,11 +97,11 @@ case "$mode" in
 esac
 
 for dn in "${of[og_cfg]}" "${of[og_cache]}"; do
-	if [[ -L "$dn" ]]; then
+	if [[ -L $dn ]]; then
 		rm "$dn" || exit
 	fi
 
-	if [[ -d "$dn" ]]; then
+	if [[ -d $dn ]]; then
 		rm -r "$dn" || exit
 	fi
 

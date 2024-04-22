@@ -53,24 +53,24 @@ elif [[ -f $2 ]]; then
 	exit
 fi
 
-if_dn=$(readlink -f "$1")
-of_dn=$(readlink -f "$2")
+declare session cp_log error_log used free diff start stop
+declare -a files dn_parts fn_parts
+declare -A if of regex md5s
 
-declare session cp_log error_log used free
-declare -a files fn_parts dn_parts
-declare -A regex md5s
+if[dn]=$(readlink -f "$1")
+of[dn]=$(readlink -f "$2")
 
 session="${RANDOM}-${RANDOM}"
 
-cp_log="${of_dn}/hdd_dump_copied-${session}.txt"
-error_log="${of_dn}/hdd_dump_errors-${session}.txt"
+cp_log="${of[dn]}/hdd_dump_copied-${session}.txt"
+error_log="${of[dn]}/hdd_dump_errors-${session}.txt"
 
 regex[du]='^([0-9]+)([[:blank:]]+)(.*)$'
 
-mkdir -p "$of_dn" || exit
+mkdir -p "${of[dn]}" || exit
 
-used=$(du --summarize --block-size=1 "$if_dn" | grep -Eo '^[0-9]+')
-free=$(df --output=avail --block-size=1 "$of_dn" | tail -n +2 | tr -d '[:blank:]')
+used=$(du --summarize --block-size=1 "${if[dn]}" | grep -Eo '^[0-9]+')
+free=$(df --output=avail --block-size=1 "${of[dn]}" | tail -n +2 | tr -d '[:blank:]')
 
 if [[ $used -gt $free ]]; then
 	diff=$(( used - free ))
@@ -78,7 +78,7 @@ if [[ $used -gt $free ]]; then
 	cat <<USED
 
 Not enough free space in:
-${of_dn}
+${of[dn]}
 
 Difference is ${diff} bytes.
 
@@ -92,13 +92,10 @@ fi
 # the MD5 hash, and for copying the file, sleeping 10 seconds between
 # each try.
 md5copy () {
-	if_tmp="$1"
-	of_tmp="$2"
-
 	declare md5_if exit_status
 
 	for n in {1..5}; do
-		md5_if=$(md5sum -b "$if_tmp" 2>&-)
+		md5_if=$(md5sum -b "${if[fn]}" 2>&-)
 
 		exit_status="$?"
 
@@ -110,7 +107,7 @@ md5copy () {
 			fi
 		else
 			if [[ $n -eq 5 ]]; then
-				printf '%s\n' "$if_tmp" >> "$error_log"
+				printf '%s\n' "${if[fn]}" >> "$error_log"
 
 				return
 			fi
@@ -121,25 +118,25 @@ md5copy () {
 
 	md5s["${md5_if}"]=1
 
-	printf '%s' "copying: ${if_tmp}... "
+	printf '%s' "copying: ${if[fn]}... "
 
 	for n in {1..5}; do
-		cp -p "$if_tmp" "$of_tmp" 2>&-
+		cp -p "${if[fn]}" "${of[fn]}" 2>&-
 
 		exit_status="$?"
 
 		if [[ $exit_status -eq 0 ]]; then
 			printf '%s\n' 'done'
-			printf '%s\n' "$if_tmp" >> "$cp_log"
+			printf '%s\n' "${if[fn]}" >> "$cp_log"
 
 			return
 		else
 			if [[ $n -eq 5 ]]; then
 				printf '%s\n' 'error'
-				printf '%s\n' "$if_tmp" >> "$error_log"
+				printf '%s\n' "${if[fn]}" >> "$error_log"
 
-				if [[ -f $of_tmp ]]; then
-					rm -f "$of_tmp" 2>&-
+				if [[ -f ${of[fn]} ]]; then
+					rm -f "${of[fn]}" 2>&-
 				fi
 
 				return
@@ -152,32 +149,32 @@ md5copy () {
 
 touch "$cp_log" "$error_log"
 
-mapfile -d'/' -t dn_parts <<<"$if_dn"
+mapfile -d'/' -t dn_parts <<<"${if[dn]}"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 start="${#dn_parts[@]}"
 
-mapfile -t files < <(find "$if_dn" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
+mapfile -t files < <(find "${if[dn]}" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if="${files[${i}]}"
+	if[fn]="${files[${i}]}"
 
 # Removes the directory name from the beginning of the string. Creating
 # the basename this way because it's more safe than using regex:es, if
 # the string contains weird characters (that are interpreted as part of
 # the regex).
-	mapfile -d'/' -t fn_parts <<<"$if"
+	mapfile -d'/' -t fn_parts <<<"${if[fn]}"
 	fn_parts[-1]="${fn_parts[-1]%$'\n'}"
 	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
-	dn=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
-	dn="${dn:1}"
-	bn="${fn_parts[-1]}"
+	of[dn_tmp]=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
+	of[dn_tmp]="${of[dn_tmp]:1}"
+	of[bn]="${fn_parts[-1]}"
 
-	dn="${of_dn}/${dn}"
-	of="${dn}/${bn}"
+	of[dn_tmp]="${of[dn]}/${of[dn_tmp]}"
+	of[fn]="${of[dn_tmp]}/${of[bn]}"
 
-	mkdir -p "$dn" || exit
+	mkdir -p "${of[dn_tmp]}" || exit
 
-	if [[ ! -f $of ]]; then
-		md5copy "$if" "$of"
+	if [[ ! -f ${of[fn]} ]]; then
+		md5copy
 	fi
 done

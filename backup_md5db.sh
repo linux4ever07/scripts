@@ -10,8 +10,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare date of
-declare -a dirs depths files
+declare date of dn depth
+declare -a dirs depths files files_tmp
 
 date=$(date '+%F')
 of="${PWD}/md5db_backup_${date}.tar.xz"

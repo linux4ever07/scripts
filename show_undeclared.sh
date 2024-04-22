@@ -16,11 +16,11 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-if=$(readlink -f "$1")
-
-declare switch_func switch_var func_name
-declare -a lines
+declare if switch_func switch_var func_name var var_tmp line line_tmp
+declare -a lines declared_tmp
 declare -A regex declared_global undeclared_global
+
+if=$(readlink -f "$1")
 
 regex[start]='^([[:blank:]]*)([^ ]+)[[:blank:]]*\(\) \{'
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'

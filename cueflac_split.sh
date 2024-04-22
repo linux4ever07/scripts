@@ -9,10 +9,10 @@
 # The output files are put here:
 # ${HOME}/split-tracks/${album}
 
-declare of_dn
+declare line
 declare -a cmd dirs files_in files_out
 declare -a format
-declare -A regex
+declare -A if of regex
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
@@ -31,7 +31,7 @@ regex[fn]='^(.*)\.([^.]*)$'
 # Creates an array of the list of commands needed by this script.
 cmd=('cuebreakpoints' 'shnsplit')
 
-of_dn="${HOME}/split-tracks"
+of[dn]="${HOME}/split-tracks"
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -92,9 +92,9 @@ check_cmd () {
 }
 
 for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	dn="${dirs[${i}]}"
+	if[dn]="${dirs[${i}]}"
 
-	mapfile -t files_in < <(find "$dn" -type f -iname "*.cue")
+	mapfile -t files_in < <(find "${if[dn]}" -type f -iname "*.cue")
 
 	files_out+=("${files_in[@]}")
 done
@@ -102,14 +102,14 @@ done
 unset -v files_in
 
 for (( i = 0; i < ${#files_out[@]}; i++ )); do
-	cue="${files_out[${i}]}"
-	cue_dn=$(dirname "$cue")
+	if[cue]="${files_out[${i}]}"
+	if[cue_dn]=$(dirname "${if[cue]}")
 
 	declare album fn ext
 	declare -a lines files tracks
 
 # Reads the source CUE sheet into RAM.
-	mapfile -t lines < <(tr -d '\r' <"$cue" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"${if[cue]}" | sed -E "s/${regex[blank]}/\1/")
 
 # This loop processes each line in the CUE sheet, and stores all the
 # containing file names in the 'files' array.
@@ -165,19 +165,19 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 		album="${BASH_REMATCH[1]}"
 	fi
 
-	split_dn="${of_dn}/${album}"
+	of[album_dn]="${of[dn]}/${album}"
 
-	if [[ -d $split_dn ]]; then
+	if [[ -d ${of[album_dn]} ]]; then
 		unset -v album fn ext
 
 		continue
 	fi
 
-	mkdir -p "$split_dn"
-	cd "$split_dn"
+	mkdir -p "${of[album_dn]}"
+	cd "${of[album_dn]}"
 
-	cuebreakpoints "$cue" | shnsplit -O always -o flac -- "${cue_dn}/${fn}"
-	cuetag.sh "$cue" split-track*.flac
+	cuebreakpoints "${if[cue]}" | shnsplit -O always -o flac -- "${if[cue_dn]}/${fn}"
+	cuetag.sh "${if[cue]}" split-track*.flac
 
 	unset -v album fn ext
 done

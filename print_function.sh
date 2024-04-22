@@ -14,11 +14,11 @@ if [[ ! -f $1 || -z $2 ]]; then
 	usage
 fi
 
-if=$(readlink -f "$1")
-
-declare switch
+declare if switch line
 declare -a lines
 declare -A regex
+
+if=$(readlink -f "$1")
 
 regex[start]="^([[:blank:]]*)${2}[[:blank:]]*\(\) \{"
 

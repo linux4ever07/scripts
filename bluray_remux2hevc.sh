@@ -335,6 +335,7 @@ uriencode () {
 break_name () {
 	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
+	declare array_ref number_ref elements type_tmp
 	declare -a types
 	declare -a bname_dots bname_hyphens bname_underscores bname_spaces
 	declare -A bname_elements
@@ -568,6 +569,7 @@ imdb () {
 # Creates a function, called 'check_regex', which will split lines based
 # on a delimiter, and check each word against a regex.
 check_regex () {
+	declare word
 	declare -a words match
 
 	regex[tmp]="$2"
@@ -611,7 +613,8 @@ check_regex () {
 # subtitle tracks, and with the core DTS track.
 dts_extract_remux () {
 	declare high_kbps low_kbps high_bps low_bps bps_limit use_kbps
-	declare map_use_ref audio_format args_string
+	declare map_ref map_use_ref lang_ref stream_ref track_ref bitrate_ref channel_ref
+	declare audio_format args_string line
 	declare -a audio_types if_info_tmp args1
 	declare -A type elements audio_tracks audio_maps audio_channels
 
@@ -642,7 +645,7 @@ dts_extract_remux () {
 # Creates a function, called 'parse_ffmpeg', which will parse the output
 # from ffmpeg, get all the streams and bitrates.
 	parse_ffmpeg () {
-		declare n lang_tmp
+		declare n lang_tmp bps_last this next line
 		declare -a streams_tmp
 
 		streams=()
@@ -1081,6 +1084,7 @@ sub_mux () {
 # command is installed, a text file containing information from that
 # will also be created.
 info_txt () {
+	declare txt_ref info_ref
 	declare -a info_list1 info_list2 info_list3
 	declare -a of_info of_remux_info hb_version_info hb_opts_info ff_version_info ff_opts_info size_info mediainfo_info
 	declare -A info

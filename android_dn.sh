@@ -19,8 +19,8 @@ if [[ $# -ne 1 || ! -d $1 ]]; then
 	usage
 fi
 
-declare pause_msg
-declare -a targets dirs
+declare in_dn pause_msg
+declare -a targets dirs dirs_tmp
 
 in_dn=$(readlink -f "$1")
 targets=('Android' 'LOST.DIR' 'System Volume Information' '.Trash*')
@@ -37,6 +37,8 @@ regex[date]='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}'
 # displays the directories found, and once a directory is selected it
 # displays options ('list' and 'remove').
 menu () {
+	declare date dn dn_tmp fn n size
+
 # Directory menu.
 	clear
 
@@ -56,17 +58,17 @@ menu () {
 		return
 	fi
 
-	tmp_dn="${dirs[${REPLY}]}"
+	dn_tmp="${dirs[${REPLY}]}"
 	n="$REPLY"
 
-	if [[ -z $tmp_dn ]]; then
+	if [[ -z $dn_tmp ]]; then
 		return
 	fi
 
 # Options menu.
 	clear
 
-	printf '\n%s\n\n' "$tmp_dn"
+	printf '\n%s\n\n' "$dn_tmp"
 	printf 'Choose action:\n\n'
 	printf '(l) list\n'
 	printf '(r) remove\n\n'
@@ -75,7 +77,9 @@ menu () {
 
 	case "$REPLY" in
 		'l')
-			mapfile -t files < <(find "$tmp_dn" -type f 2>&-)
+			declare -a files
+
+			mapfile -t files < <(find "$dn_tmp" -type f 2>&-)
 
 			for (( i = 0; i < ${#files[@]}; i++ )); do
 				fn="${files[${i}]}"
@@ -97,7 +101,7 @@ menu () {
 			unset dirs["${n}"]
 			dirs=("${dirs[@]}")
 
-			rm -rf "$tmp_dn"
+			rm -rf "$dn_tmp"
 		;;
 		*)
 			return

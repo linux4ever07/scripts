@@ -37,12 +37,11 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-if=$(readlink -f "$1")
-bn=$(basename "$if")
-
-declare session of limit tab date
+declare if limit tab date line_this line_next
 declare -a lines_in lines_out
 declare -A regex
+
+if=$(readlink -f "$1")
 
 regex[comment]='^[[:blank:]]*#+[[:blank:]]*'
 regex[blank1]='^[[:blank:]]+'
@@ -50,9 +49,6 @@ regex[blank2]='[[:blank:]]+$'
 regex[blank3]='[[:blank:]]+'
 regex[tab]='^ {4}'
 regex[shebang]='^#!'
-
-session="${RANDOM}-${RANDOM}"
-of="/dev/shm/${bn%.*}-${session}.txt"
 
 limit=72
 tab=$(printf '\t')
@@ -87,8 +83,8 @@ if_shebang () {
 # Creates a function, called 'reformat_comments', which will reformat
 # comments if they're longer than the set limit.
 reformat_comments () {
-	declare start stop switch
-	declare -a buffer
+	declare start stop switch string chars word
+	declare -a words buffer
 
 	start="$i"
 

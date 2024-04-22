@@ -2,8 +2,8 @@
 
 # This script is meant to handle drives that have been connected to an
 # NVIDIA SHIELD. The SHIELD creates 2 special directories on drives that
-# have been connected to it. Those directories cannot be accessed in
-# Linux. They can't be read, moved, copied or deleted.
+# have been connected to it. Those directories sometimes cannot be
+# accessed in Linux. They can't be read, moved, copied or deleted.
 
 # The script is specifically meant to prepare a drive so its content can
 # be copied to another drive. To avoid errors when using 'cp -rp', we
@@ -14,6 +14,7 @@
 
 set -eo pipefail
 
+declare dn dn_tmp fn session switch
 declare -a dirs files ignore
 
 # Creates a function, called 'usage', which will print usage

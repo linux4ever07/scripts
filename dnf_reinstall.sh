@@ -44,6 +44,8 @@ regex[rpm]='^[^\/]+(.*)$'
 # Creates a function, called 'dnf_install', which will reinstall
 # packages.
 dnf_install () {
+	declare rpm
+
 	touch "$txt_fn"
 
 	for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do

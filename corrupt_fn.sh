@@ -30,7 +30,7 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare size_in size_out block_size seek count
+declare fn size_in size_out block_size seek count
 
 # Creates a function, called 'block_calc', which will be used to get the
 # optimal block size to use.

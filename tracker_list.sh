@@ -58,18 +58,19 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
+declare line end_l end_tmp_l switch
+declare protocol address end port tracker
+declare protocol_tmp address_tmp end_tmp port_tmp
+declare -a lines_out protocols addresses ends ports
 declare -A regex
 
 regex[url]='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
 regex[end]='^(.*):([0-9]+)(.*)$'
 
-declare protocol address end port tracker
-declare protocol_tmp address_tmp end_tmp port_tmp
-declare -a lines_out protocols addresses ends ports
-
 # Creates a function, called 'get_lines', which reads the files given as
 # arguments to the script into memory.
 get_lines () {
+	declare fn
 	declare -a lines_in
 
 	for (( z = 0; z < ${#files[@]}; z++ )); do

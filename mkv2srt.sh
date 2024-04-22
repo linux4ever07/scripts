@@ -18,9 +18,8 @@
 # a different movie release etc.
 
 declare tracks_n
-declare if if_dn if_bn of_dn of_mkv
 declare -a cmd files_tmp
-declare -A regex tracks
+declare -A if of regex tracks
 
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
@@ -60,10 +59,10 @@ clean_up () {
 	fi
 
 	for (( i = 0; i < ${#files_tmp[@]}; i++ )); do
-		fn_tmp="${files_tmp[${i}]}"
+		if[fn_tmp]="${files_tmp[${i}]}"
 
-		if [[ -f $fn_tmp ]]; then
-			rm "$fn_tmp"
+		if [[ -f ${if[fn_tmp]} ]]; then
+			rm "${if[fn_tmp]}"
 		fi
 	done
 }
@@ -71,16 +70,16 @@ clean_up () {
 # Creates a function, called 'set_names', which will create variables
 # for file names.
 set_names () {
-	if=$(readlink -f "$1")
-	if_dn=$(dirname "$if")
-	if_bn=$(basename "$if")
+	if[fn]=$(readlink -f "$1")
+	if[dn]=$(dirname "${if[fn]}")
+	if[bn]=$(basename "${if[fn]}")
 
-	if_bn_lc="${if_bn,,}"
+	if[bn_lc]="${if[bn],,}"
 
-	of_dn="${if_dn}/${if_bn%.*}"
-	of_mkv="${of_dn}/${if_bn}"
+	of[dn]="${if[dn]}/${if[bn]%.*}"
+	of[mkv]="${of[dn]}/${if[bn]}"
 
-	if [[ ${if_bn_lc##*.} != 'mkv' ]]; then
+	if [[ ${if[bn_lc]##*.} != 'mkv' ]]; then
 		usage
 	fi
 }
@@ -89,10 +88,10 @@ set_names () {
 # of media files, and if they contain subtitle tracks, store those in
 # the 'sub_tracks' hash.
 get_tracks () {
-	declare switch
+	declare switch line
 	declare -a mkvinfo_lines mkvinfo_tracks
 
-	mapfile -t mkvinfo_lines < <(mkvinfo "$if" 2>&-)
+	mapfile -t mkvinfo_lines < <(mkvinfo "${if[fn]}" 2>&-)
 
 # Singles out the part that lists the tracks, and ignores the rest of
 # the output from 'mkvinfo'.
@@ -172,7 +171,8 @@ get_tracks () {
 # subtitles from the Matroska file, and remux it without the SRT
 # subtitles.
 extract_remux () {
-	declare switch of_srt
+	declare switch string
+	declare num_tmp sub_tmp srt_tmp lang_tmp name_tmp
 	declare -a args_srt args_not args_string full_args
 
 	switch=0
@@ -205,10 +205,10 @@ extract_remux () {
 		fi
 
 		if [[ $srt_tmp -eq 1 ]]; then
-			of_srt="${of_dn}/${num_tmp}_${lang_tmp}_${name_tmp}.srt"
-			files_tmp+=("$of_srt")
+			of[srt]="${of[dn]}/${num_tmp}_${lang_tmp}_${name_tmp}.srt"
+			files_tmp+=("${of[srt]}")
 
-			args_srt+=(\""${num_tmp}:${of_srt}"\")
+			args_srt+=(\""${num_tmp}:${of[srt]}"\")
 		fi
 
 		if [[ $srt_tmp -eq 0 ]]; then
@@ -219,17 +219,17 @@ extract_remux () {
 
 # If there's no SRT subtitles in the Matroska file, quit.
 	if [[ ${#args_srt[@]} -eq 0 ]]; then
-		printf '\n%s\n\n' "There are no SRT subtitles in: ${if_bn}"
+		printf '\n%s\n\n' "There are no SRT subtitles in: ${if[bn]}"
 		exit
 	fi
 
-	if [[ -d $of_dn ]]; then
+	if [[ -d ${of[dn]} ]]; then
 		return
 	fi
 
-	mkdir -p "$of_dn"
+	mkdir -p "${of[dn]}"
 
-	full_args=(mkvextract \""${if}"\" tracks "${args_srt[@]}")
+	full_args=(mkvextract \""${if[fn]}"\" tracks "${args_srt[@]}")
 
 # Runs mkvextract, and prints the command.
 	eval "${full_args[@]}"
@@ -244,7 +244,7 @@ extract_remux () {
 # Change line-endings to make the files compatible with DOS/Windows.
 	unix2dos "${files_tmp[@]}"
 
-	files_tmp+=("$of_mkv")
+	files_tmp+=("${of[mkv]}")
 
 	string="${full_args[@]}"
 	printf '\n%s\n\n' "$string"
@@ -252,7 +252,7 @@ extract_remux () {
 	args_string=$(printf '%s,' "${args_not[@]}")
 	args_string="${args_string%,}"
 
-	full_args=(mkvmerge -o \""${of_mkv}"\" '--subtitle-tracks' \""${args_string}"\" \""${if}"\")
+	full_args=(mkvmerge -o \""${of[mkv]}"\" '--subtitle-tracks' \""${args_string}"\" \""${if[fn]}"\")
 
 # Runs mkvmerge, and prints the command.
 	if [[ $switch -eq 1 ]]; then
@@ -268,7 +268,7 @@ extract_remux () {
 	fi
 
 # Removes original MKV file.
-	rm "$if"
+	rm "${if[fn]}"
 
 # Resets the tracks and files variables.
 	tracks=()

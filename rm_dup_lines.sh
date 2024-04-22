@@ -5,8 +5,9 @@
 
 set -eo pipefail
 
+declare session line line_tmp
 declare -a clients files lines
-declare -A regex
+declare -A if of regex
 
 clients=('hexchat' 'irccloud' 'irssi' 'konversation')
 
@@ -16,9 +17,9 @@ regex[irssi]='^[0-9]+:[0-9]+(.*)$'
 regex[konversation]='^\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\](.*)$'
 
 session="${RANDOM}-${RANDOM}"
-dn="/dev/shm/rm_dup_lines-${session}"
+of[dn]="/dev/shm/rm_dup_lines-${session}"
 
-mkdir "$dn"
+mkdir "${of[dn]}"
 
 # Creates a function, called 'get_client', which will figure out which
 # client was used to generate the IRC log in question, to be able to
@@ -51,14 +52,15 @@ get_client () {
 mapfile -t files < <(find "$PWD" -type f -iname "*.log" -o -iname "*.txt" 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
-	bn=$(basename "$fn")
+	if[fn]="${files[${i}]}"
+	if[bn]=$(basename "${if[fn]}")
+	of[fn]="${of[dn]}/${if[bn]}"
 
-	fn_out="${dn}/${bn}"
+	declare previous
 
-	touch "$fn_out"
+	touch "${of[fn]}"
 
-	mapfile -t lines < <(tr -d '\r' <"$fn")
+	mapfile -t lines < <(tr -d '\r' <"${if[fn]}")
 
 	get_client
 
@@ -80,13 +82,13 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 
 		previous="$line_tmp"
 
-		printf '%s\n' "$line" >> "$fn_out"
+		printf '%s\n' "$line" >> "${of[fn]}"
 	done
 
 	unset -v previous regex[client]
 
-	touch -r "$fn" "$fn_out"
-	mv "$fn_out" "$fn"
+	touch -r "${if[fn]}" "${of[fn]}"
+	mv "${of[fn]}" "${if[fn]}"
 done
 
-rm -rf "$dn"
+rm -rf "${of[dn]}"

@@ -5,7 +5,7 @@
 # to access the hard drive, in case the intention was not to quit
 # Chrome.
 
-declare restart_fn
+declare fn bn restart_fn
 declare -a files
 declare -A regex
 

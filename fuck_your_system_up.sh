@@ -10,7 +10,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare -a types sources devices
+declare device type
+declare -a types sources devices devices_tmp
 declare -A regex
 
 regex[hd]='^\/dev\/hd[[:alpha:]]+$'
@@ -21,6 +22,8 @@ types=('hd' 'sd' 'nvme')
 sources=('/dev/zero' '/dev/urandom')
 
 erase_devices () {
+	declare n source
+
 	for (( i = 0; i < ${#devices[@]}; i++ )); do
 		device="${devices[${i}]}"
 

@@ -24,8 +24,7 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-declare session
-declare name md5 size size_limit
+declare session line name md5 size size_limit
 declare -a cue_files bin_files cue_dirs lines format match
 declare -A if of regex
 

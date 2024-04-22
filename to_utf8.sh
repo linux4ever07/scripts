@@ -34,7 +34,7 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare charset_of session
+declare if charset_of session
 
 charset_of='UTF-8'
 session="${RANDOM}-${RANDOM}"

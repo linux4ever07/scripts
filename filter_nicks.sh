@@ -17,13 +17,13 @@ if [[ $# -lt 2 || ! -f $1 ]]; then
 	usage
 fi
 
-if=$(readlink -f "$1")
-if_bn=$(basename "$if")
-of="${if_bn%.*}-${RANDOM}-${RANDOM}.txt"
-
-declare time line nick nick_utf8
+declare time line nick nick_tmp nick_ref nick_utf8 nick_tmp_utf8
 declare -a times lines words clients
-declare -A regex nicks nicks_tmp
+declare -A if of regex nicks nicks_tmp
+
+if[fn]=$(readlink -f "$1")
+if[bn]=$(basename "${if[fn]}")
+of[fn]="${if[bn]%.*}-${RANDOM}-${RANDOM}.txt"
 
 regex[nick]='^<\+*(.*)>$'
 
@@ -81,7 +81,7 @@ get_nick () {
 utf8_convert () {
 	string_in="$@"
 
-	declare string_out
+	declare char_tmp string_out
 
 	for (( z = 0; z < ${#string_in}; z++ )); do
 		char_tmp="${string_in:${z}:1}"
@@ -111,7 +111,7 @@ for nick in "$@"; do
 	nicks["${nick_utf8}"]="${nick,,}"
 done
 
-mapfile -t lines < <(tr -d '\r' <"$if")
+mapfile -t lines < <(tr -d '\r' <"${if[fn]}")
 
 get_client
 
@@ -180,4 +180,4 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	if [[ -n ${!nick_ref} ]]; then
 		printf '%s\n' "${time}${line}"
 	fi
-done | tee "$of"
+done | tee "${of[fn]}"
