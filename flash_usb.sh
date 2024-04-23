@@ -27,15 +27,6 @@ declare -A regex
 
 image=$(readlink -f "$1")
 
-pause_msg="
-You are about to flash:
-${device}
-
-With:
-${image}
-
-Are you sure? [y/n]: "
-
 regex[part]='\-part[0-9]+$'
 
 # Creates a function, called 'get_files', which will print file names in
@@ -87,6 +78,15 @@ while [[ $REPLY != 'y' ]]; do
 	read -p 'Is this the correct device? [y/n]: '
 	printf '\n'
 done
+
+pause_msg="
+You are about to flash:
+${device}
+
+With:
+${image}
+
+Are you sure? [y/n]: "
 
 read -p "$pause_msg"
 
