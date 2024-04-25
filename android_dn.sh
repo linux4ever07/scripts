@@ -19,10 +19,11 @@ if [[ $# -ne 1 || ! -d $1 ]]; then
 	usage
 fi
 
-declare in_dn pause_msg
+declare pause_msg
 declare -a targets dirs dirs_tmp
+declare -A if
 
-in_dn=$(readlink -f "$1")
+if[dn]=$(readlink -f "$1")
 targets=('Android' 'LOST.DIR' 'System Volume Information' '.Trash*')
 
 pause_msg='Are you sure? [y/n]: '
@@ -31,13 +32,13 @@ declare -A regex
 
 regex[num]='^[0-9]+$'
 regex[size]='^[0-9]+M'
-regex[date]='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}'
+regex[date]='^[0-9]{4}-[0-9]{2}-[0-9]{2}'
 
 # Creates a function, called 'menu'. It displays 2 menus. First it
 # displays the directories found, and once a directory is selected it
 # displays options ('list' and 'remove').
 menu () {
-	declare date dn dn_tmp fn n size
+	declare date n size
 
 # Directory menu.
 	clear
@@ -45,10 +46,10 @@ menu () {
 	printf '\nChoose directory:\n\n'
 
 	for (( i = 0; i < ${#dirs[@]}; i++ )); do
-		dn="${dirs[${i}]}"
-		size=$(du -BM -s "$dn" | grep -Eo "${regex[size]}")
+		if[dn_tmp]="${dirs[${i}]}"
+		size=$(du -BM -s "${if[dn_tmp]}" | grep -Eo "${regex[size]}")
 
-		printf '%s) %s (%s)\n' "$i" "$dn" "$size"
+		printf '%s) %s (%s)\n' "$i" "${if[dn_tmp]}" "$size"
 	done
 
 	printf '\n'
@@ -58,17 +59,17 @@ menu () {
 		return
 	fi
 
-	dn_tmp="${dirs[${REPLY}]}"
+	if[dn_tmp]="${dirs[${REPLY}]}"
 	n="$REPLY"
 
-	if [[ -z $dn_tmp ]]; then
+	if [[ -z ${if[dn_tmp]} ]]; then
 		return
 	fi
 
 # Options menu.
 	clear
 
-	printf '\n%s\n\n' "$dn_tmp"
+	printf '\n%s\n\n' "${if[dn_tmp]}"
 	printf 'Choose action:\n\n'
 	printf '(l) list\n'
 	printf '(r) remove\n\n'
@@ -79,13 +80,13 @@ menu () {
 		'l')
 			declare -a files
 
-			mapfile -t files < <(find "$dn_tmp" -type f 2>&-)
+			mapfile -t files < <(find "${if[dn_tmp]}" -type f 2>&-)
 
 			for (( i = 0; i < ${#files[@]}; i++ )); do
-				fn="${files[${i}]}"
-				date=$(stat -c '%y' "$fn" | grep -Eo "${regex[date]}")
+				if[fn]="${files[${i}]}"
+				date=$(stat -c '%y' "${if[fn]}" | grep -Eo "${regex[date]}")
 
-				printf '%s (%s)\n' "$fn" "$date"
+				printf '%s (%s)\n' "${if[fn]}" "$date"
 			done | less
 
 			unset -v files
@@ -101,7 +102,7 @@ menu () {
 			unset dirs["${n}"]
 			dirs=("${dirs[@]}")
 
-			rm -rf "$dn_tmp"
+			rm -rf "${if[dn_tmp]}"
 		;;
 		*)
 			return
@@ -110,8 +111,10 @@ menu () {
 }
 
 # Gets all directories that matches the target names.
-for dn in "${targets[@]}"; do
-	mapfile -t dirs_tmp < <(find "$in_dn" -type d -iname "$dn" 2>&-)
+for (( i = 0; i < ${#targets[@]}; i++ )); do
+	if[dn_tmp]="${targets[${i}]}"
+
+	mapfile -t dirs_tmp < <(find "${if[dn]}" -type d -iname "${if[dn_tmp]}" 2>&-)
 	dirs+=("${dirs_tmp[@]}")
 done
 

@@ -36,7 +36,7 @@ declare -A regex
 if=$(readlink -f "$1")
 
 regex[comment]='^[[:blank:]]*#+'
-regex[echo]='echo( \-[[:alpha:]]+){0,}[[:blank:]]*'
+regex[echo]='echo( -[[:alpha:]]+){0,}[[:blank:]]*'
 
 printf_cmd='printf '\''%s\\n'\'' '
 

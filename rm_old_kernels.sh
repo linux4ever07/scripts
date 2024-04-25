@@ -22,15 +22,15 @@ pause_msg='Does this look OK? [y/n]: '
 types=('core' 'devel' 'devel_matched' 'headers' 'kernel' 'modules' 'modules_extra')
 
 regex[column]="^([^ ]+${arch}) ([^ ]+) ([^ ]+)"
-regex[version]='^([0-9]+)\.([0-9]+)\.([0-9]+)\-([0-9]+)\.fc[0-9]+'
+regex[version]='^([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)\.fc[0-9]+'
 
-regex[core]="^kernel\-core\.${arch}$"
-regex[devel]="^kernel\-devel\.${arch}$"
-regex[devel_matched]="^kernel\-devel\-matched\.${arch}$"
-regex[headers]="^kernel\-headers\.${arch}$"
+regex[core]="^kernel-core\.${arch}$"
+regex[devel]="^kernel-devel\.${arch}$"
+regex[devel_matched]="^kernel-devel-matched\.${arch}$"
+regex[headers]="^kernel-headers\.${arch}$"
 regex[kernel]="^kernel\.${arch}$"
-regex[modules]="^kernel\-modules\.${arch}$"
-regex[modules_extra]="^kernel\-modules\-extra\.${arch}$"
+regex[modules]="^kernel-modules\.${arch}$"
+regex[modules_extra]="^kernel-modules-extra\.${arch}$"
 
 # Creates a function, called 'parse_version', which will parse a version
 # number and print the result.

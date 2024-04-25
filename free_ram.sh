@@ -22,7 +22,7 @@ declare -A regex pids
 regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
 regex[rend]='--type=renderer'
 regex[ext]='--extension-process'
-regex[tab]='^.*\-childID [0-9]+.* tab$'
+regex[tab]='^.*-childID [0-9]+.* tab$'
 
 # Creates a limit for the amount of free RAM required.
 ram_limit=1000000
