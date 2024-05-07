@@ -61,8 +61,14 @@ my $db = 'md5.db';
 # Path to and name of log file.
 my $log_fn = $ENV{HOME} . '/' . 'md5db.log';
 
+# Delimiter for database.
+my $delim = "\t\*\t";
+
 # Regex for skipping dotfiles in home directories.
-$regex{dotfile} = qr(^\/home\/[^\/]+\/\.);
+$regex{dotfile} = qr/^\/home\/[^\/]+\/\./;
+
+# Regex for stripping current directory from file name.
+$regex{dotslash} = qr/^\.\//;
 
 # Regex for stripping line breaks from lines.
 $regex{newline} = qr/(\r){0,}(\n){0,}$/;
@@ -70,17 +76,20 @@ $regex{newline} = qr/(\r){0,}(\n){0,}$/;
 # Regex for separating basename from extension.
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 
-# Regex for stripping path from file name.
+# Regex for separating path from basename.
 $regex{path} = qr/^(.*[\\\/])(.*)$/;
+
+# Regex for parsing database files.
+$regex{format_md5db} = qr/^(.*)\Q$delim\E([[:alnum:]]{32})$/;
+
+# Regex for parsing *.MD5 files.
+$regex{format_md5} = qr/^([[:alnum:]]{32})\s\*(.*)$/;
 
 # Regex for identifying FLAC files.
 $regex{flac} = qr/\.flac$/i;
 
 # Regex for identifying *.MD5 files.
 $regex{md5} = qr/\.md5$/i;
-
-# Delimiter for database.
-my $delim = "\t\*\t";
 
 # Creating a variable which sets a limit on the total number of bytes
 # that can be read into RAM at once. If you have plenty of RAM, it's
@@ -503,9 +512,9 @@ sub get_files {
 # user's home directory are usually configuration files for the desktop
 # and various applications. These files change often and will therefore
 # clog the log file created by this script, making it hard to read.
-		if (abs_path($fn) =~ m($regex{dotfile})) { next; }
+		if (abs_path($fn) =~ m/$regex{dotfile}/) { next; }
 
-		$fn =~ s(^\.\/)();
+		$fn =~ s/$regex{dotslash}//;
 
 		if (! -f $fn or ! -r $fn) { next; }
 
@@ -530,9 +539,6 @@ sub file2hash {
 	my $dn = dirname($db);
 	my($fn, $hash, @lines);
 
-# The format string for parsing database file.
-	my $format = qr/^(.*)\Q$delim\E([[:alnum:]]{32})$/;
-
 # Open database file and read it into the @lines array.
 	open(my $md5db_in, '<', $db) or die "Can't open '$db': $!";
 	foreach my $line (<$md5db_in>) {
@@ -544,7 +550,7 @@ sub file2hash {
 # Loop to check that the format of the database file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if ($line =~ m/$format/) {
+		if ($line =~ m/$regex{format_md5db}/) {
 # Split the line into relative file name and MD5 hash.
 			$fn = $1;
 			$hash = $2;
@@ -633,9 +639,6 @@ sub md5import {
 	my $dn = dirname($md5fn);
 	my($fn, $hash, @lines);
 
-# The format string for parsing the *.MD5 files.
-	my $format = qr/^([[:alnum:]]{32})\s\*(.*)$/;
-
 # Open *.MD5 file and read it into the @lines array.
 	open(my $md5_in, '<', $md5fn) or die "Can't open '$md5fn': $!";
 	foreach my $line (<$md5_in>) {
@@ -647,11 +650,11 @@ sub md5import {
 # Loop to check that the format of the *.MD5 file really is correct
 # before proceeding.
 	while (my $line = shift(@lines)) {
-		if ($line =~ m/$format/) {
+		if ($line =~ m/$regex{format_md5}/) {
 # Split the line into MD5 hash and relative file name.
 			$hash = lc($1);
 			$fn = $2;
-			$fn =~ s($regex{path})($2);
+			$fn =~ s/$regex{path}/$2/;
 		} else { next; }
 
 # Add full path to file name, unless it's the current directory.
