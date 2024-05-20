@@ -142,7 +142,7 @@ if[bn]=$(basename "${if[fn]}")
 # output remux file.
 # * 'hb_subs' is a switch that tells the script to pass the subs
 # directly to HandBrake.
-declare title year tune lang session exist hb_subs
+declare title year tune lang session exist hb_subs txt_fn
 declare format v_encoder preset v_bitrate a_encoder rls_type
 declare -a cmd maps langs bitrates if_info
 declare -A regex streams
@@ -335,14 +335,12 @@ uriencode () {
 # Creates a function, called 'break_name', which will break up the
 # input file name, and parse it, to extract the movie title, and year.
 break_name () {
-	declare bname
-
-	bname=$(sed -E 's/ +/ /g' <<<"$1")
-
-	declare array_ref number_ref elements type_tmp
+	declare bname array_ref number_ref elements type type_tmp
 	declare -a types
 	declare -a bname_dots bname_hyphens bname_underscores bname_spaces
 	declare -A bname_elements
+
+	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
@@ -433,7 +431,7 @@ imdb () {
 		return 1
 	fi
 
-	declare agent y t type url_tmp url id
+	declare agent y t type url_tmp url id json_type
 	declare -a term tmp_array
 	declare -A json_types imdb_info
 
@@ -618,7 +616,7 @@ check_regex () {
 dts_extract_remux () {
 	declare high_kbps low_kbps high_bps low_bps bps_limit use_kbps
 	declare map_ref map_use_ref lang_ref stream_ref track_ref bitrate_ref channel_ref
-	declare audio_format args_string line
+	declare audio_format args_string line type_tmp
 	declare -a audio_types if_info_tmp args1
 	declare -A type elements audio_tracks audio_maps audio_channels
 
@@ -866,31 +864,31 @@ dts_extract_remux () {
 		fi
 
 # Check if the current stream has the right format. If so, save it.
-		for tmp_type in "${audio_types[@]}"; do
-			n="elements[${tmp_type}]"
+		for type_tmp in "${audio_types[@]}"; do
+			n="elements[${type_tmp}]"
 
-			check_regex "${!stream_ref}" "${type[${tmp_type}]}"
+			check_regex "${!stream_ref}" "${type[${type_tmp}]}"
 
 			if [[ $? -ne 0 ]]; then
 				continue
 			fi
 
-			audio_tracks["${tmp_type},${!n}"]="${!stream_ref}"
-			audio_maps["${tmp_type},${!n}"]="${!map_ref}"
-			(( elements[${tmp_type}] += 1 ))
+			audio_tracks["${type_tmp},${!n}"]="${!stream_ref}"
+			audio_maps["${type_tmp},${!n}"]="${!map_ref}"
+			(( elements[${type_tmp}] += 1 ))
 			break
 		done
 	done
 
 # Go through the different types of audio and see if we have matching
 # surround tracks in those formats.
-	for tmp_type in "${audio_types[@]}"; do
-		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
-			track_ref="audio_tracks[${tmp_type},${i}]"
+	for type_tmp in "${audio_types[@]}"; do
+		for (( i = 0; i < ${elements[${type_tmp}]}; i++ )); do
+			track_ref="audio_tracks[${type_tmp},${i}]"
 
 			declare channel
 
-			audio_channels["${tmp_type},${i}"]=0
+			audio_channels["${type_tmp},${i}"]=0
 
 			channel=$(check_regex "${!track_ref}" "${regex[surround]}")
 
@@ -898,7 +896,7 @@ dts_extract_remux () {
 				continue
 			fi
 
-			audio_channels["${tmp_type},${i}"]="$channel"
+			audio_channels["${type_tmp},${i}"]="$channel"
 
 			unset -v channel
 		done
@@ -906,14 +904,14 @@ dts_extract_remux () {
 
 # Go through the format priority list in descending order, and pick the
 # audio track that has the highest number of channels (if possible).
-	for tmp_type in "${audio_types[@]}"; do
+	for type_tmp in "${audio_types[@]}"; do
 		declare map channel
 		channel=0
 
-		for (( i = 0; i < ${elements[${tmp_type}]}; i++ )); do
-			track_ref="audio_tracks[${tmp_type},${i}]"
-			map_ref="audio_maps[${tmp_type},${i}]"
-			channel_ref="audio_channels[${tmp_type},${i}]"
+		for (( i = 0; i < ${elements[${type_tmp}]}; i++ )); do
+			track_ref="audio_tracks[${type_tmp},${i}]"
+			map_ref="audio_maps[${type_tmp},${i}]"
+			channel_ref="audio_channels[${type_tmp},${i}]"
 
 			if [[ ${!channel_ref} -gt $channel ]]; then
 				map="$map_ref"
@@ -923,7 +921,7 @@ dts_extract_remux () {
 
 		if [[ $channel -ge 5 ]]; then
 			map_use_ref="$map"
-			audio_format="$tmp_type"
+			audio_format="$type_tmp"
 			break
 		fi
 
@@ -933,13 +931,13 @@ dts_extract_remux () {
 # Pick the first audio track in the list, in the preferred available
 # format, if $map_use_ref is still empty.
 	if [[ -z $map_use_ref ]]; then
-		for tmp_type in "${audio_types[@]}"; do
-			if [[ ${elements[${tmp_type}]} -eq 0 ]]; then
+		for type_tmp in "${audio_types[@]}"; do
+			if [[ ${elements[${type_tmp}]} -eq 0 ]]; then
 				continue
 			fi
 
-			map_use_ref="audio_maps[${tmp_type},0]"
-			audio_format="$tmp_type"
+			map_use_ref="audio_maps[${type_tmp},0]"
+			audio_format="$type_tmp"
 			break
 		done
 	fi
@@ -1088,7 +1086,7 @@ sub_mux () {
 # command is installed, a text file containing information from that
 # will also be created.
 info_txt () {
-	declare txt_ref info_ref
+	declare txt_ref info_ref type
 	declare -a info_list1 info_list2 info_list3
 	declare -a of_info of_remux_info hb_version_info hb_opts_info ff_version_info ff_opts_info size_info mediainfo_info
 	declare -A info

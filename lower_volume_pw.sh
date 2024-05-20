@@ -10,7 +10,7 @@
 
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
-declare cfg_fn pw_id interval unit spin_pid
+declare cfg_fn pw_id interval unit spin_pid n
 declare -a count
 declare -A regex volume
 

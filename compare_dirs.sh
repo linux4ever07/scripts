@@ -12,7 +12,7 @@ set -eo pipefail
 
 declare is_md5sum dir1 dir2 dir1_size dir2_size regex
 declare dir1_files_elements dir1_dirs_elements dir2_files_elements dir2_dirs_elements
-declare dir type dir1_f dir2_f start bn bn_md5
+declare dir type key dir1_f dir2_f start bn bn_md5
 declare dir1_files_missing_elements dir1_dirs_missing_elements
 declare dir2_files_missing_elements dir2_dirs_missing_elements
 declare md5s_mismatch_elements identical

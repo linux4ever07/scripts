@@ -9,7 +9,7 @@
 
 set -eo pipefail
 
-declare comm_tmp args_tmp pid_tmp ram_used_tmp line
+declare comm_tmp args_tmp pid_tmp ram_used_tmp key line
 declare -A regex pids pids_ram
 
 regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'

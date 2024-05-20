@@ -25,8 +25,10 @@ if=$(readlink -f "$1")
 regex[start]='^([[:blank:]]*)([^ ]+)[[:blank:]]*\(\) \{'
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[declare]='^(declare|local)( -[[:alpha:]]+){0,1} (.*)$'
-regex[var]='^([a-zA-Z0-9_]+)=(.*)$'
-regex[mapfile]='^mapfile( -d.{3}){0,1}( -t){0,1} ([^ ]+).*$'
+regex[var]='[a-zA-Z0-9_]+'
+regex[var_set]="^(${regex[var]})(\[.*\]){0,1}=.*$"
+regex[var_for]="^for (${regex[var]}) in .*; do$"
+regex[mapfile]="^mapfile( -d.{3}){0,1}( -t){0,1} (${regex[var]}).*$"
 
 switch_func=0
 
@@ -69,7 +71,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		done
 	fi
 
-	if [[ $line_tmp =~ ${regex[var]} ]]; then
+	if [[ $line_tmp =~ ${regex[var_set]} || $line_tmp =~ ${regex[var_for]} ]]; then
 		var="${BASH_REMATCH[1]}"
 
 		switch_var=0
@@ -163,7 +165,7 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 		done
 	fi
 
-	if [[ $line_tmp =~ ${regex[var]} ]]; then
+	if [[ $line_tmp =~ ${regex[var_set]} || $line_tmp =~ ${regex[var_for]} ]]; then
 		var="${BASH_REMATCH[1]}"
 
 		switch_var=0

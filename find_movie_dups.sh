@@ -20,7 +20,7 @@
 # A recent version of 'break_name.sh' is required to be located in the
 # same directory as this script.
 
-declare mode count
+declare mode count key
 declare -a dirs files_in files_out
 declare -A if movie regex
 
@@ -104,7 +104,7 @@ imdb () {
 		return 1
 	fi
 
-	declare agent y t type url_tmp url id
+	declare agent y t type url_tmp url id json_type
 	declare -a term tmp_array
 	declare -A json_types imdb_info
 

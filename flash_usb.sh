@@ -22,7 +22,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare image device pause_msg exit_status
+declare image device pause_msg exit_status n
 declare -A regex
 
 image=$(readlink -f "$1")

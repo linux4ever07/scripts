@@ -25,7 +25,7 @@ mkdir "${of[dn]}"
 # client was used to generate the IRC log in question, to be able to
 # parse it correctly.
 get_client () {
-	declare switch
+	declare switch client
 
 	switch=0
 

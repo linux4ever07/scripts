@@ -17,7 +17,7 @@ if [[ $# -lt 2 || ! -f $1 ]]; then
 	usage
 fi
 
-declare time line nick nick_tmp nick_ref nick_utf8 nick_tmp_utf8
+declare time line word nick nick_tmp nick_ref nick_utf8 nick_tmp_utf8
 declare -a times lines words clients
 declare -A if of regex nicks nicks_tmp
 
@@ -38,7 +38,7 @@ regex[konversation]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0
 # client was used to generate the IRC log in question, to be able to
 # parse it correctly.
 get_client () {
-	declare switch
+	declare client switch
 
 	switch=0
 

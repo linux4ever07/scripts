@@ -16,6 +16,7 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
+declare comm_tmp pid
 declare -a session name
 declare -A regex pids
 

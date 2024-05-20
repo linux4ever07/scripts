@@ -92,7 +92,7 @@ fi
 # the MD5 hash, and for copying the file, sleeping 10 seconds between
 # each try.
 md5copy () {
-	declare md5_if exit_status
+	declare md5_if exit_status n
 
 	for n in {1..5}; do
 		md5_if=$(md5sum -b "${if[fn]}" 2>&-)

@@ -99,6 +99,7 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
+declare arg
 declare -a library
 
 for arg in "$@"; do
@@ -113,7 +114,7 @@ fi
 
 check_cmd
 
-declare mode session exit_status no_ext ext md5
+declare mode session exit_status no_ext ext md5 key
 declare -a files files_tmp_in files_tmp_out empty symlinks corrupt_in corrupt_out
 declare -a ext_list1 ext_list2 stdout_v
 declare -A regex md5h if of
@@ -232,6 +233,7 @@ set_names () {
 # Creates a function, called 'get_files', which will get all the
 # archives in the directories given as arguments to the script.
 get_files () {
+	declare ext_tmp
 	declare -a files1 files2 files_all
 
 	mapfile -t files_all < <(find "${library[@]}" -type f 2>&-)
@@ -458,7 +460,7 @@ arch_pack () {
 # hash representing the extracted directory, and compress the directory
 # content as a 7zip archive.
 check_n_repack () {
-	declare type
+	declare type md5
 
 	if [[ $ext == '.tar' ]]; then
 		rm_tmp "${of[fn_tmp]}${ext}"
@@ -569,7 +571,7 @@ rm_tmp () {
 # Creates a function, called 'get_common', which will check a list of
 # file names and find the directory that has the most files.
 get_common () {
-	declare md5 common_n
+	declare md5 key common_n
 	declare -A common_md5 common_dirs
 
 	unset -v of[common_dn]
@@ -589,11 +591,11 @@ get_common () {
 		return
 	fi
 
-	for key_tmp in "${!common_dirs[@]}"; do
-		if[dn]="${common_dirs[${key_tmp}]}"
+	for key in "${!common_dirs[@]}"; do
+		if[dn]="${common_dirs[${key}]}"
 
-		if [[ ${common_md5[${key_tmp}]} -gt $common_n ]]; then
-			common_n="${common_md5[${key_tmp}]}"
+		if [[ ${common_md5[${key}]} -gt $common_n ]]; then
+			common_n="${common_md5[${key}]}"
 			of[common_dn]="${if[dn]}"
 		fi
 	done

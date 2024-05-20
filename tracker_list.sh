@@ -58,7 +58,7 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare line end_l end_tmp_l switch
+declare line end_l end_tmp_l switch n
 declare protocol address end port tracker
 declare protocol_tmp address_tmp end_tmp port_tmp
 declare -a lines_out protocols addresses ends ports

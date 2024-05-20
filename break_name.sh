@@ -50,12 +50,11 @@ query_string="${query[@]}"
 # Creates a function, called 'break_name', which will break up the input
 # file name.
 break_name () {
-	declare bname
-
-	bname=$(sed -E 's/ +/ /g' <<<"$1")
-
+	declare bname type
 	declare -a types
 	declare -A bname_elements
+
+	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
 	types=('dots' 'hyphens' 'underscores' 'spaces')
 
@@ -146,7 +145,7 @@ break_name_parse () {
 # a file name against the words in 'rip' array. It prints the number of
 # matches.
 break_name_find () {
-	declare count
+	declare count tag
 	declare -a rip
 
 	count=0

@@ -57,7 +57,7 @@ imdb () {
 		return 1
 	fi
 
-	declare agent y t type url_tmp url id
+	declare agent y t type url_tmp url id json_type
 	declare -a term tmp_array
 	declare -A json_types imdb_info
 

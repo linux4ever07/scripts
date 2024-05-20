@@ -20,7 +20,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare device pause_msg exit_status
+declare device pause_msg exit_status n
 declare -a types args
 declare -A regex
 
