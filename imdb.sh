@@ -39,8 +39,6 @@ time_calc () {
 	declare s m h
 
 	s="$1"
-	m=0
-	h=0
 
 	m=$(( s / 60 ))
 	h=$(( m / 60 ))
@@ -86,7 +84,7 @@ imdb () {
 	regex[runtime1]='\,\"runtime\":'
 	regex[runtime2]='\"seconds\":(.*)\,\"displayableProperty\":'
 
-	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+	agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
 # This function gets a URL using cURL.
 	get_page () {

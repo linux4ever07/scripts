@@ -10,7 +10,7 @@ regex[blank]='[[:blank:]]+'
 regex[url]='^(http)(s)?:\/\/'
 regex[title]='^.*<title>(.*)<\/title>.*$'
 
-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
 mapfile -d' ' -t words < <(sed -E "s/${regex[blank]}/ /g" <<<"$@")
 words[-1]="${words[-1]%$'\n'}"
