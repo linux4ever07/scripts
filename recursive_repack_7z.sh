@@ -469,6 +469,8 @@ check_n_repack () {
 	mapfile -t files_tmp_in < <(compgen -G "*")
 
 	for (( z = 0; z < ${#files_tmp_in[@]}; z++ )); do
+# The if statement below is only for my personal needs, and it can
+# safely be removed.
 		if [[ ${files_tmp_in[${z}]} == 'not a tty' ]]; then
 			continue
 		fi

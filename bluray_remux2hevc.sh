@@ -325,6 +325,8 @@ fsencode () {
 # special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
+	declare url_string
+
 	url_string="$@"
 
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)$/\1/'
@@ -333,6 +335,8 @@ uriencode () {
 # Creates a function, called 'break_name', which will break up the
 # input file name, and parse it, to extract the movie title, and year.
 break_name () {
+	declare bname
+
 	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
 	declare array_ref number_ref elements type_tmp

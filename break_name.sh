@@ -50,6 +50,8 @@ query_string="${query[@]}"
 # Creates a function, called 'break_name', which will break up the input
 # file name.
 break_name () {
+	declare bname
+
 	bname=$(sed -E 's/ +/ /g' <<<"$1")
 
 	declare -a types
@@ -151,7 +153,7 @@ break_name_find () {
 
 # Creates an array with all the different scene tags to look for in
 # each file name.
-	rip=(720p 1080p screener hc dvb hdtv tvrip webrip webdl web-dl hddvd hd-dvd bluray blu-ray bdrip dvdrip divx xvid h264 x264 avc h265 x265 hevc dts ac3 pcm vorbis aac mp3)
+	rip=(720p 1080p 2160p screener hc dvb hdtv tvrip webrip webdl web-dl hddvd hd-dvd bluray blu-ray bdrip dvdrip divx xvid h264 x264 avc h265 x265 hevc dts ac3 pcm vorbis aac mp3)
 
 # This for loop goes through the word list, and compares each
 # word with the words in 'rip' array.

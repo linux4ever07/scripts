@@ -88,6 +88,8 @@ break_name_parse () {
 # special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
+	declare url_string
+
 	url_string="$@"
 
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)$/\1/'

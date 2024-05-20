@@ -79,9 +79,9 @@ get_nick () {
 # the nick as a hash element name, even if the nick contains special
 # characters.
 utf8_convert () {
-	string_in="$@"
+	declare char_tmp string_in string_out
 
-	declare char_tmp string_out
+	string_in="$@"
 
 	for (( z = 0; z < ${#string_in}; z++ )); do
 		char_tmp="${string_in:${z}:1}"

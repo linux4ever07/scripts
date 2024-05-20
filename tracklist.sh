@@ -3,6 +3,9 @@
 # This script looks for FLAC files in the current directory and creates
 # a tracklist from the tags.
 
+# If metaflac isn't installed, quit running the script.
+command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
+
 declare if artist album year track title
 declare length total_length time total_time
 declare -a files
@@ -24,6 +27,7 @@ gettags () {
 		line="${lines[${z}]}"
 
 		unset -v mflac
+		declare -a mflac
 
 		mflac[0]="${line%%=*}"
 		mflac[1]="${line#*=}"
@@ -41,9 +45,6 @@ gettags () {
 		alltags["${field}"]="${mflac[1]}"
 	done
 }
-
-# If metaflac isn't installed, quit running the script.
-command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
 # Find FLAC files in the current directory.
 mapfile -t files < <(find "$PWD" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)

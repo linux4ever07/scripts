@@ -35,10 +35,10 @@ declare fn size_in size_out block_size seek count
 # Creates a function, called 'block_calc', which will be used to get the
 # optimal block size to use.
 block_calc () {
+	declare bytes1 bytes2 block_diff1 block_diff2
+
 	bytes1="$1"
 	bytes2="$2"
-
-	declare block_diff1 block_diff2
 
 	block_size=1048576
 

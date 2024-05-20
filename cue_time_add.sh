@@ -17,13 +17,9 @@ format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
 # timestamps back and forth between the time (mm:ss:ff) format and
 # frames / sectors.
 time_convert () {
+	declare time m s f
+
 	time="$1"
-
-	declare m s f
-
-	m=0
-	s=0
-	f=0
 
 # If argument is in the mm:ss:ff format...
 	if [[ $time =~ ${format[1]} ]]; then

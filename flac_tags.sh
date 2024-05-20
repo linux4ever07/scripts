@@ -14,6 +14,9 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
+# If metaflac isn't installed, quit running the script.
+command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
+
 declare dn
 declare -a files
 
@@ -33,11 +36,11 @@ regex[num]='^[0-9]+$'
 # Creates a function, called 'gettags', which gets all the tags present
 # in a FLAC file.
 gettags () {
-	if="$1"
-
-	declare line field
+	declare if line field
 	declare -a lines
 	declare -A alltags
+
+	if="$1"
 
 	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
 
@@ -45,6 +48,7 @@ gettags () {
 		line="${lines[${z}]}"
 
 		unset -v mflac
+		declare -a mflac
 
 		mflac[0]="${line%%=*}"
 		mflac[1]="${line#*=}"

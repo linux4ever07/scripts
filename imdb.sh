@@ -26,6 +26,8 @@ declare -A regex
 # special characters in any string to be URL friendly. This will be
 # used in the 'imdb' function.
 uriencode () {
+	declare url_string
+
 	url_string="$@"
 
 	curl -Gso /dev/null -w %{url_effective} --data-urlencode "$url_string" 'http://localhost' | sed -E 's/^.{18}(.*)$/\1/'
@@ -34,6 +36,8 @@ uriencode () {
 # Creates a function, called 'time_calc', which will translate seconds
 # into the hh:mm:ss format.
 time_calc () {
+	declare s m h
+
 	s="$1"
 	m=0
 	h=0

@@ -181,9 +181,9 @@ get_volume () {
 
 # Creates a function, called 'set_volume', which sets the volume.
 set_volume () {
-	mute_tmp="$1"
+	declare mute_tmp volume_1 volume_2
 
-	declare volume_1 volume_2
+	mute_tmp="$1"
 
 	if [[ ${volume[out]} =~ ${regex[split]} ]]; then
 		volume_1="${BASH_REMATCH[1]}"
@@ -224,6 +224,8 @@ reset_volume () {
 # Creates a function, called 'sleep_low', which sleeps and then lowers
 # the volume.
 sleep_low () {
+	declare diff
+
 	diff="$1"
 
 	sleep "$interval"

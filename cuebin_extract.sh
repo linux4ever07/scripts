@@ -251,13 +251,9 @@ get_files () {
 # timestamps back and forth between the time (mm:ss:ff) format and
 # frames / sectors.
 time_convert () {
+	declare time m s f
+
 	time="$1"
-
-	declare m s f
-
-	m=0
-	s=0
-	f=0
 
 # If argument is in the mm:ss:ff format...
 	if [[ $time =~ ${format[1]} ]]; then
@@ -294,7 +290,7 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare line file_n track_n index_n frames
+	declare line file_n track_n index_n frames error
 	declare -a match lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
@@ -617,10 +613,10 @@ get_length () {
 # * 2352
 # * 2448
 block_calc () {
+	declare bytes1 bytes2 block_diff1 block_diff2
+
 	bytes1="$1"
 	bytes2="$2"
-
-	declare block_diff1 block_diff2
 
 	block_size=16384
 
