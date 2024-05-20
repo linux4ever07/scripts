@@ -60,7 +60,7 @@ gettags () {
 # Enters the Songbird Music Library directory.
 cd "$library"
 
-mapfile -t dirs1 < <(find "$library" -mindepth 1 -maxdepth 1 -type d 2>&-)
+mapfile -t dirs1 < <(find "$library" -mindepth 1 -maxdepth 1 -type d 2>&- | sort)
 
 for (( i = 0; i < ${#dirs1[@]}; i++ )); do
 	artist_dn="${dirs1[${i}]}"
@@ -77,7 +77,7 @@ for (( i = 0; i < ${#dirs1[@]}; i++ )); do
 	printf "+---%s\n" "$albumartist"
 	printf "|    %s\n" '\'
 
-	mapfile -t dirs2 < <(find "$artist_dn" -mindepth 1 -maxdepth 1 -type d 2>&-)
+	mapfile -t dirs2 < <(find "$artist_dn" -mindepth 1 -maxdepth 1 -type d 2>&- | sort)
 
 	for (( j = 0; j < ${#dirs2[@]}; j++ )); do
 		album_dn="${dirs2[${j}]}"
