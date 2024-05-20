@@ -6,7 +6,7 @@
 # If metaflac isn't installed, quit running the script.
 command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
-declare if artist album year track title
+declare if albumartist artist album date tracks track title
 declare length total_length time total_time
 declare -a files
 declare -A alltags
@@ -55,14 +55,14 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	exit
 fi
 
-# Gets the ARTIST, ALBUM and DATE tags.
 if="${files[0]}"
 
 gettags
 
-artist="${alltags[albumartist]}"
+albumartist="${alltags[albumartist]}"
 album="${alltags[album]}"
-year="${alltags[date]}"
+date="${alltags[date]}"
+tracks="${#files[@]}"
 
 # Function to calculate seconds for a track.
 # Usage: time_seconds <file>
@@ -98,10 +98,10 @@ total_time=$(time_readable "$total_length")
 # Prints album information.
 cat <<INFO
 
-Artist: ${artist}
+Artist: ${albumartist}
 Album: ${album}
-Year: ${year}
-Tracks: ${#files[@]}
+Date: ${date}
+Tracks: ${tracks}
 Total time: ${total_time}
 
 Tracklist

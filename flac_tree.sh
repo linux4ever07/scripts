@@ -18,8 +18,8 @@ fi
 # If metaflac isn't installed, quit running the script.
 command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
-declare library artist_dn album_dn if albumartist album year tracks
-declare -a dirs1 dirs2
+declare library artist_dn album_dn if albumartist album date tracks
+declare -a dirs1 dirs2 files
 declare -A alltags
 
 library=$(readlink -f "$1")
@@ -72,6 +72,7 @@ for (( i = 0; i < ${#dirs1[@]}; i++ )); do
 	if=$(find "$artist_dn" -type f -iname "*.flac" | head -1)
 
 	gettags
+
 	albumartist="${alltags[albumartist]}"
 
 	printf "+---%s\n" "$albumartist"
@@ -86,26 +87,25 @@ for (( i = 0; i < ${#dirs1[@]}; i++ )); do
 			continue
 		fi
 
-		if=$(find "$album_dn" -type f -iname "*.flac" 2>&- | head -1)
+		mapfile -t files < <(find "$album_dn" -maxdepth 1 -type f -iname "*.flac" 2>&-)
 
-		if [[ -z $if ]]; then
+		if [[ ${#files[@]} -eq 0 ]]; then
 			continue
 		fi
 
+		if="${files[0]}"
+
 		gettags
+
 		album="${alltags[album]}"
-		year="${alltags[date]}"
-		tracks="${alltags[totaltracks]}"
+		date="${alltags[date]}"
+		tracks="${#files[@]}"
 
-		if [[ -z $year ]]; then
-			year="???"
+		if [[ -z $date ]]; then
+			date="???"
 		fi
 
-		if [[ -z $tracks ]]; then
-			tracks="???"
-		fi
-
-		printf "|     %s (%s)\n" "$album" "$year"
+		printf "|     %s (%s)\n" "$album" "$date"
 		printf "|     %s tracks.\n" "$tracks"
 		printf "|\n"
 	done
