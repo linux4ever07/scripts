@@ -184,10 +184,7 @@ sub read_decode_fn {
 sub time_convert {
 	my $time = shift;
 
-	my $h = 0;
-	my $m = 0;
-	my $s = 0;
-	my $ms = 0;
+	my($h, $m, $s, $ms);
 
 # If argument is in the hh:mm:ss format...
 	if ($time =~ m/$format[1]/) {

@@ -5,7 +5,7 @@
 # Tor Browser if less than 1 GB is available. The script will only kill
 # the tabs, but not the main window itself, so the application keeps
 # running but RAM is still freed up.
-#
+
 # The web browser is always the application that ends up using the most
 # RAM on my system. Once the RAM is nearly full, Linux starts swapping
 # and gradually slows down more and more, until grinding to a complete
