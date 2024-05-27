@@ -91,6 +91,8 @@ check_cmd () {
 	fi
 }
 
+check_cmd "${cmd[@]}"
+
 for (( i = 0; i < ${#dirs[@]}; i++ )); do
 	if[dn]="${dirs[${i}]}"
 
