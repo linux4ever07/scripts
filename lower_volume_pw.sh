@@ -203,14 +203,12 @@ set_volume () {
 # Creates a function, called 'reset_volume', which resets the volume.
 reset_volume () {
 	volume[out]="${volume[no]}"
-
 	set_volume 'false'
 
 	until [[ ${volume[out]} -eq ${volume[full]} ]]; do
-		(( volume[out] += 100000 ))
-
 		sleep 0.1
 
+		(( volume[out] += 100000 ))
 		set_volume 'false'
 	done
 }
