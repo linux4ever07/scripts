@@ -209,10 +209,6 @@ reset_volume () {
 	until [[ ${volume[out]} -eq ${volume[full]} ]]; do
 		(( volume[out] += 100000 ))
 
-		if [[ ${volume[out]} -gt ${volume[full]} ]]; then
-			volume[out]="${volume[full]}"
-		fi
-
 		sleep 0.1
 
 		set_volume 'false'
@@ -266,7 +262,7 @@ get_interval () {
 # If there's still a remaining difference, go through the array in
 # reverse, and subtract from each element until the difference is gone.
 # This will distribute the difference evenly.
-	for (( i = last; i > 0; i-- )); do
+	for (( i = last; i >= 0; i-- )); do
 		(( interval_out[${i}] -= interval_in[1] ))
 		(( interval_in[1] -= 1 ))
 
