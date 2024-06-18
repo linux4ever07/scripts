@@ -11,7 +11,7 @@
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
 declare cfg_fn pw_id interval unit spin_pid n
-declare -a count
+declare -a interval_out
 declare -A regex volume
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -32,9 +32,7 @@ volume[target]=0
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
 interval=10
-unit=354
-
-count=(0 0 0)
+unit=360
 
 # Creates a function, called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
@@ -224,56 +222,58 @@ reset_volume () {
 # Creates a function, called 'sleep_low', which sleeps and then lowers
 # the volume.
 sleep_low () {
-	declare diff
-
-	diff="$1"
-
-	sleep "$interval"
-
-	if [[ $diff -ge ${volume[out]} ]]; then
-		volume[out]=0
-	else
-		(( volume[out] -= diff ))
-	fi
-
-	set_volume 'false'
-
 	printf '%s\n' "${volume[out]}"
+
+	for (( i = 0; i < ${#interval_out[@]}; i++ )); do
+		sleep "$interval"
+
+		volume[out]="${interval_out[${i}]}"
+		set_volume 'false'
+
+		printf '%s\n' "${volume[out]}"
+	done
 }
 
-# Creates a function, called 'get_count', which will get the exact
+# Creates a function, called 'get_interval', which will get the exact
 # number to decrease the volume by every 10 seconds. Since Bash can't do
 # floating-point arithmetic, this becomes slightly tricky. Keep in mind
-# that Bash always rounds down, never up. I've chosen 354 as the unit
-# because then it'll be exactly 1 minute left to take care of potential
-# remaining value.
-get_count () {
-	declare diff rem
+# that Bash always rounds down, never up.
+get_interval () {
+	declare last
+	declare -a diff interval_in
+
+	last=$(( unit - 1 ))
 
 # Calculates the difference between current volume and target volume.
-	diff=$(( volume[out] - volume[target] ))
+	diff[0]=$(( volume[out] - volume[target] ))
+	diff[1]="${volume[out]}"
 
-# If the difference is greater than (or equal to) 354, do some
-# calculations. Otherwise just decrease by 0 until the very last second,
-# and then decrease volume by the full difference. There's no need to
-# lower the volume gradually, if the difference is very small.
-	if [[ $diff -ge $unit ]]; then
-		count[0]=$(( diff / unit ))
-		rem=$(( diff % unit ))
+	interval_in[0]=$(( diff[0] / unit ))
+	interval_in[1]=$(( diff[0] % unit ))
 
-# If there's a remaining value, then divide that value by 5, which will
-# be for 354-359. If there's still a remaining value after that, then
-# set ${count[2]} to that value. This will be used for the last instance
-# of lowering the volume.
-		if [[ $rem -ge 5 ]]; then
-			count[1]=$(( rem / 5 ))
-			count[2]=$(( rem % 5 ))
-		else
-			count[2]="$rem"
-		fi
-	else
-		count[2]="$diff"
+# Creates array elements representing the desired volume level at each
+# point in time, by subtracting the difference between current volume
+# and target volume.
+	for (( i = 0; i < unit; i++ )); do
+		(( interval_out[${i}] = (diff[1] - interval_in[0]) ))
+		(( diff[1] -= interval_in[0] ))
+	done
+
+	if [[ ${interval_in[1]} -eq 0 ]]; then
+		return
 	fi
+
+# If there's still a remaining difference, go through the array in
+# reverse, and subtract from each element until the difference is gone.
+# This will distribute the difference evenly.
+	for (( i = last; i > 0; i-- )); do
+		(( interval_out[${i}] -= interval_in[1] ))
+		(( interval_in[1] -= 1 ))
+
+		if [[ ${interval_in[1]} -eq 0 ]]; then
+			break
+		fi
+	done
 }
 
 # Creates a function, called 'spin', which will show a simple animation,
@@ -307,27 +307,13 @@ reset_volume
 
 # If volume is greater than target volume, then...
 if [[ ${volume[out]} -gt ${volume[target]} ]]; then
-	get_count
+	get_interval
 
 # Starts the spinner animation...
 	spin &
 	spin_pid="$!"
 
-	printf '%s\n' "${volume[out]}"
-
-# For the first 354 10-second intervals, lower the volume by the value
-# in ${count[0]}
-	for n in {1..354}; do
-		sleep_low "${count[0]}"
-	done
-
-# For 354-359, lower the volume by the value in ${count[1]}
-	for n in {1..5}; do
-		sleep_low "${count[1]}"
-	done
-
-# Finally lower the volume by the value in ${count[2]}
-	sleep_low "${count[2]}"
+	sleep_low
 
 	kill "$spin_pid"
 	printf '\n'
