@@ -235,7 +235,7 @@ sleep_low () {
 }
 
 # Creates a function, called 'get_interval', which will get the exact
-# number to decrease the volume by every 10 seconds. Since Bash can't do
+# number to decrease the volume by at each interval. Since Bash can't do
 # floating-point arithmetic, this becomes slightly tricky. Keep in mind
 # that Bash always rounds down, never up.
 get_interval () {
@@ -307,12 +307,14 @@ reset_volume
 
 # If volume is greater than target volume, then...
 if [[ ${volume[out]} -gt ${volume[target]} ]]; then
+# Gets the amount to lower the volume by at each interval.
 	get_interval
 
-# Starts the spinner animation...
+# Starts the spinner animation.
 	spin &
 	spin_pid="$!"
 
+# Lowers the volume.
 	sleep_low
 
 	kill "$spin_pid"
