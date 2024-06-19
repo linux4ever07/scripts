@@ -249,8 +249,8 @@ get_interval () {
 # point in time, by subtracting the difference between current volume
 # and target volume.
 	for (( i = 0; i < unit; i++ )); do
-		(( interval_out[${i}] = (diff[1] - interval_in[0]) ))
 		(( diff[1] -= interval_in[0] ))
+		interval_out["${i}"]="${diff[1]}"
 	done
 
 	if [[ ${interval_in[1]} -eq 0 ]]; then
