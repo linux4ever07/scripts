@@ -10,7 +10,7 @@
 
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
-declare cfg_fn pw_id interval unit spin_pid n
+declare cfg_fn pw_id interval unit animation_pid n
 declare -a interval_out
 declare -A regex volume
 
@@ -20,7 +20,7 @@ regex[id]='^id ([0-9]+),'
 regex[node]='^node\.description = \"(.*)\"'
 regex[class]='^media\.class = \"(.*)\"'
 regex[sink]='^Audio\/Sink$'
-regex[volume]='^\"channelVolumes\": \[ ([0-9]+\.[0-9]+), [0-9]+\.[0-9]+ \],'
+regex[volume]='^\"channelVolumes\": \[ ([0-9]+)\.([0-9]+), ([0-9]+)\.([0-9]+) \],'
 regex[zero]='^0+([0-9]+)$'
 regex[split]='^([0-9]+)([0-9]{6})$'
 regex[cfg_node]='^node = (.*)$'
@@ -59,7 +59,7 @@ get_id () {
 
 	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
-# Parse the output from 'pw-cli'...
+# Parses the output from 'pw-cli'.
 	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
 		line="${pw_info[${i}]}"
 
@@ -84,7 +84,7 @@ get_id () {
 
 	(( n += 1 ))
 
-# Save the ids and node names of every node that's an audio sink.
+# Saves the ids and node names of every node that's an audio sink.
 	for (( i = 0; i < n; i++ )); do
 		if [[ ${pw_parsed[${i},class]} =~ ${regex[sink]} ]]; then
 			nodes["${pw_parsed[${i},id]}"]="${pw_parsed[${i},node]}"
@@ -161,7 +161,7 @@ get_volume () {
 			continue
 		fi
 
-		volume[in]=$(tr -d '.' <<<"${BASH_REMATCH[1]}")
+		volume[in]="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
 
 		if [[ ${volume[in]} =~ ${regex[zero]} ]]; then
 			volume[in]="${BASH_REMATCH[1]}"
@@ -270,17 +270,17 @@ get_interval () {
 	done
 }
 
-# Creates a function, called 'spin', which will show a simple animation,
-# while waiting for the command output.
-spin () {
-	declare s
-	declare -a spinner
+# Creates a function, called 'animation', which will show a simple
+# animation, while waiting for the command output.
+animation () {
+	declare step
+	declare -a steps
 
-	spinner=('   ' '.  ' '.. ' '...')
+	steps=('   ' '.  ' '.. ' '...')
 
 	while [[ 1 ]]; do
-		for s in "${spinner[@]}"; do
-			printf '\r%s%s' 'Wait' "$s"
+		for step in "${steps[@]}"; do
+			printf '\r%s%s' 'Wait' "$step"
 			sleep 0.5
 		done
 	done
@@ -304,13 +304,14 @@ if [[ ${volume[out]} -gt ${volume[target]} ]]; then
 # Gets the amount to lower the volume by at each interval.
 	get_interval
 
-# Starts the spinner animation.
-	spin &
-	spin_pid="$!"
+# Starts the animation.
+	animation &
+	animation_pid="$!"
 
 # Lowers the volume.
 	sleep_low
 
-	kill "$spin_pid"
+# Stops the animation.
+	kill "$animation_pid"
 	printf '\n'
 fi
