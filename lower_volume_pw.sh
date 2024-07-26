@@ -233,10 +233,8 @@ sleep_low () {
 # floating-point arithmetic, this becomes slightly tricky. Keep in mind
 # that Bash always rounds down, never up.
 get_interval () {
-	declare last
+	declare first last
 	declare -a diff interval_in
-
-	last=$(( unit - 1 ))
 
 # Calculates the difference between current volume and target volume.
 	diff[0]=$(( volume[out] - volume[target] ))
@@ -257,16 +255,15 @@ get_interval () {
 		return
 	fi
 
+	first=$(( ${#interval_out[@]} - interval_in[1] ))
+	last=$(( ${#interval_out[@]} - 1 ))
+
 # If there's still a remaining difference, go through the array in
 # reverse, and subtract from each element until the difference is gone.
 # This will distribute the difference evenly.
-	for (( i = last; i >= 0; i-- )); do
+	for (( i = last; i >= first; i-- )); do
 		(( interval_out[${i}] -= interval_in[1] ))
 		(( interval_in[1] -= 1 ))
-
-		if [[ ${interval_in[1]} -eq 0 ]]; then
-			break
-		fi
 	done
 }
 
