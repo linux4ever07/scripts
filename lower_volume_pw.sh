@@ -205,7 +205,7 @@ reset_volume () {
 	volume[out]="${volume[no]}"
 	set_volume 'false'
 
-	until [[ ${volume[out]} -eq ${volume[full]} ]]; do
+	until [[ ${volume[out]} -ge ${volume[full]} ]]; do
 		sleep 0.1
 
 		(( volume[out] += 100000 ))
