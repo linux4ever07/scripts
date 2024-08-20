@@ -49,7 +49,7 @@ device_menu () {
 
 	cd '/dev/disk/by-id'
 
-	mapfile -t devices < <(get_files "usb-*" | grep -Ev "${regex[part]}")
+	mapfile -t devices < <(get_files "usb-*" | grep -Ev -- "${regex[part]}")
 
 	if [[ ${#devices[@]} -eq 0 ]]; then
 		printf '\n%s\n\n' 'No USB storage devices found!'
