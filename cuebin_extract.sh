@@ -793,12 +793,15 @@ encode_audio () {
 
 	type_tmp="${audio_types[${type}]}"
 
+# If audio type is not 'wav', return from this function.
+	if [[ $type_tmp != 'wav' ]]; then
+		return
+	fi
+
 	mapfile -t files < <(get_files "*.wav")
 
-# If type is not 'wav' or there are no WAV files, return from this
-# function. This makes it possible for the script to finish normally,
-# even if there are no audio tracks.
-	if [[ $type_tmp != 'wav' || ${#files[@]} -eq 0 ]]; then
+# If there are no WAV files, return from this function.
+	if [[ ${#files[@]} -eq 0 ]]; then
 		return
 	fi
 
