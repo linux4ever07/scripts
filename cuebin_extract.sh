@@ -818,7 +818,7 @@ encode_audio () {
 # Creates a function, called 'create_cue', which will create a new CUE
 # sheet, based on the file list created by the 'copy_track' function.
 create_cue () {
-	declare index_string track_n line_ref type_tmp
+	declare index_string track_n line_ref
 	declare -a offset
 	declare -A ext_format
 
@@ -826,8 +826,6 @@ create_cue () {
 
 	offset=('  ' '    ')
 	ext_format=([bin]='BINARY' [cdr]='BINARY' [ogg]='OGG' [flac]='FLAC')
-
-	type_tmp="${audio_types[${type}]}"
 
 # Creates a function, called 'set_track_info', which will add FILE,
 # TRACK, PREGAP, INDEX and POSTGAP commands. Pregap and postgap is only
