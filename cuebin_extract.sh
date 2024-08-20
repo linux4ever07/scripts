@@ -729,26 +729,37 @@ copy_all_tracks () {
 # Creates a function, called 'cdr2wav', which will convert the extracted
 # CDR files to WAV (using 'ffmpeg' or 'sox').
 cdr2wav () {
-	declare type_tmp
+	declare switch type_tmp
 	declare -a files
 
-	type_tmp="${audio_types[${type}]}"
+	switch=0
+
+# Checks the chosen audio types to see if WAV files need to be produced.
+	for type in "${!audio_types_run[@]}"; do
+		type_tmp="${audio_types[${type}]}"
+
+		if [[ $type_tmp == 'wav' ]]; then
+			switch=1
+
+			break
+		fi
+	done
+
+# If WAV files don't need to be produced, return from this function.
+	if [[ $switch -eq 0 ]]; then
+		return
+	fi
 
 	mapfile -t files < <(get_files "*.cdr")
 
-# If type is not 'wav' or there are no CDR files, return from this
-# function.
-	if [[ $type_tmp != 'wav' || ${#files[@]} -eq 0 ]]; then
+# If there are no CDR files, return from this function.
+	if [[ ${#files[@]} -eq 0 ]]; then
 		return
 	fi
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		if[cdr]="${files[${i}]}"
 		of[wav]="${if[cdr]%.*}.wav"
-
-		if [[ -f ${of[wav]} ]]; then
-			continue
-		fi
 
 		declare args_ref
 		declare -a args_ffmpeg args_sox
@@ -923,9 +934,9 @@ get_gaps
 get_length
 
 copy_all_tracks
+cdr2wav
 
 for type in "${!audio_types_run[@]}"; do
-	cdr2wav
 	encode_audio
 	create_cue
 done
