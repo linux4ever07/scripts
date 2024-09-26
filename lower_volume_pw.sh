@@ -10,6 +10,19 @@
 
 # https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio
 
+# FYI:
+
+# The volume seems to behave differently depending on the connection
+# type of speakers (analog or digital). If the connection is analog then
+# the volume level in PipeWire acts independently of the desktop
+# environment, but this isn't the case when using a digital S/PDIF
+# connection. The 'reset_volume' function is for when the volume of the
+# DE and PipeWire is independent. Otherwise that function doesn't need
+# to be run, and the line that runs it can be commented out.
+
+# This is the behavior in GNOME at least, but it might be different in
+# other DEs or WMs.
+
 declare cfg_fn pw_id interval unit animation_pid n
 declare -a interval_out
 declare -A regex volume
@@ -294,7 +307,7 @@ get_volume
 # the value set in PipeWire. The volume set in the desktop environment
 # seems to be indpendent of the volume set in PipeWire, which might be
 # what's causing this.
-reset_volume
+#reset_volume
 
 # If volume is greater than target volume, then...
 if [[ ${volume[out]} -gt ${volume[target]} ]]; then
