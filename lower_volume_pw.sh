@@ -20,10 +20,10 @@
 # DE and PipeWire is independent. Otherwise that function doesn't need
 # to be run, and the line that runs it can be commented out.
 
-# This is the behavior in GNOME at least, but it might be different in
-# other DEs or WMs.
+# This is the current behavior in GNOME at least, but it might be
+# different in other DEs or WMs.
 
-declare cfg_fn pw_id interval unit animation_pid n
+declare cfg_fn pw_id interval unit animation_pid
 declare -a interval_out
 declare -A regex volume
 
