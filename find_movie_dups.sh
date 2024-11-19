@@ -260,7 +260,7 @@ mapfile -t files_in < <(sudo find "${dirs[@]}" -type f \( -iname "*.avi" -o -ina
 for (( i = 0; i < ${#files_in[@]}; i++ )); do
 	set_names "${files_in[${i}]}"
 
-# If file name pattern matches YouTube videos, ignore file, and continue
+# If name pattern matches YouTube videos, ignore file, and continue
 # with the next iteration of the loop.
 # * (720p_H.264-AAC).mp4
 # * (1080p_30fps_H264-128kbit_AAC).mp4
@@ -268,12 +268,10 @@ for (( i = 0; i < ${#files_in[@]}; i++ )); do
 		continue
 	fi
 
-# Loop through the rip array, in order to find at least two matches for
-# the current $fn.
+# Try to find at least 2 scene tag matches for the current name.
 	count=$(break_name_find "${if[bn_lc]}")
 
-# If directory name contains at least two of the search terms in the
-# 'rip' array, continue on.
+# If name contains at least 2 scene tags, continue on.
 	if [[ $count -ge 2 ]]; then
 		files_out+=("${if[fn]}")
 	fi
