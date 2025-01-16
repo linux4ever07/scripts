@@ -290,7 +290,7 @@ time_convert () {
 # variables. It will also add full path to file names listed in the CUE
 # sheet.
 read_cue () {
-	declare line file_n track_n index_n frames error
+	declare line file_n track_n index_n frames size error
 	declare -a match lines files not_found wrong_format wrong_mode
 
 	declare -a error_types
@@ -350,6 +350,11 @@ read_cue () {
 
 			if_info["${file_n},file_name"]="${match[1]}"
 			if_info["${file_n},file_format"]="${match[2]}"
+
+			if [[ -f ${match[1]} ]]; then
+				size=$(stat -c '%s' "${match[1]}")
+				if_info["${file_n},file_size"]="$size"
+			fi
 
 			continue
 		fi
@@ -511,8 +516,8 @@ get_length () {
 	declare bytes_pregap bytes_track bytes_total frames
 	declare pregap_this_ref pregap_next_ref
 	declare index1_this_ref index1_next_ref
-	declare file_n_this_ref file_n_next_ref file_ref
-	declare sector_ref start_ref
+	declare file_n_this_ref file_n_next_ref
+	declare size_ref sector_ref start_ref
 
 	bytes_total=0
 
@@ -521,13 +526,9 @@ get_length () {
 # function will also reset the 'bytes_total' variable to '0' (as the
 # current track is last in the current BIN file).
 	get_size () {
-		declare size
-
-		size=$(stat -c '%s' "${!file_ref}")
-
-		bytes_track=$(( size - ${!start_ref} ))
 		bytes_total=0
 
+		bytes_track=$(( ${!size_ref} - ${!start_ref} ))
 		bytes["${this},track,length"]="$bytes_track"
 	}
 
@@ -546,7 +547,7 @@ get_length () {
 		file_n_this_ref="if_info[${this},file]"
 		file_n_next_ref="if_info[${next},file]"
 
-		file_ref="if_info[${!file_n_this_ref},file_name]"
+		size_ref="if_info[${!file_n_this_ref},file_size]"
 
 		sector_ref="if_info[${this},sector]"
 
