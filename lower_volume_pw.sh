@@ -2,7 +2,7 @@
 
 # This script slowly and gradually lowers the volume until it's equal to
 # 0%. Although, any target volume can be set using the $volume[target]
-# variable. The script takes 1 hour (360 * 10 seconds) all in all, to
+# variable. The script takes 1 hour (3600 * 1 seconds) all in all, to
 # completely lower the volume to the target volume.
 
 # I'm using this script to automatically lower the volume when I fall
@@ -44,8 +44,8 @@ volume[target]=0
 
 cfg_fn="${HOME}/lower_volume_pw.cfg"
 
-interval=10
-unit=360
+interval=1
+unit=3600
 
 # Creates a function, called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
