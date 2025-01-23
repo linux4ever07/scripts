@@ -23,7 +23,7 @@
 # This is the current behavior in GNOME at least, but it might be
 # different in other DEs or WMs.
 
-declare cfg_fn pw_id interval unit animation_pid
+declare cfg_fn pw_id interval unit
 declare -a interval_out
 declare -A regex volume
 
@@ -229,7 +229,7 @@ reset_volume () {
 # Creates a function, called 'sleep_low', which sleeps and then lowers
 # the volume.
 sleep_low () {
-	printf '%s\n' "${volume[out]}"
+	printf '  %-7s\r' "${volume[out]}"
 
 	for (( i = 0; i < ${#interval_out[@]}; i++ )); do
 		sleep "$interval"
@@ -237,7 +237,7 @@ sleep_low () {
 		volume[out]="${interval_out[${i}]}"
 		set_volume 'false'
 
-		printf '%s\n' "${volume[out]}"
+		printf '  %-7s\r' "${volume[out]}"
 	done
 }
 
@@ -280,22 +280,6 @@ get_interval () {
 	done
 }
 
-# Creates a function, called 'animation', which will show a simple
-# animation, while waiting for the command output.
-animation () {
-	declare step
-	declare -a steps
-
-	steps=('   ' '.  ' '.. ' '...')
-
-	while [[ 1 ]]; do
-		for step in "${steps[@]}"; do
-			printf '\r%s%s' 'Wait' "$step"
-			sleep 0.5
-		done
-	done
-}
-
 # Gets the PipeWire id.
 get_id
 
@@ -314,14 +298,9 @@ if [[ ${volume[out]} -gt ${volume[target]} ]]; then
 # Gets the amount to lower the volume by at each interval.
 	get_interval
 
-# Starts the animation.
-	animation &
-	animation_pid="$!"
-
 # Lowers the volume.
 	sleep_low
 
-# Stops the animation.
-	kill "$animation_pid"
-	printf '\n'
+# Prints newline.
+	printf '\n\n'
 fi
