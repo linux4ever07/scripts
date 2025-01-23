@@ -108,7 +108,7 @@ get_id () {
 
 # If the configuration file exists, get the node name from that.
 	if [[ -f $cfg_fn ]]; then
-		printf '\n%s: %s\n\n' 'Using audio output found in' "$cfg_fn"
+		printf '\n%s:\n%s\n\n' 'Using audio output found in' "$cfg_fn"
 
 		mapfile -t lines <"$cfg_fn"
 
@@ -150,7 +150,7 @@ get_id () {
 			line="node = ${pw_node}"
 
 			printf '%s\n\n' "$line" > "$cfg_fn"
-			printf '\n%s: %s\n\n' 'Wrote selected audio output to' "$cfg_fn"
+			printf '\n%s:\n%s\n\n' 'Wrote selected audio output to' "$cfg_fn"
 		fi
 	fi
 
