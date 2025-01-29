@@ -291,8 +291,8 @@ time_convert () {
 # sheet.
 read_cue () {
 	declare line file_n track_n index_n frames size error
+	declare elements msg_ref list_ref
 	declare -a match lines files not_found wrong_format wrong_mode
-
 	declare -a error_types
 	declare -A error_msgs
 
@@ -432,8 +432,6 @@ read_cue () {
 	fi
 
 	for error in "${error_types[@]}"; do
-		declare elements msg_ref list_ref
-
 		elements=0
 
 		case "$error" in
