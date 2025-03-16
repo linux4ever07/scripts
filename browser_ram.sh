@@ -121,7 +121,11 @@ esac
 is_browser () {
 	declare cmd_stdout
 
-	cmd_stdout=$(ps -C "$cmd" -o pid= 2>&1)
+	if [[ $browser == 'chrome' ]]; then
+		cmd_stdout=$(ps -C chrome -o pid= 2>&1)
+	else
+		cmd_stdout=$(ps -C "$cmd" -o pid= 2>&1)
+	fi
 
 	return "$?"
 }
