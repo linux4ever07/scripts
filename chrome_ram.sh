@@ -1,50 +1,110 @@
 #!/bin/bash
 
-# This is a script that runs the Google Chrome config / cache from
+# This is a script that runs the web browser config / cache from
 # /dev/shm (RAM). Running the whole application in RAM like this makes
 # it more responsive. However, it's not a good idea to do this unless
 # you have lots of RAM.
 
+# Right now, the script supports these browsers:
+# * Chromium
+# * Chrome
+# * Brave
+# * Firefox
+
 # The script has 2 modes, 'normal' and 'clean'.
 
 # In 'normal' mode, the script copies over config and cache from $HOME
-# to /dev/shm, and later restores it after the Chrome process quits.
+# to /dev/shm, and later restores it after the browser process quits.
 # Also, the script updates a backup TAR archive of the /dev/shm config
 # directory every 60 minutes, in case of a power outage or OS crash.
 # That backup is saved to $HOME. It's not automatically removed when
 # the script quits, so you have to remove it manually between each
 # session.
 
-# In 'clean' mode, it runs a clean instance of Chrome with a fresh
+# In 'clean' mode, it runs a clean instance of the browser with a fresh
 # config and cache. Whatever changes are made to that config will be
-# discarded, and when the Chrome process quits, the original config and
+# discarded, and when the browser process quits, the original config and
 # cache are restored.
 
 # The script also checks the amount of free RAM every second, to make
-# sure it's not less than 1GB ($ram_limit). If it's less, then Chrome
-# will be killed and the config / cache directories restored to the hard
-# drive. This is to make sure those directories don't get corrupted when
-# there's not enough free space in /dev/shm to write files.
+# sure it's not less than 1GB ($ram_limit). If it's less, then the
+# browser will be killed and the config / cache directories restored to
+# the hard drive. This is to make sure those directories don't get
+# corrupted when there's not enough free space in /dev/shm to write
+# files.
 
-# If Chrome were to become unresponsive, 'killall -9 chrome' will allow
-# the script to quit normally and restore everything. In case the user
-# wants to restart Chrome quickly, without relaunching the script or
-# touching the hard drive, there's an accompanying script to this called
-# 'chrome_kill.sh'.
+# If the browser were to become unresponsive, 'killall -9' (+ the
+# browser command name) will allow the script to quit normally and
+# restore everything. In case the user wants to restart the browser
+# quickly, without relaunching the script or touching the hard drive,
+# there's an accompanying script to this called 'browser_kill.sh'.
 
 usage () {
-	printf '\n%s\n\n' "Usage: $(basename "$0") [normal|clean]"
+	cat <<USAGE
+
+Usage: $(basename "$0") [browser] [mode]
+
+	Browsers:
+
+	chromium
+	chrome
+	brave
+	firefox
+
+	Modes:
+
+	normal
+	clean
+
+USAGE
+
 	exit
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 2 ]]; then
 	usage
 fi
 
-declare mode session ram_limit time_limit time_start time_end pause_msg
-declare cwd pid_chrome
+declare browser cmd name mode session
+declare ram_limit time_limit time_start time_end pause_msg cwd pid
 declare -a files
-declare -A if of
+declare -A browsers browsers_info if of
+
+browsers[chromium]=1
+browsers[chrome]=1
+browsers[brave]=1
+browsers[firefox]=1
+
+browsers_info[chromium,cmd]='chromium-browser'
+browsers_info[chromium,name]='Chromium'
+browsers_info[chromium,cfg]="${HOME}/.config/chromium"
+browsers_info[chromium,cache]="${HOME}/.cache/chromium"
+
+browsers_info[chrome,cmd]='google-chrome'
+browsers_info[chrome,name]='Chrome'
+browsers_info[chrome,cfg]="${HOME}/.config/google-chrome"
+browsers_info[chrome,cache]="${HOME}/.cache/google-chrome"
+
+browsers_info[brave,cmd]='brave-browser'
+browsers_info[brave,name]='Brave'
+browsers_info[brave,cfg]="${HOME}/.config/BraveSoftware/Brave-Browser"
+browsers_info[brave,cache]="${HOME}/.cache/BraveSoftware/Brave-Browser"
+
+browsers_info[firefox,cmd]='firefox'
+browsers_info[firefox,name]='Firefox'
+browsers_info[firefox,cfg]="${HOME}/.mozilla"
+browsers_info[firefox,cache]="${HOME}/.cache/mozilla"
+
+if [[ -n ${browsers[${1}]} ]]; then
+	browser="$1"
+else
+	usage
+fi
+
+cmd="${browsers_info[${browser},cmd]}"
+name="${browsers_info[${browser},name]}"
+
+shift
 
 case "$1" in
 	'normal')
@@ -58,16 +118,16 @@ case "$1" in
 	;;
 esac
 
-is_chrome () {
+is_browser () {
 	declare cmd_stdout
 
-	cmd_stdout=$(ps -C chrome -o pid= 2>&1)
+	cmd_stdout=$(ps -C "$cmd" -o pid= 2>&1)
 
 	return "$?"
 }
 
-if is_chrome; then
-	printf '\n%s\n\n' 'Chrome is already running!'
+if is_browser; then
+	printf '\n%s\n\n' "${name} is already running!"
 	exit
 fi
 
@@ -75,48 +135,48 @@ session="${RANDOM}-${RANDOM}"
 ram_limit=1000000
 time_limit=3600
 
-pause_msg='Restart Chrome? [y/n]: '
+pause_msg="Restart ${name}? [y/n]: "
 
-if[og_cfg]="${HOME}/.config/google-chrome"
-if[og_cache]="${HOME}/.cache/google-chrome"
+if[og_cfg]="${browsers_info[${browser},cfg]}"
+if[og_cache]="${browsers_info[${browser},cache]}"
 
 if[bak_cfg]="${if[og_cfg]}-${session}"
 if[bak_cache]="${if[og_cache]}-${session}"
 
-of[shm_dn]="/dev/shm/google-chrome-${session}"
+of[shm_dn]="/dev/shm/${browser}-${session}"
 of[shm_cfg]="${of[shm_dn]}/config"
 of[shm_cache]="${of[shm_dn]}/cache"
 
 of[restart_fn]="${of[shm_dn]}/kill"
-of[tar_fn]="${HOME}/google-chrome-${session}.tar"
+of[tar_fn]="${HOME}/${browser}-${session}.tar"
 of[tar_unfinished_fn]="${of[tar_fn]}.unfinished"
 
 cwd="$PWD"
 
-start_chrome () {
+start_browser () {
 	sync
 
-	printf '\n%s\n\n' 'Starting Chrome...'
+	printf '\n%s\n\n' "Starting ${name}..."
 
-	google-chrome 1>&- 2>&- &
-	pid_chrome="$!"
+	"$cmd" &>/dev/null &
+	pid="$!"
 }
 
-restart_chrome () {
+restart_browser () {
 	if [[ ! -f ${of[restart_fn]} ]]; then
 		return
 	fi
 
 	rm "${of[restart_fn]}" || exit
 
-	kill_chrome
-	start_chrome
+	kill_browser
+	start_browser
 }
 
 check_status () {
 	declare cmd_stdout
 
-	cmd_stdout=$(ps -p "$pid_chrome" -o pid= 2>&1)
+	cmd_stdout=$(ps -p "$pid" -o pid= 2>&1)
 
 	return "$?"
 }
@@ -131,18 +191,18 @@ check_ram () {
 	if [[ ${ram[6]} -lt $ram_limit ]]; then
 		printf '\n%s\n\n' 'Running out of RAM...'
 
-		kill_chrome
+		kill_browser
 
 		printf '\n'
 
 		read -p "$pause_msg" -t 60
 
 		if [[ $REPLY == 'y' ]]; then
-			start_chrome
+			start_browser
 		fi
 
 		if [[ $REPLY != 'y' ]]; then
-			restore_chrome
+			restore_browser
 
 			exit
 		fi
@@ -173,8 +233,8 @@ check_hdd () {
 Not enough free space in:
 ${HOME}
 
-You need to free up space to be able to backup the Chrome config, and to
-restore config / cache when Chrome quits.
+You need to free up space to be able to backup the ${name} config, and
+to restore config / cache when ${name} quits.
 
 NOT_ENOUGH
 
@@ -184,7 +244,7 @@ NOT_ENOUGH
 	return 0
 }
 
-backup_chrome () {
+backup_browser () {
 	cat <<BACKUP
 
 $(date)
@@ -207,8 +267,8 @@ BACKUP
 	fi
 }
 
-restore_chrome () {
-	printf '\n%s\n\n' 'Restoring Chrome config / cache...'
+restore_browser () {
+	printf '\n%s\n\n' "Restoring ${name} config / cache..."
 
 	sync
 
@@ -242,17 +302,21 @@ restore_chrome () {
 	cd "$cwd"
 }
 
-kill_chrome () {
-	kill -9 "$pid_chrome"
+kill_browser () {
+	if [[ $browser == 'brave' ]]; then
+		killall -9 brave
+	else
+		kill -9 "$pid"
+	fi
 
-	while is_chrome; do
+	while is_browser; do
 		sleep 1
 	done
 }
 
 iquit () {
-	kill_chrome
-	restore_chrome
+	kill_browser
+	restore_browser
 
 	exit
 }
@@ -272,7 +336,7 @@ ln -s "${of[shm_cfg]}" "${if[og_cfg]}" || exit
 ln -s "${of[shm_cache]}" "${if[og_cache]}" || exit
 
 if [[ $mode == 'normal' ]]; then
-	printf '\n%s\n\n' 'Copying Chrome config / cache to /dev/shm...'
+	printf '\n%s\n\n' "Copying ${name} config / cache to /dev/shm..."
 
 	mapfile -t files < <(compgen -G "${if[bak_cfg]}/*")
 
@@ -289,7 +353,7 @@ if [[ $mode == 'normal' ]]; then
 	rm -r "${if[bak_cache]}" || exit
 fi
 
-start_chrome
+start_browser
 
 if [[ $mode == 'normal' ]]; then
 	cd "${if[bak_cfg]}" || iquit
@@ -309,7 +373,7 @@ time_start=$(date '+%s')
 time_end=$(( time_start + time_limit ))
 
 while check_status; do
-	restart_chrome
+	restart_browser
 
 	sleep 1
 
@@ -318,8 +382,8 @@ while check_status; do
 	check_time || continue
 
 	if [[ $mode == 'normal' ]]; then
-		check_hdd "${of[shm_dn]}" && backup_chrome
+		check_hdd "${of[shm_dn]}" && backup_browser
 	fi
 done
 
-restore_chrome
+restore_browser
