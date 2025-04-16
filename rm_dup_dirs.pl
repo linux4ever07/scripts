@@ -89,12 +89,12 @@ sub get_files {
 	}
 }
 
-# This loop gets the depths and directories.
+# Gets the depths and directories.
 foreach my $dn (@dirs) {
 	get_dirs($dn);
 }
 
-# Gets all the depths and sorts them in descending order.
+# Sorts the depths in descending order.
 @depths = sort { $b <=> $a } keys(%dirs);
 
 # Gets the list of files contained in each directory.
@@ -108,7 +108,7 @@ foreach my $depth (@depths) {
 # files, as well as MD5 hashes. If multiple different directories have
 # the same number of files (with the same names), as well as identical
 # MD5 hashes, then remove the duplicate files. This is not recursive, so
-# there's no risk of accidentally deleting non-empty sub-directories.
+# there's no risk of accidentally removing non-empty sub-directories.
 foreach my $depth_in (@depths) {
 	foreach my $dn_in (sort(keys(%{$dirs{$depth_in}}))) {
 		my $dn_bn_in = $dirs{$depth_in}{$dn_in};
