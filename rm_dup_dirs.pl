@@ -157,7 +157,7 @@ foreach my $depth_in (@depths) {
 				if ($switch == 1) { next; }
 
 				foreach my $fn_in (@files_out) {
-					say 'Deleting: ' . $fn_in;
+					say 'Removing: ' . $fn_in;
 
 					unlink($fn_in) or die "Can't remove '$fn_in': $!";
 				}
@@ -176,7 +176,7 @@ foreach my $depth_in (@depths) {
 		@files_in = sort(keys(%{$files{$dn_in}}));
 
 		if (scalar(@files_in) == 0) {
-			say 'Deleting: ' . $dn_in;
+			say 'Removing: ' . $dn_in;
 
 			rmdir($dn_in);
 		}
