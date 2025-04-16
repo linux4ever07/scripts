@@ -47,7 +47,7 @@ sub md5sum {
 	return($hash);
 }
 
-# The 'get_files' subroutine gets all directories in the directory
+# The 'get_dirs' subroutine gets all directories in the directory
 # passed to it as argument.
 sub get_dirs {
 	my $dn = shift;
