@@ -56,8 +56,8 @@ time_convert () {
 track_n=1
 frames=0
 
-printf '\n%s\n\n' "This script will calculate the total time of all the times given."
-printf '%s\n\n' "Type or paste a time in the mm:ss:ff format."
+printf '\n%s\n\n' 'This script will calculate the total time of all the times given.'
+printf '%s\n\n' 'Type or paste a time in the mm:ss:ff format.'
 
 while [[ 1 ]]; do
 # Reads input.
@@ -79,5 +79,5 @@ while [[ 1 ]]; do
 	out=$(time_convert "$frames")
 
 # Prints the current total time in the mm:ss:ff format.
-	printf "\n*** Track %d start: %s ***\n" "$track_n" "$out"
+	printf '\n*** Track %d start: %s ***\n' "$track_n" "$out"
 done
