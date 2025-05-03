@@ -23,6 +23,11 @@
 # This is the current behavior in GNOME at least, but it might be
 # different in other DEs or WMs.
 
+# If the user wants to arbitrarily delay the lowering of volume, they
+# can do this:
+
+# sleep 1h; lower_volume_pw.sh
+
 declare cfg_fn pw_id interval unit
 declare -a interval_out
 declare -A regex volume
@@ -84,14 +89,20 @@ get_id () {
 			fi
 
 			pw_parsed["${n},id"]="${BASH_REMATCH[1]}"
+
+			continue
 		fi
 
 		if [[ $line =~ ${regex[node]} ]]; then
 			pw_parsed["${n},node"]="${BASH_REMATCH[1]}"
+
+			continue
 		fi
 
 		if [[ $line =~ ${regex[class]} ]]; then
 			pw_parsed["${n},class"]="${BASH_REMATCH[1]}"
+
+			continue
 		fi
 	done
 
