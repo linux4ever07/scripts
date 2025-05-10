@@ -43,8 +43,8 @@ regex[zero]='^0+([0-9]+)$'
 regex[split]='^([0-9]+)([0-9]{6})$'
 regex[cfg_node]='^node = (.*)$'
 
-volume[full]=1000000
-volume[no]=0
+volume[max]=1000000
+volume[min]=0
 volume[target]=0
 
 cfg_fn="${HOME}/lower_volume_pw.cfg"
@@ -226,10 +226,10 @@ set_volume () {
 
 # Creates a function, called 'reset_volume', which resets the volume.
 reset_volume () {
-	volume[out]="${volume[no]}"
+	volume[out]="${volume[min]}"
 	set_volume 'false'
 
-	until [[ ${volume[out]} -ge ${volume[full]} ]]; do
+	until [[ ${volume[out]} -ge ${volume[max]} ]]; do
 		sleep 0.1
 
 		(( volume[out] += 100000 ))
