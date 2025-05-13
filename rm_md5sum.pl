@@ -39,8 +39,8 @@ sub usage {
 	exit;
 }
 
-# The 'get_files' subroutine gets all files and directories in the
-# directory passed to it as argument.
+# The 'get_files' subroutine gets all files in the directory passed to
+# it as argument.
 sub get_files {
 	my $dn = shift;
 

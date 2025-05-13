@@ -7,8 +7,10 @@
 # If you want to do something similar, just change / add / remove array
 # elements as needed.
 
-declare drive_in drive_out
+declare owner drive_in drive_out
 declare -a drives_in drives_out
+
+owner="$USER"
 
 drives_in[0]='5c42d46c-30d6-4b43-a784-30a8328da5ae'
 drives_in[1]='f61840d6-9ba6-4cf8-ad6f-5c97c8c58b18'
@@ -28,6 +30,6 @@ for (( i = 0; i < ${#drives_in[@]}; i++ )); do
 
 	if [[ ! -L $drive_in ]]; then
 		sudo ln -s "$drive_out" "$drive_in"
-		sudo chown "${USER}:${USER}" "$drive_in"
+		sudo chown "${owner}:${owner}" "$drive_in"
 	fi
 done
