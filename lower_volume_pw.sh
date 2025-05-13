@@ -272,9 +272,11 @@ get_interval () {
 		interval_out["${i}"]="${diff[1]}"
 	done
 
-	if [[ ${diff[1]} -eq 0 ]]; then
+	if [[ ${diff[1]} -eq ${volume[target]} ]]; then
 		return
 	fi
+
+	(( diff[1] -= volume[target] ))
 
 	first=$(( ${#interval_out[@]} - diff[1] ))
 	last=$(( ${#interval_out[@]} - 1 ))
