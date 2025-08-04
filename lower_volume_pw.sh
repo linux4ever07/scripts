@@ -168,6 +168,8 @@ get_id () {
 	fi
 
 	if [[ -z $pw_id ]]; then
+		printf '\n%s\n\n' 'Failed to get audio output ID!'
+
 		exit
 	fi
 }
@@ -196,7 +198,7 @@ get_volume () {
 		done
 
 		if [[ ! ${channel_list[0]} =~ ${regex[volume3]} ]]; then
-			continue
+			break
 		fi
 
 		volume[in]="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
@@ -209,6 +211,8 @@ get_volume () {
 	done
 
 	if [[ -z ${volume[in]} ]]; then
+		printf '\n%s\n\n' 'Failed to get current volume!'
+
 		exit
 	fi
 
