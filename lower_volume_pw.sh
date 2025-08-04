@@ -28,7 +28,7 @@
 
 # sleep 1h; lower_volume_pw.sh
 
-declare cfg_fn pw_id interval unit
+declare cfg_fn pw_id interval unit channels
 declare -a interval_out
 declare -A regex volume
 
@@ -38,7 +38,9 @@ regex[id]='^id ([0-9]+),'
 regex[node]='^node\.description = \"(.*)\"'
 regex[class]='^media\.class = \"(.*)\"'
 regex[sink]='^Audio\/Sink$'
-regex[volume]='^\"channelVolumes\": \[ ([0-9]+)\.([0-9]+), ([0-9]+)\.([0-9]+) \],'
+regex[volume1]='^\"channelVolumes\": \[ (.*) \],'
+regex[volume2]='^([0-9]+\.[0-9]+)(, ){0,1}(.*)$'
+regex[volume3]='^([0-9]+)\.([0-9]+)$'
 regex[zero]='^0+([0-9]+)$'
 regex[split]='^([0-9]+)([0-9]{6})$'
 regex[cfg_node]='^node = (.*)$'
@@ -174,14 +176,26 @@ get_id () {
 # volume.
 get_volume () {
 	declare line
-	declare -a pw_dump
+	declare -a pw_dump channel_list
 
 	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
 	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
 		line="${pw_dump[${i}]}"
 
-		if [[ ! $line =~ ${regex[volume]} ]]; then
+		if [[ ! $line =~ ${regex[volume1]} ]]; then
+			continue
+		fi
+
+		line="${BASH_REMATCH[1]}"
+
+		while [[ $line =~ ${regex[volume2]} ]]; do
+			channel_list+=("${BASH_REMATCH[1]}")
+
+			line="${BASH_REMATCH[3]}"
+		done
+
+		if [[ ! ${channel_list[0]} =~ ${regex[volume3]} ]]; then
 			continue
 		fi
 
@@ -197,6 +211,8 @@ get_volume () {
 	if [[ -z ${volume[in]} ]]; then
 		exit
 	fi
+
+	channels="${#channel_list[@]}"
 
 	volume[out]="${volume[in]}"
 }
@@ -221,7 +237,13 @@ set_volume () {
 
 	volume[dec]=$(printf '%d.%06d' "$volume_1" "$volume_2")
 
-	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume[dec]}, ${volume[dec]} ] }" 1>&- 2>&-
+	for (( z = 0; z < channels; z++ )); do
+		volume[list]+="${volume[dec]}, "
+	done
+
+	volume[list]="${volume[list]%, }"
+
+	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume[list]} ] }" 1>&- 2>&-
 }
 
 # Creates a function, called 'reset_volume', which resets the volume.
