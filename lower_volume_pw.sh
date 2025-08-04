@@ -244,6 +244,8 @@ set_volume () {
 	volume[list]="${volume[list]%, }"
 
 	pw-cli s "$pw_id" Props "{ mute: ${mute_tmp}, channelVolumes: [ ${volume[list]} ] }" 1>&- 2>&-
+
+	unset -v volume[dec] volume[list]
 }
 
 # Creates a function, called 'reset_volume', which resets the volume.
