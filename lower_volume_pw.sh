@@ -28,8 +28,8 @@
 
 # sleep 1h; lower_volume_pw.sh
 
-declare cfg_fn pw_id interval unit channels
-declare -a interval_out
+declare cfg_fn pw_id interval unit
+declare -a channels interval_out
 declare -A regex volume
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -178,7 +178,7 @@ get_id () {
 # volume.
 get_volume () {
 	declare line
-	declare -a pw_dump channel_list
+	declare -a pw_dump
 
 	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
@@ -192,31 +192,33 @@ get_volume () {
 		line="${BASH_REMATCH[1]}"
 
 		while [[ $line =~ ${regex[volume2]} ]]; do
-			channel_list+=("${BASH_REMATCH[1]}")
+			channels+=("${BASH_REMATCH[1]}")
 
 			line="${BASH_REMATCH[3]}"
 		done
 
-		if [[ ! ${channel_list[0]} =~ ${regex[volume3]} ]]; then
-			break
-		fi
-
-		volume[in]="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
-
-		if [[ ${volume[in]} =~ ${regex[zero]} ]]; then
-			volume[in]="${BASH_REMATCH[1]}"
-		fi
-
 		break
 	done
+
+	for (( i = 0; i < ${#channels[@]}; i++ )); do
+		if [[ ! ${channels[${i}]} =~ ${regex[volume3]} ]]; then
+			continue
+		fi
+
+		channels["${i}"]="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+
+		if [[ ${channels[${i}]} =~ ${regex[zero]} ]]; then
+			channels["${i}"]="${BASH_REMATCH[1]}"
+		fi
+	done
+
+	volume[in]="${channels[0]}"
 
 	if [[ -z ${volume[in]} ]]; then
 		printf '\n%s\n\n' 'Failed to get current volume!'
 
 		exit
 	fi
-
-	channels="${#channel_list[@]}"
 
 	volume[out]="${volume[in]}"
 }
@@ -241,7 +243,7 @@ set_volume () {
 
 	volume[dec]=$(printf '%d.%06d' "$volume_1" "$volume_2")
 
-	for (( z = 0; z < channels; z++ )); do
+	for (( z = 0; z < ${#channels[@]}; z++ )); do
 		volume[list]+="${volume[dec]}, "
 	done
 
