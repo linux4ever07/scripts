@@ -82,7 +82,7 @@ read_cfg () {
 # use, based on user selection or the existence of a configuration file.
 get_id () {
 	declare pw_node n line
-	declare -a pw_info
+	declare -a lines
 	declare -A pw_parsed nodes
 
 	n=-1
@@ -103,11 +103,11 @@ get_id () {
 		done
 	}
 
-	mapfile -t pw_info < <(pw-cli ls Node | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
+	mapfile -t lines < <(pw-cli ls Node | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
 # Parses the output from 'pw-cli'.
-	for (( i = 0; i < ${#pw_info[@]}; i++ )); do
-		line="${pw_info[${i}]}"
+	for (( i = 0; i < ${#lines[@]}; i++ )); do
+		line="${lines[${i}]}"
 
 		if [[ $line =~ ${regex[id]} ]]; then
 			(( n += 1 ))
@@ -182,12 +182,12 @@ get_id () {
 # volume.
 get_volume () {
 	declare line
-	declare -a pw_dump
+	declare -a lines
 
-	mapfile -t pw_dump < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
+	mapfile -t lines < <(pw-dump "$pw_id" | sed -E -e "s/${regex[blank1]}/\1/" -e "s/${regex[blank2]}/ /g")
 
-	for (( i = 0; i < ${#pw_dump[@]}; i++ )); do
-		line="${pw_dump[${i}]}"
+	for (( i = 0; i < ${#lines[@]}; i++ )); do
+		line="${lines[${i}]}"
 
 		if [[ ! $line =~ ${regex[volume1]} ]]; then
 			continue
