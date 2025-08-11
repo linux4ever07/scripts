@@ -4,7 +4,7 @@
 # in a comma-separated list. The MKV file should be given as the 1st
 # argument to this script.
 
-declare switch line
+declare switch line n
 declare -a mkvinfo_tracks mkvinfo_lines lang_list
 declare -A if regex tracks
 
@@ -19,6 +19,9 @@ regex[track]='^Track$'
 regex[sub]='^Track type: subtitles$'
 regex[lang]='^Language( \(.*\)){0,1}: (.*)$'
 regex[name]='^Name: (.*)$'
+
+switch=0
+n=-1
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -42,8 +45,6 @@ mapfile -t mkvinfo_lines < <(mkvinfo "${if[fn]}" 2>&-)
 
 # Singles out the part that lists the tracks, and ignores the rest of
 # the output from 'mkvinfo'.
-switch=0
-
 for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
 	line="${mkvinfo_lines[${i}]}"
 
@@ -58,6 +59,7 @@ for (( i = 0; i < ${#mkvinfo_lines[@]}; i++ )); do
 
 	if [[ $line =~ ${regex[stop]} ]]; then
 		switch=0
+
 		break
 	fi
 
@@ -71,17 +73,11 @@ done
 unset -v mkvinfo_lines
 
 # Gets all tracks from Matroska file.
-declare n
-
 for (( i = 0; i < ${#mkvinfo_tracks[@]}; i++ )); do
 	line="${mkvinfo_tracks[${i}]}"
 
 	if [[ $line =~ ${regex[track]} ]]; then
-		if [[ -z $n ]]; then
-			n=0
-		else
-			(( n += 1 ))
-		fi
+		(( n += 1 ))
 
 		tracks["${n},sub"]=0
 	fi

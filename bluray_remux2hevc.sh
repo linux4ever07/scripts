@@ -650,6 +650,8 @@ dts_extract_remux () {
 		declare n lang_tmp bps_last this next line
 		declare -a streams_tmp
 
+		n=-1
+
 		streams=()
 		maps=()
 		langs=()
@@ -665,11 +667,7 @@ dts_extract_remux () {
 				continue
 			fi
 
-			if [[ -z $n ]]; then
-				n=0
-			else
-				(( n += 1 ))
-			fi
+			(( n += 1 ))
 
 			streams_tmp["${n}"]="$i"
 			maps["${n}"]="${BASH_REMATCH[1]}"
