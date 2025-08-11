@@ -328,7 +328,7 @@ get_interval () {
 	done
 }
 
-# Reads the configuration file.
+# Reads the configuration file, if it exists.
 read_cfg
 
 # Gets the PipeWire id.
