@@ -28,41 +28,67 @@
 
 # sleep 1h; lower_volume_pw.sh
 
-declare cfg_fn pw_id interval unit
+declare fn pw_id interval unit
 declare -a channels interval_out
-declare -A regex volume
+declare -A regex volume cfg
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[blank2]='[[:blank:]]+'
 regex[id]='^id ([0-9]+),'
-regex[node]='^node\.description = \"(.*)\"'
-regex[class]='^media\.class = \"(.*)\"'
+regex[node]='^node\.description = \"(.+)\"'
+regex[class]='^media\.class = \"(.+)\"'
 regex[sink]='^Audio\/Sink$'
-regex[volume1]='^\"channelVolumes\": \[ (.*) \],'
+regex[volume1]='^\"channelVolumes\": \[ (.+) \],'
 regex[volume2]='^([0-9]+\.[0-9]+)(, ){0,1}(.*)$'
 regex[volume3]='^([0-9]+)\.([0-9]+)$'
 regex[zero]='^0+([0-9]+)$'
 regex[split]='^([0-9]+)([0-9]{6})$'
-regex[cfg_node]='^node = (.*)$'
+regex[cfg]='^(.+) = (.+)$'
 
 volume[max]=1000000
 volume[min]=0
 volume[target]=0
 
-cfg_fn="${HOME}/lower_volume_pw.cfg"
-
 interval=1
 unit=3600
+
+fn="${HOME}/lower_volume_pw.cfg"
+
+# Creates a function, called 'read_cfg', which reads the configuration
+# file, if it exists. Right now, the file only has 1 value (node), but
+# that might change in future versions of the script.
+read_cfg () {
+	declare line
+	declare -a lines
+
+	if [[ ! -f $fn ]]; then
+		return
+	fi
+
+	mapfile -t lines < <(tr -d '\r' <"$fn")
+
+	for (( i = 0; i < ${#lines[@]}; i++ )); do
+		line="${lines[${i}]}"
+
+		if [[ ! $line =~ ${regex[cfg]} ]]; then
+			continue
+		fi
+
+		cfg["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+	done
+}
 
 # Creates a function, called 'get_id', which decides the audio output to
 # use, based on user selection or the existence of a configuration file.
 get_id () {
-	declare pw_node pw_node_tmp n line
-	declare -a pw_info lines
+	declare pw_node n line
+	declare -a pw_info
 	declare -A pw_parsed nodes
 
+	n=-1
+
 	match_node () {
-		declare pw_id_tmp
+		declare pw_id_tmp pw_node_tmp
 
 		for pw_id_tmp in "${!nodes[@]}"; do
 			pw_node_tmp="${nodes[${pw_id_tmp}]}"
@@ -84,11 +110,7 @@ get_id () {
 		line="${pw_info[${i}]}"
 
 		if [[ $line =~ ${regex[id]} ]]; then
-			if [[ -z $n ]]; then
-				n=0
-			else
-				(( n += 1 ))
-			fi
+			(( n += 1 ))
 
 			pw_parsed["${n},id"]="${BASH_REMATCH[1]}"
 
@@ -119,33 +141,19 @@ get_id () {
 
 	unset -v n
 
+	pw_node="${cfg[node]}"
+
 # If the configuration file exists, get the node name from that.
-	if [[ -f $cfg_fn ]]; then
-		printf '\n%s:\n%s\n\n' 'Using audio output found in' "$cfg_fn"
-
-		mapfile -t lines <"$cfg_fn"
-
-		for (( i = 0; i < ${#lines[@]}; i++ )); do
-			line="${lines[${i}]}"
-
-			if [[ ! $line =~ ${regex[cfg_node]} ]]; then
-				continue
-			fi
-
-			pw_node="${BASH_REMATCH[1]}"
-
-			break
-		done
-
-		if [[ -n $pw_node ]]; then
-			match_node
-		fi
+	if [[ -n $pw_node ]]; then
+		match_node
+	fi
 
 # If the node name found in configuration file doesn't exist, clear
 # the $pw_node variable so a new one can be created.
-		if [[ -z $pw_id ]]; then
-			unset -v pw_node
-		fi
+	if [[ -n $pw_id ]]; then
+		printf '\n%s:\n%s\n\n' 'Using audio output found in' "$fn"
+	else
+		unset -v pw_node
 	fi
 
 # If there's no configuration file, then ask the user to select audio
@@ -162,8 +170,8 @@ get_id () {
 		if [[ -n $pw_node ]]; then
 			line="node = ${pw_node}"
 
-			printf '%s\n\n' "$line" > "$cfg_fn"
-			printf '\n%s:\n%s\n\n' 'Wrote selected audio output to' "$cfg_fn"
+			printf '%s\n\n' "$line" > "$fn"
+			printf '\n%s:\n%s\n\n' 'Wrote selected audio output to' "$fn"
 		fi
 	fi
 
@@ -319,6 +327,9 @@ get_interval () {
 		(( diff[1] -= 1 ))
 	done
 }
+
+# Reads the configuration file.
+read_cfg
 
 # Gets the PipeWire id.
 get_id
