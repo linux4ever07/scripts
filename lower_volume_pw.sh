@@ -153,12 +153,8 @@ get_id () {
 	if [[ -n $pw_id ]]; then
 		printf '\n%s:\n%s\n\n' 'Using audio output found in' "$fn"
 	else
-		unset -v pw_node
-	fi
-
 # If there's no configuration file, then ask the user to select audio
 # output. That will get written to the configuration file.
-	if [[ -z $pw_node ]]; then
 		printf '\n%s\n\n' 'Select your audio output:'
 
 		select pw_node in "${nodes[@]}"; do
