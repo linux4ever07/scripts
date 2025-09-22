@@ -148,13 +148,12 @@ get_id () {
 		match_node
 	fi
 
-# If the node name found in configuration file doesn't exist, clear
-# the $pw_node variable so a new one can be created.
+# If the node name found in configuration file doesn't exist, or the
+# file itself doesn't, then ask the user to select audio output. That
+# will get written to the configuration file.
 	if [[ -n $pw_id ]]; then
 		printf '\n%s:\n%s\n\n' 'Using audio output found in' "$fn"
 	else
-# If there's no configuration file, then ask the user to select audio
-# output. That will get written to the configuration file.
 		printf '\n%s\n\n' 'Select your audio output:'
 
 		select pw_node in "${nodes[@]}"; do
@@ -179,7 +178,7 @@ get_id () {
 }
 
 # Creates a function, called 'get_volume', which gets the current
-# volume.
+# volume. It also gets the number of audio channels present.
 get_volume () {
 	declare line
 	declare -a lines
