@@ -30,4 +30,6 @@ mapfile -t files < <(find '/usr/share/applications/' -mindepth 1 -maxdepth 1 -in
 select name_out in "${files[@]}"; do
 	xdg-mime default "$name_out" x-scheme-handler/magnet
 	xdg-mime default "$name_out" application/x-bittorrent
+
+	break
 done
