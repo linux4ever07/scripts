@@ -28,8 +28,12 @@ name_in="$1"
 mapfile -t files < <(find '/usr/share/applications/' -mindepth 1 -maxdepth 1 -type f -iname "*${name_in}*.desktop" -exec basename {} + 2>&-)
 
 select name_out in "${files[@]}"; do
-	xdg-mime default "$name_out" x-scheme-handler/magnet
-	xdg-mime default "$name_out" application/x-bittorrent
-
 	break
 done
+
+if [[ -z $name_out ]]; then
+	exit
+fi
+
+xdg-mime default "$name_out" x-scheme-handler/magnet
+xdg-mime default "$name_out" application/x-bittorrent
