@@ -5,6 +5,8 @@
 # / write permissions to match. In the case of root, all input files
 # and directories are write-protected.
 
+set -eo pipefail
+
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
 usage () {
@@ -15,9 +17,6 @@ usage () {
 # Creates a function, called 'ch_perm', which will figure out if the
 # name is a file or a directory, and change the permissions accordingly.
 ch_perm () {
-	declare dn
-	declare -a dirs
-
 	sudo chown -v -R "${owner}:${owner}" "$1"
 
 	if [[ $owner == "$USER" ]]; then
@@ -32,12 +31,7 @@ ch_perm () {
 		return
 	fi
 
-	mapfile -t dirs < <(sudo find "$1" -type d 2>&-)
-
-	for (( i = 0; i < ${#dirs[@]}; i++ )); do
-		dn="${dirs[${i}]}"
-		sudo chmod -v ugo+x "$dn"
-	done
+	sudo find "$1" -type d -exec chmod -v ugo+x {} +
 }
 
 declare owner fn
