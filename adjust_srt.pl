@@ -246,7 +246,7 @@ sub parse_srt_bad {
 	until ($i == scalar(@lines_tmp)) {
 		$this = $lines_tmp[$i];
 
-		if (length($this) and ! $this =~ m/$format[4]/) {
+		if (length($this) and $this !~ m/$format[4]/) {
 			return(0);
 		}
 
