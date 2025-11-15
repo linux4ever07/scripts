@@ -4,16 +4,6 @@
 # (Matroska) file. The output filename is the same as the input
 # filename, only a random number is added to the name.
 
-usage () {
-	declare -a msg
-
-	msg[0]="You need mkvtoolnix installed to run this script."
-	msg[1]="Usage: $(basename "$0") [mkv]"
-	msg[2]="There are no subtitles in: ${if_bn}"
-	printf '\n%s\n\n' "${msg[${1}]}"
-	exit
-}
-
 declare -a cmd if_subs
 declare -A if of
 
@@ -21,6 +11,16 @@ if[fn]=$(readlink -f "$1")
 if[bn]=$(basename "${if[fn]}")
 if[bn_lc]="${if[bn],,}"
 of[fn]="${if[fn]%.*}-${RANDOM}.mkv"
+
+usage () {
+	declare -a msg
+
+	msg[0]="You need mkvtoolnix installed to run this script."
+	msg[1]="Usage: $(basename "$0") [mkv]"
+	msg[2]="There are no subtitles in: ${if[bn]}"
+	printf '\n%s\n\n' "${msg[${1}]}"
+	exit
+}
 
 mapfile -t cmd < <(command -v mkvinfo mkvmerge)
 
