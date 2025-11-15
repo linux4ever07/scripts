@@ -68,7 +68,7 @@ fi
 declare browser cmd name mode session
 declare ram_limit time_limit time_start time_end pause_msg cwd pid
 declare -a files
-declare -A browsers browsers_info if of
+declare -A browsers browsers_info chromium_based if of
 
 browsers[chromium]=1
 browsers[chrome]=1
@@ -94,6 +94,10 @@ browsers_info[firefox,cmd]='firefox'
 browsers_info[firefox,name]='Firefox'
 browsers_info[firefox,cfg]="${HOME}/.mozilla"
 browsers_info[firefox,cache]="${HOME}/.cache/mozilla"
+
+chromium_based[Chromium]=1
+chromium_based[Chrome]=1
+chromium_based[Brave]=1
 
 if [[ -n ${browsers[${1}]} ]]; then
 	browser="$1"
@@ -159,6 +163,10 @@ cwd="$PWD"
 
 start_browser () {
 	sync
+
+	if [[ -n ${chromium_based[${name}]} ]]; then
+		rm -f "${of[shm_cfg]}/SingletonLock"
+	fi
 
 	printf '\n%s\n\n' "Starting ${name}..."
 
