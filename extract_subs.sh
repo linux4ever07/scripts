@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
 	if [[ ! -f ${if[fn]} || ${if[ext],,} != 'mkv' ]]; then
 		continue
 	fi
-		
+
 	files+=("${if[fn]}")
 done
 
