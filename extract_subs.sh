@@ -12,7 +12,7 @@ declare -A if of
 usage () {
 	declare -a msg
 
-	msg[0]="You need mkvtoolnix installed to run this script."
+	msg[0]="This script needs mkvtoolnix installed!"
 	msg[1]="Usage: $(basename "$0") [mkv]"
 	msg[2]="There are no subtitles in: ${if[bn]}"
 
@@ -29,21 +29,27 @@ fi
 
 # The loop below handles the arguments to the script.
 while [[ $# -gt 0 ]]; do
-	if [[ -f $1 && ${1##*.} == 'mkv' ]]; then
-		files+=("$(readlink -f "$1")")
-	else
-		usage 1
-	fi
+	if[fn]=$(readlink -f "$1")
+	if[ext]="${if[fn]##*.}"
 
 	shift
+
+	if [[ ! -f ${if[fn]} || ${if[ext],,} != 'mkv' ]]; then
+		continue
+	fi
+		
+	files+=("${if[fn]}")
 done
+
+if [[ ${#files[@]} -eq 0 ]]; then
+	usage 1
+fi
 
 # The loop below goes through the list of Matroska files, checks if they
 # contain subtitles, and if so extracts them.
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	if[fn]="${files[${i}]}"
 	if[bn]=$(basename "${if[fn]}")
-	if[bn_lc]="${if[bn],,}"
 	of[fn]="${if[fn]%.*}-${RANDOM}.mkv"
 
 	mapfile -t if_subs < <(mkvinfo "${if[fn]}" 2>&- | grep 'Track type: subtitles')

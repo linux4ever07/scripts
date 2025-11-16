@@ -71,15 +71,14 @@ clean_up () {
 # for file names.
 set_names () {
 	if[fn]=$(readlink -f "$1")
+	if[ext]="${if[fn]##*.}"
 	if[dn]=$(dirname "${if[fn]}")
 	if[bn]=$(basename "${if[fn]}")
-
-	if[bn_lc]="${if[bn],,}"
 
 	of[dn]="${if[dn]}/${if[bn]%.*}"
 	of[mkv]="${of[dn]}/${if[bn]}"
 
-	if [[ ${if[bn_lc]##*.} != 'mkv' ]]; then
+	if [[ ${if[ext],,} != 'mkv' ]]; then
 		usage
 	fi
 }

@@ -9,8 +9,7 @@ declare -a mkvinfo_tracks mkvinfo_lines lang_list
 declare -A if regex tracks
 
 if[fn]=$(readlink -f "$1")
-if[bn]=$(basename "${if[fn]}")
-if[bn_lc]="${if[bn],,}"
+if[ext]="${if[fn]##*.}"
 
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
@@ -30,7 +29,7 @@ usage () {
 	exit
 }
 
-if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'mkv' ]]; then
+if [[ ! -f ${if[fn]} || ${if[ext],,} != 'mkv' ]]; then
 	usage
 fi
 
@@ -38,6 +37,7 @@ command -v mkvinfo 1>&-
 
 if [[ $? -ne 0 ]]; then
 	printf '\nThis script needs %s installed!\n\n' 'mkvtoolnix'
+
 	exit
 fi
 
