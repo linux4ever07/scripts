@@ -315,7 +315,7 @@ check_cmd () {
 # Creates a function, called 'fsencode', which will delete special
 # characters that are not allowed in file names on certain filesystems.
 # The characters in the regex are allowed. All others are deleted. Based
-# on the 'POSIX fully portable file names' entry:
+# on the 'POSIX fully portable filenames' entry:
 # https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
 fsencode () {
 	sed -E 's/[^ A-Za-z0-9._-]//g' <<<"$1"

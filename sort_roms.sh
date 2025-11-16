@@ -9,7 +9,7 @@
 
 # For best results, run your ROM collection through GoodTools before
 # using this script, if it has not been already. That will properly
-# format all the ROM filenames, so the tags will be recognized.
+# format all the ROM file names, so the tags will be recognized.
 
 # The region priority order is: U, UK, A, W, E, J.
 
