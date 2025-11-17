@@ -9,7 +9,10 @@ declare session line line_tmp
 declare -a clients files lines
 declare -A if of regex
 
-clients=('hexchat' 'irccloud' 'irssi' 'konversation')
+# The order of clients is like this, because the Konversation regex is
+# similar to the IRCCloud one and needs to be tried before it. When
+# similar, the most complex regex needs to be tried first.
+clients=('konversation' 'irccloud' 'hexchat' 'irssi')
 
 regex[hexchat]='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+ (.*)$'
 regex[irccloud]='^\[[^]]+\][[:blank:]]+(.*)$'
