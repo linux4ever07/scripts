@@ -29,8 +29,6 @@
 # %o octal
 # %x hexadecimal
 
-declare string char
-
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
 usage () {
@@ -41,6 +39,8 @@ usage () {
 if [[ $# -eq 0 ]]; then
 	usage
 fi
+
+declare string char
 
 string="$@"
 
