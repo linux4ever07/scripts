@@ -3,8 +3,24 @@
 # This script converts a string from ASCII to decimal, octal and
 # hexadecimal codes.
 
-# To convert the character from decimal, octal or hexadecimal back to
-# ASCII:
+# https://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html
+# https://www.gnu.org/software/coreutils/manual/html_node/printf-invocation.html
+
+# To convert the character back to ASCII (note the escape sequences)...
+
+# Decimal:
+# printf '%o\n' '65'
+# printf '%b\n' '\101'
+
+# Or...
+
+# printf '%x\n' '65'
+# printf '%b\n' '\x41'
+
+# Octal:
+# printf '%b\n' '\101'
+
+# Hexadecimal:
 # printf '%b\n' '\x41'
 
 # Type conversion specifiers for 'printf':
@@ -14,7 +30,6 @@
 # %x hexadecimal
 
 declare string char
-declare -a array
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -30,18 +45,13 @@ fi
 string="$@"
 
 # The loop below breaks the string up into its separate characters, and
-# stores them in an array.
-for (( i = 0; i < ${#string}; i++ )); do
-	array+=("${string:${i}:1}")
-done
-
-# The loop below prints the characters in the following formats:
+# prints the characters in the following formats:
 # %s string
 # %d decimal
 # %o octal
 # %x hexadecimal
-for (( i = 0; i < ${#array[@]}; i++ )); do
-	char="${array[${i}]}"
+for (( i = 0; i < ${#string}; i++ )); do
+	char="${string:${i}:1}"
 
 	printf 'char: %-10s dec: %-10d oct: %-10o hex: %x\n' "$char" \'"$char" \'"$char" \'"$char"
 done | less

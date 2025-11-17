@@ -15,13 +15,10 @@ if [[ ! -f $1 ]]; then
 fi
 
 declare if
-declare -a lines
 declare -A regex
 
 if=$(readlink -f "$1")
 
 regex[comment]='^[[:blank:]]*#+'
 
-mapfile -t lines < <(tr -d '\r' <"$if" | grep -Ev "${regex[comment]}")
-
-printf '%s\n' "${lines[@]}"
+tr -d '\r' <"$if" | grep -Ev "${regex[comment]}"
