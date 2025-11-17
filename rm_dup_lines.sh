@@ -11,10 +11,10 @@ declare -A if of regex
 
 clients=('hexchat' 'irccloud' 'irssi' 'konversation')
 
-regex[hexchat]='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+(.*)$'
-regex[irccloud]='^\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\](.*)$'
-regex[irssi]='^[0-9]+:[0-9]+(.*)$'
-regex[konversation]='^\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\](.*)$'
+regex[hexchat]='^[[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+ (.*)$'
+regex[irccloud]='^\[[^]]+\][[:blank:]]+(.*)$'
+regex[irssi]='^[0-9]+:[0-9]+ (.*)$'
+regex[konversation]='^\[[^]]+\][[:blank:]]+\[[^]]+\][[:blank:]]+(.*)$'
 
 session="${RANDOM}-${RANDOM}"
 of[dn]="/dev/shm/rm_dup_lines-${session}"
