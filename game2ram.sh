@@ -12,7 +12,7 @@
 set -eo pipefail
 
 declare session link_dn ram_dn system elements title_ref size_ref
-declare -a systems files size
+declare -a systems files
 declare -A regex dirs_in dirs_out if of loaded
 
 session="${RANDOM}-${RANDOM}"
@@ -169,8 +169,10 @@ for system in "${systems[@]}"; do
 		mkdir -p "${of[dn]}"
 	fi
 
-	mapfile -t "files_${system}" < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 -iname "*" -exec basename -a {} +)
-	mapfile -t "sizes_${system}" < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 -iname "*" -exec du -B MiB -s {} + | grep -Eo "${regex[du]}")
+	mapfile -t files < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 -iname "*" | sort)
+
+	mapfile -t "files_${system}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' basename -a)
+	mapfile -t "sizes_${system}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' du -B MiB -s | grep -Eo "${regex[du]}")
 
 	eval elements=$(printf '${#files_%s[@]}' "$system")
 
