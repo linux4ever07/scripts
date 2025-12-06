@@ -64,7 +64,7 @@ menu () {
 		printf '%s) %s\n' "$z" "$system"
 	done
 
-	printf '\nloaded: %s/%s\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "$actions"
+	printf '\nloaded: %s/%s/%s MiB\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "${loaded[size]}" "$actions"
 
 	read -p '>'
 
@@ -102,7 +102,7 @@ menu () {
 			y=$(( y + 1 ))
 		done
 
-		printf '\nloaded: %s/%s\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "$actions"
+		printf '\nloaded: %s/%s/%s MiB\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "${loaded[size]}" "$actions"
 
 		read -p '>'
 
@@ -126,7 +126,7 @@ menu () {
 
 			loaded[title]="${!title_ref}"
 			loaded[system]="$system"
-			loaded[size]=
+			loaded[size]="${!size_ref}"
 			loaded[link]="${dirs_out[${system}]}/${!title_ref}"
 			loaded[disk]="${dirs_in[${system}]}/${!title_ref}"
 			loaded[ram]="${ram_dn}/${!title_ref}"
