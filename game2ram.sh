@@ -124,8 +124,8 @@ menu () {
 				ln -s "${loaded[disk]}" "${loaded[link]}"
 			fi
 
-			loaded[title]="${!title_ref}"
 			loaded[system]="$system"
+			loaded[title]="${!title_ref}"
 			loaded[size]="${!size_ref}"
 			loaded[link]="${dirs_out[${system}]}/${!title_ref}"
 			loaded[disk]="${dirs_in[${system}]}/${!title_ref}"
