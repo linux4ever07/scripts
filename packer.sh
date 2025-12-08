@@ -48,22 +48,15 @@ regex[dar]='^\.[0-9]+\.dar$'
 touch "$stdout_fn"
 exec 1>>"$stdout_fn"
 
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
-
-ctrl_c () {
-	printf '%s\n' '** Trapped CTRL-C' 1>&2
-	restore_n_quit
-}
-
-# Creates a function, called 'restore_n_quit', which will restore STDOUT
+# Creates a function, called 'iquit', which will restore STDOUT
 # to the shell, and then quit.
-restore_n_quit () {
+iquit () {
 	if [[ $c_tty =~ ${regex[dev]} ]]; then
 		exec 1>"$c_tty"
 	fi
 
 	rm -f "$stdout_fn"
+
 	exit
 }
 
@@ -99,8 +92,11 @@ l
 
 USAGE
 
-	restore_n_quit
+	iquit
 }
+
+# Trap signals (INT, TERM) and call iquit.
+trap iquit SIGINT SIGTERM
 
 # If there are no arguments to the script, print usage and then quit.
 if [[ $# -lt 2 ]]; then
@@ -208,7 +204,7 @@ this line:
 PATH="\${HOME}/bin:\${PATH}"
 
 CMD
-		restore_n_quit
+		iquit
 	fi
 }
 
@@ -573,7 +569,7 @@ case "$mode" in
 # If the archive file name already exists, quit.
 		if [[ -f ${if[fn]} ]]; then
 			printf '\n%s: %s\n\n' "${if[fn]}" 'File already exists' 1>&2
-			restore_n_quit
+			iquit
 		fi
 
 # If no files / directories to be compressed were given as arguments,
@@ -627,4 +623,4 @@ esac
 
 printf '\n' 1>&2
 
-restore_n_quit
+iquit

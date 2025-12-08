@@ -40,7 +40,7 @@ iquit () {
 		rm -rf "$ram_dn"
 	fi
 
-	if [[ -n ${loaded[disk]} ]]; then
+	if [[ -n ${loaded[ram]} ]]; then
 		rm -f "${loaded[link]}"
 
 		ln -s "${loaded[disk]}" "${loaded[link]}"
@@ -152,6 +152,8 @@ menu () {
 		esac
 	fi
 }
+
+trap iquit SIGINT SIGTERM
 
 mkdir "$ram_dn"
 

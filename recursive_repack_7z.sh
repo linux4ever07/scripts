@@ -142,13 +142,12 @@ of[fn_corrupt]="${HOME}/repack_corrupt-${session}.txt"
 of[fn_empty]="${HOME}/repack_empty-${session}.txt"
 of[fn_symlink]="${HOME}/repack_symlink-${session}.txt"
 
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
+# Trap signals (INT, TERM) and call restore_n_quit.
+trap iquit SIGINT SIGTERM
 
-ctrl_c () {
-	printf '%s\n' '** Trapped CTRL-C'
-
+iquit () {
 	rm_tmp
+
 	exit
 }
 
