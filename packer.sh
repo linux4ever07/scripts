@@ -48,8 +48,8 @@ regex[dar]='^\.[0-9]+\.dar$'
 touch "$stdout_fn"
 exec 1>>"$stdout_fn"
 
-# Creates a function, called 'iquit', which will restore STDOUT
-# to the shell, and then quit.
+# Creates a function, called 'iquit', which will restore STDOUT to the
+# shell, and then quit.
 iquit () {
 	if [[ $c_tty =~ ${regex[dev]} ]]; then
 		exec 1>"$c_tty"
