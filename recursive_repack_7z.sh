@@ -142,7 +142,7 @@ of[fn_corrupt]="${HOME}/repack_corrupt-${session}.txt"
 of[fn_empty]="${HOME}/repack_empty-${session}.txt"
 of[fn_symlink]="${HOME}/repack_symlink-${session}.txt"
 
-# Trap signals (INT, TERM) and call restore_n_quit.
+# Trap signals (INT, TERM) and call iquit.
 trap iquit SIGINT SIGTERM
 
 iquit () {
