@@ -36,14 +36,10 @@ dirs_out[PS2]="${link_dn}/ps2"
 dirs_out[Gamecube]="${link_dn}/gamecube"
 
 iquit () {
+	unload_game
+
 	if [[ -d $ram_dn ]]; then
 		rm -rf "$ram_dn"
-	fi
-
-	if [[ -n ${loaded[ram]} ]]; then
-		rm -f "${loaded[link]}"
-
-		ln -s "${loaded[disk]}" "${loaded[link]}"
 	fi
 
 	sync
@@ -51,10 +47,37 @@ iquit () {
 	exit
 }
 
+load_game () {
+	loaded[system]="$system"
+	loaded[title]="${!title_ref}"
+	loaded[size]="${!size_ref}"
+	loaded[link]="${dirs_out[${system}]}/${!title_ref}"
+	loaded[disk]="${dirs_in[${system}]}/${!title_ref}"
+	loaded[ram]="${ram_dn}/${!title_ref}"
+
+	cp -Lrp "${loaded[disk]}" "${loaded[ram]}"
+
+	rm -f "${loaded[link]}"
+
+	ln -s "${loaded[ram]}" "${loaded[link]}"
+}
+
+unload_game () {
+	if [[ -n ${loaded[ram]} ]]; then
+		rm -rf "${loaded[ram]}"
+
+		rm -f "${loaded[link]}"
+
+		ln -s "${loaded[disk]}" "${loaded[link]}"
+
+		loaded=()
+	fi
+}
+
 menu () {
 	declare actions title_ref1 title_ref2 size_ref1 size_ref2 string1 string2
 
-	actions='(a) abort (q) quit'
+	actions='(a) abort (u) unload (q) quit'
 
 	printf '\nChoose system:\n\n'
 
@@ -116,26 +139,8 @@ menu () {
 				return
 			fi
 
-			if [[ -n ${loaded[ram]} ]]; then
-				rm -rf "${loaded[ram]}"
-
-				rm -f "${loaded[link]}"
-
-				ln -s "${loaded[disk]}" "${loaded[link]}"
-			fi
-
-			loaded[system]="$system"
-			loaded[title]="${!title_ref}"
-			loaded[size]="${!size_ref}"
-			loaded[link]="${dirs_out[${system}]}/${!title_ref}"
-			loaded[disk]="${dirs_in[${system}]}/${!title_ref}"
-			loaded[ram]="${ram_dn}/${!title_ref}"
-
-			cp -Lrp "${loaded[disk]}" "${loaded[ram]}"
-
-			rm -f "${loaded[link]}"
-
-			ln -s "${loaded[ram]}" "${loaded[link]}"
+			unload_game
+			load_game
 
 			sync
 		fi
@@ -143,6 +148,11 @@ menu () {
 
 	if [[ $REPLY =~ ${regex[alpha]} ]]; then
 		case "$REPLY" in
+			'u')
+				unload_game
+
+				return
+			;;
 			'q')
 				iquit
 			;;
