@@ -171,7 +171,7 @@ for system in "${systems[@]}"; do
 		mkdir -p "${of[dn]}"
 	fi
 
-	mapfile -t files < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 -iname "*" | sort)
+	mapfile -t files < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 | sort)
 
 	mapfile -t "files_${system}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' basename -a)
 	mapfile -t "sizes_${system}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' du -B MiB -s | grep -Eo "${regex[du]}")
@@ -202,6 +202,8 @@ for system in "${systems[@]}"; do
 		fi
 	done
 done
+
+unset -v files
 
 sync
 
