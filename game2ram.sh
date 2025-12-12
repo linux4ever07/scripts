@@ -63,15 +63,17 @@ load_game () {
 }
 
 unload_game () {
-	if [[ -n ${loaded[ram]} ]]; then
-		rm -rf "${loaded[ram]}"
-
-		rm -f "${loaded[link]}"
-
-		ln -s "${loaded[disk]}" "${loaded[link]}"
-
-		loaded=()
+	if [[ ${#loaded[@]} -eq 0 ]]; then
+		return
 	fi
+
+	rm -rf "${loaded[ram]}"
+
+	rm -f "${loaded[link]}"
+
+	ln -s "${loaded[disk]}" "${loaded[link]}"
+
+	loaded=()
 }
 
 menu () {
