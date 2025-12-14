@@ -55,6 +55,12 @@ iquit () {
 	exit
 }
 
+relink () {
+	rm -f "${of[link]}"
+
+	ln -s "${if[disk]}" "${of[link]}"
+}
+
 load_game () {
 	loaded[system]="$system_out"
 	loaded[title]="${!title_ref}"
@@ -186,6 +192,8 @@ for system_in in "${systems_in[@]}"; do
 	of[dn]="${dirs_out[${system_in}]}"
 
 	if [[ ! -d  ${if[dn]} ]]; then
+		printf '\nNot found:\n%s\n\n' "${if[dn]}"
+
 		exit
 	fi
 
@@ -205,20 +213,16 @@ for system_in in "${systems_in[@]}"; do
 
 		if[disk]=$(readlink -f "${if[dn]}/${!title_ref}")
 		of[link]="${of[dn]}/${!title_ref}"
-		of[disk]=$(readlink -f "${of[link]}")
+		of[disk]=$(readlink -m "${of[link]}")
 
 		if [[ ! -L ${of[link]} ]]; then
-			rm -f "${of[link]}"
-
-			ln -s "${if[disk]}" "${of[link]}"
+			relink
 
 			continue
 		fi
 
 		if [[ ${if[disk]} != "${of[disk]}" ]]; then
-			rm -f "${of[link]}"
-
-			ln -s "${if[disk]}" "${of[link]}"
+			relink
 
 			continue
 		fi
