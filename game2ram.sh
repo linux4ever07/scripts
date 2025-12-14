@@ -32,7 +32,7 @@ systems_out[ps1]='PlayStation'
 systems_out[ps2]='PlayStation 2'
 systems_out[gamecube]='GameCube'
 
-dirs_in[pc_engine_cd]='/home/lucifer/ROMs_files/pc_engine/unpacked'
+dirs_in[pc_engine_cd]='/home/lucifer/ROMs_files/pc_engine_cd/unpacked'
 dirs_in[sega_cd]='/home/lucifer/SSD/ROMs/sega_cd'
 dirs_in[saturn]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/saturn/unpacked'
 dirs_in[ps1]='/home/lucifer/SSD/ROMs/playstation'
