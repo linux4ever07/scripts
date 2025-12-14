@@ -11,29 +11,37 @@
 
 set -eo pipefail
 
-declare session link_dn ram_dn system elements title_ref size_ref
-declare -a systems files
-declare -A regex dirs_in dirs_out if of loaded
+declare session link_dn ram_dn system_in system_out elements title_ref size_ref
+declare -a systems_in files
+declare -A regex systems_out dirs_in dirs_out if of loaded
 
 session="${RANDOM}-${RANDOM}"
 link_dn="${HOME}/ROMs_links"
 ram_dn="/dev/shm/game2ram-${session}"
 
-systems=('Saturn' 'PS1' 'PS2' 'Gamecube')
-
 regex[digit]='^[[:digit:]]+$'
 regex[alpha]='^[[:alpha:]]+$'
 regex[du]='^[[:digit:]]+'
 
-dirs_in[Saturn]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/saturn/unpacked'
-dirs_in[PS1]='/home/lucifer/SSD/ROMs/playstation'
-dirs_in[PS2]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
-dirs_in[Gamecube]='/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
+systems_in=('pc_engine_cd' 'sega_cd' 'saturn' 'ps1' 'ps2' 'gamecube')
 
-dirs_out[Saturn]="${link_dn}/saturn"
-dirs_out[PS1]="${link_dn}/ps1"
-dirs_out[PS2]="${link_dn}/ps2"
-dirs_out[Gamecube]="${link_dn}/gamecube"
+systems_out[pc_engine_cd]='PC Engine CD-ROM²'
+systems_out[sega_cd]='Sega CD'
+systems_out[saturn]='Sega Saturn'
+systems_out[ps1]='PlayStation'
+systems_out[ps2]='PlayStation 2'
+systems_out[gamecube]='GameCube'
+
+dirs_in[pc_engine_cd]='/home/lucifer/ROMs_files/pc_engine/unpacked'
+dirs_in[sega_cd]='/home/lucifer/SSD/ROMs/sega_cd'
+dirs_in[saturn]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/saturn/unpacked'
+dirs_in[ps1]='/home/lucifer/SSD/ROMs/playstation'
+dirs_in[ps2]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
+dirs_in[gamecube]='/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
+
+for system_in in "${systems_in[@]}"; do
+	dirs_out["${system_in}"]="${link_dn}/${system_in}"
+done
 
 iquit () {
 	unload_game
@@ -48,11 +56,11 @@ iquit () {
 }
 
 load_game () {
-	loaded[system]="$system"
+	loaded[system]="$system_out"
 	loaded[title]="${!title_ref}"
 	loaded[size]="${!size_ref}"
-	loaded[link]="${dirs_out[${system}]}/${!title_ref}"
-	loaded[disk]="${dirs_in[${system}]}/${!title_ref}"
+	loaded[link]="${dirs_out[${system_in}]}/${!title_ref}"
+	loaded[disk]="${dirs_in[${system_in}]}/${!title_ref}"
 	loaded[ram]="${ram_dn}/${!title_ref}"
 
 	cp -Lrp "${loaded[disk]}" "${loaded[ram]}"
@@ -83,10 +91,11 @@ menu () {
 
 	printf '\nChoose system:\n\n'
 
-	for (( z = 0; z < ${#systems[@]}; z++ )); do
-		system="${systems[${z}]}"
+	for (( z = 0; z < ${#systems_in[@]}; z++ )); do
+		system_in="${systems_in[${z}]}"
+		system_out="${systems_out[${system_in}]}"
 
-		printf '%s) %s\n' "$z" "$system"
+		printf '%s) %s\n' "$z" "$system_out"
 	done
 
 	printf '\nloaded: %s/%s/%s MiB\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "${loaded[size]}" "$actions"
@@ -96,24 +105,25 @@ menu () {
 	clear
 
 	if [[ $REPLY =~ ${regex[digit]} ]]; then
-		system="${systems[${REPLY}]}"
+		system_in="${systems_in[${REPLY}]}"
+		system_out="${systems_out[${system_in}]}"
 
-		if [[ -z $system ]]; then
+		if [[ -z $system_in ]]; then
 			return
 		fi
 
-		printf '\nChoose (%s) game:\n\n' "$system"
+		printf '\nChoose (%s) game:\n\n' "$system_out"
 
-		eval elements=$(printf '${#files_%s[@]}' "$system")
+		eval elements=$(printf '${#files_%s[@]}' "$system_in")
 
 		for (( y = 0; y < elements; y++ )); do
 			z=$(( y + 1 ))
 
-			title_ref1="files_${system}[${y}]"
-			title_ref2="files_${system}[${z}]"
+			title_ref1="files_${system_in}[${y}]"
+			title_ref2="files_${system_in}[${z}]"
 
-			size_ref1="sizes_${system}[${y}]"
-			size_ref2="sizes_${system}[${z}]"
+			size_ref1="sizes_${system_in}[${y}]"
+			size_ref2="sizes_${system_in}[${z}]"
 
 			string1="${y}) ${!title_ref1:0:50} (${!size_ref1} MiB)"
 			string2="${z}) ${!title_ref2:0:50} (${!size_ref2} MiB)"
@@ -134,8 +144,8 @@ menu () {
 		clear
 
 		if [[ $REPLY =~ ${regex[digit]} ]]; then
-			title_ref="files_${system}[${REPLY}]"
-			size_ref="sizes_${system}[${REPLY}]"
+			title_ref="files_${system_in}[${REPLY}]"
+			size_ref="sizes_${system_in}[${REPLY}]"
 
 			if [[ -z ${!title_ref} ]]; then
 				return
@@ -169,11 +179,11 @@ trap iquit SIGINT SIGTERM
 
 mkdir "$ram_dn"
 
-for system in "${systems[@]}"; do
-	declare -a "files_${system}" "sizes_${system}"
+for system_in in "${systems_in[@]}"; do
+	declare -a "files_${system_in}" "sizes_${system_in}"
 
-	if[dn]="${dirs_in[${system}]}"
-	of[dn]="${dirs_out[${system}]}"
+	if[dn]="${dirs_in[${system_in}]}"
+	of[dn]="${dirs_out[${system_in}]}"
 
 	if [[ ! -d  ${if[dn]} ]]; then
 		exit
@@ -185,13 +195,13 @@ for system in "${systems[@]}"; do
 
 	mapfile -t files < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 | sort)
 
-	mapfile -t "files_${system}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' basename -a)
-	mapfile -t "sizes_${system}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' du -B MiB -s | grep -Eo "${regex[du]}")
+	mapfile -t "files_${system_in}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' basename -a)
+	mapfile -t "sizes_${system_in}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' du -B MiB -s | grep -Eo "${regex[du]}")
 
-	eval elements=$(printf '${#files_%s[@]}' "$system")
+	eval elements=$(printf '${#files_%s[@]}' "$system_in")
 
 	for (( i = 0; i < elements; i++ )); do
-		title_ref="files_${system}[${i}]"
+		title_ref="files_${system_in}[${i}]"
 
 		if[disk]=$(readlink -f "${if[dn]}/${!title_ref}")
 		of[link]="${of[dn]}/${!title_ref}"
