@@ -25,8 +25,8 @@ regex[du]='^[[:digit:]]+'
 
 add_system () {
 	systems_in+=("$1")
-	systems_out["$1"]="$2"
-	dirs_in["$1"]="$3"
+	systems_out["${1}"]="$2"
+	dirs_in["${1}"]="$3"
 }
 
 add_system 'pc_engine_cd' 'PC Engine CD-ROM²' '/home/lucifer/ROMs_files/pc_engine_cd/unpacked'
