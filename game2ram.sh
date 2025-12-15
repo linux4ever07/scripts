@@ -23,21 +23,19 @@ regex[digit]='^[[:digit:]]+$'
 regex[alpha]='^[[:alpha:]]+$'
 regex[du]='^[[:digit:]]+'
 
-systems_in=('pc_engine_cd' 'sega_cd' 'saturn' 'ps1' 'ps2' 'gamecube')
+add_system () {
+	systems_in+=("$1")
+	systems_out["$1"]="$2"
+	dirs_in["$1"]="$3"
+}
 
-systems_out[pc_engine_cd]='PC Engine CD-ROM²'
-systems_out[sega_cd]='Sega CD'
-systems_out[saturn]='Sega Saturn'
-systems_out[ps1]='PlayStation'
-systems_out[ps2]='PlayStation 2'
-systems_out[gamecube]='GameCube'
-
-dirs_in[pc_engine_cd]='/home/lucifer/ROMs_files/pc_engine_cd/unpacked'
-dirs_in[sega_cd]='/home/lucifer/SSD/ROMs/sega_cd'
-dirs_in[saturn]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/saturn/unpacked'
-dirs_in[ps1]='/home/lucifer/SSD/ROMs/playstation'
-dirs_in[ps2]='/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
-dirs_in[gamecube]='/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
+add_system 'pc_engine_cd' 'PC Engine CD-ROM²' '/home/lucifer/ROMs_files/pc_engine_cd/unpacked'
+add_system 'amiga_cd32' 'Amiga CD³²' '/home/lucifer/SSD/ROMs/amiga_cd32'
+add_system 'sega_cd' 'Sega CD' '/home/lucifer/SSD/ROMs/sega_cd'
+add_system 'saturn' 'Sega Saturn' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/saturn/unpacked'
+add_system 'ps1' 'PlayStation' '/home/lucifer/SSD/ROMs/playstation'
+add_system 'ps2' 'PlayStation 2' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
+add_system 'gamecube' 'GameCube' '/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
 
 for system_in in "${systems_in[@]}"; do
 	dirs_out["${system_in}"]="${link_dn}/${system_in}"
@@ -118,9 +116,13 @@ menu () {
 			return
 		fi
 
-		printf '\nChoose (%s) game:\n\n' "$system_out"
-
 		eval elements=$(printf '${#files_%s[@]}' "$system_in")
+
+		if [[ $elements -eq 0 ]]; then
+			return
+		fi
+
+		printf '\nChoose (%s) game:\n\n' "$system_out"
 
 		for (( y = 0; y < elements; y++ )); do
 			z=$(( y + 1 ))
