@@ -20,25 +20,24 @@
 
 set -eo pipefail
 
-declare dn fn_in fn_out fn_tmp keyword line_in line_out number session
-declare -a files keywords lines_in lines_out selected
+declare dn_in dn_out fn_in fn_out fn_tmp bn keyword line_in line_out number session
+declare -a files_in files_out dirs keywords lines_in lines_out selected
 declare -A regex
 
 session="${RANDOM}-${RANDOM}"
-#dn="${HOME}/Documents"
-dn="${HOME}/text_keyword"
+#dn_in="${HOME}/Documents"
+dn_in="${HOME}/text_keyword"
 fn_out="${HOME}/games123.txt"
-fn_tmp="${dn}/text_keyword-${session}.txt"
+fn_tmp="/dev/shm/text_keyword-${session}.txt"
 
-keywords=('(super){0,1} *nintendo *(64){0,1}' 'n *64' 'game[ -]*boy' 'gb([ca]){0,1}' 'sega' 'master[ -]*system' 'game[ -]*gear' 'mega[ -]*drive' 'genesis' 'saturn' 'dreamcast' 'neo[ -]*geo' 'pc[ -]*engine' 'turbografx' 'gamecube' 'playstation' 'ps *[1-5]' 'ouya' 'pce' 'arcade' 'mame' '(s){0,1}nes' 'pc' 'roms' '(computer|video){0,1}[ -]*game(s){0,1}')
+keywords=('(super){0,1} *nintendo *(64){0,1}' 'n *64' 'game[ -]*boy' 'gb([ca]){0,1}' 'sega' 'master[ -]*system' 'game[ -]*gear' 'mega[ -]*drive' 'genesis' 'saturn' 'dreamcast' 'neo[ -]*geo' 'pc[ -]*engine' 'turbografx' 'gamecube' 'playstation' 'ps *[1-5]' 'ouya' 'pce' 'arcade' 'mame' '(s){0,1}nes' 'pc' 'roms' '(computer|video){0,1}[ -]*game(s){0,1}' 'fav(orite|s){0,1}')
 
 regex[range]='^([[:digit:]]+)-([[:digit:]]+)$'
+regex[skip]='^/home/lucifer/game_lists'
 
-if [[ -f $fn_tmp ]]; then
-	exit
-fi
+mapfile -t dirs < <(find "/run/media/${USER}" -mindepth 1 -maxdepth 1 -type d)
 
-mapfile -t files < <(find "$dn" -mindepth 1 -maxdepth 1 -iname "notes*.txt")
+dirs=("$HOME" "${dirs[@]}")
 
 menu () {
 	declare number_in number_out number_start number_stop range_start range_stop switch
@@ -113,41 +112,91 @@ menu () {
 	done
 }
 
-for keyword in "${keywords[@]}"; do
-	for (( i = 0; i < ${#files[@]}; i++ )); do
-		fn_in="${files[${i}]}"
+process_files () {
+	if [[ ${#files_in[@]} -eq 0 ]]; then
+		return
+	fi
 
-		selected=()
+	for keyword in "${keywords[@]}"; do
+		for (( i = 0; i < ${#files_in[@]}; i++ )); do
+			fn_in="${files_in[${i}]}"
 
-		mapfile -t lines_in < <(tr -d '\r' <"$fn_in")
+			selected=()
 
-		lines_out=("${lines_in[@]}")
+			mapfile -t lines_in < <(tr -d '\r' <"$fn_in")
 
-		for (( j = 0; j < ${#lines_in[@]}; j++ )); do
-			line_in="${lines_in[${j}]}"
+			lines_out=("${lines_in[@]}")
 
-			if [[ ${line_in,,} =~ $keyword ]]; then
-				menu "$j"
+			for (( j = 0; j < ${#lines_in[@]}; j++ )); do
+				line_in="${lines_in[${j}]}"
+
+				if [[ ${line_in,,} =~ $keyword ]]; then
+					menu "$j"
+				fi
+			done
+
+			if [[ ${#selected[@]} -gt 0 ]]; then
+				for number in "${selected[@]}"; do
+					printf '%s\n' "${lines_out[${number}]}" >> "$fn_out"
+				done
+
+				printf '\n***\n\n' >> "$fn_out"
+
+				for number in "${selected[@]}"; do
+					unset -v "lines_out[${number}]"
+				done
+
+				lines_out=("${lines_out[@]}")
+
+				printf '%s\n' "${lines_out[@]}" > "$fn_tmp"
+
+				touch -r "$fn_in" "$fn_tmp"
+				mv "$fn_tmp" "$fn_in"
 			fi
 		done
+	done
+}
 
-		if [[ ${#selected[@]} -gt 0 ]]; then
-			for number in "${selected[@]}"; do
-				printf '%s\n' "${lines_out[${number}]}" >> "$fn_out"
-			done
+mapfile -t files_in < <(find "$dn_in" -mindepth 1 -maxdepth 1 -type f -iname "notes*.txt")
 
-			printf '\n***\n\n' >> "$fn_out"
+process_files
 
-			for number in "${selected[@]}"; do
-				unset -v "lines_out[${number}]"
-			done
+for dn_out in "${dirs[@]}"; do
+	mapfile -t files_in < <(find "$dn_out" -mindepth 1 -maxdepth 1 -type f -iname "*.txt")
 
-			lines_out=("${lines_out[@]}")
+	files_out+=("${files_in[@]}")
+done
 
-			printf '%s\n' "${lines_out[@]}" > "$fn_tmp"
+files_in=("${files_out[@]}")
+files_out=()
 
-			touch -r "$fn_in" "$fn_tmp"
-			mv "$fn_tmp" "$fn_in"
+for (( i = 0; i < ${#files_in[@]}; i++ )); do
+	fn_in="${files_in[${i}]}"
+	bn="${fn_in##*/}"
+	bn="${bn%.*}"
+
+	if [[ -L $fn_in ]]; then
+		continue
+	fi
+
+	if [[ $fn_in == "$fn_out" ]]; then
+		continue
+	fi
+
+	if [[ $fn_in =~ ${regex[skip]} ]]; then
+		continue
+	fi
+
+	for keyword in "${keywords[@]}"; do
+		if [[ ${bn,,} =~ $keyword ]]; then
+			files_out+=("$fn_in")
+
+			break
 		fi
 	done
 done
+
+files_in=("${files_out[@]}")
+files_out=()
+
+process_files
