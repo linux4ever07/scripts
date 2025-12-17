@@ -33,7 +33,8 @@ fn_tmp="/dev/shm/text_keyword-${session}.txt"
 keywords=('(super){0,1} *nintendo *(64){0,1}' 'n *64' 'game[ -]*boy' 'gb([ca]){0,1}' 'sega' 'master[ -]*system' 'game[ -]*gear' 'mega[ -]*drive' 'genesis' 'saturn' 'dreamcast' 'neo[ -]*geo' 'pc[ -]*engine' 'turbografx' 'gamecube' 'playstation' 'ps *[1-5]' 'ouya' 'pce' 'arcade' 'mame' '(s){0,1}nes' 'pc' 'roms' '(computer|video){0,1}[ -]*game(s){0,1}' 'fav(orite|s){0,1}')
 
 regex[range]='^([[:digit:]]+)-([[:digit:]]+)$'
-regex[skip]='^/home/lucifer/game_lists'
+regex[skip1]='^/home/lucifer/game_lists'
+regex[skip2]='^/home/lucifer/unpacked/irc_logs'
 
 mapfile -t dirs < <(find "/run/media/${USER}" -mindepth 1 -maxdepth 1 -type d)
 
@@ -183,7 +184,11 @@ for (( i = 0; i < ${#files_in[@]}; i++ )); do
 		continue
 	fi
 
-	if [[ $fn_in =~ ${regex[skip]} ]]; then
+	if [[ $fn_in =~ ${regex[skip1]} ]]; then
+		continue
+	fi
+
+	if [[ $fn_in =~ ${regex[skip2]} ]]; then
 		continue
 	fi
 
