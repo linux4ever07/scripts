@@ -33,7 +33,7 @@ add_system 'pc_engine_cd' 'PC Engine CD-ROM²' '/run/media/lucifer/2c5518a5-5311
 add_system 'amiga_cd32' 'Amiga CD³²' '/home/lucifer/SSD/ROMs/amiga_cd32'
 add_system 'sega_cd' 'Sega CD' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/sega_cd/unpacked'
 add_system 'saturn' 'Sega Saturn' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/saturn/unpacked'
-add_system 'ps1' 'PlayStation' '/home/lucifer/SSD/ROMs/playstation'
+add_system 'ps1' 'PlayStation' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation/unpacked'
 add_system 'ps2' 'PlayStation 2' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
 add_system 'gamecube' 'GameCube' '/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
 
