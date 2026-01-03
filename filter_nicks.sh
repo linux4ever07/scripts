@@ -19,20 +19,23 @@ fi
 
 declare time line word nick nick_tmp nick_ref nick_utf8 nick_tmp_utf8
 declare -a times lines words clients
-declare -A if of regex nicks nicks_tmp
+declare -A input output regex nicks nicks_tmp
 
-if[fn]=$(readlink -f "$1")
-if[bn]=$(basename "${if[fn]}")
-of[fn]="${if[bn]%.*}-${RANDOM}-${RANDOM}.txt"
+input[fn]=$(readlink -f "$1")
+input[bn]=$(basename "${input[fn]}")
+output[fn]="${input[bn]%.*}-${RANDOM}-${RANDOM}.txt"
 
 regex[nick]='^<\+*(.*)>$'
 
-clients=('hexchat' 'irccloud' 'irssi' 'konversation')
+# The order of clients is like this, because the Konversation regex is
+# similar to the IRCCloud one and needs to be tried before it. When
+# similar, the most complex regex needs to be tried first.
+clients=('konversation' 'irccloud' 'hexchat' 'irssi')
 
-regex[hexchat]='^([[:alpha:]]+ [0-9]+ [0-9]+:[0-9]+:[0-9]+)(.*)$'
-regex[irccloud]='^(\[[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+\])(.*)$'
-regex[irssi]='^([0-9]+:[0-9]+)(.*)$'
-regex[konversation]='^(\[[[:alpha:]]+, [[:alpha:]]+ [0-9]+, [0-9]+\] \[[0-9]+:[0-9]+:[0-9]+ [[:alpha:]]+ [[:alpha:]]+\])(.*)$'
+regex[hexchat]='^([[:alpha:]]+ [[:digit:]]+ [[:digit:]]+:[[:digit:]]+:[[:digit:]]+) (.*)$'
+regex[irccloud]='^(\[[^]]+\])[[:blank:]]+(.*)$'
+regex[irssi]='^([[:digit:]]+:[[:digit:]]+)[[:blank:]]+(.*)$'
+regex[konversation]='^(\[[^]]+\][[:blank:]]+\[[^]]+\])[[:blank:]]+(.*)$'
 
 # Creates a function, called 'get_client', which will figure out which
 # client was used to generate the IRC log in question, to be able to
@@ -111,7 +114,7 @@ for nick in "$@"; do
 	nicks["${nick_utf8}"]="${nick,,}"
 done
 
-mapfile -t lines < <(tr -d '\r' <"${if[fn]}")
+mapfile -t lines < <(tr -d '\r' <"${input[fn]}")
 
 get_client
 
@@ -180,4 +183,4 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	if [[ -n ${!nick_ref} ]]; then
 		printf '%s\n' "${time}${line}"
 	fi
-done | tee "${of[fn]}"
+done | tee "${output[fn]}"

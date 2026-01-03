@@ -34,12 +34,11 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare if charset_of session
+declare output_charset session
+declare -A input output regex
 
-charset_of='UTF-8'
+output_charset='UTF-8'
 session="${RANDOM}-${RANDOM}"
-
-declare -A regex
 
 regex[fn]='^(.*)\.([^.]*)$'
 regex[charset1]='([^; ]+)$'
@@ -49,41 +48,41 @@ regex[charset2]='^charset=(.*)$'
 # the correct character set encoding of the input file. If it succeeds,
 # it will encode that file to UTF-8.
 read_decode_fn () {
-	declare charset_if of
+	declare input_charset
 
-	charset_if=$(file -bi "$if")
+	input_charset=$(file -bi "${input[fn]}")
 
-	if [[ -z $charset_if ]]; then
+	if [[ -z $input_charset ]]; then
 		return
 	fi
 
-	if [[ ! $charset_if =~ ${regex[charset1]} ]]; then
+	if [[ ! $input_charset =~ ${regex[charset1]} ]]; then
 		return
 	fi
 
-	charset_if="${BASH_REMATCH[1]}"
+	input_charset="${BASH_REMATCH[1]}"
 
-	if [[ ! $charset_if =~ ${regex[charset2]} ]]; then
+	if [[ ! $input_charset =~ ${regex[charset2]} ]]; then
 		return
 	fi
 
-	charset_if="${BASH_REMATCH[1]^^}"
+	input_charset="${BASH_REMATCH[1]^^}"
 
-	if [[ $if =~ ${regex[fn]} ]]; then
-		of="${BASH_REMATCH[1]}-${session}.${BASH_REMATCH[2]}"
+	if [[ ${input[fn]} =~ ${regex[fn]} ]]; then
+		output[fn]="${BASH_REMATCH[1]}-${session}.${BASH_REMATCH[2]}"
 	else
-		of="${if}-${session}"
+		output[fn]="${input[fn]}-${session}"
 	fi
 
-	iconv -f "$charset_if" -t "$charset_of" -o "$of" "$if"
+	iconv -f "$input_charset" -t "$output_charset" -o "${output[fn]}" "${input[fn]}"
 
-	printf '\n(%s -> %s) %s %s\n\n' "$charset_if" "$charset_of" 'Wrote file:' "$of"
+	printf '\n(%s -> %s) %s %s\n\n' "$input_charset" "$output_charset" 'Wrote file:' "${output[fn]}"
 
-	unset -v charset_if of
+	unset -v input_charset
 }
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if="${files[${i}]}"
+	input[fn]="${files[${i}]}"
 
 	read_decode_fn
 done

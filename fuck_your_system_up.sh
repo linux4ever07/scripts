@@ -16,7 +16,7 @@ declare -A regex
 
 regex[hd]='^\/dev\/hd[[:alpha:]]+$'
 regex[sd]='^\/dev\/sd[[:alpha:]]+$'
-regex[nvme]='^\/dev\/nvme[0-9]+n[0-9]+$'
+regex[nvme]='^\/dev\/nvme[[:digit:]]+n[[:digit:]]+$'
 
 types=('hd' 'sd' 'nvme')
 sources=('/dev/zero' '/dev/urandom')

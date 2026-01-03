@@ -22,11 +22,11 @@
 
 declare mode count key
 declare -a dirs files_in files_out
-declare -A if movie regex
+declare -A input output movie regex
 
 regex[prune]="^\/run\/media\/${USER}\/[[:alnum:]]{8}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{12}\/extracted_subs"
-regex[720p]='\(([0-9]{3,4})p_h\.264-aac\)'
-regex[1080p]='\(([0-9]{3,4})p_([0-9]{1,2})fps_(h264|av1)-([0-9]{2,3})kbit_(aac|opus)\)'
+regex[720p]='\(([[:digit:]]{3,4})p_h\.264-aac\)'
+regex[1080p]='\(([[:digit:]]{3,4})p_([[:digit:]]{1,2})fps_(h264|av1)-([[:digit:]]{2,3})kbit_(aac|opus)\)'
 
 mode='name'
 
@@ -110,14 +110,14 @@ imdb () {
 
 	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
-	regex[y]='^\(([0-9]{4})\)$'
-	regex[id]='(title\/tt[0-9]+)'
+	regex[y]='^\(([[:digit:]]{4})\)$'
+	regex[id]='(title\/tt[[:digit:]]+)'
 	regex[list]='^,$'
 
 	regex[title1]='\,\"originalTitleText\":'
 	regex[title2]='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	regex[year1]='\,\"releaseYear\":'
-	regex[year2]='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
+	regex[year2]='\"year\":([[:digit:]]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
 	regex[plot1]='\"plotText\":'
 	regex[plot2]='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
 	regex[rating1]='\,\"ratingsSummary\":'
@@ -248,10 +248,10 @@ IMDB
 # Creates a function, called 'set_names', which will create variables
 # for file names.
 set_names () {
-	if[fn]="$1"
+	input[fn]="$1"
 
-	if[bn]=$(basename "${if[fn]}")
-	if[bn_lc]="${if[bn],,}"
+	input[bn]=$(basename "${input[fn]}")
+	input[bn_lc]="${input[bn],,}"
 }
 
 mapfile -t files_in < <(sudo find "${dirs[@]}" -type f \( -iname "*.avi" -o -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.mpg" -o -iname "*.mpeg" \) 2>&- | grep -Ev "${regex[prune]}")
@@ -264,16 +264,16 @@ for (( i = 0; i < ${#files_in[@]}; i++ )); do
 # with the next iteration of the loop.
 # * (720p_H.264-AAC).mp4
 # * (1080p_30fps_H264-128kbit_AAC).mp4
-	if [[ ${if[bn_lc]} =~ ${regex[720p]} || ${if[bn_lc]} =~ ${regex[1080p]} ]]; then
+	if [[ ${input[bn_lc]} =~ ${regex[720p]} || ${input[bn_lc]} =~ ${regex[1080p]} ]]; then
 		continue
 	fi
 
 # Try to find at least 2 scene tag matches for the current name.
-	count=$(break_name_find "${if[bn_lc]}")
+	count=$(break_name_find "${input[bn_lc]}")
 
 # If name contains at least 2 scene tags, continue on.
 	if [[ $count -ge 2 ]]; then
-		files_out+=("${if[fn]}")
+		files_out+=("${input[fn]}")
 	fi
 done
 
@@ -287,7 +287,7 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 	declare -a name_tmp imdb_tmp
 	declare -A info
 
-	mapfile -t name_tmp < <(break_name_parse "${if[bn_lc]}")
+	mapfile -t name_tmp < <(break_name_parse "${input[bn_lc]}")
 
 	if [[ $mode == 'name' ]]; then
 		info[name]="${name_tmp[0]} (${name_tmp[1]})"
@@ -316,7 +316,7 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 		movie["${info[id]}"]+="${info[name]}\n"
 	fi
 
-	movie["${info[id]}"]+="${if[fn]}\n"
+	movie["${info[id]}"]+="${input[fn]}\n"
 done
 
 unset -v name_tmp imdb_tmp info

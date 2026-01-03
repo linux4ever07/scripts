@@ -38,27 +38,27 @@ if [[ ! -d $1 ]]; then
 	usage
 fi
 
-declare if_dn of_dn session title target
+declare session title target
 declare -a global_vars priority files
-declare -A regex titles
+declare -A input output regex titles
 
 session="${RANDOM}-${RANDOM}"
 
-if_dn=$(readlink -f "$1")
-of_dn="sorted-${session}"
+input[dn]=$(readlink -f "$1")
+output[dn]="sorted-${session}"
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[ext]='\.([^.]*)$'
 regex[1]="\(([A-Z]{1,3}|[0-9]{1})\).*${regex[ext]}"
 regex[2]="^.*(\[\!\]).*${regex[ext]}"
 
-global_vars=('fn' 'bn' 'region' 'region_n')
+global_vars=('region' 'region_n')
 priority=('^U$' 'U' '^4$' '^UK$' '^A$' 'A' '^W$' '^E$' 'E' '^8$' '^J$' 'J' '^1$' '^5$')
 
-cd "$if_dn"
-mkdir "$of_dn"
+cd "${input[dn]}"
+mkdir "${output[dn]}"
 
-mapfile -t files < <(find "$if_dn" -maxdepth 1 -type f 2>&-)
+mapfile -t files < <(find "${input[dn]}" -maxdepth 1 -type f 2>&-)
 
 set_target () {
 	set_vars () {
@@ -87,30 +87,30 @@ set_target () {
 }
 
 loop_intro () {
-	fn="${files[${i}]}"
-	bn=$(basename "$fn")
+	input[fn]="${files[${i}]}"
+	input[bn]=$(basename "${input[fn]}")
 
-	if [[ ! $bn =~ ${regex[1]} ]]; then
+	if [[ ! ${input[bn]} =~ ${regex[1]} ]]; then
 		return
 	fi
 
 	region="${BASH_REMATCH[1]}"
 
-	if [[ ! $bn =~ ${regex[2]} ]]; then
+	if [[ ! ${input[bn]} =~ ${regex[2]} ]]; then
 		unset -v region
 	fi
 }
 
 get_games () {
 	for (( i = 0; i < ${#files[@]}; i++ )); do
-		fn="${files[${i}]}"
-		bn=$(basename "$fn")
+		input[fn]="${files[${i}]}"
+		input[bn]=$(basename "${input[fn]}")
 
-		if [[ ! $bn =~ ${regex[1]} ]]; then
+		if [[ ! ${input[bn]} =~ ${regex[1]} ]]; then
 			continue
 		fi
 
-		title=$(sed -E "s/${regex[1]}//" <<<"$bn")
+		title=$(sed -E "s/${regex[1]}//" <<<"${input[bn]}")
 
 		if [[ -n $title ]]; then
 			titles["${title}"]='undef'
@@ -122,7 +122,7 @@ get_games
 
 # Gets the verified ROMs.
 for title in "${!titles[@]}"; do
-	mapfile -t files < <(find "$if_dn" -maxdepth 1 -type f -name "${title}*" 2>&-)
+	mapfile -t files < <(find "${input[dn]}" -maxdepth 1 -type f -name "${title}*" 2>&-)
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		declare "${global_vars[@]}"
@@ -161,8 +161,8 @@ for title in "${!titles[@]}"; do
 		done
 
 		if [[ $region_n == "${titles[${title}]}" ]]; then
-			printf '%s\n' "$bn"
-			mv -n "$bn" "$of_dn" || exit
+			printf '%s\n' "${input[bn]}"
+			mv -n "${input[bn]}" "${output[dn]}" || exit
 		fi
 
 		unset -v "${global_vars[@]}"

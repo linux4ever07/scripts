@@ -30,7 +30,7 @@ wolf_dn="${gzdoom_cfg}/wolfendoom"
 doom_wad="${gzdoom_cfg}/doom.wad"
 doom2_wad="${gzdoom_cfg}/doom2.wad"
 
-regex[num]='^[0-9]+$'
+regex[digit]='^[[:digit:]]+$'
 
 cd "$wolf_dn"
 
@@ -95,7 +95,7 @@ while [[ 1 ]]; do
 
 	read -p '>'
 
-	if [[ ! $REPLY =~ ${regex[num]} ]]; then
+	if [[ ! $REPLY =~ ${regex[digit]} ]]; then
 		continue
 	fi
 

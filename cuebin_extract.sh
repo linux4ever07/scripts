@@ -63,12 +63,12 @@
 # good program, but not needed anymore as other functions have replaced
 # it.
 
-declare -A if of
+declare -A input output
 
-if[fn]=$(readlink -f "$1")
-if[dn]=$(dirname "${if[fn]}")
-if[bn]=$(basename "${if[fn]}")
-if[bn_lc]="${if[bn],,}"
+input[fn]=$(readlink -f "$1")
+input[dn]=$(dirname "${input[fn]}")
+input[bn]=$(basename "${input[fn]}")
+input[bn_lc]="${input[bn],,}"
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -104,14 +104,14 @@ USAGE
 
 # If input is not a real file, or it has the wrong extension, print
 # usage and quit.
-if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
+if [[ ! -f ${input[fn]} || ${input[bn_lc]##*.} != 'cue' ]]; then
 	usage
 fi
 
 declare mode byteswap pregaps session type
 declare -a format tracks_total files_total
-declare -a of_cue_cdr of_cue_ogg of_cue_flac
-declare -A regex if_info gaps bytes
+declare -a output_cue_cdr output_cue_ogg output_cue_flac
+declare -A regex input_info gaps bytes
 declare -A audio_types audio_types_run
 
 audio_types=([cdr]='cdr' [ogg]='wav' [flac]='wav')
@@ -169,10 +169,10 @@ if [[ ${#audio_types_run[@]} -eq 0 ]]; then
 	done
 fi
 
-of[name]="${if[bn_lc]%.*}"
-of[name]=$(sed -E 's/ +/_/g' <<<"${of[name]}")
+output[name]="${input[bn_lc]%.*}"
+output[name]=$(sed -E 's/ +/_/g' <<<"${output[name]}")
 
-of[dn]="${PWD}/${of[name]}-${session}"
+output[dn]="${PWD}/${output[name]}-${session}"
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
@@ -307,10 +307,10 @@ read_cue () {
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
 # Reads the source CUE sheet into RAM.
-	mapfile -t lines < <(tr -d '\r' <"${if[fn]}" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"${input[fn]}" | sed -E "s/${regex[blank]}/\1/")
 
 # This loop processes each line in the CUE sheet, and stores all the
-# relevant information in the 'if_info' hash.
+# relevant information in the 'input_info' hash.
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
 
@@ -329,7 +329,7 @@ read_cue () {
 			fi
 
 # Adds full path to the basename.
-			match[1]="${if[dn]}/${match[1]}"
+			match[1]="${input[dn]}/${match[1]}"
 
 # Resolves the path to the real file, in case it's a symlink.
 			match[1]=$(readlink -f "${match[1]}")
@@ -348,12 +348,12 @@ read_cue () {
 
 			(( file_n += 1 ))
 
-			if_info["${file_n},file_name"]="${match[1]}"
-			if_info["${file_n},file_format"]="${match[2]}"
+			input_info["${file_n},file_name"]="${match[1]}"
+			input_info["${file_n},file_format"]="${match[2]}"
 
 			if [[ -f ${match[1]} ]]; then
 				size=$(stat -c '%s' "${match[1]}")
-				if_info["${file_n},file_size"]="$size"
+				input_info["${file_n},file_size"]="$size"
 			fi
 
 			continue
@@ -366,7 +366,7 @@ read_cue () {
 			track_n="${match[1]#0}"
 
 # Saves the file number associated with this track.
-			if_info["${track_n},file"]="$file_n"
+			input_info["${track_n},file"]="$file_n"
 
 # Saves the current track number (and in effect, every track number) in
 # an array so the exact track numbers can be referenced later.
@@ -377,16 +377,16 @@ read_cue () {
 # track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
-				if_info["${track_n},type"]='data'
-				if_info["${track_n},sector"]="${BASH_REMATCH[2]}"
+				input_info["${track_n},type"]='data'
+				input_info["${track_n},sector"]="${BASH_REMATCH[2]}"
 			elif [[ ${match[2]} =~ ${regex[audio]} ]]; then
-				if_info["${track_n},type"]='audio'
-				if_info["${track_n},sector"]=2352
+				input_info["${track_n},type"]='audio'
+				input_info["${track_n},sector"]=2352
 			else
 				wrong_mode+=("$track_n")
 			fi
 
-			if_info["${track_n},mode"]="${match[2]}"
+			input_info["${track_n},mode"]="${match[2]}"
 
 			continue
 		fi
@@ -396,7 +396,7 @@ read_cue () {
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
-			if_info["${track_n},pregap"]="$frames"
+			input_info["${track_n},pregap"]="$frames"
 
 			continue
 		fi
@@ -408,7 +408,7 @@ read_cue () {
 			index_n="${match[1]#0}"
 
 			frames=$(time_convert "${match[2]}")
-			if_info["${track_n},index,${index_n}"]="$frames"
+			input_info["${track_n},index,${index_n}"]="$frames"
 
 			continue
 		fi
@@ -418,7 +418,7 @@ read_cue () {
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
-			if_info["${track_n},postgap"]="$frames"
+			input_info["${track_n},postgap"]="$frames"
 
 			continue
 		fi
@@ -478,11 +478,11 @@ get_gaps () {
 		gaps["${track_n},pre"]=0
 		gaps["${track_n},post"]=0
 
-		index0_ref="if_info[${track_n},index,0]"
-		index1_ref="if_info[${track_n},index,1]"
+		index0_ref="input_info[${track_n},index,0]"
+		index1_ref="input_info[${track_n},index,1]"
 
-		pregap_ref="if_info[${track_n},pregap]"
-		postgap_ref="if_info[${track_n},postgap]"
+		pregap_ref="input_info[${track_n},pregap]"
+		postgap_ref="input_info[${track_n},postgap]"
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
@@ -539,15 +539,15 @@ get_length () {
 		pregap_this_ref="gaps[${this},index]"
 		pregap_next_ref="gaps[${next},index]"
 
-		index1_this_ref="if_info[${this},index,1]"
-		index1_next_ref="if_info[${next},index,1]"
+		index1_this_ref="input_info[${this},index,1]"
+		index1_next_ref="input_info[${next},index,1]"
 
-		file_n_this_ref="if_info[${this},file]"
-		file_n_next_ref="if_info[${next},file]"
+		file_n_this_ref="input_info[${this},file]"
+		file_n_next_ref="input_info[${next},file]"
 
-		size_ref="if_info[${!file_n_this_ref},file_size]"
+		size_ref="input_info[${!file_n_this_ref},file_size]"
 
-		sector_ref="if_info[${this},sector]"
+		sector_ref="input_info[${this},sector]"
 
 		start_ref="bytes[${this},track,start]"
 
@@ -637,10 +637,10 @@ copy_track () {
 	declare ext block_size skip count
 	declare -a args
 
-	file_n_ref="if_info[${track_n},file]"
-	file_ref="if_info[${!file_n_ref},file_name]"
+	file_n_ref="input_info[${track_n},file]"
+	file_ref="input_info[${!file_n_ref},file_name]"
 
-	type_ref="if_info[${track_n},type]"
+	type_ref="input_info[${track_n},type]"
 
 # Depending on whether the track type is data or audio, use the
 # appropriate file name extension for the output file.
@@ -653,11 +653,11 @@ copy_track () {
 		;;
 	esac
 
-	of[bn]=$(printf '%s%02d.%s' "${of[name]}" "$track_n" "$ext")
-	of[fn]="${of[dn]}/${of[bn]}"
+	output[bn]=$(printf '%s%02d.%s' "${output[name]}" "$track_n" "$ext")
+	output[fn]="${output[dn]}/${output[bn]}"
 
 # Creates the first part of the 'dd' command.
-	args=(dd if=\""${!file_ref}"\" of=\""${of[fn]}"\")
+	args=(dd if=\""${!file_ref}"\" of=\""${output[fn]}"\")
 
 # Does a byteswap if the script was run with the '-byteswap' option, and
 # the track is audio.
@@ -710,7 +710,7 @@ copy_track () {
 	run_cmd "${args[@]}"
 
 # Adds file name to list.
-	files_total["${track_n}"]="${of[bn]}"
+	files_total["${track_n}"]="${output[bn]}"
 }
 
 # Creates a function, called 'copy_all_tracks', which will extract the
@@ -757,17 +757,17 @@ cdr2wav () {
 	fi
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
-		if[cdr]="${files[${i}]}"
-		of[wav]="${if[cdr]%.*}.wav"
+		input[cdr_fn]="${files[${i}]}"
+		output[wav_fn]="${input[cdr_fn]%.*}.wav"
 
 		declare args_ref
 		declare -a args_ffmpeg args_sox
 
 # Creates the command arguments for 'ffmpeg' and 'sox'.
 		args_ffmpeg=(-ar 44.1k -ac 2)
-		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${if[cdr]}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${of[wav]}"\")
+		args_ffmpeg=(ffmpeg -f s16le "${args_ffmpeg[@]}" -i \""${input[cdr_fn]}"\" -c:a pcm_s16le "${args_ffmpeg[@]}" \""${output[wav_fn]}"\")
 
-		args_sox=(sox -L \""${if[cdr]}"\" \""${of[wav]}"\")
+		args_sox=(sox -L \""${input[cdr_fn]}"\" \""${output[wav_fn]}"\")
 
 # Depending on what the mode is, run 'ffmpeg' or 'sox' on the CDR file,
 # specifying 'little-endian' for the input.
@@ -777,7 +777,7 @@ cdr2wav () {
 
 # If 'cdr' is not among the chosen audio types, delete the CDR file.
 		if [[ -z ${audio_types_run[cdr]} ]]; then
-			rm "${if[cdr]}" || exit
+			rm "${input[cdr_fn]}" || exit
 		fi
 
 		unset -v args_ref args_ffmpeg args_sox
@@ -833,27 +833,27 @@ create_cue () {
 		declare mode_ref format_ref track_string
 		declare pregap_ref postgap_ref time
 
-		mode_ref="if_info[${track_n},mode]"
+		mode_ref="input_info[${track_n},mode]"
 		format_ref="ext_format[${ext}]"
 
 		track_string=$(printf 'TRACK %02d %s' "$track_n" "${!mode_ref}")
 
-		eval of_cue_"${type}"+=\(\""FILE \\\"${fn}.${ext}\\\" ${!format_ref}"\"\)
-		eval of_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
+		eval output_cue_"${type}"+=\(\""FILE \\\"${no_ext}.${ext}\\\" ${!format_ref}"\"\)
+		eval output_cue_"${type}"+=\(\""${offset[0]}${track_string}"\"\)
 
 		pregap_ref="gaps[${track_n},pre]"
 		postgap_ref="gaps[${track_n},post]"
 
 		if [[ ${!pregap_ref} -gt 0 ]]; then
 			time=$(time_convert "${!pregap_ref}")
-			eval of_cue_"${type}"+=\(\""${offset[1]}PREGAP ${time}"\"\)
+			eval output_cue_"${type}"+=\(\""${offset[1]}PREGAP ${time}"\"\)
 		fi
 
-		eval of_cue_"${type}"+=\(\""${offset[1]}${index_string}"\"\)
+		eval output_cue_"${type}"+=\(\""${offset[1]}${index_string}"\"\)
 
 		if [[ ${!postgap_ref} -gt 0 ]]; then
 			time=$(time_convert "${!postgap_ref}")
-			eval of_cue_"${type}"+=\(\""${offset[1]}POSTGAP ${time}"\"\)
+			eval output_cue_"${type}"+=\(\""${offset[1]}POSTGAP ${time}"\"\)
 		fi
 	}
 
@@ -867,14 +867,14 @@ create_cue () {
 			continue
 		fi
 
-		declare fn ext
+		declare no_ext ext
 
 # Separates file name and extension.
 		if [[ ! ${!line_ref} =~ ${regex[fn]} ]]; then
 			continue
 		fi
 
-		fn="${BASH_REMATCH[1]}"
+		no_ext="${BASH_REMATCH[1]}"
 		ext="${BASH_REMATCH[2]}"
 
 # If the extension is 'cdr', then the correct extension is the same as
@@ -886,7 +886,7 @@ create_cue () {
 # Sets all the relevant file / track information.
 		set_track_info
 
-		unset -v fn ext
+		unset -v no_ext ext
 	done
 }
 
@@ -896,11 +896,11 @@ print_cue () {
 	declare lines_ref
 
 	for type in "${!audio_types_run[@]}"; do
-		of[fn]="${of[dn]}/${of[name]}01_${type}.cue"
-		lines_ref="of_cue_${type}[@]"
+		output[cue_fn]="${output[dn]}/${output[name]}01_${type}.cue"
+		lines_ref="output_cue_${type}[@]"
 
 		printf '\n'
-		printf '%s\r\n' "${!lines_ref}" | tee "${of[fn]}"
+		printf '%s\r\n' "${!lines_ref}" | tee "${output[cue_fn]}"
 	done
 }
 
@@ -923,10 +923,10 @@ clean_up () {
 check_cmd 'oggenc' 'flac' "$mode"
 
 # Creates the output directory and changes into it.
-mkdir "${of[dn]}" || exit
-cd "${of[dn]}" || exit
+mkdir "${output[dn]}" || exit
+cd "${output[dn]}" || exit
 
-printf '\nOutput:\n%s\n\n' "${of[dn]}"
+printf '\nOutput:\n%s\n\n' "${output[dn]}"
 
 # Runs the functions.
 read_cue

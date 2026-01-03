@@ -63,14 +63,14 @@ imdb () {
 
 	mapfile -t term < <(sed -E 's/[[:blank:]]+/\n/g' <<<"$@")
 
-	regex[y]='^\(([0-9]{4})\)$'
-	regex[id]='(title\/tt[0-9]+)'
+	regex[y]='^\(([[:digit:]]{4})\)$'
+	regex[id]='(title\/tt[[:digit:]]+)'
 	regex[list]='^,$'
 
 	regex[title1]='\,\"originalTitleText\":'
 	regex[title2]='\"text\":\"(.*)\"\,\"__typename\":\"TitleText\"'
 	regex[year1]='\,\"releaseYear\":'
-	regex[year2]='\"year\":([0-9]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
+	regex[year2]='\"year\":([[:digit:]]{4})\,\"endYear\":.*\,\"__typename\":\"YearRange\"'
 	regex[plot1]='\"plotText\":'
 	regex[plot2]='\"plainText\":\"(.*)\"\,\"__typename\":\"Markdown\"'
 	regex[rating1]='\,\"ratingsSummary\":'

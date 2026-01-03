@@ -34,7 +34,8 @@ ch_perm () {
 	sudo find "$1" -type d -exec chmod -v ugo+x {} +
 }
 
-declare owner fn
+declare owner
+declare -A input output
 
 case "$1" in
 	'user')
@@ -55,13 +56,13 @@ if [[ $# -eq 0 ]]; then
 fi
 
 while [[ $# -gt 0 ]]; do
-	fn=$(readlink -f "$1")
+	input[fn]=$(readlink -f "$1")
 
-	if [[ ! -f $fn && ! -d $fn ]]; then
+	if [[ ! -f ${input[fn]} && ! -d ${input[fn]} ]]; then
 		usage
 	fi
 
-	ch_perm "$fn"
+	ch_perm "${input[fn]}"
 
 	shift
 done

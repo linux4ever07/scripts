@@ -53,24 +53,24 @@ elif [[ -f $2 ]]; then
 	exit
 fi
 
-declare session cp_log error_log used free diff start stop
+declare session used free diff start stop
 declare -a files dn_parts fn_parts
-declare -A if of regex md5s
+declare -A input output regex md5s
 
-if[dn]=$(readlink -f "$1")
-of[dn]=$(readlink -f "$2")
+input[dn]=$(readlink -f "$1")
+output[dn]=$(readlink -f "$2")
 
 session="${RANDOM}-${RANDOM}"
 
-cp_log="${of[dn]}/hdd_dump_copied-${session}.txt"
-error_log="${of[dn]}/hdd_dump_errors-${session}.txt"
+output[cp_log_fn]="${output[dn]}/hdd_dump_copied-${session}.txt"
+output[error_log_fn]="${output[dn]}/hdd_dump_errors-${session}.txt"
 
-regex[du]='^([0-9]+)([[:blank:]]+)(.*)$'
+regex[du]='^([[:digit:]]+)([[:blank:]]+)(.*)$'
 
-mkdir -p "${of[dn]}" || exit
+mkdir -p "${output[dn]}" || exit
 
-used=$(du --summarize --block-size=1 "${if[dn]}" | grep -Eo '^[0-9]+')
-free=$(df --output=avail --block-size=1 "${of[dn]}" | tail -n +2 | tr -d '[:blank:]')
+used=$(du --summarize --block-size=1 "${input[dn]}" | grep -Eo '^[[:digit:]]+')
+free=$(df --output=avail --block-size=1 "${output[dn]}" | tail -n +2 | tr -d '[:blank:]')
 
 if [[ $used -gt $free ]]; then
 	diff=$(( used - free ))
@@ -78,7 +78,7 @@ if [[ $used -gt $free ]]; then
 	cat <<USED
 
 Not enough free space in:
-${of[dn]}
+${output[dn]}
 
 Difference is ${diff} bytes.
 
@@ -92,22 +92,22 @@ fi
 # the MD5 hash, and for copying the file, sleeping 10 seconds between
 # each try.
 md5copy () {
-	declare md5_if exit_status n
+	declare hash exit_status n
 
 	for n in {1..5}; do
-		md5_if=$(md5sum -b "${if[fn]}" 2>&-)
+		hash=$(md5sum -b "${input[fn]}" 2>&-)
 
 		exit_status="$?"
 
-		md5_if="${md5_if%% *}"
+		hash="${hash%% *}"
 
 		if [[ $exit_status -eq 0 ]]; then
-			if [[ ${md5s[${md5_if}]} -eq 1 ]]; then
+			if [[ ${md5s[${hash}]} -eq 1 ]]; then
 				return
 			fi
 		else
 			if [[ $n -eq 5 ]]; then
-				printf '%s\n' "${if[fn]}" >> "$error_log"
+				printf '%s\n' "${input[fn]}" >> "${output[error_log_fn]}"
 
 				return
 			fi
@@ -116,27 +116,27 @@ md5copy () {
 		fi
 	done
 
-	md5s["${md5_if}"]=1
+	md5s["${hash}"]=1
 
-	printf '%s' "copying: ${if[fn]}... "
+	printf '%s' "copying: ${input[fn]}... "
 
 	for n in {1..5}; do
-		cp -p "${if[fn]}" "${of[fn]}" 2>&-
+		cp -p "${input[fn]}" "${output[fn]}" 2>&-
 
 		exit_status="$?"
 
 		if [[ $exit_status -eq 0 ]]; then
 			printf '%s\n' 'done'
-			printf '%s\n' "${if[fn]}" >> "$cp_log"
+			printf '%s\n' "${input[fn]}" >> "${output[cp_log_fn]}"
 
 			return
 		else
 			if [[ $n -eq 5 ]]; then
 				printf '%s\n' 'error'
-				printf '%s\n' "${if[fn]}" >> "$error_log"
+				printf '%s\n' "${input[fn]}" >> "${output[error_log_fn]}"
 
-				if [[ -f ${of[fn]} ]]; then
-					rm -f "${of[fn]}" 2>&-
+				if [[ -f ${output[fn]} ]]; then
+					rm -f "${output[fn]}" 2>&-
 				fi
 
 				return
@@ -147,34 +147,34 @@ md5copy () {
 	done
 }
 
-touch "$cp_log" "$error_log"
+touch "${output[cp_log_fn]}" "${output[error_log_fn]}"
 
-mapfile -d'/' -t dn_parts <<<"${if[dn]}"
+mapfile -d'/' -t dn_parts <<<"${input[dn]}"
 dn_parts[-1]="${dn_parts[-1]%$'\n'}"
 start="${#dn_parts[@]}"
 
-mapfile -t files < <(find "${if[dn]}" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
+mapfile -t files < <(find "${input[dn]}" -type f -exec du -b {} + 2>&- | sort -n | sed -E "s/${regex[du]}/\3/")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if[fn]="${files[${i}]}"
+	input[fn]="${files[${i}]}"
 
 # Removes the directory name from the beginning of the string. Creating
 # the basename this way because it's more safe than using regex:es, if
 # the string contains weird characters (that are interpreted as part of
 # the regex).
-	mapfile -d'/' -t fn_parts <<<"${if[fn]}"
+	mapfile -d'/' -t fn_parts <<<"${input[fn]}"
 	fn_parts[-1]="${fn_parts[-1]%$'\n'}"
 	stop=$(( (${#fn_parts[@]} - ${#dn_parts[@]}) - 1 ))
-	of[dn_tmp]=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
-	of[dn_tmp]="${of[dn_tmp]:1}"
-	of[bn]="${fn_parts[-1]}"
+	output[tmp_dn]=$(printf '/%s' "${fn_parts[@]:${start}:${stop}}")
+	output[tmp_dn]="${output[tmp_dn]:1}"
+	output[bn]="${fn_parts[-1]}"
 
-	of[dn_tmp]="${of[dn]}/${of[dn_tmp]}"
-	of[fn]="${of[dn_tmp]}/${of[bn]}"
+	output[tmp_dn]="${output[dn]}/${output[tmp_dn]}"
+	output[fn]="${output[tmp_dn]}/${output[bn]}"
 
-	mkdir -p "${of[dn_tmp]}" || exit
+	mkdir -p "${output[tmp_dn]}" || exit
 
-	if [[ ! -f ${of[fn]} ]]; then
+	if [[ ! -f ${output[fn]} ]]; then
 		md5copy
 	fi
 done

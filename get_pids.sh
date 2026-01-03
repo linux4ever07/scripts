@@ -20,7 +20,7 @@ declare comm_tmp pid
 declare -a session name
 declare -A regex pids
 
-regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
+regex[pid_args]='^[[:blank:]]*([[:digit:]]+)([[:blank:]]*)([^ ]+)(.*)$'
 
 # Creates a function, called 'get_pids', which gets all child process
 # IDs of the command names given to it as arguments.

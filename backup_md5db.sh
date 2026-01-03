@@ -10,11 +10,12 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare date of dn depth
-declare -a dirs depths files files_tmp
+declare date depth
+declare -a dirs depths files_in files_out
+declare -A input output
 
 date=$(date '+%F')
-of="${PWD}/md5db_backup_${date}.tar.xz"
+output[fn]="${PWD}/md5db_backup_${date}.tar.xz"
 
 dirs=('/home' '/run/media')
 depths=('2' '3')
@@ -24,20 +25,21 @@ get_files () {
 }
 
 for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	dn="${dirs[${i}]}"
+	input[dn]="${dirs[${i}]}"
+
 	depth="${depths[${i}]}"
 
-	mapfile -t files_tmp < <(get_files "$dn" "$depth")
+	mapfile -t files_in < <(get_files "${input[dn]}" "$depth")
 
-	if [[ ${#files_tmp[@]} -eq 0 ]]; then
+	if [[ ${#files_in[@]} -eq 0 ]]; then
 		continue
 	fi
 
-	files+=("${files_tmp[@]}")
+	files_out+=("${files_in[@]}")
 done
 
-if [[ ${#files[@]} -eq 0 ]]; then
+if [[ ${#files_out[@]} -eq 0 ]]; then
 	exit
 fi
 
-tar -c "${files[@]}" | xz --compress -9 > "$of"
+tar -c "${files_out[@]}" | xz --compress -9 > "${output[fn]}"

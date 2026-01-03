@@ -3,12 +3,12 @@
 # This script is meant to get the length of all individual tracks in a
 # CUE sheet.
 
-declare -A if of
+declare -A input output
 
-if[fn]=$(readlink -f "$1")
-if[dn]=$(dirname "${if[fn]}")
-if[bn]=$(basename "${if[fn]}")
-if[bn_lc]="${if[bn],,}"
+input[fn]=$(readlink -f "$1")
+input[dn]=$(dirname "${input[fn]}")
+input[bn]=$(basename "${input[fn]}")
+input[bn_lc]="${input[bn],,}"
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -19,14 +19,14 @@ usage () {
 
 # If input is not a real file, or it has the wrong extension, print
 # usage and quit.
-if [[ ! -f ${if[fn]} || ${if[bn_lc]##*.} != 'cue' ]]; then
+if [[ ! -f ${input[fn]} || ${input[bn_lc]##*.} != 'cue' ]]; then
 	usage
 fi
 
 declare track_n frames
 declare pregap_ref length_ref sector_ref
 declare -a format tracks_total
-declare -A regex if_info gaps bytes
+declare -A regex input_info gaps bytes
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
@@ -105,10 +105,10 @@ read_cue () {
 	error_msgs[wrong_mode]='The tracks below have an unrecognized mode:'
 
 # Reads the source CUE sheet into RAM.
-	mapfile -t lines < <(tr -d '\r' <"${if[fn]}" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"${input[fn]}" | sed -E "s/${regex[blank]}/\1/")
 
 # This loop processes each line in the CUE sheet, and stores all the
-# relevant information in the 'if_info' hash.
+# relevant information in the 'input_info' hash.
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
 
@@ -127,7 +127,7 @@ read_cue () {
 			fi
 
 # Adds full path to the basename.
-			match[1]="${if[dn]}/${match[1]}"
+			match[1]="${input[dn]}/${match[1]}"
 
 # Resolves the path to the real file, in case it's a symlink.
 			match[1]=$(readlink -f "${match[1]}")
@@ -146,12 +146,12 @@ read_cue () {
 
 			(( file_n += 1 ))
 
-			if_info["${file_n},file_name"]="${match[1]}"
-			if_info["${file_n},file_format"]="${match[2]}"
+			input_info["${file_n},file_name"]="${match[1]}"
+			input_info["${file_n},file_format"]="${match[2]}"
 
 			if [[ -f ${match[1]} ]]; then
 				size=$(stat -c '%s' "${match[1]}")
-				if_info["${file_n},file_size"]="$size"
+				input_info["${file_n},file_size"]="$size"
 			fi
 
 			continue
@@ -164,7 +164,7 @@ read_cue () {
 			track_n="${match[1]#0}"
 
 # Saves the file number associated with this track.
-			if_info["${track_n},file"]="$file_n"
+			input_info["${track_n},file"]="$file_n"
 
 # Saves the current track number (and in effect, every track number) in
 # an array so the exact track numbers can be referenced later.
@@ -175,16 +175,16 @@ read_cue () {
 # track mode was not recognized, then it's useless even trying to
 # process this CUE sheet.
 			if [[ ${match[2]} =~ ${regex[data]} ]]; then
-				if_info["${track_n},type"]='data'
-				if_info["${track_n},sector"]="${BASH_REMATCH[2]}"
+				input_info["${track_n},type"]='data'
+				input_info["${track_n},sector"]="${BASH_REMATCH[2]}"
 			elif [[ ${match[2]} =~ ${regex[audio]} ]]; then
-				if_info["${track_n},type"]='audio'
-				if_info["${track_n},sector"]=2352
+				input_info["${track_n},type"]='audio'
+				input_info["${track_n},sector"]=2352
 			else
 				wrong_mode+=("$track_n")
 			fi
 
-			if_info["${track_n},mode"]="${match[2]}"
+			input_info["${track_n},mode"]="${match[2]}"
 
 			continue
 		fi
@@ -194,7 +194,7 @@ read_cue () {
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
-			if_info["${track_n},pregap"]="$frames"
+			input_info["${track_n},pregap"]="$frames"
 
 			continue
 		fi
@@ -206,7 +206,7 @@ read_cue () {
 			index_n="${match[1]#0}"
 
 			frames=$(time_convert "${match[2]}")
-			if_info["${track_n},index,${index_n}"]="$frames"
+			input_info["${track_n},index,${index_n}"]="$frames"
 
 			continue
 		fi
@@ -216,7 +216,7 @@ read_cue () {
 			match=("${BASH_REMATCH[@]:1}")
 
 			frames=$(time_convert "${match[1]}")
-			if_info["${track_n},postgap"]="$frames"
+			input_info["${track_n},postgap"]="$frames"
 
 			continue
 		fi
@@ -276,11 +276,11 @@ get_gaps () {
 		gaps["${track_n},pre"]=0
 		gaps["${track_n},post"]=0
 
-		index0_ref="if_info[${track_n},index,0]"
-		index1_ref="if_info[${track_n},index,1]"
+		index0_ref="input_info[${track_n},index,0]"
+		index1_ref="input_info[${track_n},index,1]"
 
-		pregap_ref="if_info[${track_n},pregap]"
-		postgap_ref="if_info[${track_n},postgap]"
+		pregap_ref="input_info[${track_n},pregap]"
+		postgap_ref="input_info[${track_n},postgap]"
 
 # If the CUE sheet specifies a pregap using the INDEX command, save that
 # in the 'gaps' hash so it can later be converted to a PREGAP command.
@@ -337,15 +337,15 @@ get_length () {
 		pregap_this_ref="gaps[${this},index]"
 		pregap_next_ref="gaps[${next},index]"
 
-		index1_this_ref="if_info[${this},index,1]"
-		index1_next_ref="if_info[${next},index,1]"
+		index1_this_ref="input_info[${this},index,1]"
+		index1_next_ref="input_info[${next},index,1]"
 
-		file_n_this_ref="if_info[${this},file]"
-		file_n_next_ref="if_info[${next},file]"
+		file_n_this_ref="input_info[${this},file]"
+		file_n_next_ref="input_info[${next},file]"
 
-		size_ref="if_info[${!file_n_this_ref},file_size]"
+		size_ref="input_info[${!file_n_this_ref},file_size]"
 
-		sector_ref="if_info[${this},sector]"
+		sector_ref="input_info[${this},sector]"
 
 		start_ref="bytes[${this},track,start]"
 
@@ -405,7 +405,7 @@ for (( i = 0; i < ${#tracks_total[@]}; i++ )); do
 
 	pregap_ref="gaps[${track_n},index]"
 	length_ref="bytes[${track_n},track,length]"
-	sector_ref="if_info[${track_n},sector]"
+	sector_ref="input_info[${track_n},sector]"
 
 	frames=$(( ${!length_ref} / ${!sector_ref} ))
 

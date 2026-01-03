@@ -6,10 +6,10 @@
 # If metaflac isn't installed, quit running the script.
 command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
-declare if albumartist artist album date tracks track title
+declare albumartist artist album date tracks track title
 declare length total_length time total_time
 declare -a files
-declare -A alltags
+declare -A input output alltags
 
 # Creates a function, called 'gettags', which gets all the tags present
 # in a FLAC file.
@@ -21,7 +21,7 @@ gettags () {
 		unset -v alltags["${field}"]
 	done
 
-	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
+	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "${input[fn]}" 2>&-)
 
 	for (( z = 0; z < ${#lines[@]}; z++ )); do
 		line="${lines[${z}]}"
@@ -55,7 +55,7 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	exit
 fi
 
-if="${files[0]}"
+input[fn]="${files[0]}"
 
 gettags
 
@@ -110,7 +110,7 @@ INFO
 
 # Prints the track names and their duration.
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if="${files[${i}]}"
+	input[fn]="${files[${i}]}"
 
 	gettags
 
@@ -118,7 +118,7 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	track="${alltags[tracknumber]}"
 	title="${alltags[title]}"
 
-	length=$(time_seconds "$if")
+	length=$(time_seconds "${input[fn]}")
 	time=$(time_readable "$length")
 
 	printf '%02d. %s - %s (%s)\n' "$track" "$artist" "$title" "$time"

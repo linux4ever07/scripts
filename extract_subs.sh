@@ -4,8 +4,8 @@
 # files. The output file name is the same as the input file name, only a
 # random number is added to the name.
 
-declare -a cmd files if_subs
-declare -A if of
+declare -a cmd files input_subs
+declare -A input output
 
 # Creates a function called 'usage', which will print a message and then
 # quit.
@@ -14,7 +14,7 @@ usage () {
 
 	msg[0]="This script needs mkvtoolnix installed!"
 	msg[1]="Usage: $(basename "$0") [mkv]"
-	msg[2]="There are no subtitles in: ${if[bn]}"
+	msg[2]="There are no subtitles in: ${input[bn]}"
 
 	printf '\n%s\n\n' "${msg[${1}]}"
 
@@ -29,16 +29,17 @@ fi
 
 # The loop below handles the arguments to the script.
 while [[ $# -gt 0 ]]; do
-	if[fn]=$(readlink -f "$1")
-	if[ext]="${if[fn]##*.}"
+	input[fn]=$(readlink -f "$1")
+	input[ext]="${input[fn]##*.}"
+	input[ext]="${input[ext],,}"
 
 	shift
 
-	if [[ ! -f ${if[fn]} || ${if[ext],,} != 'mkv' ]]; then
+	if [[ ! -f ${input[fn]} || ${input[ext]} != 'mkv' ]]; then
 		continue
 	fi
 
-	files+=("${if[fn]}")
+	files+=("${input[fn]}")
 done
 
 if [[ ${#files[@]} -eq 0 ]]; then
@@ -48,15 +49,15 @@ fi
 # The loop below goes through the list of Matroska files, checks if they
 # contain subtitles, and if so extracts them.
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if[fn]="${files[${i}]}"
-	if[bn]=$(basename "${if[fn]}")
-	of[fn]="${if[fn]%.*}-${RANDOM}.mkv"
+	input[fn]="${files[${i}]}"
+	input[bn]=$(basename "${input[fn]}")
+	output[fn]="${input[fn]%.*}-${RANDOM}.mkv"
 
-	mapfile -t if_subs < <(mkvinfo "${if[fn]}" 2>&- | grep 'Track type: subtitles')
+	mapfile -t input_subs < <(mkvinfo "${input[fn]}" 2>&- | grep 'Track type: subtitles')
 
-	if [[ ${#if_subs[@]} -eq 0 ]]; then
+	if [[ ${#input_subs[@]} -eq 0 ]]; then
 		usage 2
 	fi
 
-	mkvmerge --title "" -o "${of[fn]}" --no-video --no-audio --no-chapters "${if[fn]}" || exit "$?"
+	mkvmerge --title "" -o "${output[fn]}" --no-video --no-audio --no-chapters "${input[fn]}" || exit "$?"
 done

@@ -12,9 +12,9 @@ set -eo pipefail
 declare comm_tmp args_tmp pid_tmp ram_used_tmp key line
 declare -A regex pids pids_ram
 
-regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
+regex[pid_args]='^[[:blank:]]*([[:digit:]]+)([[:blank:]]*)([^ ]+)(.*)$'
 regex[ram_pid]='^(.*) (.*)$'
-regex[kb]='^([0-9]+)K$'
+regex[kb]='^([[:digit:]]+)K$'
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.

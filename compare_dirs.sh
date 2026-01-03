@@ -10,14 +10,15 @@
 
 set -eo pipefail
 
-declare is_md5sum dir1 dir2 dir1_size dir2_size regex
+declare is_md5sum dir1 dir2 dir1_size dir2_size
 declare dir1_files_elements dir1_dirs_elements dir2_files_elements dir2_dirs_elements
-declare dir type key dir1_f dir2_f start bn bn_md5
+declare dir type key dir1_fn dir2_fn start bn bn_md5
 declare dir1_files_missing_elements dir1_dirs_missing_elements
 declare dir2_files_missing_elements dir2_dirs_missing_elements
 declare md5s_mismatch_elements identical
 declare dn_ref fn_ref elements_ref
 declare -a dir1_files dir1_dirs dir2_files dir2_dirs var_list1 var_list2 var_list3 dn_parts fn_parts
+declare -A regex
 
 # Checks if the user has 'md5sum' installed. This will probably not be
 # the case for macOS or FreeBSD, and that's why we're checking. If such
@@ -44,17 +45,18 @@ fi
 dir1=$(readlink -f "$1")
 dir2=$(readlink -f "$2")
 
-# Gets the total size of both directories.
-dir1_size=$(du -b -s "$dir1" | grep -Eo '^[0-9]+')
-dir2_size=$(du -b -s "$dir2" | grep -Eo '^[0-9]+')
+regex[strip]='([^ a-zA-Z0-9\.\-_ ])'
+regex[du]='^[[:digit:]]+'
 
-regex='([^ a-zA-Z0-9\.\-_ ])'
+# Gets the total size of both directories.
+dir1_size=$(du -b -s "$dir1" | grep -Eo "${regex[du]}")
+dir2_size=$(du -b -s "$dir2" | grep -Eo "${regex[du]}")
 
 # Lists all the files and directories in both directories.
-mapfile -t dir1_files < <(find "$dir1" -type f 2>&- | sed -E "s/${regex}/\\1/g")
-mapfile -t dir1_dirs < <(find "$dir1" -mindepth 1 -type d -empty 2>&- | sed -E "s/${regex}/\\1/g")
-mapfile -t dir2_files < <(find "$dir2" -type f 2>&- | sed -E "s/${regex}/\\1/g")
-mapfile -t dir2_dirs < <(find "$dir2" -mindepth 1 -type d -empty 2>&- | sed -E "s/${regex}/\\1/g")
+mapfile -t dir1_files < <(find "$dir1" -type f 2>&- | sed -E "s/${regex[strip]}/\\1/g")
+mapfile -t dir1_dirs < <(find "$dir1" -mindepth 1 -type d -empty 2>&- | sed -E "s/${regex[strip]}/\\1/g")
+mapfile -t dir2_files < <(find "$dir2" -type f 2>&- | sed -E "s/${regex[strip]}/\\1/g")
+mapfile -t dir2_dirs < <(find "$dir2" -mindepth 1 -type d -empty 2>&- | sed -E "s/${regex[strip]}/\\1/g")
 
 dir1_files_elements="${#dir1_files[@]}"
 dir1_dirs_elements="${#dir1_dirs[@]}"
@@ -109,14 +111,14 @@ unset -v "${var_list2[@]}"
 # files. We only need to check the file names that exist in both
 # directories.
 for key in "${!dir1_files_hash[@]}"; do
-	dir1_f="${dir1}/${dir1_files_hash[${key}]}"
+	dir1_fn="${dir1}/${dir1_files_hash[${key}]}"
 
 	if [[ ${dir2_files_hash[${key}]} ]]; then
-		dir2_f="${dir2}/${dir2_files_hash[${key}]}"
+		dir2_fn="${dir2}/${dir2_files_hash[${key}]}"
 
-		dir1_md5s_hash["${key}"]=$(md5sum -b "$dir1_f")
+		dir1_md5s_hash["${key}"]=$(md5sum -b "$dir1_fn")
 		dir1_md5s_hash["${key}"]="${dir1_md5s_hash[${key}]%% *}"
-		dir2_md5s_hash["${key}"]=$(md5sum -b "$dir2_f")
+		dir2_md5s_hash["${key}"]=$(md5sum -b "$dir2_fn")
 		dir2_md5s_hash["${key}"]="${dir2_md5s_hash[${key}]%% *}"
 	fi
 done
@@ -186,7 +188,7 @@ for type in "${var_list3[@]}"; do
 
 	printf '\n'
 
-	case $type in
+	case "$type" in
 		'dir1_files_missing')
 			printf '%s\n' "*** 1:${dir1}"
 			printf '%s\n\n' "The files below are missing:"

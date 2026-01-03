@@ -1,23 +1,38 @@
 #!/bin/bash
 
-# This script looks through all my disc-based ROMs, updates a folder of
-# links to those ROMs, and generates a menu allowing me to select a game
-# to load into RAM for faster performance. This is also to avoid I/O
-# issues, for example when reading the disc image from the same device
-# as an OBS desktop recording is being written to.
+# This script looks through folders of disc-based (game) ROMs, updates a
+# folder of symbolic links to those ROMs, and generates a menu allowing
+# the user to select a game to load into RAM for faster performance.
+# This is also to avoid I/O issues, for example when reading the disc
+# image from the same device as an OBS desktop recording is being
+# written to.
+
+# It's possible to load multiple games at a time, or load a range of
+# games at a time, like this:
+# 1,2,3,10 or 1-3.
+
+# This gives the user the ability to load multi-disc games. As an
+# example, some games for PlayStation span across multiple CDs or DVDs.
+
+# To add a different system, or remove a system, just edit the
+# 'add_system' lines in this script. The syntax is:
+# add_system 'basic_system_name' 'Real System Name' 'directory'
 
 # The ROM directory to be scanned in the emulator should be the one in
-# the 'link_dn' variable.
+# the 'output[link_dn]' variable. That's the directory of links, that's
+# automatically generated and updated. It points to this path by
+# default:
+# ~/ROMs_links
 
 set -eo pipefail
 
-declare session link_dn ram_dn system_in system_out elements title_ref size_ref
-declare -a systems_in files
-declare -A regex systems_out dirs_in dirs_out if of loaded
+declare session elements
+declare -a systems_in systems_out files loaded_system_keys loaded_title_keys
+declare -A input output regex dirs_in dirs_out current refs
 
 session="${RANDOM}-${RANDOM}"
-link_dn="${HOME}/ROMs_links"
-ram_dn="/dev/shm/game2ram-${session}"
+output[link_dn]="${HOME}/ROMs_links"
+output[ram_dn]="/dev/shm/game2ram-${session}"
 
 regex[digit]='^[[:digit:]]+$'
 regex[alpha]='^[[:alpha:]]+$'
@@ -25,7 +40,7 @@ regex[du]='^[[:digit:]]+'
 
 add_system () {
 	systems_in+=("$1")
-	systems_out["${1}"]="$2"
+	systems_out+=("$2")
 	dirs_in["${1}"]="$3"
 }
 
@@ -37,15 +52,17 @@ add_system 'ps1' 'PlayStation' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fe
 add_system 'ps2' 'PlayStation 2' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
 add_system 'gamecube' 'GameCube' '/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
 
-for system_in in "${systems_in[@]}"; do
-	dirs_out["${system_in}"]="${link_dn}/${system_in}"
+for (( i = 0; i < "${#systems_in[@]}"; i++ )); do
+	refs[system_in]="systems_in[${i}]"
+
+	dirs_out["${!refs[system_in]}"]="${output[link_dn]}/${!refs[system_in]}"
 done
 
 iquit () {
-	unload_game
+	unload_games
 
-	if [[ -d $ram_dn ]]; then
-		rm -rf "$ram_dn"
+	if [[ -d ${output[ram_dn]} ]]; then
+		rm -rf "${output[ram_dn]}"
 	fi
 
 	sync
@@ -54,89 +71,159 @@ iquit () {
 }
 
 relink () {
-	rm -f "${of[link]}"
+	rm -f "${output[link_fn]}"
 
-	ln -s "${if[disk]}" "${of[link]}"
+	ln -s "${input[disk_fn]}" "${output[link_fn]}"
 }
 
-load_game () {
-	loaded[system]="$system_out"
-	loaded[title]="${!title_ref}"
-	loaded[size]="${!size_ref}"
-	loaded[link]="${dirs_out[${system_in}]}/${!title_ref}"
-	loaded[disk]="${dirs_in[${system_in}]}/${!title_ref}"
-	loaded[ram]="${ram_dn}/${!title_ref}"
-
-	cp -Lrp "${loaded[disk]}" "${loaded[ram]}"
-
-	rm -f "${loaded[link]}"
-
-	ln -s "${loaded[ram]}" "${loaded[link]}"
-}
-
-unload_game () {
-	if [[ ${#loaded[@]} -eq 0 ]]; then
+unload_games () {
+	if [[ ${#loaded_title_keys[@]} -eq 0 ]]; then
 		return
 	fi
 
-	rm -rf "${loaded[ram]}"
+	for (( z = 0; z < ${#loaded_title_keys[@]}; z++ )); do
+		refs[system_key]="loaded_system_keys[${z}]"
+		refs[title_key]="loaded_title_keys[${z}]"
 
-	rm -f "${loaded[link]}"
+		refs[system_in]="systems_in[${!refs[system_key]}]"
 
-	ln -s "${loaded[disk]}" "${loaded[link]}"
+		refs[title]="files_${!refs[system_in]}[${!refs[title_key]}]"
+		refs[size]="sizes_${!refs[system_in]}[${!refs[title_key]}]"
 
-	loaded=()
+		input[disk_fn]="${dirs_in[${!refs[system_in]}]}/${!refs[title]}"
+		input[link_fn]="${dirs_out[${!refs[system_in]}]}/${!refs[title]}"
+		output[ram_fn]="${output[ram_dn]}/${!refs[title]}"
+
+		rm -rf "${output[ram_fn]}"
+
+		rm -f "${input[link_fn]}"
+
+		ln -s "${input[disk_fn]}" "${input[link_fn]}"
+	done
+
+	loaded_system_keys=()
+	loaded_title_keys=()
+}
+
+load_games () {
+	declare -a args
+
+	args=("$@")
+
+	for (( z = 0; z < ${#args[@]}; z++ )); do
+		refs[title_key]="args[${z}]"
+
+		if [[ ! ${!refs[title_key]} =~ ${regex[digit]} ]]; then
+			return
+		fi
+
+		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
+
+		if [[ -z ${!refs[title]} ]]; then
+			return
+		fi
+	done
+
+	unload_games
+
+	for (( z = 0; z < ${#args[@]}; z++ )); do
+		refs[title_key]="args[${z}]"
+
+		loaded_system_keys+=("${current[system_key]}")
+		loaded_title_keys+=("${!refs[title_key]}")
+
+		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
+		refs[size]="sizes_${current[system_in]}[${!refs[title_key]}]"
+
+		input[disk_fn]="${dirs_in[${current[system_in]}]}/${!refs[title]}"
+		input[link_fn]="${dirs_out[${current[system_in]}]}/${!refs[title]}"
+		output[ram_fn]="${output[ram_dn]}/${!refs[title]}"
+
+		cp -Lrp "${input[disk_fn]}" "${output[ram_fn]}"
+
+		rm -f "${input[link_fn]}"
+
+		ln -s "${output[ram_fn]}" "${input[link_fn]}"
+	done
+
+	sync
+}
+
+print_loaded () {
+	if [[ ${#loaded_title_keys[@]} -eq 0 ]]; then
+		return
+	fi
+
+	printf '\nLoaded:\n\n'
+
+	for (( z = 0; z < ${#loaded_title_keys[@]}; z++ )); do
+		refs[system_key]="loaded_system_keys[${z}]"
+		refs[title_key]="loaded_title_keys[${z}]"
+
+		refs[system_in]="systems_in[${!refs[system_key]}]"
+		refs[system_out]="systems_out[${!refs[system_key]}]"
+
+		refs[title]="files_${!refs[system_in]}[${!refs[title_key]}]"
+		refs[size]="sizes_${!refs[system_in]}[${!refs[title_key]}]"
+
+		printf '%s/%s/%s MiB\n' "${!refs[system_out]}" "${!refs[title]}" "${!refs[size]}"
+	done
 }
 
 menu () {
-	declare actions title_ref1 title_ref2 size_ref1 size_ref2 string1 string2
+	declare actions string1 string2 key
+	declare -a list range_in range_out
 
 	actions='(a) abort (u) unload (q) quit'
 
 	printf '\nChoose system:\n\n'
 
 	for (( z = 0; z < ${#systems_in[@]}; z++ )); do
-		system_in="${systems_in[${z}]}"
-		system_out="${systems_out[${system_in}]}"
+		refs[system_in]="systems_in[${z}]"
+		refs[system_out]="systems_out[${z}]"
 
-		printf '%s) %s\n' "$z" "$system_out"
+		printf '%s) %s\n' "$z" "${!refs[system_out]}"
 	done
 
-	printf '\nloaded: %s/%s/%s MiB\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "${loaded[size]}" "$actions"
+	print_loaded
+	printf '\n%s\n\n' "$actions"
 
 	read -p '>'
 
+	key=$(tr -d '[:space:]' <<<"$REPLY")
+
 	clear
 
-	if [[ $REPLY =~ ${regex[digit]} ]]; then
-		system_in="${systems_in[${REPLY}]}"
-		system_out="${systems_out[${system_in}]}"
+	if [[ $key =~ ${regex[digit]} ]]; then
+		current[system_key]="$key"
+		current[system_in]="${systems_in[${key}]}"
+		current[system_out]="${systems_out[${key}]}"
 
-		if [[ -z $system_in ]]; then
+		if [[ -z ${current[system_in]} ]]; then
 			return
 		fi
 
-		eval elements=$(printf '${#files_%s[@]}' "$system_in")
+		eval elements=$(printf '${#files_%s[@]}' "${current[system_in]}")
 
 		if [[ $elements -eq 0 ]]; then
 			return
 		fi
 
-		printf '\nChoose (%s) game:\n\n' "$system_out"
+		printf '\nChoose (%s) game:\n\n' "${current[system_out]}"
 
 		for (( y = 0; y < elements; y++ )); do
 			z=$(( y + 1 ))
 
-			title_ref1="files_${system_in}[${y}]"
-			title_ref2="files_${system_in}[${z}]"
+			refs[title1]="files_${current[system_in]}[${y}]"
+			refs[title2]="files_${current[system_in]}[${z}]"
 
-			size_ref1="sizes_${system_in}[${y}]"
-			size_ref2="sizes_${system_in}[${z}]"
+			refs[size1]="sizes_${current[system_in]}[${y}]"
+			refs[size2]="sizes_${current[system_in]}[${z}]"
 
-			string1="${y}) ${!title_ref1:0:50} (${!size_ref1} MiB)"
-			string2="${z}) ${!title_ref2:0:50} (${!size_ref2} MiB)"
+			string1="${y}) ${!refs[title1]:0:50} (${!refs[size1]} MiB)"
+			string2="${z}) ${!refs[title2]:0:50} (${!refs[size2]} MiB)"
 
-			if [[ -n ${!title_ref2} ]]; then
+			if [[ -n ${!refs[title2]} ]]; then
 				printf '%-75s %s\n' "$string1" "$string2"
 			else
 				printf '%s\n' "$string1"
@@ -145,31 +232,44 @@ menu () {
 			y=$(( y + 1 ))
 		done
 
-		printf '\nloaded: %s/%s/%s MiB\n\n%s\n\n' "${loaded[system]}" "${loaded[title]}" "${loaded[size]}" "$actions"
+		print_loaded
+		printf '\n%s\n\n' "$actions"
 
 		read -p '>'
 
+		key=$(tr -d '[:space:]' <<<"$REPLY")
+
 		clear
 
-		if [[ $REPLY =~ ${regex[digit]} ]]; then
-			title_ref="files_${system_in}[${REPLY}]"
-			size_ref="sizes_${system_in}[${REPLY}]"
+		mapfile -d',' -t list <<<"$key"
+		mapfile -d'-' -t range_in <<<"$key"
 
-			if [[ -z ${!title_ref} ]]; then
+		list[-1]="${list[-1]%$'\n'}"
+		range_in[-1]="${range_in[-1]%$'\n'}"
+
+		if [[ ${#list[@]} -gt 1 && ${#range_in[@]} -eq 1 ]]; then
+			load_games "${list[@]}"
+		elif [[ ${#range_in[@]} -eq 2 && ${#list[@]} -eq 1 ]]; then
+			if [[ ${range_in[0]} -gt ${range_in[1]} ]]; then
 				return
 			fi
 
-			unload_game
-			load_game
+			(( range_in[1] += 1 ))
 
-			sync
+			for (( z = range_in[0]; z < range_in[1]; z++ )); do
+				range_out+=("$z")
+			done
+
+			load_games "${range_out[@]}"
+		else
+			load_games "$key"
 		fi
 	fi
 
-	if [[ $REPLY =~ ${regex[alpha]} ]]; then
-		case "$REPLY" in
+	if [[ $key =~ ${regex[alpha]} ]]; then
+		case "$key" in
 			'u')
-				unload_game
+				unload_games
 
 				return
 			;;
@@ -185,45 +285,47 @@ menu () {
 
 trap iquit SIGINT SIGTERM
 
-mkdir "$ram_dn"
+mkdir "${output[ram_dn]}"
 
-for system_in in "${systems_in[@]}"; do
-	declare -a "files_${system_in}" "sizes_${system_in}"
+for (( i = 0; i < "${#systems_in[@]}"; i++ )); do
+	refs[system_in]="systems_in[${i}]"
 
-	if[dn]="${dirs_in[${system_in}]}"
-	of[dn]="${dirs_out[${system_in}]}"
+	declare -a "files_${!refs[system_in]}" "sizes_${!refs[system_in]}"
 
-	if [[ ! -d  ${if[dn]} ]]; then
-		printf '\nNot found:\n%s\n\n' "${if[dn]}"
+	input[dn]="${dirs_in[${!refs[system_in]}]}"
+	output[dn]="${dirs_out[${!refs[system_in]}]}"
+
+	if [[ ! -d  ${input[dn]} ]]; then
+		printf '\nNot found:\n%s\n\n' "${input[dn]}"
 
 		exit
 	fi
 
-	if [[ ! -d  ${of[dn]} ]]; then
-		mkdir -p "${of[dn]}"
+	if [[ ! -d  ${output[dn]} ]]; then
+		mkdir -p "${output[dn]}"
 	fi
 
-	mapfile -t files < <(find "${if[dn]}" -mindepth 1 -maxdepth 1 | sort)
+	mapfile -t files < <(find "${input[dn]}" -mindepth 1 -maxdepth 1 | sort)
 
-	mapfile -t "files_${system_in}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' basename -a)
-	mapfile -t "sizes_${system_in}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' du -B MiB -s | grep -Eo "${regex[du]}")
+	mapfile -t "files_${!refs[system_in]}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' basename -a)
+	mapfile -t "sizes_${!refs[system_in]}" < <(printf '%s\n' "${files[@]}" | xargs -r -d '\n' du -B MiB -s | grep -Eo "${regex[du]}")
 
-	eval elements=$(printf '${#files_%s[@]}' "$system_in")
+	eval elements=$(printf '${#files_%s[@]}' "${!refs[system_in]}")
 
-	for (( i = 0; i < elements; i++ )); do
-		title_ref="files_${system_in}[${i}]"
+	for (( j = 0; j < elements; j++ )); do
+		refs[title]="files_${!refs[system_in]}[${j}]"
 
-		if[disk]=$(readlink -f "${if[dn]}/${!title_ref}")
-		of[link]="${of[dn]}/${!title_ref}"
-		of[disk]=$(readlink -m "${of[link]}")
+		input[disk_fn]=$(readlink -f "${input[dn]}/${!refs[title]}")
+		output[link_fn]="${output[dn]}/${!refs[title]}"
+		output[disk_fn]=$(readlink -m "${output[link_fn]}")
 
-		if [[ ! -L ${of[link]} ]]; then
+		if [[ ! -L ${output[link_fn]} ]]; then
 			relink
 
 			continue
 		fi
 
-		if [[ ${if[disk]} != "${of[disk]}" ]]; then
+		if [[ ${input[disk_fn]} != "${output[disk_fn]}" ]]; then
 			relink
 
 			continue

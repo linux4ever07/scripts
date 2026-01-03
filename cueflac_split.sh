@@ -7,12 +7,11 @@
 # 'cuetools' and 'shntool' to run this script.
 
 # The output files are put here:
-# ${HOME}/split-tracks/${album}
+# ${HOME}/split-tracks/${no_ext}
 
 declare line
-declare -a cmd dirs files_in files_out
-declare -a format
-declare -A if of regex
+declare -a format cmd dirs files_in files_out
+declare -A input output regex
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
@@ -31,7 +30,7 @@ regex[fn]='^(.*)\.([^.]*)$'
 # Creates an array of the list of commands needed by this script.
 cmd=('cuebreakpoints' 'shnsplit')
 
-of[dn]="${HOME}/split-tracks"
+output[dn]="${HOME}/split-tracks"
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -94,9 +93,9 @@ check_cmd () {
 check_cmd "${cmd[@]}"
 
 for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	if[dn]="${dirs[${i}]}"
+	input[dn]="${dirs[${i}]}"
 
-	mapfile -t files_in < <(find "${if[dn]}" -type f -iname "*.cue")
+	mapfile -t files_in < <(find "${input[dn]}" -type f -iname "*.cue")
 
 	files_out+=("${files_in[@]}")
 done
@@ -104,14 +103,14 @@ done
 unset -v files_in
 
 for (( i = 0; i < ${#files_out[@]}; i++ )); do
-	if[cue]="${files_out[${i}]}"
-	if[cue_dn]=$(dirname "${if[cue]}")
+	input[cue_fn]="${files_out[${i}]}"
+	input[cue_dn]=$(dirname "${input[cue_fn]}")
 
-	declare album fn ext
+	declare no_ext ext
 	declare -a lines files tracks
 
 # Reads the source CUE sheet into RAM.
-	mapfile -t lines < <(tr -d '\r' <"${if[cue]}" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"${input[cue_fn]}" | sed -E "s/${regex[blank]}/\1/")
 
 # This loop processes each line in the CUE sheet, and stores all the
 # containing file names in the 'files' array.
@@ -149,37 +148,34 @@ for (( i = 0; i < ${#files_out[@]}; i++ )); do
 		continue
 	fi
 
-	fn="${files[0]}"
+	input[fn]="${files[0]}"
 
 	unset -v lines files tracks
 
-	album="$fn"
-
-	if [[ $fn =~ ${regex[fn]} ]]; then
+	if [[ ${input[fn]} =~ ${regex[fn]} ]]; then
+		no_ext="${BASH_REMATCH[1]}"
 		ext="${BASH_REMATCH[2],,}"
 
 		if [[ $ext != 'flac' ]]; then
-			unset -v album fn ext
+			unset -v no_ext ext
 
 			continue
 		fi
-
-		album="${BASH_REMATCH[1]}"
 	fi
 
-	of[album_dn]="${of[dn]}/${album}"
+	output[album_dn]="${output[dn]}/${no_ext}"
 
-	if [[ -d ${of[album_dn]} ]]; then
-		unset -v album fn ext
+	if [[ -d ${output[album_dn]} ]]; then
+		unset -v no_ext ext
 
 		continue
 	fi
 
-	mkdir -p "${of[album_dn]}"
-	cd "${of[album_dn]}"
+	mkdir -p "${output[album_dn]}"
+	cd "${output[album_dn]}"
 
-	cuebreakpoints "${if[cue]}" | shnsplit -O always -o flac -- "${if[cue_dn]}/${fn}"
-	cuetag.sh "${if[cue]}" split-track*.flac
+	cuebreakpoints "${input[cue_fn]}" | shnsplit -O always -o flac -- "${input[cue_dn]}/${input[fn]}"
+	cuetag.sh "${input[cue_fn]}" split-track*.flac
 
-	unset -v album fn ext
+	unset -v no_ext ext
 done

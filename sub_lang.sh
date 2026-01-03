@@ -6,10 +6,11 @@
 
 declare switch line n
 declare -a mkvinfo_tracks mkvinfo_lines lang_list
-declare -A if regex tracks
+declare -A input output regex tracks
 
-if[fn]=$(readlink -f "$1")
-if[ext]="${if[fn]##*.}"
+input[fn]=$(readlink -f "$1")
+input[ext]="${input[fn]##*.}"
+input[ext]="${input[ext],,}"
 
 regex[start]='^\|\+ Tracks$'
 regex[stop]='^\|\+ '
@@ -29,7 +30,7 @@ usage () {
 	exit
 }
 
-if [[ ! -f ${if[fn]} || ${if[ext],,} != 'mkv' ]]; then
+if [[ ! -f ${input[fn]} || ${input[ext]} != 'mkv' ]]; then
 	usage
 fi
 
@@ -41,7 +42,7 @@ if [[ $? -ne 0 ]]; then
 	exit
 fi
 
-mapfile -t mkvinfo_lines < <(mkvinfo "${if[fn]}" 2>&-)
+mapfile -t mkvinfo_lines < <(mkvinfo "${input[fn]}" 2>&-)
 
 # Singles out the part that lists the tracks, and ignores the rest of
 # the output from 'mkvinfo'.

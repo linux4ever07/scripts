@@ -15,24 +15,24 @@
 # (i.e. video encoding). To prevent that from happening, I created
 # this script.
 
-declare ram_limit log_killed
+declare ram_limit
 declare -a free_ram ram swap
-declare -A regex pids
+declare -A input output regex pids
 
-regex[pid_args]='^[[:blank:]]*([0-9]+)([[:blank:]]*)([^ ]+)(.*)$'
+regex[pid_args]='^[[:blank:]]*([[:digit:]]+)([[:blank:]]*)([^ ]+)(.*)$'
 regex[rend]='--type=renderer'
 regex[ext]='--extension-process'
-regex[tab]='^.*-childID [0-9]+.* tab$'
+regex[tab]='^.*-childID [[:digit:]]+.* tab$'
 
 # Creates a limit for the amount of free RAM required.
 ram_limit=1000000
 
 # Creates a file name for the log.
-log_killed="${HOME}/browser_killed.log"
+output[log_fn]="${HOME}/browser_killed.log"
 
-# If $log_killed is not a file, create it.
-if [[ ! -f $log_killed ]]; then
-	touch "$log_killed"
+# If ${output[log_fn]} is not a file, create it.
+if [[ ! -f ${output[log_fn]} ]]; then
+	touch "${output[log_fn]}"
 fi
 
 # Creates a function, called 'now', which will print the date and time.
@@ -121,7 +121,7 @@ kill_firefox () {
 	fi
 
 	time=$(now)
-	printf '%s\n\n' "${time}: Killing Firefox / Tor Browser..." | tee --append "$log_killed"
+	printf '%s\n\n' "${time}: Killing Firefox / Tor Browser..." | tee --append "${output[log_fn]}"
 
 	for (( i = 0; i < ${#pids_tmp[@]}; i++ )); do
 		pid="${pids_tmp[${i}]}"
@@ -151,7 +151,7 @@ kill_chrome () {
 	fi
 
 	time=$(now)
-	printf '%s\n\n' "${time}: Killing Chrome / Chromium..." | tee --append "$log_killed"
+	printf '%s\n\n' "${time}: Killing Chrome / Chromium..." | tee --append "${output[log_fn]}"
 
 	for (( i = 0; i < ${#pids_tmp[@]}; i++ )); do
 		pid="${pids_tmp[${i}]}"

@@ -14,17 +14,17 @@ if [[ ! -f $1 || -z $2 ]]; then
 	usage
 fi
 
-declare if switch line
+declare switch line
 declare -a lines
-declare -A regex
+declare -A input output regex
 
-if=$(readlink -f "$1")
+input[fn]=$(readlink -f "$1")
 
 regex[start]="^([[:blank:]]*)${2}[[:blank:]]*\(\) \{"
 
 switch=0
 
-mapfile -t lines < <(tr -d '\r' <"$if")
+mapfile -t lines < <(tr -d '\r' <"${input[fn]}")
 
 printf '\n'
 

@@ -19,16 +19,16 @@ fi
 
 declare session line_in line_out
 declare -a lines_in lines_out
-declare -A if of
+declare -A input output
 
 session="${RANDOM}-${RANDOM}"
 
-if[fn]=$(readlink -f "$1")
-of[fn]=$(readlink -f "$2")
-of[fn_tmp]="${of[fn]%.*}-${session}.txt"
+input[fn]=$(readlink -f "$1")
+output[fn]=$(readlink -f "$2")
+output[tmp_fn]="${output[fn]%.*}-${session}.txt"
 
-mapfile -t lines_in < <(tr -d '\r' <"${if[fn]}")
-mapfile -t lines_out < <(tr -d '\r' <"${of[fn]}")
+mapfile -t lines_in < <(tr -d '\r' <"${input[fn]}")
+mapfile -t lines_out < <(tr -d '\r' <"${output[fn]}")
 
 declare switch
 
@@ -48,9 +48,9 @@ for (( i = 0; i < ${#lines_out[@]}; i++ )); do
 	done
 
 	if [[ $switch -eq 0 ]]; then
-		printf '%s\n' "$line_out" | tee -a "${of[fn_tmp]}"
+		printf '%s\n' "$line_out" | tee -a "${output[tmp_fn]}"
 	fi
 done
 
-touch -r "${of[fn]}" "${of[fn_tmp]}"
-mv "${of[fn_tmp]}" "${of[fn]}"
+touch -r "${output[fn]}" "${output[tmp_fn]}"
+mv "${output[tmp_fn]}" "${output[fn]}"

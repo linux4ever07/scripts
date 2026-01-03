@@ -16,20 +16,22 @@
 
 set -eo pipefail
 
-declare -a dirs files vars1
-declare -A regex
+declare key
+declare -a dirs files
+declare -A input output regex
 
-regex[srt]='\/([0-9]+_)*eng(lish)*.srt$'
+regex[srt]='\/([[:digit:]]+_)*eng(lish)*.srt$'
 
-vars1=('size' 'dn' 'bn' 'if' 'of')
 dirs=("$HOME" "/run/media/${USER}")
 
 get_files () {
-	declare srt_tmp size_tmp
+	declare srt_tmp size_tmp size
 	declare -a files_tmp movie_tmp sub_tmp
 
-	for dn in "$@"; do
-		mapfile -t files_tmp < <(find "$dn" -type d -name "*-RARBG" -o -name "*-VXT" 2>&-)
+	for key in "$@"; do
+		input[dn]="$key"
+
+		mapfile -t files_tmp < <(find "${input[dn]}" -type d -name "*-RARBG" -o -name "*-VXT" 2>&-)
 
 		if [[ ${#files_tmp[@]} -eq 0 ]]; then
 			continue
@@ -45,23 +47,21 @@ get_files () {
 	printf '\n'
 
 	for (( i = 0; i < ${#files[@]}; i++ )); do
-		declare "${vars1[@]}"
+		size=0
 
-		dn="${files[${i}]}"
+		input[dn]="${files[${i}]}"
 
-		mapfile -t movie_tmp < <(compgen -G "${dn}/*.mp4")
+		mapfile -t movie_tmp < <(compgen -G "${input[dn]}/*.mp4")
 
 		if [[ ${#movie_tmp[@]} -ne 1 ]]; then
 			continue
 		fi
 
-		mapfile -t sub_tmp < <(compgen -G "${dn}/Subs/*.srt")
+		mapfile -t sub_tmp < <(compgen -G "${input[dn]}/Subs/*.srt")
 
 		if [[ ${#sub_tmp[@]} -eq 0 ]]; then
 			continue
 		fi
-
-		size=0
 
 		for (( j = 0; j < ${#sub_tmp[@]}; j++ )); do
 			srt_tmp="${sub_tmp[${j}]}"
@@ -75,29 +75,32 @@ get_files () {
 			if [[ $size_tmp -gt $size ]]; then
 				size="$size_tmp"
 
-				bn=$(basename "$srt_tmp")
-				if="Subs/${bn}"
+				input[bn]=$(basename "$srt_tmp")
+				input[fn]="Subs/${input[bn]}"
 
-				of="${movie_tmp[0]%.*}.srt"
+				output[fn]="${movie_tmp[0]%.*}.srt"
 			fi
 		done
 
-		if [[ -z $of ]]; then
-			unset -v "${vars1[@]}"
+		if [[ -z ${output[fn]} ]]; then
+			input=()
+			output=()
 			continue
 		fi
 
-		if [[ -e $of ]]; then
-			unset -v "${vars1[@]}"
+		if [[ -e ${output[fn]} ]]; then
+			input=()
+			output=()
 			continue
 		fi
 
-		printf '%s\n' "$if"
-		printf '%s\n\n' "$of"
+		printf '%s\n' "${input[fn]}"
+		printf '%s\n\n' "${output[fn]}"
 
-		ln -s "$if" "$of"
+		ln -s "${input[fn]}" "${output[fn]}"
 
-		unset -v "${vars1[@]}"
+		input=()
+		output=()
 	done
 }
 

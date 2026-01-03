@@ -17,32 +17,30 @@ fi
 # If metaflac isn't installed, quit running the script.
 command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
-declare dn
+declare track
 declare -a files
+declare -A input output regex
 
-dn=$(readlink -f "$1")
+input[dn]=$(readlink -f "$1")
 
-mapfile -t files < <(find "$dn" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)
+regex[digit]='^[[:digit:]]+$'
+
+mapfile -t files < <(find "${input[dn]}" -maxdepth 1 -type f -iname "*.flac" 2>&- | sort -n)
 
 if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare track
-declare -A regex
-
-regex[num]='^[0-9]+$'
-
 # Creates a function, called 'gettags', which gets all the tags present
 # in a FLAC file.
 gettags () {
-	declare if line field
+	declare line field
 	declare -a lines
 	declare -A alltags
 
-	if="$1"
+	input[fn]="$1"
 
-	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
+	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "${input[fn]}" 2>&-)
 
 	for (( z = 0; z < ${#lines[@]}; z++ )); do
 		line="${lines[${z}]}"
@@ -91,7 +89,7 @@ options () {
 		;;
 	esac
 
-	if [[ ! $REPLY =~ ${regex[num]} ]]; then
+	if [[ ! $REPLY =~ ${regex[digit]} ]]; then
 		return
 	fi
 

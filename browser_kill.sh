@@ -26,9 +26,9 @@ if [[ $# -ne 1 ]]; then
 	usage
 fi
 
-declare browser fn bn restart_fn
+declare browser
 declare -a files
-declare -A browsers regex
+declare -A browsers input output regex
 
 browsers[chromium]=1
 browsers[chrome]=1
@@ -41,20 +41,20 @@ else
 	usage
 fi
 
-regex[bn]="${browser}-[0-9]+-[0-9]+"
+regex[bn]="${browser}-[[:digit:]]+-[[:digit:]]+"
 regex[ram]="^${regex[bn]}$"
 
 mapfile -t files < <(find '/dev/shm' -mindepth 1 -maxdepth 1 -type d -name "${browser}-*")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
-	bn=$(basename "$fn")
+	input[fn]="${files[${i}]}"
+	input[bn]=$(basename "${input[fn]}")
 
-	if [[ ! $bn =~ ${regex[ram]} ]]; then
+	if [[ ! ${input[bn]} =~ ${regex[ram]} ]]; then
 		continue
 	fi
 
-	restart_fn="${fn}/kill"
+	output[restart_fn]="${input[fn]}/kill"
 
-	touch "$restart_fn"
+	touch "${output[restart_fn]}"
 done

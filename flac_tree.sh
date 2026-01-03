@@ -4,7 +4,7 @@
 # FLAC music library, by reading tags.
 
 # The script expects this directory structure:
-# ${library}/${albumartist}/${album}
+# ${input[library_dn]}/${albumartist}/${album}
 
 usage () {
 	printf '\n%s\n\n' "Usage: $(basename "$0") [FLAC library directory]"
@@ -18,11 +18,11 @@ fi
 # If metaflac isn't installed, quit running the script.
 command -v metaflac 1>&- || { printf '\n%s\n\n' 'This script requires metaflac.'; exit; }
 
-declare library artist_dn album_dn if albumartist album date tracks
+declare albumartist album date tracks
 declare -a dirs1 dirs2 files
-declare -A alltags
+declare -A input output alltags
 
-library=$(readlink -f "$1")
+input[library_dn]=$(readlink -f "$1")
 
 gettags () {
 	declare line field
@@ -32,7 +32,7 @@ gettags () {
 		unset -v alltags["${field}"]
 	done
 
-	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "$if" 2>&-)
+	mapfile -t lines < <(metaflac --no-utf8-convert --export-tags-to=- "${input[fn]}" 2>&-)
 
 	for (( z = 0; z < ${#lines[@]}; z++ )); do
 		line="${lines[${z}]}"
@@ -58,18 +58,18 @@ gettags () {
 }
 
 # Enters the Songbird Music Library directory.
-cd "$library"
+cd "${input[library_dn]}"
 
-mapfile -t dirs1 < <(find "$library" -mindepth 1 -maxdepth 1 -type d 2>&- | sort)
+mapfile -t dirs1 < <(find "${input[library_dn]}" -mindepth 1 -maxdepth 1 -type d 2>&- | sort)
 
 for (( i = 0; i < ${#dirs1[@]}; i++ )); do
-	artist_dn="${dirs1[${i}]}"
+	input[artist_dn]="${dirs1[${i}]}"
 
-	if [[ ! -d $artist_dn ]]; then
+	if [[ ! -d ${input[artist_dn]} ]]; then
 		continue
 	fi
 
-	if=$(find "$artist_dn" -type f -iname "*.flac" | head -1)
+	input[fn]=$(find "${input[artist_dn]}" -type f -iname "*.flac" | head -1)
 
 	gettags
 
@@ -78,22 +78,22 @@ for (( i = 0; i < ${#dirs1[@]}; i++ )); do
 	printf "+---%s\n" "$albumartist"
 	printf "|    %s\n" '\'
 
-	mapfile -t dirs2 < <(find "$artist_dn" -mindepth 1 -maxdepth 1 -type d 2>&- | sort)
+	mapfile -t dirs2 < <(find "${input[artist_dn]}" -mindepth 1 -maxdepth 1 -type d 2>&- | sort)
 
 	for (( j = 0; j < ${#dirs2[@]}; j++ )); do
-		album_dn="${dirs2[${j}]}"
+		input[album_dn]="${dirs2[${j}]}"
 
-		if [[ ! -d $album_dn ]]; then
+		if [[ ! -d ${input[album_dn]} ]]; then
 			continue
 		fi
 
-		mapfile -t files < <(find "$album_dn" -maxdepth 1 -type f -iname "*.flac" 2>&-)
+		mapfile -t files < <(find "${input[album_dn]}" -maxdepth 1 -type f -iname "*.flac" 2>&-)
 
 		if [[ ${#files[@]} -eq 0 ]]; then
 			continue
 		fi
 
-		if="${files[0]}"
+		input[fn]="${files[0]}"
 
 		gettags
 

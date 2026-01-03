@@ -31,12 +31,12 @@ if [[ $EUID -ne 0 ]]; then
 	exit
 fi
 
-declare date txt_fn
+declare date
 declare -a dnf_pkgs
-declare -A regex
+declare -A input output regex
 
 date=$(date '+%F')
-txt_fn="${HOME}/dnf_reinstall_${date}.txt"
+output[log_fn]="${HOME}/dnf_reinstall_${date}.txt"
 
 regex[dnf]='^([^ ]+).*$'
 regex[rpm]='^[^\/]+(.*)$'
@@ -46,7 +46,7 @@ regex[rpm]='^[^\/]+(.*)$'
 dnf_install () {
 	declare rpm
 
-	touch "$txt_fn"
+	touch "${output[log_fn]}"
 
 	for (( i = 0; i < ${#dnf_pkgs[@]}; i++ )); do
 		rpm="${dnf_pkgs[${i}]}"
@@ -54,7 +54,7 @@ dnf_install () {
 		dnf -y reinstall "$rpm"
 
 		if [[ $? -eq 0 ]]; then
-			printf '%s\n' "$rpm" >> "$txt_fn"
+			printf '%s\n' "$rpm" >> "${output[log_fn]}"
 		fi
 	done
 }

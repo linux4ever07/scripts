@@ -27,7 +27,7 @@ declare -A regex
 
 image=$(readlink -f "$1")
 
-regex[part]='-part[0-9]+$'
+regex[part]='-part[[:digit:]]+$'
 
 # Creates a function, called 'get_files', which will print file names in
 # the current directory, but only if the glob pattern matches actual

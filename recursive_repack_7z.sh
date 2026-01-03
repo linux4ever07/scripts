@@ -114,13 +114,10 @@ fi
 
 check_cmd
 
-declare mode session exit_status no_ext ext md5 key
+declare mode session exit_status no_ext ext hash key
 declare -a files files_tmp_in files_tmp_out empty symlinks corrupt_in corrupt_out
 declare -a ext_list1 ext_list2 stdout_v
-declare -A regex md5h if of
-
-session="${RANDOM}-${RANDOM}"
-PATH="${if[dn_script]}:${PATH}"
+declare -A input output regex md5h
 
 ext_list1=('.tar' '.tgz' '.tbz' '.tbz2' '.txz')
 ext_list2=('.z' '.gz' '.bz2' '.xz' '.zip' '.7z' '.rar' '.lzh' '.lha' '.arj')
@@ -130,17 +127,21 @@ regex[fn]='^(.*)\.([^.]*)$'
 regex[abc]='[^a-zA-Z]'
 regex[file]='^([^\/]+).*$'
 regex[tar]='^\.tar\.[^.]*$'
-regex[dar]='^\.[0-9]+\.dar$'
+regex[dar]='^\.[[:digit:]]+\.dar$'
 
-if[fn_md5db]='md5.db'
+input[fn_md5db]='md5.db'
 
-if[dn_script]=$(dirname "$(readlink -f "$0")")
+input[dn_script]=$(dirname "$(readlink -f "$0")")
 
-of[fn_same_md5]="${HOME}/repack_same_md5-${session}.txt"
-of[fn_same_name]="${HOME}/repack_same_name-${session}.txt"
-of[fn_corrupt]="${HOME}/repack_corrupt-${session}.txt"
-of[fn_empty]="${HOME}/repack_empty-${session}.txt"
-of[fn_symlink]="${HOME}/repack_symlink-${session}.txt"
+PATH="${input[dn_script]}:${PATH}"
+
+session="${RANDOM}-${RANDOM}"
+
+output[fn_same_md5]="${HOME}/repack_same_md5-${session}.txt"
+output[fn_same_name]="${HOME}/repack_same_name-${session}.txt"
+output[fn_corrupt]="${HOME}/repack_corrupt-${session}.txt"
+output[fn_empty]="${HOME}/repack_empty-${session}.txt"
+output[fn_symlink]="${HOME}/repack_symlink-${session}.txt"
 
 # Trap signals (INT, TERM) and call iquit.
 trap iquit SIGINT SIGTERM
@@ -197,11 +198,11 @@ set_names () {
 
 	switch=0
 
-	if[fn]=$(readlink -f "$1")
-	if[dn]=$(dirname "${if[fn]}")
-	if[bn]=$(basename "${if[fn]}")
+	input[fn]=$(readlink -f "$1")
+	input[dn]=$(dirname "${input[fn]}")
+	input[bn]=$(basename "${input[fn]}")
 
-	get_ext "${if[bn]}" 2
+	get_ext "${input[bn]}" 2
 
 	if [[ $ext =~ ${regex[tar]} ]]; then
 		switch=1
@@ -212,21 +213,21 @@ set_names () {
 	fi
 
 	if [[ $switch -eq 0 ]]; then
-		get_ext "${if[bn]}" 1
+		get_ext "${input[bn]}" 1
 	fi
 
-	of[bn_tmp]="${no_ext}-${RANDOM}"
-	of[dn_tmp]="${if[dn]}/${of[bn_tmp]}"
+	output[bn_tmp]="${no_ext}-${RANDOM}"
+	output[dn_tmp]="${input[dn]}/${output[bn_tmp]}"
 
-	of[dn_tar]="${of[dn_tmp]}/tar"
+	output[dn_tar]="${output[dn_tmp]}/tar"
 
-	of[fn]="${if[dn]}/${no_ext}.tar.7z"
+	output[fn]="${input[dn]}/${no_ext}.tar.7z"
 
-	if [[ -f ${of[fn]} && ${of[fn]} != "${if[fn]}" ]]; then
-		of[fn]="${if[dn]}/${of[bn_tmp]}.tar.7z"
+	if [[ -f ${output[fn]} && ${output[fn]} != "${input[fn]}" ]]; then
+		output[fn]="${input[dn]}/${output[bn_tmp]}.tar.7z"
 	fi
 
-	of[fn_tmp]="${of[dn_tmp]}/${no_ext}"
+	output[fn_tmp]="${output[dn_tmp]}/${no_ext}"
 }
 
 # Creates a function, called 'get_files', which will get all the
@@ -246,7 +247,7 @@ get_files () {
 			regex[ext]="${ext_tmp}$"
 
 			if [[ $ext =~ ${regex[ext]} ]]; then
-				files1+=("${if[fn]}")
+				files1+=("${input[fn]}")
 				break
 			fi
 		done
@@ -255,7 +256,7 @@ get_files () {
 			regex[ext]="${ext_tmp}$"
 
 			if [[ $ext =~ ${regex[ext]} ]]; then
-				files2+=("${if[fn]}")
+				files2+=("${input[fn]}")
 				break
 			fi
 		done
@@ -272,15 +273,15 @@ get_symlinks () {
 	mapfile -t files_tmp_out < <(find . -mindepth 1 2>&-)
 
 	for (( z = 0; z < ${#files_tmp_out[@]}; z++ )); do
-		if[test]="${files_tmp_out[${z}]}"
+		input[fn_test]="${files_tmp_out[${z}]}"
 
-		if [[ ! -e ${if[test]} ]]; then
-			symlinks_tmp+=("${if[test]}")
+		if [[ ! -e ${input[fn_test]} ]]; then
+			symlinks_tmp+=("${input[fn_test]}")
 		fi
 	done
 
 	if [[ ${#symlinks_tmp[@]} -gt 0 ]]; then
-		symlinks+=("*** ${of[fn]}" "${symlinks_tmp[@]}" '')
+		symlinks+=("*** ${output[fn]}" "${symlinks_tmp[@]}" '')
 	fi
 
 	files_tmp_out=()
@@ -296,10 +297,10 @@ sort_long () {
 	max_length="${#files_tmp_in[0]}"
 
 	for (( z = 0; z < ${#files_tmp_in[@]}; z++ )); do
-		if[fn]="${files_tmp_in[${z}]}"
-		if[bn]=$(basename "${if[fn]}")
+		input[fn]="${files_tmp_in[${z}]}"
+		input[bn]=$(basename "${input[fn]}")
 
-		length="${#if[bn]}"
+		length="${#input[bn]}"
 
 		lengths_tmp+=("$length")
 
@@ -320,11 +321,11 @@ sort_long () {
 		length="$y"
 
 		for (( z = 0; z < ${#files_tmp_in[@]}; z++ )); do
-			if[fn]="${files_tmp_in[${z}]}"
-			if[length]="${lengths_tmp[${z}]}"
+			input[fn]="${files_tmp_in[${z}]}"
+			input[length]="${lengths_tmp[${z}]}"
 
-			if [[ ${if[length]} -eq $length ]]; then
-				printf '%s\n' "${if[fn]}"
+			if [[ ${input[length]} -eq $length ]]; then
+				printf '%s\n' "${input[fn]}"
 			fi
 		done
 	done
@@ -337,7 +338,7 @@ arch_unpack () {
 
 	case "$1" in
 		*.dar)
-			mapfile -t stdout_v < <(dar -x "${of[fn_tmp]}" 2>&1; printf '%s\n' "$?")
+			mapfile -t stdout_v < <(dar -x "${output[fn_tmp]}" 2>&1; printf '%s\n' "$?")
 			output "$2"
 		;;
 		*.tar)
@@ -391,7 +392,7 @@ arch_unpack () {
 arch_repair () {
 	declare type
 
-	type=$(file --brief --extension "${if[bn]}")
+	type=$(file --brief --extension "${input[bn]}")
 
 	if [[ $type =~ ${regex[file]} ]]; then
 		type="${BASH_REMATCH[1]}"
@@ -399,34 +400,34 @@ arch_repair () {
 		if [[ $type != '???' ]]; then
 			ext="${ext%.*}.${type}"
 
-			mv -n "${if[bn]}" "${no_ext}${ext}"
+			mv -n "${input[bn]}" "${no_ext}${ext}"
 
-			if[bn]="${no_ext}${ext}"
+			input[bn]="${no_ext}${ext}"
 
-			arch_unpack "$ext" "${of[fn_tmp]}${ext}"
+			arch_unpack "$ext" "${output[fn_tmp]}${ext}"
 
 			if [[ $exit_status -eq 0 ]]; then
 				return
 			fi
 
-			rm_tmp "${of[fn_tmp]}${ext}"
+			rm_tmp "${output[fn_tmp]}${ext}"
 		fi
 	fi
 
 	if [[ $ext == '.zip' ]]; then
-		zip -q -F "${if[bn]}" --out "${of[bn_tmp]}.zip" 1>&- 2>&-
-		arch_unpack "$ext" "${of[fn_tmp]}.zip"
+		zip -q -F "${input[bn]}" --out "${output[bn_tmp]}.zip" 1>&- 2>&-
+		arch_unpack "$ext" "${output[fn_tmp]}.zip"
 
 		if [[ $exit_status -eq 0 ]]; then
-			mv "${of[bn_tmp]}.zip" "${if[bn]}"
+			mv "${output[bn_tmp]}.zip" "${input[bn]}"
 		else
-			rm_tmp "${of[fn_tmp]}${ext}"
+			rm_tmp "${output[fn_tmp]}${ext}"
 
-			zip -q -FF "${if[bn]}" --out "${of[bn_tmp]}.zip" 1>&- 2>&-
-			arch_unpack "$ext" "${of[fn_tmp]}.zip"
+			zip -q -FF "${input[bn]}" --out "${output[bn_tmp]}.zip" 1>&- 2>&-
+			arch_unpack "$ext" "${output[fn_tmp]}.zip"
 
 			if [[ $exit_status -eq 0 ]]; then
-				mv "${of[bn_tmp]}.zip" "${if[bn]}"
+				mv "${output[bn_tmp]}.zip" "${input[bn]}"
 			fi
 		fi
 	fi
@@ -438,7 +439,7 @@ arch_pack () {
 
 	if [[ ! -f "${no_ext}.tar" ]]; then
 		mapfile -t stdout_v < <(tar -cf "${no_ext}.tar" "$@" 2>&1; printf '%s\n' "$?")
-		output "${of[fn_tmp]}.tar"
+		output "${output[fn_tmp]}.tar"
 	fi
 
 	if [[ -f "${no_ext}.tar" ]]; then
@@ -447,7 +448,7 @@ arch_pack () {
 	fi
 
 	mapfile -t stdout_v < <(7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "${no_ext}.tar.7z" "${no_ext}.tar" 2>&1; printf '%s\n' "$?")
-	output "${of[fn_tmp]}.tar.7z"
+	output "${output[fn_tmp]}.tar.7z"
 
 	if [[ -f "${no_ext}.tar.7z" ]]; then
 		chown "${USER}:${USER}" "${no_ext}.tar.7z"
@@ -459,12 +460,12 @@ arch_pack () {
 # hash representing the extracted directory, and compress the directory
 # content as a 7zip archive.
 check_n_repack () {
-	declare type md5
+	declare type hash
 
 	if [[ $ext == '.tar' ]]; then
-		rm_tmp "${of[fn_tmp]}${ext}"
+		rm_tmp "${output[fn_tmp]}${ext}"
 	else
-		rm -f "${if[bn]}"
+		rm -f "${input[bn]}"
 	fi
 
 	mapfile -t files_tmp_in < <(compgen -G "*")
@@ -493,10 +494,10 @@ check_n_repack () {
 
 				mapfile -t files_tmp_in < <(compgen -G "*")
 
-				mkdir -p "${of[dn_tar]}"
-				cd "${of[dn_tar]}"
+				mkdir -p "${output[dn_tar]}"
+				cd "${output[dn_tar]}"
 
-				arch_unpack '.tar' "${of[fn_tmp]}.tar"
+				arch_unpack '.tar' "${output[fn_tmp]}.tar"
 			fi
 		fi
 	fi
@@ -505,35 +506,35 @@ check_n_repack () {
 
 	md5db_fast.pl -index . 1>&- 2>&-
 
-	if [[ -f ${if[fn_md5db]} ]]; then
-		md5=$(md5sum -b "${if[fn_md5db]}")
-		md5="${md5%% *}"
+	if [[ -f ${input[fn_md5db]} ]]; then
+		hash=$(md5sum -b "${input[fn_md5db]}")
+		hash="${hash%% *}"
 
-		md5h["${md5}"]+="${of[fn]}\n"
+		md5h["${hash}"]+="${output[fn]}\n"
 	else
-		empty+=("${of[fn]}")
+		empty+=("${output[fn]}")
 	fi
 
-	if [[ $PWD == "${of[dn_tar]}" ]]; then
-		cd "${of[dn_tmp]}"
-		rm -rf "${of[dn_tar]}"
+	if [[ $PWD == "${output[dn_tar]}" ]]; then
+		cd "${output[dn_tmp]}"
+		rm -rf "${output[dn_tar]}"
 	fi
 
 	arch_pack "${files_tmp_in[@]}"
 
-	rm -f "${if[fn]}"
-	mv "${no_ext}.tar.7z" "${of[fn]}"
+	rm -f "${input[fn]}"
+	mv "${no_ext}.tar.7z" "${output[fn]}"
 }
 
 # Creates a function, called 'rm_tmp', which will remove temporary
 # files.
 rm_tmp () {
-	if [[ -z ${of[dn_tmp]} || ! -d ${of[dn_tmp]} ]]; then
+	if [[ -z ${output[dn_tmp]} || ! -d ${output[dn_tmp]} ]]; then
 		return
 	fi
 
 	if [[ $# -eq 0 ]]; then
-		rm -rf "${of[dn_tmp]}"
+		rm -rf "${output[dn_tmp]}"
 
 		return
 	fi
@@ -543,24 +544,24 @@ rm_tmp () {
 
 	skip=("$@")
 
-	mapfile -t files_tmp_out < <(find "${of[dn_tmp]}" -mindepth 1 2>&-)
+	mapfile -t files_tmp_out < <(find "${output[dn_tmp]}" -mindepth 1 2>&-)
 
 	for (( y = 0; y < ${#files_tmp_out[@]}; y++ )); do
-		if[test]="${files_tmp_out[${y}]}"
+		input[fn_test]="${files_tmp_out[${y}]}"
 
 		for (( z = 0; z < ${#skip[@]}; z++ )); do
-			of[test]="${skip[${z}]}"
+			output[fn_test]="${skip[${z}]}"
 
 			switch=0
 
-			if [[ ${if[test]} ==  "${of[test]}" ]]; then
+			if [[ ${input[fn_test]} ==  "${output[fn_test]}" ]]; then
 				switch=1
 				break
 			fi
 		done
 
 		if [[ $switch -eq 0 ]]; then
-			rm -rf "${if[test]}"
+			rm -rf "${input[fn_test]}"
 		fi
 	done
 
@@ -570,20 +571,20 @@ rm_tmp () {
 # Creates a function, called 'get_common', which will check a list of
 # file names and find the directory that has the most files.
 get_common () {
-	declare md5 key common_n
+	declare hash key common_n
 	declare -A common_md5 common_dirs
 
-	unset -v of[common_dn]
+	unset -v output[common_dn]
 
 	for (( z = 0; z < ${#files_tmp_in[@]}; z++ )); do
 		set_names "${files_tmp_in[${z}]}"
 
-		md5=$(md5sum -b <<<"${if[dn]}")
-		md5="${md5%% *}"
+		hash=$(md5sum -b <<<"${input[dn]}")
+		hash="${hash%% *}"
 
-		(( common_md5[${md5}] += 1 ))
+		(( common_md5[${hash}] += 1 ))
 
-		common_dirs["${md5}"]="${if[dn]}"
+		common_dirs["${hash}"]="${input[dn]}"
 	done
 
 	if [[ ${#common_dirs[@]} -eq 1 ]]; then
@@ -591,11 +592,11 @@ get_common () {
 	fi
 
 	for key in "${!common_dirs[@]}"; do
-		if[dn]="${common_dirs[${key}]}"
+		input[dn]="${common_dirs[${key}]}"
 
 		if [[ ${common_md5[${key}]} -gt $common_n ]]; then
 			common_n="${common_md5[${key}]}"
-			of[common_dn]="${if[dn]}"
+			output[common_dn]="${input[dn]}"
 		fi
 	done
 }
@@ -606,16 +607,16 @@ get_files
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	set_names "${files[${i}]}"
 
-	mkdir -p "${of[dn_tmp]}"
-	cp -p "${if[fn]}" "${of[dn_tmp]}"
-	cd "${of[dn_tmp]}"
+	mkdir -p "${output[dn_tmp]}"
+	cp -p "${input[fn]}" "${output[dn_tmp]}"
+	cd "${output[dn_tmp]}"
 
-	arch_unpack "$ext" "${of[fn_tmp]}${ext}"
+	arch_unpack "$ext" "${output[fn_tmp]}${ext}"
 
 	if [[ $exit_status -eq 0 ]]; then
 		check_n_repack
 	else
-		corrupt_in+=("${if[fn]}")
+		corrupt_in+=("${input[fn]}")
 	fi
 
 	rm_tmp
@@ -625,22 +626,22 @@ done
 for (( i = 0; i < ${#corrupt_in[@]}; i++ )); do
 	set_names "${corrupt_in[${i}]}"
 
-	mkdir -p "${of[dn_tmp]}"
-	cp -p "${if[fn]}" "${of[dn_tmp]}"
-	cd "${of[dn_tmp]}"
+	mkdir -p "${output[dn_tmp]}"
+	cp -p "${input[fn]}" "${output[dn_tmp]}"
+	cd "${output[dn_tmp]}"
 
 	arch_repair
 
 	if [[ $exit_status -eq 0 ]]; then
 		check_n_repack
 	else
-		corrupt_out+=("${if[fn]}")
+		corrupt_out+=("${input[fn]}")
 	fi
 
 	rm_tmp
 done
 
-printf '%s\n' "${corrupt_out[@]}" > "${of[fn_corrupt]}"
+printf '%s\n' "${corrupt_out[@]}" > "${output[fn_corrupt]}"
 
 unset -v corrupt_in corrupt_out
 
@@ -654,15 +655,15 @@ for key in "${!md5h[@]}"; do
 
 	mapfile -t files_tmp_in < <(sort_long "${files_tmp_in[@]}")
 
-	printf '*** %s\n' "$key" >> "${of[fn_same_md5]}"
+	printf '*** %s\n' "$key" >> "${output[fn_same_md5]}"
 
 	for (( i = 0; i < ${#files_tmp_in[@]}; i++ )); do
 		set_names "${files_tmp_in[${i}]}"
 
-		printf '%s\n' "${if[fn]}" >> "${of[fn_same_md5]}"
+		printf '%s\n' "${input[fn]}" >> "${output[fn_same_md5]}"
 	done
 
-	printf '\n' >> "${of[fn_same_md5]}"
+	printf '\n' >> "${output[fn_same_md5]}"
 done
 
 md5h=()
@@ -673,13 +674,13 @@ mapfile -t files < <(find "${library[@]}" -type f -iname "*.tar.7z" 2>&-)
 for (( i = 0; i < ${#files[@]}; i++ )); do
 	set_names "${files[${i}]}"
 
-	if[bn_abc]=$(sed -E "s/${regex[abc]}//g" <<<"${no_ext,,}")
-	if[bn_abc]="${if[bn_abc]:0:4}"
+	input[bn_abc]=$(sed -E "s/${regex[abc]}//g" <<<"${no_ext,,}")
+	input[bn_abc]="${input[bn_abc]:0:4}"
 
-	md5=$(md5sum -b <<<"${if[bn_abc]}")
-	md5="${md5%% *}"
+	hash=$(md5sum -b <<<"${input[bn_abc]}")
+	hash="${hash%% *}"
 
-	md5h["${md5}"]+="${if[fn]}\n"
+	md5h["${hash}"]+="${input[fn]}\n"
 done
 
 for key in "${!md5h[@]}"; do
@@ -693,17 +694,17 @@ for key in "${!md5h[@]}"; do
 
 	get_common
 
-	if [[ -z ${of[common_dn]} ]]; then
+	if [[ -z ${output[common_dn]} ]]; then
 		continue
 	fi
 
-	printf '*** %s\n' "${of[common_dn]}" >> "${of[fn_same_name]}"
-	printf '%s\n' "${files_tmp_in[@]}" >> "${of[fn_same_name]}"
-	printf '\n' >> "${of[fn_same_name]}"
+	printf '*** %s\n' "${output[common_dn]}" >> "${output[fn_same_name]}"
+	printf '%s\n' "${files_tmp_in[@]}" >> "${output[fn_same_name]}"
+	printf '\n' >> "${output[fn_same_name]}"
 done
 
 unset -v md5h
 
 # Print the rest of the text files.
-printf '%s\n' "${empty[@]}" > "${of[fn_empty]}"
-printf '%s\n' "${symlinks[@]}" > "${of[fn_symlink]}"
+printf '%s\n' "${empty[@]}" > "${output[fn_empty]}"
+printf '%s\n' "${symlinks[@]}" > "${output[fn_symlink]}"

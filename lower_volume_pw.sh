@@ -28,21 +28,21 @@
 
 # sleep 1h; lower_volume_pw.sh
 
-declare fn pw_id interval unit
+declare pw_id interval unit
 declare -a channels interval_out
-declare -A regex volume cfg
+declare -A input output regex volume cfg
 
 regex[blank1]='^[[:blank:]]*(.*)[[:blank:]]*$'
 regex[blank2]='[[:blank:]]+'
-regex[id]='^id ([0-9]+),'
+regex[id]='^id ([[:digit:]]+),'
 regex[node]='^node\.description = \"(.+)\"'
 regex[class]='^media\.class = \"(.+)\"'
 regex[sink]='^Audio\/Sink$'
 regex[volume1]='^\"channelVolumes\": \[ (.+) \],'
-regex[volume2]='^([0-9]+\.[0-9]+)(, ){0,1}(.*)$'
-regex[volume3]='^([0-9]+)\.([0-9]+)$'
-regex[zero]='^0+([0-9]+)$'
-regex[split]='^([0-9]+)([0-9]{6})$'
+regex[volume2]='^([[:digit:]]+\.[[:digit:]]+)(, ){0,1}(.*)$'
+regex[volume3]='^([[:digit:]]+)\.([[:digit:]]+)$'
+regex[zero]='^0+([[:digit:]]+)$'
+regex[split]='^([[:digit:]]+)([[:digit:]]{6})$'
 regex[cfg]='^(.+) = (.+)$'
 
 volume[max]=1000000
@@ -52,7 +52,7 @@ volume[target]=0
 interval=1
 unit=3600
 
-fn="${HOME}/lower_volume_pw.cfg"
+output[cfg_fn]="${HOME}/lower_volume_pw.cfg"
 
 # Creates a function, called 'read_cfg', which reads the configuration
 # file, if it exists. Right now, the file only has 1 value (node), but
@@ -61,11 +61,11 @@ read_cfg () {
 	declare line
 	declare -a lines
 
-	if [[ ! -f $fn ]]; then
+	if [[ ! -f ${output[cfg_fn]} ]]; then
 		return
 	fi
 
-	mapfile -t lines < <(tr -d '\r' <"$fn")
+	mapfile -t lines < <(tr -d '\r' <"${output[cfg_fn]}")
 
 	for (( i = 0; i < ${#lines[@]}; i++ )); do
 		line="${lines[${i}]}"
@@ -152,7 +152,7 @@ get_id () {
 # file itself doesn't, then ask the user to select audio output. That
 # will get written to the configuration file.
 	if [[ -n $pw_id ]]; then
-		printf '\n%s:\n%s\n\n' 'Using audio output found in' "$fn"
+		printf '\n%s:\n%s\n\n' 'Using audio output found in' "${output[cfg_fn]}"
 	else
 		printf '\n%s\n\n' 'Select your audio output:'
 
@@ -165,8 +165,8 @@ get_id () {
 		if [[ -n $pw_node ]]; then
 			line="node = ${pw_node}"
 
-			printf '%s\n\n' "$line" > "$fn"
-			printf '\n%s:\n%s\n\n' 'Wrote selected audio output to' "$fn"
+			printf '%s\n\n' "$line" > "${output[cfg_fn]}"
+			printf '\n%s:\n%s\n\n' 'Wrote selected audio output to' "${output[cfg_fn]}"
 		fi
 	fi
 

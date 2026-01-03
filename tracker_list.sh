@@ -62,29 +62,27 @@ declare line end_l end_tmp_l switch n
 declare protocol address end port tracker
 declare protocol_tmp address_tmp end_tmp port_tmp
 declare -a lines_out protocols addresses ends ports
-declare -A regex
+declare -A input output regex
 
 regex[url]='^([[:alpha:]]+):\/\/([^:\/]+)(.*)$'
-regex[end]='^(.*):([0-9]+)(.*)$'
+regex[end]='^(.*):([[:digit:]]+)(.*)$'
 
 # Creates a function, called 'get_lines', which reads the files given as
 # arguments to the script into memory.
 get_lines () {
-	declare fn
 	declare -a lines_in
 
 	for (( z = 0; z < ${#files[@]}; z++ )); do
-		fn="${files[${z}]}"
+		input[fn]="${files[${z}]}"
 
-		declare -a lines
+		mapfile -t lines_in < <(tr -d '\r' <"${input[fn]}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:blank:]]+/\n/g')
 
-		mapfile -t lines < <(tr -d '\r' <"$fn" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:blank:]]+/\n/g')
-		lines_in+=("${lines[@]}")
-
-		unset -v lines
+		lines_out+=("${lines_in[@]}")
 	done
 
-	mapfile -t lines_out < <(printf '%s\n' "${lines_in[@]}" | sort -u)
+	unset -v lines_in
+
+	mapfile -t lines_out < <(printf '%s\n' "${lines_out[@]}" | sort -u)
 }
 
 get_lines
@@ -174,7 +172,7 @@ for (( i = 0; i < ${#addresses[@]}; i++ )); do
 		continue
 	fi
 
-	case $protocol in
+	case "$protocol" in
 		http*)
 			curl --retry 10 --retry-delay 10 --connect-timeout 10 --silent --output /dev/null "$tracker"
 		;;

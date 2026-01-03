@@ -26,7 +26,7 @@ declare -A regex
 
 types=('quick' 'full')
 
-regex[part]='^(.*)[0-9]+$'
+regex[part]='^(.*)[[:digit:]]+$'
 
 while [[ $# -gt 0 ]]; do
 	device=$(readlink -f "$1")

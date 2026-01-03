@@ -28,25 +28,24 @@
 
 set -o pipefail
 
-declare mode session stdout_fn c_tty
+declare mode session c_tty
 declare no_ext ext
+declare -A regex input output
 
 session="${RANDOM}-${RANDOM}"
-stdout_fn="/dev/shm/packer_stdout-${session}.txt"
+output[stdout_fn]="/dev/shm/packer_stdout-${session}.txt"
 c_tty=$(tty)
-
-declare -A regex if of
 
 regex[dev]='^\/dev'
 regex[fn]='^(.*)\.([^.]*)$'
 regex[tar]='^\.tar\.[^.]*$'
-regex[dar]='^\.[0-9]+\.dar$'
+regex[dar]='^\.[[:digit:]]+\.dar$'
 
 # Redirect STDOUT to a file, to capture the output. Only STDERR will be
 # displayed, which ensures that errors and prompts will always be
 # visible in real-time.
-touch "$stdout_fn"
-exec 1>>"$stdout_fn"
+touch "${output[stdout_fn]}"
+exec 1>>"${output[stdout_fn]}"
 
 # Creates a function, called 'iquit', which will restore STDOUT to the
 # shell, and then quit.
@@ -55,7 +54,7 @@ iquit () {
 		exec 1>"$c_tty"
 	fi
 
-	rm -f "$stdout_fn"
+	rm -f "${output[stdout_fn]}"
 
 	exit
 }
@@ -134,11 +133,11 @@ fi
 print_stdout () {
 	declare -a lines
 
-	mapfile -t lines <"$stdout_fn"
+	mapfile -t lines <"${output[stdout_fn]}"
 
 	printf '%s\n' "${lines[@]}"
 
-	truncate -s 0 "$stdout_fn"
+	truncate -s 0 "${output[stdout_fn]}"
 }
 
 # Creates a function, called 'output', which will let the user know if
@@ -155,9 +154,9 @@ output () {
 	mapfile -t stdout_lines < <(print_stdout)
 
 	if [[ $exit_status -eq 0 ]]; then
-		printf '\n%s: %s\n' "${if[fn]}" 'Everything is Ok'
+		printf '\n%s: %s\n' "${input[fn]}" 'Everything is Ok'
 	else
-		printf '\n%s: %s\n' "${if[fn]}" 'Something went wrong'
+		printf '\n%s: %s\n' "${input[fn]}" 'Something went wrong'
 	fi
 }
 
@@ -234,11 +233,11 @@ set_names () {
 
 	switch=0
 
-	if[fn]=$(readlink -f "$1")
-	if[dn]=$(dirname "${if[fn]}")
-	if[bn]=$(basename "${if[fn]}")
+	input[fn]=$(readlink -f "$1")
+	input[dn]=$(dirname "${input[fn]}")
+	input[bn]=$(basename "${input[fn]}")
 
-	get_ext "${if[bn]}" 2
+	get_ext "${input[bn]}" 2
 
 	if [[ $ext =~ ${regex[tar]} ]]; then
 		switch=1
@@ -249,10 +248,10 @@ set_names () {
 	fi
 
 	if [[ $switch -eq 0 ]]; then
-		get_ext "${if[bn]}" 1
+		get_ext "${input[bn]}" 1
 	fi
 
-	no_ext="${if[dn]}/${no_ext}"
+	no_ext="${input[dn]}/${no_ext}"
 }
 
 # Creates a function, called 'arch_pack', which will create an archive.
@@ -275,19 +274,19 @@ arch_pack () {
 			output "$?" 1>&2
 		;;
 		*.zip)
-			zip -r -9 "${if[fn]}" "$@"
+			zip -r -9 "${input[fn]}" "$@"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "${if[fn]}" "$@"
+			7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "${input[fn]}" "$@"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar a -m5 "${if[fn]}" "$@"
+			rar a -m5 "${input[fn]}" "$@"
 			output "$?" 1>&2
 		;;
 		*)
@@ -300,28 +299,28 @@ arch_pack () {
 # copy files from, and unmount an ISO file. This in effect means
 # extracting the ISO.
 iso_unpack () {
-	if[bn_iso]="${if[bn]%.*}"
-	of[dn_iso_mnt]="/dev/shm/${if[bn_iso]}-${session}"
-	of[dn_iso]="${PWD}/${if[bn_iso]}-${session}"
+	input[bn_iso]="${input[bn]%.*}"
+	output[dn_iso_mnt]="/dev/shm/${input[bn_iso]}-${session}"
+	output[dn_iso]="${PWD}/${input[bn_iso]}-${session}"
 
-	printf '\n%s: %s\n' "${of[dn_iso]}" 'Creating output directory...'
-	mkdir "${of[dn_iso_mnt]}" "${of[dn_iso]}"
+	printf '\n%s: %s\n' "${output[dn_iso]}" 'Creating output directory...'
+	mkdir "${output[dn_iso_mnt]}" "${output[dn_iso]}"
 
-	printf '\n%s: %s\n' "${if[fn]}" 'Mounting...'
-	sudo mount "${if[fn]}" "${of[dn_iso_mnt]}" -o loop
+	printf '\n%s: %s\n' "${input[fn]}" 'Mounting...'
+	sudo mount "${input[fn]}" "${output[dn_iso_mnt]}" -o loop
 
-	printf '\n%s: %s\n' "${if[fn]}" 'Extracting files...'
-	cp -rp "${of[dn_iso_mnt]}"/* "${of[dn_iso]}"
+	printf '\n%s: %s\n' "${input[fn]}" 'Extracting files...'
+	cp -rp "${output[dn_iso_mnt]}"/* "${output[dn_iso]}"
 
-	printf '\n%s: %s %s...\n' "${of[dn_iso]}" 'Changing owner to' "$USER"
-	sudo chown -R "${USER}:${USER}" "${of[dn_iso]}"
-	sudo chmod -R +rw "${of[dn_iso]}"
+	printf '\n%s: %s %s...\n' "${output[dn_iso]}" 'Changing owner to' "$USER"
+	sudo chown -R "${USER}:${USER}" "${output[dn_iso]}"
+	sudo chmod -R +rw "${output[dn_iso]}"
 
-	printf '\n%s: %s\n' "${if[fn]}" 'Unmounting...'
-	sudo umount "${of[dn_iso_mnt]}"
+	printf '\n%s: %s\n' "${input[fn]}" 'Unmounting...'
+	sudo umount "${output[dn_iso_mnt]}"
 
-	printf '\n%s: %s\n' "${of[dn_iso_mnt]}" 'Removing mountpoint...'
-	rm -rf "${of[dn_iso_mnt]}"
+	printf '\n%s: %s\n' "${output[dn_iso_mnt]}" 'Removing mountpoint...'
+	rm -rf "${output[dn_iso_mnt]}"
 }
 
 # Creates a function, called 'arch_unpack', which will extract an
@@ -335,65 +334,65 @@ arch_unpack () {
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar -xf "${if[fn]}"
+			tar -xf "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			tar -xzf "${if[fn]}"
+			tar -xzf "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			tar -xjf "${if[fn]}"
+			tar -xjf "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			tar -xJf "${if[fn]}"
+			tar -xJf "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			gunzip "${if[fn]}"
+			gunzip "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.bz2)
-			bunzip2 "${if[fn]}"
+			bunzip2 "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.xz)
-			unxz "${if[fn]}"
+			unxz "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.zip)
-			unzip "${if[fn]}"
+			unzip "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za x "${if[fn]}"
+			7za x "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar x "${if[fn]}"
+			rar x "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
 			check_cmd lzh 1>&2
 
-			7z x "${if[fn]}"
+			7z x "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
 			check_cmd cab 1>&2
 
-			cabextract "${if[fn]}"
+			cabextract "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.arj)
 			check_cmd arj 1>&2
 
-			7z x "${if[fn]}"
+			7z x "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.iso)
@@ -415,59 +414,59 @@ arch_test () {
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar -tf "${if[fn]}"
+			tar -tf "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			gunzip -t "${if[fn]}"
+			gunzip -t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.bz2)
-			bunzip2 -t "${if[fn]}"
+			bunzip2 -t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.xz)
-			xz -t "${if[fn]}"
+			xz -t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.zip)
-			unzip -t "${if[fn]}"
+			unzip -t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za t "${if[fn]}"
+			7za t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar t "${if[fn]}"
+			rar t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
 			check_cmd lzh 1>&2
 
-			7z t "${if[fn]}"
+			7z t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
 			check_cmd cab 1>&2
 
-			cabextract -t "${if[fn]}"
+			cabextract -t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.arj)
 			check_cmd arj 1>&2
 
-			7z t "${if[fn]}"
+			7z t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*.iso)
 			check_cmd iso 1>&2
 
-			7z t "${if[fn]}"
+			7z t "${input[fn]}"
 			output "$?" 1>&2
 		;;
 		*)
@@ -487,71 +486,71 @@ arch_list () {
 			output "$?" 1>&2
 		;;
 		*.tar)
-			tar -tvf "${if[fn]}" | less 1>&2
+			tar -tvf "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar.z|*.tar.gz|*.tgz)
-			tar -ztvf "${if[fn]}" | less 1>&2
+			tar -ztvf "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar.bz2|*.tbz|*.tbz2)
-			tar -jtvf "${if[fn]}" | less 1>&2
+			tar -jtvf "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.tar.xz|*.txz)
-			tar -Jtvf "${if[fn]}" | less 1>&2
+			tar -Jtvf "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.z|*.gz)
-			gunzip -l "${if[fn]}" | less 1>&2
+			gunzip -l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.bz2)
-			bunzip2 -t "${if[fn]}" | less 1>&2
+			bunzip2 -t "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.xz)
-			unxz -l "${if[fn]}" | less 1>&2
+			unxz -l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.zip)
-			unzip -l "${if[fn]}" | less 1>&2
+			unzip -l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.7z)
 			check_cmd 7z 1>&2
 
-			7za l "${if[fn]}" | less 1>&2
+			7za l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.rar)
 			check_cmd rar 1>&2
 
-			rar vb "${if[fn]}" | less 1>&2
+			rar vb "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.lzh|*.lha)
 			check_cmd lzh 1>&2
 
-			7z l "${if[fn]}" | less 1>&2
+			7z l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.cab|*.exe)
 			check_cmd cab 1>&2
 
-			cabextract -l "${if[fn]}" | less 1>&2
+			cabextract -l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.arj)
 			check_cmd arj 1>&2
 
-			7z l "${if[fn]}" | less 1>&2
+			7z l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*.iso)
 			check_cmd iso 1>&2
 
-			7z l "${if[fn]}" | less 1>&2
+			7z l "${input[fn]}" | less 1>&2
 			output "$?" 1>&2
 		;;
 		*)
@@ -567,8 +566,8 @@ case "$mode" in
 		shift
 
 # If the archive file name already exists, quit.
-		if [[ -f ${if[fn]} ]]; then
-			printf '\n%s: %s\n\n' "${if[fn]}" 'File already exists' 1>&2
+		if [[ -f ${input[fn]} ]]; then
+			printf '\n%s: %s\n\n' "${input[fn]}" 'File already exists' 1>&2
 			iquit
 		fi
 
@@ -584,7 +583,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f ${if[fn]} || ! -r ${if[fn]} ]]; then
+			if [[ ! -f ${input[fn]} || ! -r ${input[fn]} ]]; then
 				usage 1>&2
 			fi
 
@@ -597,7 +596,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f ${if[fn]} || ! -r ${if[fn]} ]]; then
+			if [[ ! -f ${input[fn]} || ! -r ${input[fn]} ]]; then
 				usage 1>&2
 			fi
 
@@ -610,7 +609,7 @@ case "$mode" in
 		while [[ $# -gt 0 ]]; do
 			set_names "$1"
 
-			if [[ ! -f ${if[fn]} || ! -r ${if[fn]} ]]; then
+			if [[ ! -f ${input[fn]} || ! -r ${input[fn]} ]]; then
 				usage 1>&2
 			fi
 

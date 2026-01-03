@@ -23,27 +23,27 @@ fi
 
 declare session
 declare -a vars files dirs path_parts
-declare -A if of depth regex
+declare -A input output depth regex
+
+input[dn]=$(readlink -f "$1")
+
+regex[fn]='^(.*)\.([^.]*)$'
 
 vars=('files' 'dirs' 'path_parts')
 
 session="${RANDOM}-${RANDOM}"
 
-if[dn]=$(readlink -f "$1")
-
-regex[fn]='^(.*)\.([^.]*)$'
-
 depth[max]=0
 
-mapfile -d'/' -t path_parts <<<"${if[dn]}"
+mapfile -d'/' -t path_parts <<<"${input[dn]}"
 depth[min]=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "${if[dn]}" -exec printf '%q\n' {} + 2>&-)
+mapfile -t files < <(find "${input[dn]}" -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	eval if[fn]="${files[${i}]}"
+	eval input[fn]="${files[${i}]}"
 
-	mapfile -d'/' -t path_parts <<<"${if[fn]}"
+	mapfile -d'/' -t path_parts <<<"${input[fn]}"
 	depth[tmp]=$(( ${#path_parts[@]} - 1 ))
 	depth[diff]=$(( depth[tmp] - depth[min] ))
 
@@ -55,50 +55,50 @@ done
 unset -v "${vars[@]}"
 
 for (( i = depth[max]; i > 0; i-- )); do
-	mapfile -t dirs < <(find "${if[dn]}" -type d -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
+	mapfile -t dirs < <(find "${input[dn]}" -type d -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
 	for (( j = 0; j < ${#dirs[@]}; j++ )); do
-		eval if[fn]="${dirs[${j}]}"
-		of[dn]=$(dirname "${if[fn]}")
-		if[bn]=$(basename "${if[fn]}")
+		eval input[fn]="${dirs[${j}]}"
+		output[dn]=$(dirname "${input[fn]}")
+		input[bn]=$(basename "${input[fn]}")
 
-		unset -v if[ext] of[ext]
+		unset -v input[ext] output[ext]
 
-		mapfile -t files < <(compgen -G "${if[fn]}/*")
+		mapfile -t files < <(compgen -G "${input[fn]}/*")
 
 		if [[ ${#files[@]} -ne 1 ]]; then
 			continue
 		fi
 
-		of[fn]="${files[0]}"
-		of[bn]=$(basename "${of[fn]}")
+		output[fn]="${files[0]}"
+		output[bn]=$(basename "${output[fn]}")
 
-		if [[ ${if[bn]} =~ ${regex[fn]} ]]; then
-			if[bn]="${BASH_REMATCH[1]}"
-			if[ext]="${BASH_REMATCH[2]}"
+		if [[ ${input[bn]} =~ ${regex[fn]} ]]; then
+			input[bn]="${BASH_REMATCH[1]}"
+			input[ext]="${BASH_REMATCH[2]}"
 		fi
 
-		if [[ ${of[bn]} =~ ${regex[fn]} ]]; then
-			of[bn]="${BASH_REMATCH[1]}"
-			of[ext]="${BASH_REMATCH[2]}"
+		if [[ ${output[bn]} =~ ${regex[fn]} ]]; then
+			output[bn]="${BASH_REMATCH[1]}"
+			output[ext]="${BASH_REMATCH[2]}"
 		fi
 
-		if [[ ${if[bn]} != "${of[bn]}" ]]; then
+		if [[ ${input[bn]} != "${output[bn]}" ]]; then
 			continue
 		fi
 
-		printf '%s\n' "${if[fn]}"
+		printf '%s\n' "${input[fn]}"
 
-		if [[ -n ${if[ext]} ]]; then
-			of[fn]="${if[bn]}-${session}.${if[ext]}"
+		if [[ -n ${input[ext]} ]]; then
+			output[fn]="${input[bn]}-${session}.${input[ext]}"
 		else
-			of[fn]="${if[bn]}-${session}"
+			output[fn]="${input[bn]}-${session}"
 		fi
 
-		of[fn]="${of[dn]}/${of[fn]}"
+		output[fn]="${output[dn]}/${output[fn]}"
 
-		mv -n "${if[fn]}" "${of[fn]}"
-		mv -n "${of[fn]}"/* "${of[dn]}"
-		rm -r "${of[fn]}"
+		mv -n "${input[fn]}" "${output[fn]}"
+		mv -n "${output[fn]}"/* "${output[dn]}"
+		rm -r "${output[fn]}"
 	done
 done

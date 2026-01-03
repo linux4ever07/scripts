@@ -68,7 +68,7 @@ fi
 declare browser cmd name mode session
 declare ram_limit time_limit time_start time_end pause_msg cwd pid
 declare -a files
-declare -A browsers browsers_info chromium_based if of
+declare -A browsers browsers_info chromium_based input output
 
 browsers[chromium]=1
 browsers[chrome]=1
@@ -145,19 +145,19 @@ time_limit=3600
 
 pause_msg="Restart ${name}? [y/n]: "
 
-if[og_cfg]="${browsers_info[${browser},cfg]}"
-if[og_cache]="${browsers_info[${browser},cache]}"
+input[og_cfg]="${browsers_info[${browser},cfg]}"
+input[og_cache]="${browsers_info[${browser},cache]}"
 
-if[bak_cfg]="${if[og_cfg]}-${session}"
-if[bak_cache]="${if[og_cache]}-${session}"
+input[bak_cfg]="${input[og_cfg]}-${session}"
+input[bak_cache]="${input[og_cache]}-${session}"
 
-of[shm_dn]="/dev/shm/${browser}-${session}"
-of[shm_cfg]="${of[shm_dn]}/config"
-of[shm_cache]="${of[shm_dn]}/cache"
+output[ram_dn]="/dev/shm/${browser}-${session}"
+output[ram_cfg]="${output[ram_dn]}/config"
+output[ram_cache]="${output[ram_dn]}/cache"
 
-of[restart_fn]="${of[shm_dn]}/kill"
-of[tar_fn]="${HOME}/${browser}-${session}.tar"
-of[tar_unfinished_fn]="${of[tar_fn]}.unfinished"
+output[restart_fn]="${output[ram_dn]}/kill"
+output[tar_fn]="${HOME}/${browser}-${session}.tar"
+output[tar_unfinished_fn]="${output[tar_fn]}.unfinished"
 
 cwd="$PWD"
 
@@ -165,7 +165,7 @@ start_browser () {
 	sync
 
 	if [[ -n ${chromium_based[${name}]} ]]; then
-		rm -f "${of[shm_cfg]}/SingletonLock"
+		rm -f "${output[ram_cfg]}/SingletonLock"
 	fi
 
 	printf '\n%s\n\n' "Starting ${name}..."
@@ -175,11 +175,11 @@ start_browser () {
 }
 
 restart_browser () {
-	if [[ ! -f ${of[restart_fn]} ]]; then
+	if [[ ! -f ${output[restart_fn]} ]]; then
 		return
 	fi
 
-	rm "${of[restart_fn]}" || exit
+	rm "${output[restart_fn]}" || exit
 
 	kill_browser
 	start_browser
@@ -236,7 +236,7 @@ check_time () {
 check_hdd () {
 	declare cfg_size hdd_free
 
-	cfg_size=$(du --summarize --total --block-size=1 "$@" | tail -n 1 | grep -Eo '^[0-9]+')
+	cfg_size=$(du --summarize --total --block-size=1 "$@" | tail -n 1 | grep -Eo '^[[:digit:]]+')
 	hdd_free=$(df --output=avail --block-size=1 "$HOME" | tail -n +2 | tr -d '[:blank:]')
 
 	if [[ $cfg_size -gt $hdd_free ]]; then
@@ -262,10 +262,10 @@ backup_browser () {
 $(date)
 
 Backing up:
-${of[shm_cfg]}
+${output[ram_cfg]}
 
 To:
-${of[tar_fn]}
+${output[tar_fn]}
 
 BACKUP
 
@@ -274,8 +274,8 @@ BACKUP
 	mapfile -t files < <(compgen -G "*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		tar -cf "${of[tar_unfinished_fn]}" "${files[@]}"
-		mv "${of[tar_unfinished_fn]}" "${of[tar_fn]}"
+		tar -cf "${output[tar_unfinished_fn]}" "${files[@]}"
+		mv "${output[tar_unfinished_fn]}" "${output[tar_fn]}"
 	fi
 }
 
@@ -284,30 +284,30 @@ restore_browser () {
 
 	sync
 
-	rm "${if[og_cfg]}" "${if[og_cache]}" || exit
+	rm "${input[og_cfg]}" "${input[og_cache]}" || exit
 
 	if [[ $mode == 'normal' ]]; then
-		mkdir -p "${if[og_cfg]}" "${if[og_cache]}" || exit
+		mkdir -p "${input[og_cfg]}" "${input[og_cache]}" || exit
 
-		mapfile -t files < <(compgen -G "${of[shm_cfg]}/*")
+		mapfile -t files < <(compgen -G "${output[ram_cfg]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "${if[og_cfg]}" || exit
+			cp -rp "${files[@]}" "${input[og_cfg]}" || exit
 		fi
 
-		mapfile -t files < <(compgen -G "${of[shm_cache]}/*")
+		mapfile -t files < <(compgen -G "${output[ram_cache]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "${if[og_cache]}" || exit
+			cp -rp "${files[@]}" "${input[og_cache]}" || exit
 		fi
 	fi
 
 	if [[ $mode == 'clean' ]]; then
-		mv "${if[bak_cfg]}" "${if[og_cfg]}" || exit
-		mv "${if[bak_cache]}" "${if[og_cache]}" || exit
+		mv "${input[bak_cfg]}" "${input[og_cfg]}" || exit
+		mv "${input[bak_cache]}" "${input[og_cache]}" || exit
 	fi
 
-	rm -r "${of[shm_dn]}"
+	rm -r "${output[ram_dn]}"
 
 	sync
 
@@ -333,53 +333,54 @@ iquit () {
 	exit
 }
 
-mkdir -p "${if[og_cfg]}" "${if[og_cache]}" || exit
+mkdir -p "${input[og_cfg]}" "${input[og_cache]}" || exit
 
 if [[ $mode == 'normal' ]]; then
-	check_hdd "${if[og_cfg]}" || exit
+	check_hdd "${input[og_cfg]}" || exit
 fi
 
-mv "${if[og_cfg]}" "${if[bak_cfg]}" || exit
-mv "${if[og_cache]}" "${if[bak_cache]}" || exit
+mv "${input[og_cfg]}" "${input[bak_cfg]}" || exit
+mv "${input[og_cache]}" "${input[bak_cache]}" || exit
 
-mkdir -p "${of[shm_cfg]}" "${of[shm_cache]}" || exit
+mkdir -p "${output[ram_cfg]}" "${output[ram_cache]}" || exit
 
-ln -s "${of[shm_cfg]}" "${if[og_cfg]}" || exit
-ln -s "${of[shm_cache]}" "${if[og_cache]}" || exit
+ln -s "${output[ram_cfg]}" "${input[og_cfg]}" || exit
+ln -s "${output[ram_cache]}" "${input[og_cache]}" || exit
 
 if [[ $mode == 'normal' ]]; then
 	printf '\n%s\n\n' "Copying ${name} config / cache to /dev/shm..."
 
-	mapfile -t files < <(compgen -G "${if[bak_cfg]}/*")
+	mapfile -t files < <(compgen -G "${input[bak_cfg]}/*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		cp -rp "${files[@]}" "${of[shm_cfg]}" || exit
+		cp -rp "${files[@]}" "${output[ram_cfg]}" || exit
 	fi
 
-	mapfile -t files < <(compgen -G "${if[bak_cache]}/*")
+	mapfile -t files < <(compgen -G "${input[bak_cache]}/*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		cp -rp "${files[@]}" "${of[shm_cache]}" || exit
+		cp -rp "${files[@]}" "${output[ram_cache]}" || exit
 	fi
 
-	rm -r "${if[bak_cache]}" || exit
+	rm -r "${input[bak_cache]}" || exit
 fi
 
 start_browser
 
 if [[ $mode == 'normal' ]]; then
-	cd "${if[bak_cfg]}" || iquit
+	cd "${input[bak_cfg]}" || iquit
 
 	mapfile -t files < <(compgen -G "*")
 
 	if [[ ${#files[@]} -gt 0 ]]; then
-		tar -cf "${of[tar_fn]}" "${files[@]}" || iquit
+		tar -cf "${output[tar_unfinished_fn]}" "${files[@]}" || iquit
+		mv "${output[tar_unfinished_fn]}" "${output[tar_fn]}" || iquit
 	fi
 
-	rm -r "${if[bak_cfg]}" || iquit
+	rm -r "${input[bak_cfg]}" || iquit
 fi
 
-cd "${of[shm_cfg]}" || iquit
+cd "${output[ram_cfg]}" || iquit
 
 time_start=$(date '+%s')
 time_end=$(( time_start + time_limit ))
@@ -394,7 +395,7 @@ while check_status; do
 	check_time || continue
 
 	if [[ $mode == 'normal' ]]; then
-		check_hdd "${of[shm_dn]}" && backup_browser
+		check_hdd "${output[ram_dn]}" && backup_browser
 	fi
 done
 

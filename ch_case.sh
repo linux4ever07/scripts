@@ -26,11 +26,11 @@ fi
 
 declare case pause_msg
 declare -a vars files path_parts
-declare -A if of depth
+declare -A input output depth
 
 vars=('files' 'path_parts')
 
-if[dn]=$(readlink -f "$1")
+input[dn]=$(readlink -f "$1")
 
 case="$2"
 
@@ -38,7 +38,7 @@ depth[max]=0
 
 pause_msg="
 You're about to recursively change all the file / directory names
-under \"${if[dn]}\" to ${case} case.
+under \"${input[dn]}\" to ${case} case.
 
 Are you sure? [y/n]: "
 
@@ -50,15 +50,15 @@ fi
 
 printf '\n'
 
-mapfile -d'/' -t path_parts <<<"${if[dn]}"
+mapfile -d'/' -t path_parts <<<"${input[dn]}"
 depth[min]=$(( ${#path_parts[@]} - 1 ))
 
-mapfile -t files < <(find "${if[dn]}" -exec printf '%q\n' {} + 2>&-)
+mapfile -t files < <(find "${input[dn]}" -exec printf '%q\n' {} + 2>&-)
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	eval if[fn]="${files[${i}]}"
+	eval input[fn]="${files[${i}]}"
 
-	mapfile -d'/' -t path_parts <<<"${if[fn]}"
+	mapfile -d'/' -t path_parts <<<"${input[fn]}"
 	depth[tmp]=$(( ${#path_parts[@]} - 1 ))
 	depth[diff]=$(( depth[tmp] - depth[min] ))
 
@@ -70,23 +70,23 @@ done
 unset -v "${vars[@]}"
 
 for (( i = depth[max]; i > 0; i-- )); do
-	mapfile -t files < <(find "${if[dn]}" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
+	mapfile -t files < <(find "${input[dn]}" -mindepth "$i" -maxdepth "$i" -exec printf '%q\n' {} + 2>&-)
 
 	for (( j = 0; j < ${#files[@]}; j++ )); do
-		eval if[fn]="${files[${j}]}"
-		of[dn]=$(dirname "${if[fn]}")
-		if[bn]=$(basename "${if[fn]}")
+		eval input[fn]="${files[${j}]}"
+		output[dn]=$(dirname "${input[fn]}")
+		input[bn]=$(basename "${input[fn]}")
 
-		of[upper]="${if[bn]^^}"
-		of[lower]="${if[bn],,}"
+		output[upper]="${input[bn]^^}"
+		output[lower]="${input[bn],,}"
 
-		of[bn]="${of[${case}]}"
+		output[bn]="${output[${case}]}"
 
-		of[fn]="${of[dn]}/${of[bn]}"
+		output[fn]="${output[dn]}/${output[bn]}"
 
-		if [[ ${of[bn]} != "${if[bn]}" ]]; then
-			printf '%s\n' "${of[fn]}"
-			mv -n "${if[fn]}" "${of[fn]}"
+		if [[ ${output[bn]} != "${input[bn]}" ]]; then
+			printf '%s\n' "${output[fn]}"
+			mv -n "${input[fn]}" "${output[fn]}"
 		fi
 	done
 done

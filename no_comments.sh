@@ -14,11 +14,10 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-declare if
-declare -A regex
+declare -A input output regex
 
-if=$(readlink -f "$1")
+input[fn]=$(readlink -f "$1")
 
 regex[comment]='^[[:blank:]]*#+'
 
-tr -d '\r' <"$if" | grep -Ev "${regex[comment]}"
+tr -d '\r' <"${input[fn]}" | grep -Ev "${regex[comment]}"

@@ -36,9 +36,9 @@ if [[ $# -ne 2 ]]; then
 	usage
 fi
 
-declare browser mode dn date ram_date bak_date
+declare browser mode date ram_date bak_date key
 declare -a files
-declare -A browsers browsers_info regex if of
+declare -A browsers browsers_info input output regex
 
 browsers[chromium]=1
 browsers[chrome]=1
@@ -80,27 +80,27 @@ esac
 ram_date=0
 bak_date=0
 
-of[og_cfg]="${browsers_info[${browser},cfg]}"
-of[og_cache]="${browsers_info[${browser},cache]}"
+input[og_cfg]="${browsers_info[${browser},cfg]}"
+input[og_cache]="${browsers_info[${browser},cache]}"
 
-regex[bn]="${browser}-[0-9]+-[0-9]+"
+regex[bn]="${browser}-[[:digit:]]+-[[:digit:]]+"
 regex[ram]="^${regex[bn]}$"
 regex[bak]="^${regex[bn]}\.tar$"
 
 mapfile -t files < <(find '/dev/shm' -mindepth 1 -maxdepth 1 -type d -name "${browser}-*")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if[fn]="${files[${i}]}"
-	if[bn]=$(basename "${if[fn]}")
+	input[fn]="${files[${i}]}"
+	input[bn]=$(basename "${input[fn]}")
 
-	if [[ ! ${if[bn]} =~ ${regex[ram]} ]]; then
+	if [[ ! ${input[bn]} =~ ${regex[ram]} ]]; then
 		continue
 	fi
 
-	date=$(stat -c '%Y' "${if[fn]}")
+	date=$(stat -c '%Y' "${input[fn]}")
 
 	if [[ $date -gt $ram_date ]]; then
-		if[ram_fn]="${if[fn]}"
+		input[ram_fn]="${input[fn]}"
 		ram_date="$date"
 	fi
 done
@@ -108,72 +108,74 @@ done
 mapfile -t files < <(find "$HOME" -mindepth 1 -maxdepth 1 -type f -name "${browser}-*.tar")
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if[fn]="${files[${i}]}"
-	if[bn]=$(basename "${if[fn]}")
+	input[fn]="${files[${i}]}"
+	input[bn]=$(basename "${input[fn]}")
 
-	if [[ ! ${if[bn]} =~ ${regex[bak]} ]]; then
+	if [[ ! ${input[bn]} =~ ${regex[bak]} ]]; then
 		continue
 	fi
 
-	date=$(stat -c '%Y' "${if[fn]}")
+	date=$(stat -c '%Y' "${input[fn]}")
 
 	if [[ $date -gt $bak_date ]]; then
-		if[bak_fn]="${if[fn]}"
+		input[bak_fn]="${input[fn]}"
 		bak_date="$date"
 	fi
 done
 
 case "$mode" in
 	'ram')
-		if [[ -z ${if[ram_fn]} ]]; then
+		if [[ -z ${input[ram_fn]} ]]; then
 			exit
 		fi
 	;;
 	'backup')
-		if [[ -z ${if[bak_fn]} ]]; then
+		if [[ -z ${input[bak_fn]} ]]; then
 			exit
 		fi
 	;;
 esac
 
-for dn in "${of[og_cfg]}" "${of[og_cache]}"; do
-	if [[ -L $dn ]]; then
-		rm "$dn" || exit
+for key in "${input[og_cfg]}" "${input[og_cache]}"; do
+	input[dn]="$key"
+
+	if [[ -L ${input[dn]} ]]; then
+		rm "${input[dn]}" || exit
 	fi
 
-	if [[ -d $dn ]]; then
-		rm -r "$dn" || exit
+	if [[ -d ${input[dn]} ]]; then
+		rm -r "${input[dn]}" || exit
 	fi
 
-	mkdir -p "$dn" || exit
+	mkdir -p "${input[dn]}" || exit
 done
 
 sync
 
 case "$mode" in
 	'ram')
-		if[ram_cfg]="${if[ram_fn]}/config"
-		if[ram_cache]="${if[ram_fn]}/cache"
+		output[ram_cfg]="${input[ram_fn]}/config"
+		output[ram_cache]="${input[ram_fn]}/cache"
 
-		mapfile -t files < <(compgen -G "${if[ram_cfg]}/*")
+		mapfile -t files < <(compgen -G "${output[ram_cfg]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "${of[og_cfg]}" || exit
+			cp -rp "${files[@]}" "${input[og_cfg]}" || exit
 		fi
 
-		mapfile -t files < <(compgen -G "${if[ram_cache]}/*")
+		mapfile -t files < <(compgen -G "${output[ram_cache]}/*")
 
 		if [[ ${#files[@]} -gt 0 ]]; then
-			cp -rp "${files[@]}" "${of[og_cache]}" || exit
+			cp -rp "${files[@]}" "${input[og_cache]}" || exit
 		fi
 
 		sync
 
-		rm -r "${if[ram_fn]}" || exit
+		rm -r "${input[ram_fn]}" || exit
 	;;
 	'backup')
-		cd "${of[og_cfg]}" || exit
-		tar -xf "${if[bak_fn]}" || exit
+		cd "${input[og_cfg]}" || exit
+		tar -xf "${input[bak_fn]}" || exit
 
 		sync
 	;;

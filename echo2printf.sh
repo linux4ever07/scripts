@@ -29,18 +29,18 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-declare if printf_cmd line
+declare printf_cmd line
 declare -a lines
-declare -A regex
+declare -A input output regex
 
-if=$(readlink -f "$1")
+input[fn]=$(readlink -f "$1")
 
 regex[comment]='^[[:blank:]]*#+'
 regex[echo]='echo( -[[:alpha:]]+){0,}[[:blank:]]*'
 
 printf_cmd='printf '\''%s\\n'\'' '
 
-mapfile -t lines < <(tr -d '\r' <"$if")
+mapfile -t lines < <(tr -d '\r' <"${input[fn]}")
 
 for (( i = 0; i < ${#lines[@]}; i++ )); do
 	line="${lines[${i}]}"
@@ -54,6 +54,6 @@ for (( i = 0; i < ${#lines[@]}; i++ )); do
 	fi
 done
 
-truncate -s 0 "$if"
+truncate -s 0 "${input[fn]}"
 
-printf '%s\n' "${lines[@]}" > "$if"
+printf '%s\n' "${lines[@]}" > "${input[fn]}"

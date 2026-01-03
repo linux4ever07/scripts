@@ -23,7 +23,7 @@ declare -a bname_dots bname_hyphens bname_underscores bname_spaces
 declare -A regex
 
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
-regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([0-9]{4})([[:punct:]]|[[:blank:]]){0,1}$'
+regex[year]='^([[:punct:]]|[[:blank:]]){0,1}([[:digit:]]{4})([[:punct:]]|[[:blank:]]){0,1}$'
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in

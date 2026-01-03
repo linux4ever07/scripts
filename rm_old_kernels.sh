@@ -22,7 +22,7 @@ pause_msg='Does this look OK? [y/n]: '
 types=('core' 'devel' 'devel_matched' 'headers' 'kernel' 'modules' 'modules_extra')
 
 regex[column]="^([^ ]+${arch}) ([^ ]+) ([^ ]+)"
-regex[version]='^([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)\.fc[0-9]+'
+regex[version]='^([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)-([[:digit:]]+)\.fc[[:digit:]]+'
 
 regex[core]="^kernel-core\.${arch}$"
 regex[devel]="^kernel-devel\.${arch}$"

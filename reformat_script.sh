@@ -37,11 +37,11 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-declare if limit tab date line_this line_next
+declare limit tab date line_this line_next
 declare -a lines_in lines_out
-declare -A regex
+declare -A input output regex
 
-if=$(readlink -f "$1")
+input[fn]=$(readlink -f "$1")
 
 regex[comment]='^[[:blank:]]*#+[[:blank:]]*'
 regex[blank1]='^[[:blank:]]+'
@@ -54,7 +54,7 @@ limit=72
 tab=$(printf '\t')
 
 # Reads the input file.
-mapfile -t lines_in < <(tr -d '\r' <"$if")
+mapfile -t lines_in < <(tr -d '\r' <"${input[fn]}")
 
 # Creates a function, called 'next_line', which will shift the line
 # variables by 1 line.
@@ -205,13 +205,13 @@ done
 #fi
 
 # Gets the modification time of the input file.
-date=$(date -R -r "$if")
+date=$(date -R -r "${input[fn]}")
 
 # Truncates the input file.
-truncate -s 0 "$if"
+truncate -s 0 "${input[fn]}"
 
 # Prints the altered lines to the input file.
-printf '%s\n' "${lines_out[@]}" > "$if"
+printf '%s\n' "${lines_out[@]}" > "${input[fn]}"
 
 # Copies the original modification time to the changed file.
-touch -d "$date" "$if"
+touch -d "$date" "${input[fn]}"

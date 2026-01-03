@@ -42,11 +42,11 @@ if [[ $# -eq 0 ]]; then
 	usage
 fi
 
-declare if of pid exit_status
+declare pid exit_status
 declare -a files args1 args2 args3 args
-declare -A regex
+declare -A input output regex
 
-regex[fps]='^([0-9]+)(\.[0-9]+){0,1}$'
+regex[fps]='^([[:digit:]]+)(\.[[:digit:]]+){0,1}$'
 
 if [[ $1 =~ ${regex[fps]} ]]; then
 	args2=(-r \""${1}"\")
@@ -69,8 +69,8 @@ if [[ ${#files[@]} -eq 0 ]]; then
 fi
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	if="${files[${i}]}"
-	of="${if%.*}_av1.mkv"
+	input[fn]="${files[${i}]}"
+	output[fn]="${input[fn]%.*}_av1.mkv"
 
 # If there's any running ffmpeg processes, wait until they're finished
 # to avoid oversaturating the CPU.
@@ -78,8 +78,8 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 		sleep 1
 	done
 
-	args1=(ffmpeg -y -i \""${if}"\" -pix_fmt yuv420p10le)
-	args3=(-c:a flac -c:v libsvtav1 -crf 20 \""${of}"\")
+	args1=(ffmpeg -y -i \""${input[fn]}"\" -pix_fmt yuv420p10le)
+	args3=(-c:a flac -c:v libsvtav1 -crf 20 \""${output[fn]}"\")
 
 	if [[ ${#args2[@]} -gt 0 ]]; then
 		args=("${args1[@]}" "${args2[@]}" "${args3[@]}")
@@ -100,11 +100,11 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 # If the encoding succeeded, copy file permissions and modification
 # time from input file to output file, and then delete the input file.
 	if [[ $exit_status -eq 0 ]]; then
-		chown --reference="$if" "$of"
-		chmod --reference="$if" "$of"
-		touch -r "$if" "$of"
+		chown --reference="${input[fn]}" "${output[fn]}"
+		chmod --reference="${input[fn]}" "${output[fn]}"
+		touch -r "${input[fn]}" "${output[fn]}"
 
-		rm -f "$if"
+		rm -f "${input[fn]}"
 	else
 		exit
 	fi

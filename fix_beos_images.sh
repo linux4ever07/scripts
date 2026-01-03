@@ -26,7 +26,7 @@ fi
 
 declare session line name md5 size size_limit
 declare -a cue_files bin_files cue_dirs lines format match
-declare -A if of regex
+declare -A input output regex
 
 format[0]='^[0-9]+$'
 format[1]='^([0-9]{2,}):([0-9]{2}):([0-9]{2})$'
@@ -47,9 +47,9 @@ session="${RANDOM}-${RANDOM}"
 
 size_limit=3145728
 
-if[dn]=$(readlink -f "$1")
-of[dn_cuebin]="${if[dn]}/cuebin"
-of[dn_floppy]="${if[dn]}/floppy"
+input[dn]=$(readlink -f "$1")
+output[cuebin_dn]="${input[dn]}/cuebin"
+output[floppy_dn]="${input[dn]}/floppy"
 
 # Creates a function, called 'get_files', which will be used to generate
 # file lists to be used by other functions.
@@ -61,32 +61,32 @@ get_files () {
 	done | sort -n
 }
 
-ch_case.sh "${if[dn]}" lower
+ch_case.sh "${input[dn]}" lower
 
-mapfile -t cue_files < <(find "${if[dn]}" -type f -iname "*.cue")
+mapfile -t cue_files < <(find "${input[dn]}" -type f -iname "*.cue")
 
-mkdir -p "${of[dn_cuebin]}" "${of[dn_floppy]}" || exit
-cd "${of[dn_cuebin]}" || exit
+mkdir -p "${output[cuebin_dn]}" "${output[floppy_dn]}"
+cd "${output[cuebin_dn]}"
 
 for (( i = 0; i < ${#cue_files[@]}; i++ )); do
-	if[fn]="${cue_files[${i}]}"
-	if[dn]=$(dirname "${if[fn]}")
-	if[bn]=$(basename "${if[fn]}")
+	input[fn]="${cue_files[${i}]}"
+	input[dn]=$(dirname "${input[fn]}")
+	input[bn]=$(basename "${input[fn]}")
 
-	of[bn]=$(sed -E 's/ +/_/g' <<<"${if[bn],,}")
+	output[bn]=$(sed -E 's/ +/_/g' <<<"${input[bn],,}")
 
-	if[cue]="${if[fn]}"
-	of[cue]="${if[dn]}/${of[bn]}"
+	input[cue_fn]="${input[fn]}"
+	output[cue_fn]="${input[dn]}/${output[bn]}"
 
-	if [[ ${if[cue]} != "${of[cue]}" ]]; then
-		mv "${if[cue]}" "${of[cue]}" || exit
+	if [[ ${input[cue_fn]} != "${output[cue_fn]}" ]]; then
+		mv "${input[cue_fn]}" "${output[cue_fn]}"
 	fi
 
-	printf '%s\n\n' "*** ${of[cue]}"
+	printf '%s\n\n' "*** ${output[cue_fn]}"
 
-	mapfile -t lines < <(tr -d '\r' <"${of[cue]}" | sed -E "s/${regex[blank]}/\1/")
+	mapfile -t lines < <(tr -d '\r' <"${output[cue_fn]}" | sed -E "s/${regex[blank]}/\1/")
 
-	truncate -s 0 "${of[cue]}"
+	truncate -s 0 "${output[cue_fn]}"
 
 	for (( j = 0; j < ${#lines[@]}; j++ )); do
 		line="${lines[${j}]}"
@@ -110,18 +110,18 @@ for (( i = 0; i < ${#cue_files[@]}; i++ )); do
 			line="${match[@]}"
 		fi
 
-		printf '%s\r\n' "$line" >> "${of[cue]}"
+		printf '%s\r\n' "$line" >> "${output[cue_fn]}"
 	done
 
-	cuebin_extract.sh "${of[cue]}" -cdr
+	cuebin_extract.sh "${output[cue_fn]}" -cdr
 done
 
-mapfile -t cue_dirs < <(find "${of[dn_cuebin]}" -mindepth 1 -maxdepth 1 -type d)
+mapfile -t cue_dirs < <(find "${output[cuebin_dn]}" -mindepth 1 -maxdepth 1 -type d)
 
 for (( i = 0; i < ${#cue_dirs[@]}; i++ )); do
-	if[dn]="${cue_dirs[${i}]}"
+	input[dn]="${cue_dirs[${i}]}"
 
-	cd "${if[dn]}" || exit
+	cd "${input[dn]}"
 
 	mapfile -t cue_files < <(get_files "*.cue")
 	mapfile -t bin_files < <(get_files "*.bin" "*.cdr")
@@ -140,7 +140,7 @@ for (( i = 0; i < ${#cue_dirs[@]}; i++ )); do
 
 	name="${BASH_REMATCH[1]}"
 
-	mv "${cue_files[0]}" "${name}.cue" || exit
+	mv "${cue_files[0]}" "${name}.cue"
 	cue_files[0]="${name}.cue"
 
 	size=$(stat -c '%s' "${bin_files[0]}")
@@ -152,28 +152,28 @@ for (( i = 0; i < ${#cue_dirs[@]}; i++ )); do
 	md5=$(md5sum -b "${bin_files[0]}")
 	md5="${md5%% *}"
 
-	of[floppy]="floppy_${md5}.bin"
+	output[floppy]="floppy_${md5}.bin"
 
-	mapfile -t lines < <(tr -d '\r' <"${cue_files[0]}" | sed -E "s/${bin_files[0]}/${of[floppy]}/")
+	mapfile -t lines < <(tr -d '\r' <"${cue_files[0]}" | sed -E "s/${bin_files[0]}/${output[floppy]}/")
 	printf '%s\r\n' "${lines[@]}" > "${cue_files[0]}"
 
-	mv -n "${bin_files[0]}" "${of[floppy]}" || exit
-	cp -p "${of[floppy]}" "${of[dn_floppy]}" || exit
+	mv -n "${bin_files[0]}" "${output[floppy]}"
+	cp -p "${output[floppy]}" "${output[floppy_dn]}"
 done
 
-cd "${of[dn_cuebin]}" || exit
+cd "${output[cuebin_dn]}"
 
 for (( i = 0; i < ${#cue_dirs[@]}; i++ )); do
-	if[dn]="${cue_dirs[${i}]}"
-	if[bn]=$(basename "${if[dn]}")
+	input[tmp_dn]="${cue_dirs[${i}]}"
+	input[tmp_bn]=$(basename "${input[tmp_dn]}")
 
-	if [[ ${if[bn]} =~ ${regex[dn]} ]]; then
-		of[dn]="${BASH_REMATCH[1]}"
+	if [[ ${input[tmp_bn]} =~ ${regex[dn]} ]]; then
+		output[dn]="${BASH_REMATCH[1]}"
 	fi
 
-	if [[ -d ${of[dn]} ]]; then
+	if [[ -d ${output[dn]} ]]; then
 		continue
 	fi
 
-	mv -n "${if[bn]}" "${of[dn]}" || exit
+	mv -n "${input[tmp_bn]}" "${output[dn]}"
 done

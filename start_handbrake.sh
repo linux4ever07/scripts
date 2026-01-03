@@ -12,7 +12,7 @@ declare -A regex
 
 comm='HandBrakeCLI'
 
-regex[pid_comm]='^[[:blank:]]*([0-9]+)[[:blank:]]*(.*)$'
+regex[pid_comm]='^[[:blank:]]*([[:digit:]]+)[[:blank:]]*(.*)$'
 
 mapfile -t hb_pids < <(ps -C "$comm" -o pid=,args=)
 

@@ -30,7 +30,8 @@ if [[ ${#files[@]} -eq 0 ]]; then
 	usage
 fi
 
-declare fn size_in size_out block_size seek count
+declare size_in size_out block_size seek count
+declare -A input output
 
 # Creates a function, called 'block_calc', which will be used to get the
 # optimal block size to use.
@@ -58,9 +59,9 @@ block_calc () {
 }
 
 for (( i = 0; i < ${#files[@]}; i++ )); do
-	fn="${files[${i}]}"
+	input[fn]="${files[${i}]}"
 
-	size_in=$(stat -c '%s' "$fn")
+	size_in=$(stat -c '%s' "${input[fn]}")
 	size_out=$(( size_in / 10 ))
 
 	block_calc "$size_in" "$size_out"
@@ -68,8 +69,8 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
 	seek=$(( (size_in - size_out) / block_size ))
 	count=$(( size_out / block_size ))
 
-	printf '\n*** %s\n' "$fn"
+	printf '\n*** %s\n' "${input[fn]}"
 	printf 'size: %s , block: %s , seek: %s , count: %s\n\n' "$size_in" "$block_size" "$seek" "$count"
 
-	dd if='/dev/zero' of="$fn" bs="$block_size" seek="$seek" count="$count" &>/dev/null
+	dd if='/dev/zero' of="${input[fn]}" bs="$block_size" seek="$seek" count="$count" &>/dev/null
 done

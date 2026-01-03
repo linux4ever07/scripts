@@ -14,9 +14,9 @@
 
 set -eo pipefail
 
-declare fn_ignore session switch
+declare session switch key
 declare -a dirs files ignore
-declare -A if of
+declare -A input output
 
 # Creates a function, called 'usage', which will print usage
 # instructions and then quit.
@@ -45,28 +45,30 @@ ignore=('NVIDIA_SHIELD' 'LOST.DIR')
 
 # Loop through directories given as arguments to the script.
 for (( i = 0; i < ${#dirs[@]}; i++ )); do
-	if[dn]="${dirs[${i}]}"
+	input[dn]="${dirs[${i}]}"
 	session="${RANDOM}-${RANDOM}"
-	of[dn]="${if[dn]}/${session}"
+	output[dn]="${input[dn]}/${session}"
 
 # Change into the directory.
-	cd "${if[dn]}"
+	cd "${input[dn]}"
+
+# Create destination sub-directory.
+	mkdir -p "${output[dn]}"
 
 # List everything in the current directory, including hidden files.
 	mapfile -t files < <(ls -1A)
 
-# Create destination sub-directory.
-	mkdir -p "${of[dn]}"
-
 # Loop through files and sub-directories in the current directory.
 	for (( j = 0; j < ${#files[@]}; j++ )); do
-		if[fn]="${files[${j}]}"
+		input[fn]="${files[${j}]}"
 		switch=0
 
 # If current file name matches any of the special SHIELD directories,
 # ignore it.
-		for fn_ignore in "${ignore[@]}"; do
-			if [[ ${if[fn]} == "$fn_ignore" ]]; then
+		for key in "${ignore[@]}"; do
+			input[ignore_fn]="$key"
+
+			if [[ ${input[fn]} == "${input[ignore_fn]}" ]]; then
 				switch=1
 				break
 			fi
@@ -78,6 +80,6 @@ for (( i = 0; i < ${#dirs[@]}; i++ )); do
 
 # Move the current file / directory to destination sub-directory,
 # without overwriting.
-		mv -n "${if[fn]}" "${of[dn]}"
+		mv -n "${input[fn]}" "${output[dn]}"
 	done
 done

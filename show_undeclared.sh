@@ -16,11 +16,11 @@ if [[ ! -f $1 ]]; then
 	usage
 fi
 
-declare if switch_func switch_var func_name var var_tmp line line_tmp
+declare switch_func switch_var func_name var var_tmp line line_tmp
 declare -a lines declared_tmp
-declare -A regex declared_global undeclared_global
+declare -A input output regex declared_global undeclared_global
 
-if=$(readlink -f "$1")
+input[fn]=$(readlink -f "$1")
 
 regex[start]='^([[:blank:]]*)([^ ]+)[[:blank:]]*\(\) \{'
 regex[blank]='^[[:blank:]]*(.*)[[:blank:]]*$'
@@ -34,9 +34,9 @@ switch_func=0
 
 func_name='main'
 
-mapfile -t lines < <(tr -d '\r' <"$if")
+mapfile -t lines < <(tr -d '\r' <"${input[fn]}")
 
-printf '\n%s\n\n' "$if"
+printf '\n%s\n\n' "${input[fn]}"
 
 # Handling global variables here.
 for (( i = 0; i < ${#lines[@]}; i++ )); do
