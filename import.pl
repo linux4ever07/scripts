@@ -271,64 +271,64 @@ sub albumartist {
 
 # The 'import' subroutine imports a FLAC album to the FLAC library.
 sub import {
-	my $if_dn = shift;
+	my $dn_in = shift;
 
 	my $flac_n = 0;
 	my $log_n = 0;
 
-	my($of_dn, $imported_ref);
+	my($dn_out, $imported_ref);
 
-	foreach my $if (sort(keys(%files))) {
-		my($of_bn, $of);
+	foreach my $fn_in (sort(keys(%files))) {
+		my($bn_out, $fn_out);
 
-		mk_refs($if);
-		discnumber($if, $if_dn);
-		albumartist($if);
+		mk_refs($fn_in);
+		discnumber($fn_in, $dn_in);
+		albumartist($fn_in);
 
 		$imported_ref = \$imported{${$tags_ref{albumartist}}}{${$tags_ref{album}}};
 
-		$of_dn = $library . '/' . ${$tags_ref{albumartist}} . '/' . ${$tags_ref{album}};
+		$dn_out = $library . '/' . ${$tags_ref{albumartist}} . '/' . ${$tags_ref{album}};
 
-		$of_bn = sprintf('%d-%02d. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
+		$bn_out = sprintf('%d-%02d. %s.flac', ${$tags_ref{discnumber}}, ${$tags_ref{tracknumber}}, ${$tags_ref{title}});
 
-		$of = $of_dn . '/' . $of_bn;
+		$fn_out = $dn_out . '/' . $bn_out;
 
 		if (length($$imported_ref->{${$tags_ref{discnumber}}})) {
-			say $of_dn . ': already exists';
+			say $dn_out . ': already exists';
 			say 'Skipping...' . "\n";
 			return;
 		}
 
-		if (-f $of) {
-			say $of . ': already exists';
+		if (-f $fn_out) {
+			say $fn_out . ': already exists';
 			say 'Skipping...' . "\n";
 			return;
 		}
 
-		make_path($of_dn);
+		make_path($dn_out);
 
-		say 'Copying \'' . $if . '\'' . "\n\t" . 'to \'' . $of . '\'...';
-		copy($if, $of) or die "Copy failed: $!";
+		say 'Copying \'' . $fn_in . '\'' . "\n\t" . 'to \'' . $fn_out . '\'...';
+		copy($fn_in, $fn_out) or die "Copy failed: $!";
 		$flac_n++;
 	}
 
 	say 'Copied ' . $flac_n . ' / ' . $tracks . ' files from \'' . ${$tags_ref{album}} . '\'.' . "\n";
 
-	foreach my $if (@logs) {
-		my($of_bn, $of);
+	foreach my $fn_in (@logs) {
+		my($bn_out, $fn_out);
 
-		$of_bn = ${$tags_ref{discnumber}} . '-' . ${$tags_ref{album}} . '.log';
+		$bn_out = ${$tags_ref{discnumber}} . '-' . ${$tags_ref{album}} . '.log';
 
-		$of = $of_dn . '/' . $of_bn;
+		$fn_out = $dn_out . '/' . $bn_out;
 
-		if (-f $of) {
-			say $of . ': already exists';
+		if (-f $fn_out) {
+			say $fn_out . ': already exists';
 			say 'Skipping...' . "\n";
 			return;
 		}
 
-		say 'Copying \'' . $if . '\'' . "\n\t" . 'to \'' . $of . '\'...' . "\n";
-		copy($if, $of) or die "Copy failed: $!";
+		say 'Copying \'' . $fn_in . '\'' . "\n\t" . 'to \'' . $fn_out . '\'...' . "\n";
+		copy($fn_in, $fn_out) or die "Copy failed: $!";
 		$log_n++;
 	}
 

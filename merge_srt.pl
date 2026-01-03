@@ -33,7 +33,7 @@ use POSIX qw(floor);
 
 my(%regex, %lines);
 my(@files, @lines_tmp, @format);
-my($mode, $dn, $of, $delim, $offset);
+my($mode, $dn, $fn_out, $delim, $offset);
 
 $regex{fn} = qr/^(.*)\.([^.]*)$/;
 $regex{charset1} = qr/([^; ]+)$/;
@@ -52,7 +52,7 @@ $regex{microdvd_underline} = qr/^\{ *y *: *u *\}$/i;
 $offset = 0;
 
 $dn = cwd();
-$of = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
+$fn_out = $dn . '/' . 'merged_srt' . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
 if (! scalar(@ARGV)) { usage(); }
 
@@ -387,10 +387,10 @@ while (my $fn = shift(@files)) {
 
 print_sub();
 
-open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
+open(my $srt, '> :raw', $fn_out) or die "Can't open file '$fn_out': $!";
 foreach my $line (@lines_tmp) {
 	print $srt $line . "\r\n";
 }
-close($srt) or die "Can't close file '$of': $!";
+close($srt) or die "Can't close file '$fn_out': $!";
 
-say "\n" . 'Wrote file: ' . $of . "\n";
+say "\n" . 'Wrote file: ' . $fn_out . "\n";

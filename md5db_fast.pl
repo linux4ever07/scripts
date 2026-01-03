@@ -583,17 +583,17 @@ sub hash2file {
 # overwriting database file with nothing.
 	if (! keys(%md5h)) { return; }
 
-	my $of = 'md5' . '-' . $session . '.db';
+	my $fn_out = 'md5' . '-' . $session . '.db';
 
-	open(my $md5db_out, '>', $of) or die "Can't open '$of': $!";
+	open(my $md5db_out, '>', $fn_out) or die "Can't open '$fn_out': $!";
 # Loop through keys in database hash and print the entries (divided by
 # the $delim variable) to database file.
 	foreach my $fn (sort(keys(%md5h))) {
 		print $md5db_out $fn . $delim . $md5h{$fn} . "\r\n";
 	}
-	close($md5db_out) or die "Can't close '$of': $!";
+	close($md5db_out) or die "Can't close '$fn_out': $!";
 
-	rename($of, $db) or die "Can't rename '$of': $!";
+	rename($fn_out, $db) or die "Can't rename '$fn_out': $!";
 }
 
 # Subroutine for creating temporary variables. A session number, and

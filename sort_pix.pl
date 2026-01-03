@@ -70,17 +70,17 @@ sub get_type {
 # The 'md5sum' subroutine gets the MD5 hash, as well as last
 # modification date, of the image.
 sub md5sum {
-	my $if = shift;
+	my $fn_in = shift;
 
-	my $date = (stat($if))[9];
+	my $date = (stat($fn_in))[9];
 
 	my($hash);
 
-	open(my $mf, '< :raw', $if) or die "Can't open '$if': $!";
+	open(my $mf, '< :raw', $fn_in) or die "Can't open '$fn_in': $!";
 	$hash = Digest::MD5->new->addfile($mf)->hexdigest;
-	close($mf) or die "Can't close '$if': $!";
+	close($mf) or die "Can't close '$fn_in': $!";
 
-	$md5h{$hash}{$if} = $date;
+	$md5h{$hash}{$fn_in} = $date;
 }
 
 # The 'get_res' subroutine gets the resolution of the image, using
@@ -139,83 +139,83 @@ sub get_ratio {
 # The 'mv_res' subroutine moves the image to the proper directory, named
 # after resolution and aspect ratio.
 sub mv_res {
-	my $if = shift;
-	my $if_dn = shift;
-	my $if_bn = shift;
+	my $fn_in = shift;
+	my $dn_in = shift;
+	my $bn_in = shift;
 	my $x_res = shift;
 	my $y_res = shift;
-	my $ratio = shift;
 
-	my $of_ratio = $ratio;
+	my $ratio_in = shift;
+	my $ratio_out = $ratio_in;
 
-	$of_ratio =~ tr/:/_/;
+	$ratio_out =~ tr/:/_/;
 
 	my $res = join('x', $x_res, $y_res);
 
-	my $of_dn = join('/', $if_dn, $of_ratio, $res);
+	my $dn_out = join('/', $dn_in, $ratio_out, $res);
 
-	my($of);
+	my($fn_out);
 
 # If resolution is lower than defined in $limit, then create a directory
 # called 'low_res' and move the image there.
 	if ($x_res < $limit) {
-		$of_dn = join('/', $if_dn, 'low_res', $res);
+		$dn_out = join('/', $dn_in, 'low_res', $res);
 # If the resolution is not among the accepted aspect ratios, then create
 # a directory called 'other_res' and move the image there.
-	} elsif (! length($accepted_ratios{$ratio})) {
-		$of_dn = join('/', $if_dn, 'other_res', $res);
+	} elsif (! length($accepted_ratios{$ratio_in})) {
+		$dn_out = join('/', $dn_in, 'other_res', $res);
 	}
 
-	make_path($of_dn);
+	make_path($dn_out);
 
-	$of = join('/', $of_dn, $if_bn);
+	$fn_out = join('/', $dn_out, $bn_in);
 
-	unless (-f $of) {
-		move($if, $of) or die "Can't move '$if': $!";
+	unless (-f $fn_out) {
+		move($fn_in, $fn_out) or die "Can't move '$fn_in': $!";
 	}
 
-	say $if_bn . ': ' . $res . ' (' . $ratio . ')';
+	say $bn_in . ': ' . $res . ' (' . $ratio_in . ')';
 }
 
-foreach my $if_dn (@dirs) {
-	chdir($if_dn) or die "Can't change to '$if_dn': $!";
+foreach my $dn_in (@dirs) {
+	chdir($dn_in) or die "Can't change to '$dn_in': $!";
 
 	my @files_in = (glob("*"));
 
 	my(@files_out);
 
 # Check if the file is an image, and has the right extension.
-	foreach my $if (@files_in) {
-		if (! -f $if) { next; }
+	foreach my $fn_in (@files_in) {
+		if (! -f $fn_in) { next; }
 
-		$if =~ m/$regex{fn}/;
+		$fn_in =~ m/$regex{fn}/;
 
-		my $if_bn = $1;
-		my $if_ext = $2;
+		my $bn_in = $1;
+		my $ext_in = $2;
 
-		$if = $if_dn . '/' . $if;
+		$fn_in = $dn_in . '/' . $fn_in;
 
-		my($of);
+		my($fn_out);
 
-		my($type, $of_ext) = get_type($if);
+		my($type, $ext_out) = get_type($fn_in);
 
 		if (! length($type)) { next; }
 
 		if ($type ne 'image') { next; }
 
-		$of = $if_dn . '/' . $if_bn . '.' . $of_ext;
+		$fn_out = $dn_in . '/' . $bn_in . '.' . $ext_out;
 
-		if ($if ne $of and ! -f $of) {
-			move($if, $of) or die "Can't move '$if': $!";
-			push(@files_out, $of);
-		} else { push(@files_out, $if); }
+		if ($fn_in ne $fn_out and ! -f $fn_out) {
+			move($fn_in, $fn_out) or die "Can't move '$fn_in': $!";
+			push(@files_out, $fn_out);
+		} else { push(@files_out, $fn_in); }
 	}
 
 	@files_in = (@files_out);
 	@files_out = ();
 
-	foreach my $if (@files_in) {
-		md5sum($if);
+	foreach my $fn_in (@files_in) {
+		md5sum($fn_in);
 	}
 
 	@files_in = ();
@@ -262,16 +262,16 @@ foreach my $if_dn (@dirs) {
 
 # Check the resolution and aspect ratio of the images, and move them to
 # their proper directories.
-	foreach my $if (sort(keys(%files))) {
-		my $if_bn = basename($if);
+	foreach my $fn_in (sort(keys(%files))) {
+		my $bn_in = basename($fn_in);
 
 		my($x_res, $y_res, $ratio);
 
-		($x_res, $y_res) = get_res($if);
+		($x_res, $y_res) = get_res($fn_in);
 		$ratio = get_ratio($x_res, $y_res);
 
 		if (! length($ratio)) { next; }
 
-		mv_res($if, $if_dn, $if_bn, $x_res, $y_res, $ratio);
+		mv_res($fn_in, $dn_in, $bn_in, $x_res, $y_res, $ratio);
 	}
 }

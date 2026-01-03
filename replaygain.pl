@@ -310,9 +310,9 @@ sub mk_refs {
 # removed in the process of decoding the FLAC to WAV, before re-encoding
 # it.
 sub vendor {
-	my $if = shift;
+	my $fn_in = shift;
 
-	my($of, $of_flac, $of_wav, $of_art, $of_stderr, $has_id3v2);
+	my($fn_out, $fn_flac_out, $fn_wav_out, $fn_art_out, $fn_stderr_out, $has_id3v2);
 	$has_id3v2 = 0;
 
 	sub sigint {
@@ -331,28 +331,28 @@ sub vendor {
 		return;
 	}
 
-	$of = $if;
-	$of =~ m/$regex{fn}/;
-	$of = $1;
-	$of = $of . '-' . int(rand(10000));
+	$fn_out = $fn_in;
+	$fn_out =~ m/$regex{fn}/;
+	$fn_out = $1;
+	$fn_out = $fn_out . '-' . int(rand(10000));
 
-	$of_flac = $of . '.flac';
-	$of_wav = $of . '.wav';
-	$of_art = $of . '.albumart';
-	$of_stderr = $of . '.stderr';
+	$fn_flac_out = $fn_out . '.flac';
+	$fn_wav_out = $fn_out . '.wav';
+	$fn_art_out = $fn_out . '.albumart';
+	$fn_stderr_out = $fn_out . '.stderr';
 
-	print $if . ': old encoder (' . ${$tags_ref{vendor}} . '), re-encoding... ';
+	print $fn_in . ': old encoder (' . ${$tags_ref{vendor}} . '), re-encoding... ';
 
 # Duplicate STDERR (for restoration later).
-# Redirect STDERR to a file ($of_stderr).
+# Redirect STDERR to a file ($fn_stderr_out).
 	open(my $stderr_dup, ">&STDERR") or die "Can't dup STDERR: $!";
 	close(STDERR) or die "Can't close STDERR: $!";
-	open(STDERR, '>', $of_stderr) or die "Can't open '$of_stderr': $!";
+	open(STDERR, '>', $fn_stderr_out) or die "Can't open '$fn_stderr_out': $!";
 
-	system('flac', '--silent', '-8', $if, "--output-name=$of_flac");
+	system('flac', '--silent', '-8', $fn_in, "--output-name=$fn_flac_out");
 	or_warn("Can't encode file");
 
-# Close the STDERR file ($of_stderr).
+# Close the STDERR file ($fn_stderr_out).
 # Restore STDERR from $stderr_dup.
 # Close the $stderr_dup filehandle.
 	close(STDERR) or die "Can't close STDERR: $!";
@@ -360,65 +360,65 @@ sub vendor {
 	close($stderr_dup) or die "Can't close STDERR: $!";
 
 	if ($? == 0) {
-		move($of_flac, $if) or die "Can't rename '$of_flac': $!";
+		move($fn_flac_out, $fn_in) or die "Can't rename '$fn_flac_out': $!";
 		say 'done';
 	} elsif ($? == 2) {
-		sigint($of_flac, $of_stderr);
+		sigint($fn_flac_out, $fn_stderr_out);
 	} else {
-# Open a filehandle that reads from the STDERR file ($of_stderr).
+# Open a filehandle that reads from the STDERR file ($fn_stderr_out).
 # Checks if FLAC file has ID3v2 tags.
-		open(my $stderr_fh, '<', $of_stderr)
-		or die "Can't open '$of_stderr': $!";
+		open(my $stderr_fh, '<', $fn_stderr_out)
+		or die "Can't open '$fn_stderr_out': $!";
 		while (chomp(my $line = <$stderr_fh>)) {
 			if ($line =~ m/$regex{id3v2}/) {
 				$has_id3v2 = 1;
 				last;
 			}
 		}
-		close($stderr_fh) or die "Can't close '$of_stderr': $!";
+		close($stderr_fh) or die "Can't close '$fn_stderr_out': $!";
 
 		if (! $has_id3v2) { last; }
 
-		print "\n" . $if . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
+		print "\n" . $fn_in . ': ' . 'replacing ID3v2 tags with VorbisComment... ';
 
 # Decode the FLAC file to WAV (in order to lose the ID3v2 tags).
-		system('flac', '--silent', '--decode', $if, "--output-name=$of_wav");
+		system('flac', '--silent', '--decode', $fn_in, "--output-name=$fn_wav_out");
 		or_warn("Can't decode file");
 
-		if ($? == 2) { sigint($of_wav, $of_stderr); }
+		if ($? == 2) { sigint($fn_wav_out, $fn_stderr_out); }
 
 # Back up the album art, if it exists.
-		system("metaflac --export-picture-to=\"$of_art\" \"$if\" 1>&- 2>&-");
+		system("metaflac --export-picture-to=\"$fn_art_out\" \"$fn_in\" 1>&- 2>&-");
 
 # Encode the WAV file to FLAC.
-		if (-f $of_art) {
-			system('flac', '--silent', '-8', "--picture=$of_art", $of_wav, "--output-name=$of_flac");
+		if (-f $fn_art_out) {
+			system('flac', '--silent', '-8', "--picture=$fn_art_out", $fn_wav_out, "--output-name=$fn_flac_out");
 			or_warn("Can't encode file");
 
-			unlink($of_art)
-			or die "Can't remove '$of_art': $!";
+			unlink($fn_art_out)
+			or die "Can't remove '$fn_art_out': $!";
 		} else {
-			system('flac', '--silent', '-8', $of_wav, "--output-name=$of_flac");
+			system('flac', '--silent', '-8', $fn_wav_out, "--output-name=$fn_flac_out");
 			or_warn("Can't encode file");
 		}
 
-		unlink($of_wav)
-		or die "Can't remove '$of_wav': $!";
+		unlink($fn_wav_out)
+		or die "Can't remove '$fn_wav_out': $!";
 
 		if ($? == 0) {
-			move($of_flac, $if)
-			or die "Can't move '$of_flac': $!";
+			move($fn_flac_out, $fn_in)
+			or die "Can't move '$fn_flac_out': $!";
 			say 'done';
 
 # Rewrite the tags. They were removed in the decoding process.
-			writetags($if, 0);
+			writetags($fn_in, 0);
 		} elsif ($? == 2) {
-			sigint($of_wav, $of_flac, $of_stderr);
+			sigint($fn_wav_out, $fn_flac_out, $fn_stderr_out);
 		}
 	}
 
 # Delete the STDERR file.
-	unlink($of_stderr) or die "Can't remove '$of_stderr': $!";
+	unlink($fn_stderr_out) or die "Can't remove '$fn_stderr_out': $!";
 }
 
 # The 'rm_tag' subroutine removes tags of choice.
@@ -697,9 +697,9 @@ sub writetags {
 # The 'tags2fn' subroutine creates a new path and file name for the
 # input files, based on the changes that have been made to the tags.
 sub tags2fn {
-	my $if = shift;
+	my $fn_in = shift;
 
-	my($of_dn, $of_bn, $of);
+	my($dn_out, $bn_out, $fn_out);
 	my($discnumber, $tracknumber, $albumartist, $album, $title);
 
 	sub rm_special_chars {
@@ -731,27 +731,27 @@ sub tags2fn {
 	$title = rm_special_chars(${$tags_ref{title}});
 	$title =~ s/ +/ /g;
 
-	$of_dn = $library . '/' . $albumartist . '/' . $album;
-	$of_bn = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
-	$of = $of_dn . '/' . $of_bn;
+	$dn_out = $library . '/' . $albumartist . '/' . $album;
+	$bn_out = $discnumber . '-' . $tracknumber . '. ' . $title . '.flac';
+	$fn_out = $dn_out . '/' . $bn_out;
 
-	if (! -d $of_dn) {
-		make_path($of_dn) or die "Can't create directory: $!";
+	if (! -d $dn_out) {
+		make_path($dn_out) or die "Can't create directory: $!";
 	}
 
-	if (! -f $of) {
-		move($if, $of) or die "Can't rename '$if': $!";
-		say $if . ': renamed based on tags';
+	if (! -f $fn_out) {
+		move($fn_in, $fn_out) or die "Can't rename '$fn_in': $!";
+		say $fn_in . ': renamed based on tags';
 	}
 
 # If the input directory contains other filetypes besides FLAC, move
 # those files to the new directory. This may include log files, etc.
 	if (length($files{other})) {
-		foreach my $if (keys(%{$files{other}})) {
-			$of = $of_dn . '/' . basename($if);
+		foreach my $fn_in (keys(%{$files{other}})) {
+			$fn_out = $dn_out . '/' . basename($fn_in);
 
-			if (! -f $of) {
-				move($if, $of) or die "Can't rename '$if': $!";
+			if (! -f $fn_out) {
+				move($fn_in, $fn_out) or die "Can't rename '$fn_in': $!";
 			}
 		}
 

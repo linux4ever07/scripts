@@ -391,19 +391,19 @@ sub print_sub {
 
 print "\n";
 
-while (my $fn = shift(@files)) {
-	my $of = $fn;
-	$of =~ s/$regex{fn}/$1/;
-	$of = $of . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
+while (my $fn_in = shift(@files)) {
+	my $fn_out = $fn_in;
+	$fn_out =~ s/$regex{fn}/$1/;
+	$fn_out = $fn_out . '-' . int(rand(10000)) . '-' . int(rand(10000)) . '.srt';
 
-	process_sub($fn);
+	process_sub($fn_in);
 	print_sub();
 
-	open(my $srt, '> :raw', $of) or die "Can't open file '$of': $!";
+	open(my $srt, '> :raw', $fn_out) or die "Can't open file '$fn_out': $!";
 	foreach my $line (@lines_tmp) {
 		print $srt $line . "\r\n";
 	}
-	close($srt) or die "Can't close file '$of': $!";
+	close($srt) or die "Can't close file '$fn_out': $!";
 
-	say 'Wrote file: ' . $of . "\n";
+	say 'Wrote file: ' . $fn_out . "\n";
 }

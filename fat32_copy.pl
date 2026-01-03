@@ -70,18 +70,18 @@ sub get_files {
 # The 'copy_split' subroutine splits files that are larger than
 # $size_limit, and copies files.
 sub copy_split {
-	my $if = shift;
-	my $of = shift;
-	my $of_part = $of . '.part';
-	my $size = (stat($if))[7];
+	my $fn_in = shift;
+	my $fn_out = shift;
+	my $fn_out_part = $fn_out . '.part';
+	my $size = (stat($fn_in))[7];
 	my($read_fn, $write_fn, $buffer);
 	my $read_write_n = 0;
 	my $part_n = 1;
 
-	if ($if eq $of) {
+	if ($fn_in eq $fn_out) {
 		say "
-in: $if
-out: $of
+in: $fn_in
+out: $fn_out
 
 Can\'t copy file to itself!
 ";
@@ -89,27 +89,27 @@ Can\'t copy file to itself!
 	}
 
 	if ($size > $size_limit) {
-		$of = $of_part . $part_n;
+		$fn_out = $fn_out_part . $part_n;
 	} else {
-		copy($if, $of) or die "Can't copy '$if': $!";
+		copy($fn_in, $fn_out) or die "Can't copy '$fn_in': $!";
 		return;
 	}
 
-	open($read_fn, '< :raw', $if) or die "Can't open '$if': $!";
-	open($write_fn, '> :raw', $of) or die "Can't open '$of': $!";
+	open($read_fn, '< :raw', $fn_in) or die "Can't open '$fn_in': $!";
+	open($write_fn, '> :raw', $fn_out) or die "Can't open '$fn_out': $!";
 	while (read($read_fn, $buffer, $buffer_size)) {
 		if ($read_write_n == $split) {
 			$read_write_n = 0;
 			$part_n++;
-			close($write_fn) or die "Can't close '$of': $!";
-			$of = $of_part . $part_n;
-			open($write_fn, '> :raw', $of) or die "Can't open '$of': $!";
+			close($write_fn) or die "Can't close '$fn_out': $!";
+			$fn_out = $fn_out_part . $part_n;
+			open($write_fn, '> :raw', $fn_out) or die "Can't open '$fn_out': $!";
 		}
-		print $write_fn $buffer or die "Can't write to '$of': $!";
+		print $write_fn $buffer or die "Can't write to '$fn_out': $!";
 		$read_write_n++
 	}
-	close($read_fn) or die "Can't close '$if': $!";
-	close($write_fn) or die "Can't close '$of': $!";
+	close($read_fn) or die "Can't close '$fn_in': $!";
+	close($write_fn) or die "Can't close '$fn_out': $!";
 }
 
 if (-f $in) {
@@ -129,10 +129,10 @@ if (-d $in) {
 		}
 
 		foreach my $fn (@{$files{$dn}}) {
-			my $if = $in . '/' . $fn;
-			my $of = $out . '/' . $fn;
+			my $fn_in = $in . '/' . $fn;
+			my $fn_out = $out . '/' . $fn;
 
-			copy_split($if, $of);
+			copy_split($fn_in, $fn_out);
 		}
 	}
 }

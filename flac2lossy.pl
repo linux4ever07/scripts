@@ -321,7 +321,7 @@ sub name {
 	my $ext = shift;
 	my $tags_ref = shift;
 
-	my(@tags, $of, $of_bn, $of_dn);
+	my(@tags, $fn_out, $dn_out, $bn_out);
 
 	sub rm_special_chars {
 		my $string = shift;
@@ -336,22 +336,22 @@ sub name {
 	push(@tags, rm_special_chars(${$$tags_ref{tracknumber}}));
 	push(@tags, rm_special_chars(${$$tags_ref{title}}));
 
-	$of_dn = join('/', $ENV{HOME}, $ext, $tags[0], $tags[1]);
+	$dn_out = join('/', $ENV{HOME}, $ext, $tags[0], $tags[1]);
 
-	unless (-d $of_dn) {
-		make_path($of_dn) or warn "Can't make_path '$of_dn': $!";
+	unless (-d $dn_out) {
+		make_path($dn_out) or warn "Can't make_path '$dn_out': $!";
 	}
 
-	$of_bn = sprintf('%d-%02d. %s.%s', $tags[2], $tags[3], $tags[4], $ext);
+	$bn_out = sprintf('%d-%02d. %s.%s', $tags[2], $tags[3], $tags[4], $ext);
 
-	$of = $of_dn . '/' . $of_bn;
+	$fn_out = $dn_out . '/' . $bn_out;
 
-	if (-f $of) {
-		say $of . ': already exists';
+	if (-f $fn_out) {
+		say $fn_out . ': already exists';
 		threads->exit();
 	}
 
-	return($of);
+	return($fn_out);
 }
 
 # The 'decode' subroutine decodes FLAC files to WAV / PCM, and stores
@@ -381,14 +381,14 @@ sub decode {
 sub lame {
 	my $tid = threads->tid();
 
-	while (my($if, $size) = $files_q->dequeue(2)) {
+	while (my($fn_in, $size) = $files_q->dequeue(2)) {
 		my @opts_tmp = @opts;
 
 		my(%tags_ref, $tag_tmp);
 
-		mk_refs($if, \%tags_ref);
+		mk_refs($fn_in, \%tags_ref);
 
-		my $of = name($if, 'mp3', \%tags_ref);
+		my $fn_out = name($fn_in, 'mp3', \%tags_ref);
 
 		$tag_tmp = ${$tags_ref{artist}};
 		push(@opts_tmp, ('--ta', $tag_tmp));
@@ -410,18 +410,18 @@ sub lame {
 		}
 
 		push(@opts_tmp, '-');
-		push(@opts_tmp, $of);
+		push(@opts_tmp, $fn_out);
 
-		say $tid . ' ' . $of . ': encoding...';
+		say $tid . ' ' . $fn_out . ': encoding...';
 
 		open(my $lame, '|-:raw', @opts_tmp)
 		or die "Can't run 'lame': $!";
-		print $lame $pcm{$if};
+		print $lame $pcm{$fn_in};
 		close($lame) or die "Couldn't close 'lame': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
-		delete($pcm{$if});
+		delete($pcm{$fn_in});
 		$file_stack -= $size; }
 	}
 }
@@ -430,14 +430,14 @@ sub lame {
 sub aac {
 	my $tid = threads->tid();
 
-	while (my($if, $size) = $files_q->dequeue(2)) {
+	while (my($fn_in, $size) = $files_q->dequeue(2)) {
 		my @opts_tmp = @opts;
 
 		my(%tags_ref, $tag_tmp);
 
-		mk_refs($if, \%tags_ref);
+		mk_refs($fn_in, \%tags_ref);
 
-		my $of = name($if, 'm4a', \%tags_ref);
+		my $fn_out = name($fn_in, 'm4a', \%tags_ref);
 
 		$tag_tmp = 'artist' . '=' . ${$tags_ref{artist}};
 		push(@opts_tmp, ('-metadata', $tag_tmp));
@@ -458,18 +458,18 @@ sub aac {
 			push(@opts_tmp, ('-metadata', $tag_tmp));
 		}
 
-		push(@opts_tmp, $of);
+		push(@opts_tmp, $fn_out);
 
-		say $tid . ' ' . $of . ': encoding...';
+		say $tid . ' ' . $fn_out . ': encoding...';
 
 		open(my $ffmpeg, '|-:raw', @opts_tmp)
 		or die "Can't run 'ffmpeg': $!";
-		print $ffmpeg $pcm{$if};
+		print $ffmpeg $pcm{$fn_in};
 		close($ffmpeg) or die "Couldn't close 'ffmpeg': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
-		delete($pcm{$if});
+		delete($pcm{$fn_in});
 		$file_stack -= $size; }
 	}
 }
@@ -478,16 +478,16 @@ sub aac {
 sub vorbis {
 	my $tid = threads->tid();
 
-	while (my($if, $size) = $files_q->dequeue(2)) {
+	while (my($fn_in, $size) = $files_q->dequeue(2)) {
 		my @opts_tmp = @opts;
 
 		my(%tags_ref, $tag_tmp);
 
-		mk_refs($if, \%tags_ref);
+		mk_refs($fn_in, \%tags_ref);
 
-		my $of = name($if, 'ogg', \%tags_ref);
+		my $fn_out = name($fn_in, 'ogg', \%tags_ref);
 
-		push(@opts_tmp, ('-o', $of));
+		push(@opts_tmp, ('-o', $fn_out));
 
 		$tag_tmp = 'artist' . '=' . ${$tags_ref{artist}};
 		push(@opts_tmp, ('-c', $tag_tmp));
@@ -510,16 +510,16 @@ sub vorbis {
 
 		push(@opts_tmp, '-');
 
-		say $tid . ' ' . $of . ': encoding...';
+		say $tid . ' ' . $fn_out . ': encoding...';
 
 		open(my $oggenc, '|-:raw', @opts_tmp)
 		or die "Can't run 'oggenc': $!";
-		print $oggenc $pcm{$if};
+		print $oggenc $pcm{$fn_in};
 		close($oggenc) or die "Couldn't close 'oggenc': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
-		delete($pcm{$if});
+		delete($pcm{$fn_in});
 		$file_stack -= $size; }
 	}
 }
@@ -528,14 +528,14 @@ sub vorbis {
 sub opus {
 	my $tid = threads->tid();
 
-	while (my($if, $size) = $files_q->dequeue(2)) {
+	while (my($fn_in, $size) = $files_q->dequeue(2)) {
 		my @opts_tmp = @opts;
 
 		my(%tags_ref, $tag_tmp);
 
-		mk_refs($if, \%tags_ref);
+		mk_refs($fn_in, \%tags_ref);
 
-		my $of = name($if, 'opus', \%tags_ref);
+		my $fn_out = name($fn_in, 'opus', \%tags_ref);
 
 		$tag_tmp = 'artist' . '=' . ${$tags_ref{artist}};
 		push(@opts_tmp, ('--comment', $tag_tmp));
@@ -557,18 +557,18 @@ sub opus {
 		}
 
 		push(@opts_tmp, '-');
-		push(@opts_tmp, $of);
+		push(@opts_tmp, $fn_out);
 
-		say $tid . ' ' . $of . ': encoding...';
+		say $tid . ' ' . $fn_out . ': encoding...';
 
 		open(my $opusenc, '|-:raw', @opts_tmp)
 		or die "Can't run 'opusenc': $!";
-		print $opusenc $pcm{$if};
+		print $opusenc $pcm{$fn_in};
 		close($opusenc) or die "Couldn't close 'opusenc': $!";
 
 		{ lock(%pcm);
 		lock($file_stack);
-		delete($pcm{$if});
+		delete($pcm{$fn_in});
 		$file_stack -= $size; }
 	}
 }
