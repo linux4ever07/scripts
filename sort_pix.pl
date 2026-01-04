@@ -70,17 +70,17 @@ sub get_type {
 # The 'md5sum' subroutine gets the MD5 hash, as well as last
 # modification date, of the image.
 sub md5sum {
-	my $fn_in = shift;
+	my $fn = shift;
 
-	my $date = (stat($fn_in))[9];
+	my $date = (stat($fn))[9];
 
 	my($hash);
 
-	open(my $mf, '< :raw', $fn_in) or die "Can't open '$fn_in': $!";
+	open(my $mf, '< :raw', $fn) or die "Can't open '$fn': $!";
 	$hash = Digest::MD5->new->addfile($mf)->hexdigest;
-	close($mf) or die "Can't close '$fn_in': $!";
+	close($mf) or die "Can't close '$fn': $!";
 
-	$md5h{$hash}{$fn_in} = $date;
+	$md5h{$hash}{$fn} = $date;
 }
 
 # The 'get_res' subroutine gets the resolution of the image, using
@@ -225,26 +225,26 @@ foreach my $dn_in (@dirs) {
 	foreach my $hash (keys(%md5h)) {
 		if (keys(%{$md5h{$hash}}) == 1) { next; }
 
-		my($og_fn, $og_date);
+		my($fn_og, $date_og);
 
 		foreach my $fn (keys(%{$md5h{$hash}})) {
 			my $date = $md5h{$hash}{$fn};
 
-			if (! length($og_fn) and ! length($og_date)) {
-				$og_fn = $fn;
-				$og_date = $date;
+			if (! length($fn_og) and ! length($date_og)) {
+				$fn_og = $fn;
+				$date_og = $date;
 
 				next;
 			}
 
-			if ($date < $og_date) {
-				$og_fn = $fn;
-				$og_date = $date;
+			if ($date < $date_og) {
+				$fn_og = $fn;
+				$date_og = $date;
 			}
 		}
 
 		foreach my $fn (keys(%{$md5h{$hash}})) {
-			if ($fn ne $og_fn) {
+			if ($fn ne $fn_og) {
 				unlink($fn) or die "Can't remove '$fn': $!";
 			}
 		}

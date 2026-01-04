@@ -317,8 +317,8 @@ sub files2queue {
 
 # The 'name' subroutine generates file names for output files.
 sub name {
-	my $fn = shift;
-	my $ext = shift;
+	my $fn_in = shift;
+	my $ext_out = shift;
 	my $tags_ref = shift;
 
 	my(@tags, $fn_out, $dn_out, $bn_out);
@@ -336,13 +336,13 @@ sub name {
 	push(@tags, rm_special_chars(${$$tags_ref{tracknumber}}));
 	push(@tags, rm_special_chars(${$$tags_ref{title}}));
 
-	$dn_out = join('/', $ENV{HOME}, $ext, $tags[0], $tags[1]);
+	$dn_out = join('/', $ENV{HOME}, $ext_out, $tags[0], $tags[1]);
 
 	unless (-d $dn_out) {
 		make_path($dn_out) or warn "Can't make_path '$dn_out': $!";
 	}
 
-	$bn_out = sprintf('%d-%02d. %s.%s', $tags[2], $tags[3], $tags[4], $ext);
+	$bn_out = sprintf('%d-%02d. %s.%s', $tags[2], $tags[3], $tags[4], $ext_out);
 
 	$fn_out = $dn_out . '/' . $bn_out;
 
