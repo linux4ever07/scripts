@@ -49,6 +49,9 @@ get_files () {
 	for (( i = 0; i < ${#files[@]}; i++ )); do
 		size=0
 
+		input=()
+		output=()
+
 		input[dn]="${files[${i}]}"
 
 		mapfile -t movie_tmp < <(compgen -G "${input[dn]}/*.mp4")
@@ -83,14 +86,10 @@ get_files () {
 		done
 
 		if [[ -z ${output[fn]} ]]; then
-			input=()
-			output=()
 			continue
 		fi
 
 		if [[ -e ${output[fn]} ]]; then
-			input=()
-			output=()
 			continue
 		fi
 
@@ -98,9 +97,6 @@ get_files () {
 		printf '%s\n\n' "${output[fn]}"
 
 		ln -s "${input[fn]}" "${output[fn]}"
-
-		input=()
-		output=()
 	done
 }
 
