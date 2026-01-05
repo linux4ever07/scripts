@@ -52,7 +52,7 @@ add_system 'ps1' 'PlayStation' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fe
 add_system 'ps2' 'PlayStation 2' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
 add_system 'gamecube' 'GameCube' '/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
 
-for (( i = 0; i < "${#systems_in[@]}"; i++ )); do
+for (( i = 0; i < ${#systems_in[@]}; i++ )); do
 	refs[system_in]="systems_in[${i}]"
 
 	dirs_out["${!refs[system_in]}"]="${output[link_dn]}/${!refs[system_in]}"
@@ -287,7 +287,7 @@ trap iquit SIGINT SIGTERM
 
 mkdir "${output[ram_dn]}"
 
-for (( i = 0; i < "${#systems_in[@]}"; i++ )); do
+for (( i = 0; i < ${#systems_in[@]}; i++ )); do
 	refs[system_in]="systems_in[${i}]"
 
 	declare -a "files_${!refs[system_in]}" "sizes_${!refs[system_in]}"
