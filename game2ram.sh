@@ -36,6 +36,7 @@ output[ram_dn]="/dev/shm/game2ram-${session}"
 
 regex[digit]='^[[:digit:]]+$'
 regex[alpha]='^[[:alpha:]]+$'
+regex[list]='^([[:digit:]]+)([[:punct:]]){0,1}(.*)$'
 regex[du]='^[[:digit:]]+'
 
 add_system () {
@@ -171,10 +172,11 @@ print_loaded () {
 }
 
 menu () {
-	declare actions string1 string2 key
-	declare -a list range_in range_out
+	declare actions string1 string2 key mode
+	declare -a list_in list_out
 
 	actions='(a) abort (u) unload (q) quit'
+	mode='list'
 
 	printf '\nChoose system:\n\n'
 
@@ -241,29 +243,47 @@ menu () {
 
 		clear
 
-		mapfile -d',' -t list <<<"$key"
-		mapfile -d'-' -t range_in <<<"$key"
+		while [[ $key =~ ${regex[list]} ]]; do
+			list_in+=("${BASH_REMATCH[1]}")
 
-		list[-1]="${list[-1]%$'\n'}"
-		range_in[-1]="${range_in[-1]%$'\n'}"
+			key="${BASH_REMATCH[3]}"
 
-		if [[ ${#list[@]} -gt 1 && ${#range_in[@]} -eq 1 ]]; then
-			load_games "${list[@]}"
-		elif [[ ${#range_in[@]} -eq 2 && ${#list[@]} -eq 1 ]]; then
-			if [[ ${range_in[0]} -gt ${range_in[1]} ]]; then
+			if [[ -z ${BASH_REMATCH[2]} ]]; then
+				continue
+			fi
+
+			case "${BASH_REMATCH[2]}" in
+				',')
+					mode='list'
+				;;
+				'-')
+					mode='range'
+				;;
+				*)
+					return
+				;;
+			esac
+		done
+
+		if [[ ${#list_in[@]} -eq 0 ]]; then
+			return
+		fi
+
+		if [[ $mode == 'range' && ${#list_in[@]} -eq 2 ]]; then
+			if [[ ${list_in[0]} -gt ${list_in[1]} ]]; then
 				return
 			fi
 
-			(( range_in[1] += 1 ))
+			(( list_in[1] += 1 ))
 
-			for (( z = range_in[0]; z < range_in[1]; z++ )); do
-				range_out+=("$z")
+			for (( z = list_in[0]; z < list_in[1]; z++ )); do
+				list_out+=("$z")
 			done
-
-			load_games "${range_out[@]}"
 		else
-			load_games "$key"
+			list_out=("${list_in[@]}")
 		fi
+
+		load_games "${list_out[@]}"
 	fi
 
 	if [[ $key =~ ${regex[alpha]} ]]; then
