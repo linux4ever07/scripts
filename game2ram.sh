@@ -227,7 +227,7 @@ menu () {
 			return
 		fi
 
-		printf '\nChoose (%s) game:\n\n' "${current[system_out]}"
+		printf '\nChoose (%s) game(s):\n\n' "${current[system_out]}"
 
 		for (( y = 0; y < elements; y++ )); do
 			z=$(( y + 1 ))
