@@ -196,6 +196,22 @@ menu () {
 
 	clear
 
+	if [[ $key =~ ${regex[alpha]} ]]; then
+		case "$key" in
+			'u')
+				unload_games
+
+				return
+			;;
+			'q')
+				iquit
+			;;
+			*)
+				return
+			;;
+		esac
+	fi
+
 	if [[ $key =~ ${regex[digit]} ]]; then
 		current[system_key]="$key"
 		current[system_in]="${systems_in[${key}]}"
@@ -243,6 +259,22 @@ menu () {
 
 		clear
 
+		if [[ $key =~ ${regex[alpha]} ]]; then
+			case "$key" in
+				'u')
+					unload_games
+
+					return
+				;;
+				'q')
+					iquit
+				;;
+				*)
+					return
+				;;
+			esac
+		fi
+
 		while [[ $key =~ ${regex[list]} ]]; do
 			list_in+=("${BASH_REMATCH[1]}")
 
@@ -284,22 +316,6 @@ menu () {
 		fi
 
 		load_games "${list_out[@]}"
-	fi
-
-	if [[ $key =~ ${regex[alpha]} ]]; then
-		case "$key" in
-			'u')
-				unload_games
-
-				return
-			;;
-			'q')
-				iquit
-			;;
-			*)
-				return
-			;;
-		esac
 	fi
 }
 
