@@ -43,6 +43,7 @@ add_system () {
 	systems_in+=("$1")
 	systems_out+=("$2")
 	dirs_in["${1}"]="$3"
+	dirs_out["${1}"]="${output[link_dn]}/${1}"
 }
 
 add_system 'pc_engine_cd' 'PC Engine CD-ROM²' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/pc_engine_cd/unpacked'
@@ -52,12 +53,6 @@ add_system 'saturn' 'Sega Saturn' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-20
 add_system 'ps1' 'PlayStation' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation/unpacked'
 add_system 'ps2' 'PlayStation 2' '/run/media/lucifer/2c5518a5-5311-4a7d-8356-206fecd9f13f/ROMs/playstation_2/unpacked'
 add_system 'gamecube' 'GameCube' '/run/media/lucifer/SD_BTRFS/SD_BTRFS/gamecube/new'
-
-for (( i = 0; i < ${#systems_in[@]}; i++ )); do
-	refs[system_in]="systems_in[${i}]"
-
-	dirs_out["${!refs[system_in]}"]="${output[link_dn]}/${!refs[system_in]}"
-done
 
 iquit () {
 	unload_games
