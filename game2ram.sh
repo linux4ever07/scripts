@@ -72,19 +72,23 @@ relink () {
 	ln -s "${input[disk_fn]}" "${output[link_fn]}"
 }
 
+init_refs () {
+	refs[system_key]="$1"
+	refs[system_in]="systems_in[${!refs[system_key]}]"
+	refs[system_out]="systems_out[${!refs[system_key]}]"
+
+	refs[title_key]="$2"
+	refs[title]="files_${!refs[system_in]}[${!refs[title_key]}]"
+	refs[size]="sizes_${!refs[system_in]}[${!refs[title_key]}]"
+}
+
 unload_games () {
 	if [[ ${#loaded_title_keys[@]} -eq 0 ]]; then
 		return
 	fi
 
 	for (( z = 0; z < ${#loaded_title_keys[@]}; z++ )); do
-		refs[system_key]="loaded_system_keys[${z}]"
-		refs[title_key]="loaded_title_keys[${z}]"
-
-		refs[system_in]="systems_in[${!refs[system_key]}]"
-
-		refs[title]="files_${!refs[system_in]}[${!refs[title_key]}]"
-		refs[size]="sizes_${!refs[system_in]}[${!refs[title_key]}]"
+		init_refs "loaded_system_keys[${z}]" "loaded_title_keys[${z}]"
 
 		input[disk_fn]="${dirs_in[${!refs[system_in]}]}/${!refs[title]}"
 		input[link_fn]="${dirs_out[${!refs[system_in]}]}/${!refs[title]}"
@@ -107,8 +111,7 @@ load_games () {
 	args=("$@")
 
 	for (( z = 0; z < ${#args[@]}; z++ )); do
-		refs[title_key]="args[${z}]"
-		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
+		init_refs 'current[system_key]' "args[${z}]"
 
 		if [[ -z ${!refs[title]} ]]; then
 			return
@@ -118,10 +121,9 @@ load_games () {
 	unload_games
 
 	for (( z = 0; z < ${#args[@]}; z++ )); do
-		refs[title_key]="args[${z}]"
-		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
+		init_refs 'current[system_key]' "args[${z}]"
 
-		loaded_system_keys+=("${current[system_key]}")
+		loaded_system_keys+=("${!refs[system_key]}")
 		loaded_title_keys+=("${!refs[title_key]}")
 
 		input[disk_fn]="${dirs_in[${current[system_in]}]}/${!refs[title]}"
@@ -146,14 +148,7 @@ print_loaded () {
 	printf '\nLoaded:\n\n'
 
 	for (( z = 0; z < ${#loaded_title_keys[@]}; z++ )); do
-		refs[system_key]="loaded_system_keys[${z}]"
-		refs[title_key]="loaded_title_keys[${z}]"
-
-		refs[system_in]="systems_in[${!refs[system_key]}]"
-		refs[system_out]="systems_out[${!refs[system_key]}]"
-
-		refs[title]="files_${!refs[system_in]}[${!refs[title_key]}]"
-		refs[size]="sizes_${!refs[system_in]}[${!refs[title_key]}]"
+		init_refs "loaded_system_keys[${z}]" "loaded_title_keys[${z}]"
 
 		printf '%s/%s/%s MiB\n' "${!refs[system_out]}" "${!refs[title]}" "${!refs[size]}"
 	done
