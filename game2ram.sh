@@ -9,6 +9,7 @@
 
 # It's possible to load multiple games at a time, or load a range of
 # games at a time, like this:
+
 # 1,2,3,10 or 1-3.
 
 # This gives the user the ability to load multi-disc games. As an
@@ -22,7 +23,14 @@
 # the 'output[link_dn]' variable. That's the directory of links, that's
 # automatically generated and updated. It points to this path by
 # default:
+
 # ~/ROMs_links
+
+# FYI:
+
+# The link directory only gets updated when this script is run, so if
+# you're scanning that directory in the emulator, it will only find the
+# ROMs that were present the last time the script was run.
 
 set -eo pipefail
 
@@ -126,8 +134,8 @@ load_games () {
 		loaded_system_keys+=("${!refs[system_key]}")
 		loaded_title_keys+=("${!refs[title_key]}")
 
-		input[disk_fn]="${dirs_in[${current[system_in]}]}/${!refs[title]}"
-		input[link_fn]="${dirs_out[${current[system_in]}]}/${!refs[title]}"
+		input[disk_fn]="${dirs_in[${!refs[system_in]}]}/${!refs[title]}"
+		input[link_fn]="${dirs_out[${!refs[system_in]}]}/${!refs[title]}"
 		output[ram_fn]="${output[ram_dn]}/${!refs[title]}"
 
 		cp -Lrp "${input[disk_fn]}" "${output[ram_fn]}"
