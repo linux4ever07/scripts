@@ -119,12 +119,10 @@ load_games () {
 
 	for (( z = 0; z < ${#args[@]}; z++ )); do
 		refs[title_key]="args[${z}]"
+		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
 
 		loaded_system_keys+=("${current[system_key]}")
 		loaded_title_keys+=("${!refs[title_key]}")
-
-		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
-		refs[size]="sizes_${current[system_in]}[${!refs[title_key]}]"
 
 		input[disk_fn]="${dirs_in[${current[system_in]}]}/${!refs[title]}"
 		input[link_fn]="${dirs_out[${current[system_in]}]}/${!refs[title]}"
