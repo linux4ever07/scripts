@@ -17,6 +17,7 @@
 
 # To add a different system, or remove a system, just edit the
 # 'add_system' lines in this script. The syntax is:
+
 # add_system 'basic_system_name' 'Real System Name' 'directory'
 
 # The ROM directory to be scanned in the emulator should be the one in
