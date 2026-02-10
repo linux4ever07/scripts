@@ -108,11 +108,6 @@ load_games () {
 
 	for (( z = 0; z < ${#args[@]}; z++ )); do
 		refs[title_key]="args[${z}]"
-
-		if [[ ! ${!refs[title_key]} =~ ${regex[digit]} ]]; then
-			return
-		fi
-
 		refs[title]="files_${current[system_in]}[${!refs[title_key]}]"
 
 		if [[ -z ${!refs[title]} ]]; then
